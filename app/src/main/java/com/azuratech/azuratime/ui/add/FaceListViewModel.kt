@@ -1,0 +1,144 @@
+package com.azuratech.azuratime.ui.add
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.FaceWithDetails
+import com.azuratech.azuratime.data.repository.ClassRepository
+import com.azuratech.azuratime.data.repository.FaceAssignmentRepository
+import com.azuratech.azuratime.data.repository.FaceRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.io.File
+import javax.inject.Inject
+
+@HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
+class FaceListViewModel @Inject constructor(
+    private val faceRepository: FaceRepository,
+    private val classRepository: ClassRepository,
+    private val assignmentRepository: FaceAssignmentRepository
+) : ViewModel() {
+
+    private val _searchQuery = MutableStateFlow("")
+    private val _selectedClassName = MutableStateFlow<String?>(null)
+    private val _editingStudent = MutableStateFlow<FaceWithDetails?>(null)
+    private val _assigningStudent = MutableStateFlow<FaceEntity?>(null)
+
+    // Data flows from repositories
+    private val _allFacesFlow = faceRepository.allFacesWithDetailsFlow
+    private val _allClassesFlow = classRepository.allClasses
+    private val _allAssignmentsFlow = assignmentRepository.allAssignedClassesMap
+
+    // The "Search Machine" combines all data sources with the search query
+    private val _filteredStudents = combine(
+        _searchQuery.debounce(300),
+        _selectedClassName,
+        _allFacesFlow
+    ) { query, className, faces ->
+        faces.filter { face ->
+            val matchesQuery = if (query.isBlank()) true else face.face.name.contains(query, ignoreCase = true)
+            val matchesClass = if (className == null) true else face.className == className
+            matchesQuery && matchesClass
+        }
+    }
+
+    // This flow creates the display-ready items
+    private val _studentDisplayItems = combine(
+        _filteredStudents,
+        _allAssignmentsFlow
+    ) { students, assignments ->
+        students.distinctBy { it.face.faceId }.map { student ->
+            val assignedClasses = assignments[student.face.faceId] ?: emptyList()
+            StudentDisplayItem(
+                faceWithDetails = student,
+                assignedClassNames = assignedClasses.joinToString { it.name }.ifEmpty { "Belum ada kelas" },
+                isBiometricReady = student.face.photoUrl?.let { it.startsWith("http") || File(it).exists() } == true,
+                assignedClassIds = assignedClasses.map { it.id }
+            )
+        }
+    }
+
+    val uiState: StateFlow<FaceListUiState> = combine(
+        _studentDisplayItems,
+        _allClassesFlow,
+        _searchQuery,
+        _selectedClassName,
+        _editingStudent,
+        _assigningStudent
+    ) { args ->
+        @Suppress("UNCHECKED_CAST")
+        val students = args[0] as List<StudentDisplayItem>
+        @Suppress("UNCHECKED_CAST")
+        val allClasses = args[1] as List<ClassEntity>
+        val query = args[2] as String
+        val className = args[3] as String?
+        @Suppress("UNCHECKED_CAST")
+        val editing = args[4] as FaceWithDetails?
+        @Suppress("UNCHECKED_CAST")
+        val assigning = args[5] as FaceEntity?
+
+        FaceListUiState(
+            isLoading = false, // Can be enhanced later
+            students = students,
+            allClasses = allClasses,
+            searchQuery = query,
+            selectedClassName = className,
+            studentForQuickEdit = editing,
+            studentForClassAssignment = assigning
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = FaceListUiState()
+    )
+
+    // --- Event Handlers ---
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun onClassFilterChanged(className: String?) {
+        _selectedClassName.value = className
+    }
+
+    fun onEditStudentClicked(student: FaceWithDetails) {
+        _editingStudent.value = student
+    }
+
+    fun onAssignClassesClicked(student: FaceEntity) {
+        _assigningStudent.value = student
+    }
+
+    fun onDismissDialog() {
+        _editingStudent.value = null
+        _assigningStudent.value = null
+    }
+
+    fun onSaveChanges(updatedFace: FaceEntity) {
+        viewModelScope.launch {
+            faceRepository.updateFaceBasic(updatedFace)
+            onDismissDialog()
+        }
+    }
+
+    fun onDeleteStudent(student: FaceEntity) {
+        viewModelScope.launch {
+            faceRepository.deleteFace(student)
+        }
+    }
+
+    fun onToggleStudentClassAssignment(studentId: String, classId: String, isAssigned: Boolean) {
+        viewModelScope.launch {
+            if (isAssigned) {
+                assignmentRepository.assignToClass(studentId, classId)
+            } else {
+                assignmentRepository.removeSpecificAssignment(studentId, classId)
+            }
+        }
+    }
+}
