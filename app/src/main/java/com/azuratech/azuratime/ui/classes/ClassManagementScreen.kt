@@ -1,0 +1,220 @@
+package com.azuratech.azuratime.ui.classes
+
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel // 🔥 Gunakan Hilt
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
+
+// 🔥 Database Entities
+import com.azuratech.azuratime.data.local.ClassEntity
+
+// 🔥 Azura Design System & Utils
+import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
+import com.azuratech.azuratime.ui.theme.AzuraShapes
+import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.util.showToast
+
+/**
+ * 🏰 CLASS MANAGEMENT SCREEN
+ * Updated to use Hilt and cleaned up parameters.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClassManagementScreen(
+    viewModel: ClassViewModel = hiltViewModel(), // 🔥 Pakai hiltViewModel()
+    onNavigateBack: () -> Unit = {},
+    onClassClick: (id: String, name: String) -> Unit = { _, _ -> }
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    
+    // State Observation
+    val classes by viewModel.classes.collectAsStateWithLifecycle(emptyList())
+    
+    // UI Local State
+    var showDialog by remember { mutableStateOf(false) }
+    var editingClass by remember { mutableStateOf<ClassEntity?>(null) }
+    var inputText by remember { mutableStateOf("") }
+    var isImporting by remember { mutableStateOf(false) }
+
+    // CSV Launcher (Simplified)
+    val csvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        // 🔥 ViewModel sekarang sudah menangani URI secara internal atau via UseCase
+        uri?.let {
+            scope.launch {
+                isImporting = true
+                // 🔥 FIX: Hanya memanggil callback onComplete
+                viewModel.importClassesFromCsv {
+                    isImporting = false
+                    context.showToast("Impor Kelas Berhasil!")
+                }
+            }
+        }
+    }
+
+    AzuraScreen(
+        title = "Manajemen Kelas",
+        onBack = onNavigateBack,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    editingClass = null
+                    inputText = ""
+                    showDialog = true
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                shape = AzuraShapes.medium
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
+            }
+        },
+        actions = {
+            if (isImporting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp).padding(end = 8.dp), 
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                IconButton(onClick = { csvLauncher.launch("text/*") }) {
+                    Icon(Icons.Default.FileUpload, contentDescription = "Import CSV")
+                }
+            }
+        }
+    ) {
+        Column(modifier = Modifier.fillMaxSize().padding(top = AzuraSpacing.md)) {
+            
+            // Header Info
+            Text(
+                text = "Daftar Kelas Aktif",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            Spacer(modifier = Modifier.height(AzuraSpacing.md))
+
+            if (classes.isEmpty()) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Belum ada data kelas", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    items(classes, key = { it.id }) { classItem ->
+                        ClassItemRow(
+                            classItem = classItem,
+                            onClick = { onClassClick(classItem.id, classItem.name) },
+                            onEdit = {
+                                editingClass = classItem
+                                inputText = classItem.name
+                                showDialog = true
+                            },
+                            onDelete = {
+                                viewModel.deleteClass(
+                                    classEntity = classItem,
+                                    onFailure = { msg -> context.showToast(msg) }
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // CREATE / UPDATE DIALOG
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(if (editingClass == null) "Tambah Kelas" else "Ubah Nama Kelas") },
+            text = {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    label = { Text("Nama Kelas") },
+                    placeholder = { Text("Contoh: 10-IPA-1") },
+                    singleLine = true,
+                    shape = AzuraShapes.medium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    enabled = inputText.isNotBlank(),
+                    onClick = {
+                        if (editingClass == null) {
+                            viewModel.addClass(inputText)
+                        } else {
+                            viewModel.updateClass(editingClass!!.id, inputText)
+                        }
+                        showDialog = false
+                    }
+                ) { Text("Simpan") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Batal") }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClassItemRow(
+    classItem: ClassEntity,
+    onClick: () -> Unit = {},
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+    ) {
+        Row(
+            modifier = Modifier.padding(AzuraSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Groups, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(AzuraSpacing.md))
+            Text(
+                text = classItem.name, 
+                style = MaterialTheme.typography.bodyLarge, 
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Row {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    }
+}

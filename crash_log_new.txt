@@ -1,0 +1,112 @@
+--------- beginning of system
+04-14 13:15:59.454  1895  2025 D OplusAppQuickStart_AppQuickStartController: notifyStartActivity intent:Intent { flg=0x10000000 cmp=com.azuratech.azuratime/.MainActivity }, function disable
+--------- beginning of main
+04-14 13:15:59.473  1895  2230 I [UAH_CLIENT]: UahEventAcquire, cmdid:2, pkg:none, identity:com.android.server.wm
+04-14 13:15:59.473  1895  2025 W ActivityTaskManager: callingPackage for (uid=2000, pid=24291) has no WPC
+04-14 13:15:59.498  1895  2025 D WindowManager: NFW_setClientVisible:ActivityRecord{bc3e74d u0 com.azuratech.azuratime/.MainActivity clientVisible:true
+04-14 13:15:59.499  1895  2025 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@f5bd303e does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+04-14 13:15:59.504  1895  2025 D FlexibleTaskController: isSupportFlexibleWindow target = com.azuratech.azuratime/.MainActivity callPkg = FlexibleTaskController support = true ,caller = 1895
+04-14 13:15:59.504  1895  2025 D CompatChangeReporter: Compat change id reported: 306666082; UID 10467; state: ENABLED
+04-14 13:15:59.505  1895  2025 D ActivityStarterExtImpl: do not intercept for realCallingAppIsSystemApp or CallingAppIsSystemApp
+04-14 13:15:59.508  1895  2025 D FlexibleWindowManagerService: isIgnoreAppearedAcrossTask:false
+04-14 13:15:59.509  1895  2025 D FlexibleWindowManagerService: isIgnoreAppearedAcrossTask:false
+04-14 13:15:59.509  1895  2025 D FlexibleTaskController: findSourceTaskForFreeForm: sourceRecord = null ,realCallingPid:24291 ,launchFromZoomMode:false ,prevTopTask:Task{b74b40 #28592 type=home I=com.android.launcher/.Launcher}
+04-14 13:15:59.509  1895  2025 D FlexibleTaskController: findSourceTaskForFreeForm: the caller is not a flexible freeform window application and does not have a zoom windowMode startup parameter
+04-14 13:15:59.509  1895  2025 D FlexibleTaskController: adjustOptionsForFlexibleTask not allow options follow process task's options, reason:9 ,reusedOptions:null
+04-14 13:15:59.509  1895  2025 D FlexibleTaskController: isSupportFlexibleWindow target = com.azuratech.azuratime/.MainActivity callPkg = FlexibleTaskController support = true ,caller = 1895
+04-14 13:15:59.509  1895  2025 D FlexibleWindowManagerService: no reused task found for ActivityRecord{bc3e74d u0 com.azuratech.azuratime/.MainActivity t-1}
+04-14 13:15:59.525   962   962 I hwcomposer: [HWCDisplay] (0 updateFps():4192), (type:1, mode:2) fps:1.095024,dur:1826.44,max:1669.17,min:157.28  
+04-14 13:15:59.534   982  1070 I mtkpower@impl: [setMode] type:5, enabled:1
+04-14 13:15:59.534  1895  2025 D OplusStartingWindowManager: we don't revise window flags for third app
+04-14 13:15:59.534  1895  2025 D ActivityTaskManager: validateStartingWindowTheme:  Pkg=com.azuratech.azuratime, Translucent=false, Floating=false, ShowWallpaper=false, Disable=false, LaunchSource=4
+04-14 13:15:59.534  1895  2025 D ActivityTaskManager: addStartingWindow for ActivityRecord{bc3e74d u0 com.azuratech.azuratime/.MainActivity t28759}, mainWin=null, state=INITIALIZING, isKeyguardLocked=false, isKeyguardGoingAway=false
+04-14 13:15:59.534  1895  2025 D ActivityTaskManager: getStartingWindowType: , newTask=true, taskSwitch=true, processRunning=false, allowTaskSnapshot=true, activityCreated=false, activityAllDrawn=false, snapshot exist: false
+04-14 13:15:59.534  1895  2025 D ActivityRecordExtImpl: handleStartingWindowForCompactWindow origin type:2, adjustType : 2
+04-14 13:15:59.537  1895  2025 D TaskOrganizerController: TaskOrganizerController.addStartingWindow: call wmshell to addStartingWindow
+04-14 13:15:59.538  1895  2025 I PowerHalWrapper: amsBoostNotify pid:2733,activity:com.android.launcher.Launcher, package:com.android.launcher, mProcessCreatePackcom.azuratech.azuratime 
+04-14 13:15:59.538  1895  2025 I PowerHalWrapper: state: 0 
+04-14 13:15:59.538  1895  2025 I mtkpower_client: [PowerHal_Wrap_notifyAppState] com.android.launcher/com.android.launcher.Launcher pid=2733 activityId:59007869 state:0
+04-14 13:15:59.538   979   979 I vendor.mediatek.hardware.mtkpower_applist-service.mediatek: packName: com.android.launcher actName: com.android.launcher.Launcher pid: 2733 activityId: 59007869 uid: 10179 state: 0
+04-14 13:15:59.539   979   979 I MTK_APPList: [notifyAPPstate] com.android.launcher/com.android.launcher.Launcher, pid=2733, activityId=59007869, uid=10179, state:PAUSED, fps:-1, win:0
+04-14 13:15:59.539   979   979 I MTK_APPList: [notifyAPPstate] multi_resumed_app_count: 0
+04-14 13:15:59.539   979   979 I MTK_APPList: [getForegroundAPPCount] 1
+04-14 13:15:59.539   979   979 I MTK_APPList: [notifyNetdUID] 10179
+04-14 13:15:59.539  1895  2025 I PowerHalWrapper: amsBoostNotify AMS_BOOST_PROCESS_CREATE_BOOST:false 
+04-14 13:15:59.539  1895  1895 D MBrainLocalService: isVendorFreezeConditionPass is false
+04-14 13:15:59.539  1895  1895 E MBrainLocalService: notifyAppSwitch failed
+04-14 13:15:59.541  1895  2230 I [UAH_CLIENT]: UahEventAcquire, cmdid:1, pkg:com.azuratech.azuratime, identity:com.android.server.wm
+04-14 13:15:59.542  1895  2025 D ActivityTaskManager: notifyTaskRemoved, task: Task{57e3140 #28758 type=standard A=10467:com.azuratech.azuratime} trace:com.android.server.wm.RecentTasks.removeForAddTask:1837 com.android.server.wm.RecentTasks.add:1350 com.android.server.wm.ActivityStarter.startActivityInner:2663 com.android.server.wm.ActivityStarter.startActivityUnchecked:1921 com.android.server.wm.ActivityStarter.executeRequest:1659 
+04-14 13:15:59.542  1895  2647 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@f5bd303e does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+04-14 13:15:59.542   979   979 I MTK_APPList: [notifyPID] 2733
+04-14 13:15:59.543   982  1119 I libPowerHal: [perfSetSysInfo] pid type:24, 2733
+04-14 13:15:59.543  1895  2025 D ActivityTaskManager: notifyTaskAdded, task: Task{9144713 #28759 type=standard A=10467:com.azuratech.azuratime} trace:com.android.server.wm.RecentTasks.add:1365 com.android.server.wm.ActivityStarter.startActivityInner:2663 com.android.server.wm.ActivityStarter.startActivityUnchecked:1921 com.android.server.wm.ActivityStarter.executeRequest:1659 com.android.server.wm.ActivityStarter.execute:914 
+04-14 13:15:59.545  1895  1922 D callGcSupression: java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object java.lang.reflect.Method.invoke(java.lang.Object, java.lang.Object[])' on a null object reference
+04-14 13:15:59.545  1895  2025 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.azuratech.azuratime/.MainActivity mCallingUid=2000} with LAUNCH_MULTIPLE from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+04-14 13:15:59.546  2359  2569 V WindowManagerShell: Transition requested (#1299): android.os.BinderProxy@b7551cb TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=28759 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.azuratech.azuratime/.MainActivity mCallingUid=2000 } baseActivity=ComponentInfo{com.azuratech.azuratime/com.azuratech.azuratime.MainActivity} topActivity=ComponentInfo{com.azuratech.azuratime/com.azuratech.azuratime.MainActivity} origActivity=null realActivity=ComponentInfo{com.azuratech.azuratime/com.azuratech.azuratime.MainActivity} numActivities=1 lastActiveTime=223294796 supportsSplitScreenMultiWindow=true supportsMultiWindow=true supportsPocketStudioMultiWindow=true isInFlexibleEmbedded = false uid = 10467 pid = 0 resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@de1dda8} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 64 - 0, 0) topActivityInfo=ActivityInfo{2a4c0c1 com.azuratech.azuratime.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false topActivityInOplusCompatMode=false topActivityEligibleForLetterboxEducation= falseisLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false topActivityEligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=720 topActivityLetterboxHeight=1612 isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false cameraCompatTaskInfo=CameraCompatTaskInfo { cameraCompatControlState=hidden freeformCameraCompatMode=inactive}} topActivityLetterboxInsets=Rect(0, 0 - 0, 0) mOplusExtraBundle = Bundle[mParcelledData.dataSize=348]}, pipTask = null, remoteTransition = null, displayChange = null, flags = 0, debugId = 1299 }
+04-14 13:15:59.547  2733  2733 D callGcSupression: java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object java.lang.reflect.Method.invoke(java.lang.Object, java.lang.Object[])' on a null object reference
+04-14 13:15:59.548  1895  2647 I PowerHalWrapper: amsBoostProcessCreate package:com.azuratech.azuratime 
+04-14 13:15:59.552  2359  2569 D ZoomController: onTaskMovedToFront, task id:28759
+04-14 13:15:59.553  2359  2569 I ZoomUiController: FloatHandle-isFloatHandleShow mPackageName = null
+04-14 13:15:59.553   932 19270 E TetherController: property_get sys.radio.data.modem_share_flag return 0, 1!
+04-14 13:15:59.554  2733  2733 D ScrollOptim [SceneManager]: updateCurrentActivity: mCurrentActivityName=null, isOptEnable=true, isAnimAheadEnable=false, isFrameInsertEnable=false, InsertNum=0, isEnabledForScrollChanged=false
+04-14 13:15:59.556  2359  2569 D WindowManagerShell: setLauncherKeepClearAreaHeight: visible=false, height=168
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: methodInvoke SupressionGC failed1
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.SupressionGC [int, int]
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at java.lang.Class.getMethod(Class.java:2934)
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at java.lang.Class.getDeclaredMethod(Class.java:2913)
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at com.android.wm.shell.util.ReflectionUtils.methodInvoke(ReflectionUtils.java:32)
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at com.oplus.transition.OplusTransitionReflectionHelper.callGcSupression(OplusTransitionReflectionHelper.java:109)
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at com.android.wm.shell.ShellTaskOrganizer.addStartingWindow(ShellTaskOrganizer.java:549)
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at android.window.TaskOrganizer$1.addStartingWindow(TaskOrganizer.java:298)
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at android.window.ITaskOrganizer$Stub.onTransact(ITaskOrganizer.java:184)
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at android.os.Binder.execTransactInternal(Binder.java:1523)
+04-14 13:15:59.558  2359  6056 E ReflectionUtils: 	at android.os.Binder.execTransact(Binder.java:1457)
+04-14 13:15:59.558  2359  2587 D PhoneStartingWindowTypeAlgorithm: preferredStartingWindowType newTask=true, taskSwitch=true, processRunning=false, allowTaskSnapshot=true, activityCreated=false, isSolidColorSplashScreen=false, legacySplashScreen=false, activityDrawn=false, windowless=false, topIsHome=false
+04-14 13:15:59.558  2359  2587 D OplusShellStartingWindowManager: getReviseStartingWindowType not support, windowInfo is null
+04-14 13:15:59.558  2733  2733 I SplitScreenManager: Attached Launcher#9e95832 ON_PAUSE
+04-14 13:15:59.561  2359  2587 D OplusShellStartingWindowManager: adjustSuggestedWindowType originType: 1, wi: StartingWindowInfo{taskId=28759 targetActivityInfo=null displayId=0 topActivityType=1 preferredStartingWindowType=8b insetsState=null topWindowLayoutParams=null mainWindowLayoutParams=null splashScreenThemeResId 7f0f0100, exi: OplusStartingWindowExtendedInfo{mAppToken=android.os.BinderProxy@1853fa7, mSupportSplashScreenPreview=false, mIsSystemApp=false, mIsExceptionListApp=false, mPreviewBitmap=null, mShouldDrawBackground=false, mForceLightMode=false, mForceNightMode=false, mNotSupportNightMode=false, mForcePreview=false, mForceBigIcon=false, mQuickStartingSurface=null, mForceSolidColorSplash=false}
+04-14 13:15:59.561  2359  2587 D OplusShellStartingWindowManager: adjustSuggestedWindowType: skip no-system app and no-exception list app
+04-14 13:15:59.563  1895  2025 D CompatChangeReporter: Compat change id reported: 309578419; UID 10467; state: ENABLED
+04-14 13:15:59.567  1074  1293 I SurfaceFlinger: [SF client] NEW(0xb4000076ea9a6900) for (2359:com.android.systemui)
+04-14 13:15:59.568  2359  2588 D ShellStartingWindow: getWindowAttrs SplashScreenWindowAttrs{ mWindowBgResId: 106028f, mWindowBgColor: 0, mWindowBgImage: false, mSplashScreenIcon: false, mBrandingImage: false, mIconBgColor: 0, uiMode: 0}
+04-14 13:15:59.569  2359  2588 I ShellStartingWindow: makeSplashScreenContentView themeBGColor: fffafafa, isDark: true, last config hash: 83721093
+04-14 13:15:59.571  2733  2733 W LauncherClient[u0]: isConnected false because mOverlay is null
+04-14 13:15:59.573  1895  2025 V SensorManager: call sensorServiceCommonInterface name: setScreenShotDisable
+04-14 13:15:59.574   933   933 D Zygote  : Forked child process 24299
+04-14 13:15:59.576  1895  1941 I ActivityManager: Start proc 24299:com.azuratech.azuratime/u0a467 for next-top-activity {com.azuratech.azuratime/com.azuratech.azuratime.MainActivity}
+04-14 13:15:59.578  2359  2587 D WindowManager: Add to mViews: android.widget.FrameLayout{abc2f43 V.E...... ......I. 0,0-0,0 alpha=1.0 viewInfo = },pkg= com.azuratech.azuratime
+04-14 13:15:59.580  2359  2633 D skia    : setRusSupported enable 0
+04-14 13:15:59.580  1074  1074 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+04-14 13:15:59.583  1895  2025 D SensorServiceExtImpl: sensorServiceCommonInterface funcName = setScreenShotDisable, flag = 0, status = 0
+04-14 13:15:59.585  1895  2025 I OplusHansManager : front pkg: com.azuratech.azuratime, uid: 10467, prev pkg: com.android.launcher, prev uid: 10179
+04-14 13:15:59.585  1895  2025 D RefreshRate: don't do app switch boost,arDisplayId:0 mDisplayId:0 currentSettingMode:2 hasAppSwitchBoostPriority:false is supportRefreshRateSwitch:true
+04-14 13:15:59.585  1895  2025 V SensorManager: call sensorServiceCommonInterface name: setScreenShotDisable
+04-14 13:15:59.585  1895  2025 D SensorServiceExtImpl: sensorServiceCommonInterface funcName = setScreenShotDisable, flag = 0, status = 0
+04-14 13:15:59.585  1895  2659 D NativeFreezeManager: freezeForAppSwitchScene mAppLaunchFzDxEnable enter, mFgAppPkgname com.azuratech.azuratime
+04-14 13:15:59.586  1895  2230 I [UAH_CLIENT]: UahEventAcquire, cmdid:1, pkg:com.azuratech.azuratime, identity:com.android.server.wm
+04-14 13:15:59.586  1895  2025 D ActivityTaskManager: setAppVisibility(Token{6fc3d50 ActivityRecord{bc3e74d u0 com.azuratech.azuratime/.MainActivity t28759}}, visible=true): mNextAppTransitionRequests=[], mNextAppTransitionFlags=,mAppTransitionState=APP_STATE_IDLE visible=false mVisibleRequested=false
+04-14 13:15:59.586  1895  2025 D ActivityTaskManager: setVisibility(Token{6fc3d50 ActivityRecord{bc3e74d u0 com.azuratech.azuratime/.MainActivity t28759}}, visible=true) defer commitVisibility for transition collecting
+04-14 13:15:59.586  1895  2025 V SensorManager: call sensorServiceCommonInterface name: setScreenShotDisable
+04-14 13:15:59.587  1895  2025 D SensorServiceExtImpl: sensorServiceCommonInterface funcName = setScreenShotDisable, flag = 0, status = 0
+04-14 13:15:59.587  1895  2397 I Osense-BaseDecisionMaker: notifySceneToAthenaPolicy: SCENE_APP_SWITCH, bundle: Bundle[{prevPkgName=com.android.launcher, curUid=10467, curPkgName=com.azuratech.azuratime, prevUid=10179}]
+04-14 13:15:59.587  1895  2025 D ActivityTaskManager: setAppVisibility(Token{a78ba79 ActivityRecord{384637d u0 com.android.launcher/.Launcher t28592}}, visible=false): mNextAppTransitionRequests=[], mNextAppTransitionFlags=,mAppTransitionState=APP_STATE_IDLE visible=true mVisibleRequested=true
+04-14 13:15:59.587  1895  2230 I [UAH_CLIENT]: UahEventAcquire, cmdid:1, pkg:com.azuratech.azuratime, identity:com.android.server.wm
+04-14 13:15:59.588  1895  2025 D ActivityTaskManager: setVisibility(Token{a78ba79 ActivityRecord{384637d u0 com.android.launcher/.Launcher t28592}}, visible=false) defer commitVisibility for transition collecting
+04-14 13:15:59.588  1895  2397 I Osense-BaseDecisionMaker: scene: SCENE_APP_SWITCH, excutingPolicy: freezer
+04-14 13:15:59.588  1895  2397 D Osense-BaseDecisionMaker: invoke freezer policy,type: fast
+04-14 13:15:59.589  1895  2794 I OplusHansManager : Fast Freezer has no uids to freeze
+04-14 13:15:59.593  2359  2588 D ShellStartingWindow: inconsize = 384
+04-14 13:15:59.594  1895  2024 D ActivityTaskManager: attachStartingWindow: mStartingData=SplashScreenStartingData{a819a80 waitForSyncTransactionCommit=false removeAfterTransaction= 0},mStartingWindow=Window{fa0fb2 u0 Splash Screen com.azuratech.azuratime}
+04-14 13:15:59.595  1895  2024 I WindowManager: addWindow: New client android.os.BinderProxy@f2a3dbd : window=Window{fa0fb2 u0 Splash Screen com.azuratech.azuratime}
+04-14 13:15:59.596  1895  2024 D WindowManager: rotation(ROTATION_0) no changed  displayId = 0, lastOrientation = -1
+04-14 13:15:59.601 24299 24299 I atech.azuratime: Late-enabling -Xcheck:jni
+04-14 13:15:59.604  2359  2587 D ViewRootImplExtImpl: onDisplayChanged -1 for VRI android.view.ViewRootImpl@66243bb
+04-14 13:15:59.604  1895  1925 I ActivityManager: Killing 22363:com.oplus.notificationmanager/1000 (adj 975): empty #8
+04-14 13:15:59.610  2359  2587 E OplusBracketLog: [OplusViewMirrorManager] updateHostViewRootIfNeeded, not support android.view.ViewRootImpl@66243bb
+04-14 13:15:59.615  1895  2794 I OplusHansManager : onUidActive() update stay time, uid=10467, pkgName=com.azuratech.azuratime, U stay=59
+04-14 13:15:59.616  2359  2587 D ViewRootImplExtImpl: wrapConfigInfoIntoFlags rotation=0, smallestScreenWidthDp=360, relayoutAsync=false, flags=0, newFlags=23592960, residentWS=false, title=Splash Screen com.azuratech.azuratime
+04-14 13:15:59.616  1895  2024 D CoreBackPreview: Window{fa0fb2 u0 Splash Screen com.azuratech.azuratime}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@ef574fe, mPriority=0, mIsAnimationCallback=false}
+04-14 13:15:59.617  1895  2024 D WindowManagerServiceExtImpl: extractConfigInfoAndRealFlags rotation=0, screenDp=360, residentWS:0, win=Window{fa0fb2 u0 Splash Screen com.azuratech.azuratime}
+04-14 13:15:59.618  1895  2024 V WindowManager: Relayout Window{fa0fb2 u0 Splash Screen com.azuratech.azuratime}: viewVisibility=0, oldvis=0, req=720x1612, vsysui=, x=0, y=0
+04-14 13:15:59.619  1895  2024 I WindowManager: Window{fa0fb2 u0 Splash Screen com.azuratech.azuratime} state from NO_SURFACE to DRAW_PENDING; reason: resetDrawState
+04-14 13:15:59.620  1074  1297 D OplusLayer: setProcInfo (18227,Splash Screen com.azuratech.azuratime#18227,com.android.systemui,0x4578D52F)
