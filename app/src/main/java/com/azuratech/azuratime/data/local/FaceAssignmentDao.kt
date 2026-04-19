@@ -41,6 +41,9 @@ interface FaceAssignmentDao {
     @Query("SELECT * FROM face_assignments WHERE isSynced = 0 AND schoolId = :schoolId")
     suspend fun getUnsyncedAssignments(schoolId: String): List<FaceAssignmentEntity>
 
+    @Query("SELECT COUNT(*) FROM face_assignments WHERE schoolId = :schoolId")
+    suspend fun getAssignmentCount(schoolId: String): Int
+
     @Query("SELECT COUNT(*) FROM face_assignments WHERE schoolId = :schoolId AND classId NOT IN (SELECT id FROM classes WHERE schoolId = :schoolId)")
     fun getBrokenAssignmentsCount(schoolId: String): Flow<Int>
 

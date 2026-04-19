@@ -145,4 +145,13 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.7.3") // For CameraX .await()
 implementation("com.google.firebase:firebase-functions-ktx:20.4.0") // For Firebase Functions
+
+// --- TESTING ---
+testImplementation(libs.junit)
+androidTestImplementation(libs.androidx.junit)
+androidTestImplementation(libs.androidx.espresso.core)
+androidTestImplementation(platform(libs.androidx.compose.bom))
+androidTestImplementation(libs.androidx.ui.test.junit4)
+debugImplementation(libs.androidx.ui.tooling)
+debugImplementation(libs.androidx.ui.test.manifest)
 }

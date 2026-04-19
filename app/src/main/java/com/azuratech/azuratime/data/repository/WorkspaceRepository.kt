@@ -75,14 +75,23 @@ class WorkspaceRepository @Inject constructor(
             }
             newClasses.forEach { classDao.insert(it) }
 
-            // Download Faces & Biometric Embedding
+            // Download Faces & Biometric Embedding (Full Sync)
             val faceSnapshot = getTenantRef(newSchoolId).collection("master_faces").get().await()
-            val newFaces = faceSnapshot.documents.map { doc ->
-                FaceEntity(faceId = doc.id, schoolId = newSchoolId, name = doc.getString("name") ?: "")
+            val newFaces = faceSnapshot.documents.mapNotNull { doc ->
+                val isActive = doc.getBoolean("isActive") ?: true
+                if (!isActive) return@mapNotNull null
+                
+                val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
+                FaceEntity(
+                    faceId = doc.id,
+                    schoolId = newSchoolId,
+                    name = doc.getString("name") ?: "",
+                    photoUrl = doc.getString("photoUrl"),
+                    embedding = embedding,
+                    isSynced = true
+                )
             }
-            newFaces.forEach { face ->
-                faceDao.upsertFace(face)
-            }
+            faceDao.upsertAll(newFaces)
 
             // Download Assignments (Relasi Siswa-Kelas)
             val assignmentSnapshot = getTenantRef(newSchoolId).collection("face_assignments").get().await()

@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -106,6 +109,7 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
                     assignedIds = params.assignedIds
                 )
             }
+            .map { it.getOrNull() ?: emptyList() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun processScannedFace(scannedFaceId: String, studentName: String, onResult: (isSuccess: Boolean, message: String) -> Unit) {

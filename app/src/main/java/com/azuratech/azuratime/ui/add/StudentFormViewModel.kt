@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repository.ClassRepository
 import com.azuratech.azuratime.data.repository.FaceRepository
 import com.azuratech.azuratime.data.repository.RegisterResult
+import com.azuratech.azuratime.domain.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -31,8 +32,8 @@ class StudentFormViewModel @Inject constructor(
 
     fun loadStudentForEdit(faceId: String) {
         viewModelScope.launch {
-            val faceWithDetails = faceRepository.getFaceWithDetails(faceId)
-            if (faceWithDetails != null) {
+            val result = faceRepository.getFaceWithDetails(faceId)
+            result.getOrNull()?.let { faceWithDetails ->
                 updateState {
                     it.copy(
                         name = faceWithDetails.face.name,
@@ -84,15 +85,15 @@ class StudentFormViewModel @Inject constructor(
         updateState { it.copy(isSubmitting = true) }
 
         viewModelScope.launch {
-            val result = if (currentState.isEditMode) {
+            val registerResult: Result<RegisterResult> = if (currentState.isEditMode) {
                 // Update existing student
                 faceRepository.updateFaceWithPhoto(
                     face = currentState.toFaceEntity(),
                     photoBitmap = currentState.capturedBitmap,
                     embedding = currentState.embedding!!
                 ).fold(
-                    onSuccess = { RegisterResult.Success },
-                    onFailure = { RegisterResult.Error(it.message ?: "Unknown error") }
+                    onSuccess = { Result.Success(RegisterResult.Success) },
+                    onFailure = { Result.Failure(it) }
                 )
             } else {
                 // Register new student
@@ -105,18 +106,25 @@ class StudentFormViewModel @Inject constructor(
                 )
             }
 
-            when (result) {
-                is RegisterResult.Success -> {
-                    val successMessage = if (currentState.isEditMode) "Berhasil diperbarui" else "Berhasil didaftarkan"
-                    onSuccess(successMessage)
+            registerResult.fold(
+                onSuccess = { res ->
+                    when (res) {
+                        is RegisterResult.Success -> {
+                            val successMessage = if (currentState.isEditMode) "Berhasil diperbarui" else "Berhasil didaftarkan"
+                            onSuccess(successMessage)
+                        }
+                        is RegisterResult.Duplicate -> {
+                            updateState { it.copy(isSubmitting = false, formError = "Wajah ini mirip dengan ${res.name}") }
+                        }
+                        is RegisterResult.Error -> {
+                            updateState { it.copy(isSubmitting = false, formError = res.message) }
+                        }
+                    }
+                },
+                onFailure = { error ->
+                    updateState { it.copy(isSubmitting = false, formError = error.message ?: "Unknown error") }
                 }
-                is RegisterResult.Duplicate -> {
-                    updateState { it.copy(isSubmitting = false, formError = "Wajah ini mirip dengan ${result.name}") }
-                }
-                is RegisterResult.Error -> {
-                    updateState { it.copy(isSubmitting = false, formError = result.message) }
-                }
-            }
+            )
         }
     }
 

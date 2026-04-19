@@ -55,26 +55,59 @@ class RegistrationRepository @Inject constructor(
     private suspend fun performFaceDeltaSync() = withContext(Dispatchers.IO) {
         val lastSync = sessionManager.getLastFacesSyncTime()
         val lastTimestamp = com.google.firebase.Timestamp(java.util.Date(lastSync))
+        
+        // 1. PULL DARI TENANT
         val snapshot = db.collection("schools").document(schoolId).collection("master_faces")
             .whereGreaterThan("lastUpdated", lastTimestamp).get().await()
 
-        if (snapshot.documents.isNotEmpty()) {
-            val updatedData = snapshot.documents.mapNotNull { doc ->
-                try {
-                    val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
-                    val entity = FaceEntity(
-                        faceId = doc.id,
-                        schoolId = schoolId,
-                        name = doc.getString("name") ?: "",
-                        embedding = embedding,
-                        photoUrl = doc.getString("photoUrl"),
-                        isSynced = true
-                    )
-                    Pair(entity, doc.getBoolean("isActive") ?: true)
-                } catch (e: Exception) { null }
-            }
+        val updatedData = snapshot.documents.mapNotNull { doc ->
+            try {
+                val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
+                val entity = FaceEntity(
+                    faceId = doc.id,
+                    schoolId = schoolId,
+                    name = doc.getString("name") ?: "",
+                    embedding = embedding,
+                    photoUrl = doc.getString("photoUrl"),
+                    isSynced = true
+                )
+                Pair(entity, doc.getBoolean("isActive") ?: true)
+            } catch (e: Exception) { null }
+        }.toMutableList()
+
+        // 2. FALLBACK ROOT (LEGACY)
+        val legacyPaths = listOf("master_faces", "faces")
+        for (path in legacyPaths) {
+            try {
+                val rootSnapshot = db.collection(path)
+                    .whereGreaterThan("lastUpdated", lastTimestamp).get().await()
+                rootSnapshot.documents.forEach { doc ->
+                    if (updatedData.none { it.first.faceId == doc.id }) {
+                        val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
+                        val entity = FaceEntity(
+                            faceId = doc.id,
+                            schoolId = schoolId,
+                            name = doc.getString("name") ?: "",
+                            embedding = embedding,
+                            photoUrl = doc.getString("photoUrl"),
+                            isSynced = true
+                        )
+                        updatedData.add(Pair(entity, doc.getBoolean("isActive") ?: true))
+                    }
+                }
+            } catch (e: Exception) {}
+        }
+
+        if (updatedData.isNotEmpty()) {
             val toUpsert = updatedData.filter { it.second }.map { it.first.copy(schoolId = schoolId) }
-            faceDao.upsertAll(toUpsert)
+            val toDelete = updatedData.filter { !it.second }.map { it.first }
+
+            if (toUpsert.isNotEmpty()) faceDao.upsertAll(toUpsert)
+            if (toDelete.isNotEmpty()) {
+                toDelete.forEach { faceDao.deleteFaceById(it.faceId, schoolId) }
+            }
+            
+            sessionManager.saveLastFacesSyncTime(System.currentTimeMillis())
         }
     }
 

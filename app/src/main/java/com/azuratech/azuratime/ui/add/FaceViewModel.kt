@@ -17,7 +17,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -35,6 +37,12 @@ class FaceViewModel @Inject constructor(
     val faceList: StateFlow<List<com.azuratech.azuratime.data.local.FaceWithDetails>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { repository.allFacesWithDetailsFlow }
+        .map { result ->
+            when (result) {
+                is Result.Success -> result.data
+                else -> emptyList()
+            }
+        }
         .stateIn(
             scope = viewModelScope, 
             started = SharingStarted.WhileSubscribed(5000), 
@@ -45,6 +53,12 @@ class FaceViewModel @Inject constructor(
     val enrolledFaceList: StateFlow<List<com.azuratech.azuratime.data.local.FaceEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { repository.facesForScanningFlow }
+        .map { result ->
+            when (result) {
+                is Result.Success -> result.data
+                else -> emptyList()
+            }
+        }
         .stateIn(
             scope = viewModelScope, 
             started = SharingStarted.WhileSubscribed(5000), 
@@ -52,7 +66,12 @@ class FaceViewModel @Inject constructor(
         )
 
     fun getFacesInClassFlow(classId: String): Flow<List<com.azuratech.azuratime.data.local.FaceEntity>> = 
-        repository.getFacesInClassFlow(classId)
+        repository.getFacesInClassFlow(classId).map { result ->
+            when (result) {
+                is Result.Success -> result.data
+                else -> emptyList()
+            }
+        }
 
     suspend fun getAssignments(faceId: String) = 
         repository.getAssignmentsForFace(faceId)
@@ -70,17 +89,28 @@ class FaceViewModel @Inject constructor(
         viewModelScope.launch {
             val result = repository.registerFace(inputId, classId, name, embedding, photoBitmap)
             withContext(Dispatchers.Main) {
-                when (result) {
-                    is RegisterResult.Success -> onSuccess()
-                    is RegisterResult.Duplicate -> onDuplicate(result.name)
-                    is RegisterResult.Error -> onError(result.message)
-                }
+                result.fold(
+                    onSuccess = { regResult ->
+                        when (regResult) {
+                            is RegisterResult.Success -> onSuccess()
+                            is RegisterResult.Duplicate -> onDuplicate(regResult.name)
+                            is RegisterResult.Error -> onError(regResult.message)
+                        }
+                    },
+                    onFailure = { onError(it.message ?: "Gagal registrasi") }
+                )
             }
         }
     }
 
     fun deleteFace(face: com.azuratech.azuratime.data.local.FaceEntity) { 
-        viewModelScope.launch { repository.deleteFace(face) } 
+        viewModelScope.launch { 
+            try {
+                repository.deleteFace(face) 
+            } catch (e: Exception) {
+                android.util.Log.e("FaceViewModel", "Gagal hapus: ${e.message}")
+            }
+        } 
     }
 
     fun updateEmployeeClass(faceId: String, classId: String?) {
