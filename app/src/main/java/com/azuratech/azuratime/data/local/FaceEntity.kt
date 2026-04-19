@@ -18,5 +18,6 @@ data class FaceEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val createdBy: String? = "Admin",
     val lastUpdated: Long = System.currentTimeMillis(),
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val isDeleted: Boolean = false
 )

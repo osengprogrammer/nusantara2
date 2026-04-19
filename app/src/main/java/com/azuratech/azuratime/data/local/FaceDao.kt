@@ -58,6 +58,9 @@ interface FaceDao {
     @Query("DELETE FROM faces WHERE schoolId = :schoolId")
     suspend fun deleteAllBySchool(schoolId: String)
 
+    @Query("UPDATE faces SET isDeleted = 1, isSynced = 0 WHERE faceId = :faceId AND schoolId = :schoolId")
+    suspend fun markPendingDeletion(faceId: String, schoolId: String)
+
     // 🔥 Added for DataIntegrityRepository and ReportRepository
     @Query("SELECT COUNT(*) FROM faces WHERE schoolId = :schoolId")
     fun getTotalFacesFlow(schoolId: String): Flow<Int>

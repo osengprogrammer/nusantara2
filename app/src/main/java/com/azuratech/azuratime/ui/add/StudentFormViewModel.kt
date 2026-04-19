@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repository.ClassRepository
 import com.azuratech.azuratime.data.repository.FaceRepository
-import com.azuratech.azuratime.data.repository.RegisterResult
+import com.azuratech.azuratime.domain.face.RegisterResult
 import com.azuratech.azuratime.domain.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

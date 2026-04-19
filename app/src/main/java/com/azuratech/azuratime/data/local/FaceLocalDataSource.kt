@@ -18,4 +18,5 @@ interface FaceLocalDataSource {
     suspend fun deleteFaceById(faceId: String, schoolId: String)
     suspend fun insertAssignment(assignment: FaceAssignmentEntity)
     suspend fun deleteAssignmentsByFace(faceId: String, schoolId: String)
+    suspend fun markPendingDeletion(faceId: String, schoolId: String)
 }
