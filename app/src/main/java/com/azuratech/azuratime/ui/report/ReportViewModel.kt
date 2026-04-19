@@ -6,6 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.data.repository.ReportRepository
+import com.azuratech.azuratime.domain.report.usecase.GetReportDataUseCase
+import com.azuratech.azuratime.domain.sync.usecase.SyncMasterDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,7 +31,9 @@ data class MatrixParams(
 @HiltViewModel
 class ReportViewModel @Inject constructor(
     application: Application,
-    private val repository: ReportRepository
+    private val repository: ReportRepository,
+    private val getReportDataUseCase: GetReportDataUseCase,
+    private val syncMasterDataUseCase: SyncMasterDataUseCase
 ) : AndroidViewModel(application) {
 
     private val _startDate = MutableStateFlow(LocalDate.now().withDayOfMonth(1))
@@ -43,7 +47,7 @@ class ReportViewModel @Inject constructor(
     val availableClasses: StateFlow<List<ClassEntity>> = combine(_userRole, _assignedClasses) { role, assigned ->
         role to assigned
     }.flatMapLatest { (role, assigned) ->
-        repository.getAvailableClasses(role, assigned)
+        getReportDataUseCase.getAvailableClasses(role, assigned)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @Suppress("UNCHECKED_CAST")
@@ -63,8 +67,14 @@ class ReportViewModel @Inject constructor(
         .debounce(200)
         .flatMapLatest { (params, policy, dateRange) ->
             combine(
-                repository.getStudentsInReport(params.role, params.classId, params.assigned),
-                repository.getRecordsForMatrix(params.role, params.start, params.end, params.classId, params.assigned),
+                getReportDataUseCase.getStudentsInReport(params.role, params.classId, params.assigned),
+                repository.getCheckInRecordDao().getFilteredRecords(
+                    schoolId = "",
+                    startDate = params.start,
+                    endDate = params.end,
+                    classId = params.classId,
+                    assignedIds = params.assigned
+                ),
                 availableClasses
             ) { results: Array<*> ->
                 val students = results[0] as List<FaceEntity>
@@ -187,6 +197,6 @@ class ReportViewModel @Inject constructor(
     fun setPolicy(policy: String) { _reportPolicy.value = policy }
 
     fun refreshMasterData() {
-        viewModelScope.launch { repository.refreshMasterData() }
+        viewModelScope.launch { syncMasterDataUseCase() }
     }
 }

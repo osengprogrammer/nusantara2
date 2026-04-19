@@ -8,6 +8,7 @@ import com.azuratech.azuratime.data.repository.WorkspaceRepository
 import com.azuratech.azuratime.data.repository.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
+import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,7 @@ class WorkspaceViewModel @Inject constructor(
     application: Application,
     private val repository: WorkspaceRepository,
     private val userRepository: UserRepository,
+    private val syncUserUseCase: SyncUserUseCase,
     private val sessionManager: SessionManager,
     private val db: FirebaseFirestore
 ) : AndroidViewModel(application) {
@@ -56,7 +58,7 @@ class WorkspaceViewModel @Inject constructor(
                 repository.switchWorkspace(userId, newSchoolId)
 
                 // 3. Sync User agar Role/Membership terbaru masuk ke Room
-                userRepository.syncUserFromCloud(userId)
+                syncUserUseCase(userId)
 
                 _uiState.value = WorkspaceState.Success(newSchoolName)
             } catch (e: Exception) {
@@ -131,7 +133,7 @@ class WorkspaceViewModel @Inject constructor(
                 sessionManager.saveActiveSchoolId(schoolId)
 
                 // 3. Tarik membership terbaru (sebagai ADMIN sekolah baru)
-                userRepository.syncUserFromCloud(userId)
+                syncUserUseCase(userId)
 
                 _uiState.value = WorkspaceState.Success(schoolName)
             } catch (e: Exception) {
@@ -155,7 +157,7 @@ class WorkspaceViewModel @Inject constructor(
             _uiState.value = WorkspaceState.Switching
             try {
                 db.collection("schools").document(schoolId).update("schoolName", newName.trim()).await()
-                userRepository.syncUserFromCloud(userId)
+                syncUserUseCase(userId)
                 _uiState.value = WorkspaceState.Idle
                 onSuccess()
             } catch (e: Exception) {

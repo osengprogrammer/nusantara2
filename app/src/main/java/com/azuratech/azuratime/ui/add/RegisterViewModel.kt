@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repository.RegistrationRepository
 import com.azuratech.azuratime.domain.model.ProcessResult
+import com.azuratech.azuratime.domain.sync.usecase.ProcessCsvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -24,9 +25,10 @@ data class RegisterState(
 )
 
 @HiltViewModel
-class RegisterViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
+class RegisterViewModel @Inject constructor(
     application: Application,
-    private val repository: RegistrationRepository // 🔥 FIX: Repository disuntikkan otomatis
+    private val repository: RegistrationRepository,
+    private val processCsvUseCase: ProcessCsvUseCase
 ) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(RegisterState())
@@ -45,7 +47,7 @@ class RegisterViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
             val resultLogs = mutableListOf<ProcessResult>()
 
             try {
-                repository.processCsvFile(uri, dataType).collect { result ->
+                processCsvUseCase(uri, dataType).collect { result ->
                     if (result.status != "Syncing") {
                         resultLogs.add(result)
                     }

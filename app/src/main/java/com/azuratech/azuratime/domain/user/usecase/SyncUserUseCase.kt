@@ -83,4 +83,50 @@ class SyncUserUseCase @Inject constructor(
             Result.Failure(AppError.Network(e.message))
         }
     }
+
+    suspend fun searchByEmail(email: String): UserEntity? = withContext(Dispatchers.IO) {
+        try {
+            val snapshot = db.collection("whitelisted_users")
+                .whereEqualTo("email", email.trim().lowercase())
+                .limit(1).get().await()
+
+            val doc = snapshot.documents.firstOrNull() ?: return@withContext null
+            val data = doc.data ?: return@withContext null
+
+            @Suppress("UNCHECKED_CAST")
+            val rawMemberships = data["memberships"] as? Map<String, Map<String, Any>> ?: emptyMap()
+            val parsedMemberships = rawMemberships.mapValues { entry ->
+                Membership(
+                    schoolName = entry.value["schoolName"] as? String ?: "Unknown",
+                    role = entry.value["role"] as? String ?: "USER"
+                )
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            val rawFriends = data["friends"] as? Map<String, Map<String, Any>> ?: emptyMap()
+            val parsedFriends = rawFriends.mapValues { entry ->
+                FriendConnection(
+                    friendName = entry.value["friendName"] as? String ?: "Guru",
+                    friendEmail = entry.value["friendEmail"] as? String ?: "",
+                    status = entry.value["status"] as? String ?: "UNKNOWN"
+                )
+            }
+
+            UserEntity(
+                userId = doc.id,
+                email = data["email"] as? String ?: "",
+                name = data["name"] as? String ?: "User",
+                memberships = parsedMemberships,
+                friends = parsedFriends,
+                activeSchoolId = data["activeSchoolId"] as? String,
+                status = data["status"] as? String ?: "PENDING",
+                isActive = data["isActive"] as? Boolean ?: true,
+                activeClassId = data["activeClassId"] as? String,
+                deviceId = data["deviceId"] as? String,
+                createdAt = data["createdAt"] as? Long ?: System.currentTimeMillis()
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
