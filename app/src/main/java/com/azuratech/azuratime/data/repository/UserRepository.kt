@@ -194,17 +194,6 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun updateActiveClass(user: UserEntity, classId: String?): UserEntity = withContext(Dispatchers.IO) {
-        val updatedUser = user.copy(activeClassId = classId)
-        userDao.updateUser(updatedUser)
-        try {
-            syncUserToCloud(updatedUser)
-        } catch (e: Exception) {
-            Log.e("UserRepository", "Gagal sync Active Class: ${e.message}")
-        }
-        return@withContext updatedUser
-    }
-
     suspend fun resolveAttendanceConflict(conflict: AttendanceConflict, useCloud: Boolean) = withContext(Dispatchers.IO) {
         if (useCloud) {
             checkInRecordDao.insert(conflict.cloud)

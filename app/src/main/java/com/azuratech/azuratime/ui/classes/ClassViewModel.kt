@@ -6,6 +6,7 @@ import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.domain.classes.usecase.DeleteClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
+import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
 import com.azuratech.azuratime.domain.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -13,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.net.Uri
 
 /**
  * 🛠️ CLASS VIEW MODEL - Migrated to UseCases
@@ -21,7 +23,8 @@ import kotlinx.coroutines.withContext
 class ClassViewModel @Inject constructor(
     private val getClassesUseCase: GetClassesUseCase,
     private val updateClassUseCase: UpdateClassUseCase,
-    private val deleteClassUseCase: DeleteClassUseCase
+    private val deleteClassUseCase: DeleteClassUseCase,
+    private val importClassesUseCase: ImportClassesUseCase
 ) : ViewModel() {
 
     // =====================================================
@@ -57,9 +60,11 @@ class ClassViewModel @Inject constructor(
         }
     }
 
-    fun importClassesFromCsv(onComplete: () -> Unit) {
-        // Stub implementation to unblock compilation
+    fun importClassesFromCsv(uri: Uri, onComplete: () -> Unit) {
         viewModelScope.launch {
+            val result = importClassesUseCase(uri)
+            // Even if it fails, we call onComplete to stop loading UI
+            // The result handling for errors could be added here if we had a snackbar state
             onComplete()
         }
     }

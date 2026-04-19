@@ -39,13 +39,13 @@ class RegisterViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
     // =====================================================
     // 🚀 MANTRA PEMPROSES CSV BATCH (BULK IMPORT)
     // =====================================================
-    fun processCsvFile(context: Context, uri: Uri, dataType: String) {
+    fun processCsvFile(uri: Uri, dataType: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _state.value = RegisterState(isProcessing = true, status = "Mempersiapkan data...", progress = 0.05f)
             val resultLogs = mutableListOf<ProcessResult>()
 
             try {
-                repository.processCsvFile(context, uri, dataType).collect { result ->
+                repository.processCsvFile(uri, dataType).collect { result ->
                     if (result.status != "Syncing") {
                         resultLogs.add(result)
                     }

@@ -111,11 +111,11 @@ class RegistrationRepository @Inject constructor(
         }
     }
 
-    fun processCsvFile(context: Context, uri: Uri, type: String): Flow<ProcessResult> = flow {
+    fun processCsvFile(uri: Uri, type: String): Flow<ProcessResult> = flow {
         emit(ProcessResult("", "", "Syncing", type, "Updating Biometric Database..."))
         performFaceDeltaSync()
 
-        val parsedData = CsvImportUtils.parseCsvToStudentData(context, uri)
+        val parsedData = CsvImportUtils.parseCsvToStudentData(application, uri)
         val existingFaces = faceDao.getAllFacesForScanningList(schoolId)
 
         val newlyRegisteredFaces = mutableListOf<FaceEntity>()

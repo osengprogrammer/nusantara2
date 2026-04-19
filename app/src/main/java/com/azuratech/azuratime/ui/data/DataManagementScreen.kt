@@ -55,7 +55,7 @@ fun DataManagementScreen(
     val csvPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { registerViewModel.processCsvFile(context, it, selectedType) }
+        uri?.let { registerViewModel.processCsvFile(it, selectedType) }
     }
 
     AzuraScreen(title = screenTitle, onBack = onNavigateBack) {
