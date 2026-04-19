@@ -5,13 +5,14 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.repository.CheckInRepository
+import com.azuratech.azuratime.domain.face.usecase.SyncFacesUseCase
+import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
 import com.azuratech.azuratime.data.repository.ClassRepository
-import com.azuratech.azuratime.data.repository.FaceRepository
 import com.azuratech.azuratime.data.repository.FaceAssignmentRepository
 import com.azuratech.azuratime.data.repository.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuratime.domain.result.AppError
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -20,73 +21,75 @@ import kotlinx.coroutines.withContext
 /**
  * 🛡️ THE INVISIBLE GUARDRAIL: Persistent Background Sync
  * 
- * Memastikan sinkronisasi data tetap berjalan hingga selesai,
- * bahkan jika aplikasi ditutup atau jaringan terputus (akan di-retry
- * saat koneksi kembali ada).
+ * Canonical worker for all data synchronization.
+ * Handles both OneTimeWork (manual) and PeriodicWork (background).
  */
 @HiltWorker
 class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val database: AppDatabase,
+    private val syncFacesUseCase: SyncFacesUseCase,
+    private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
     private val userRepository: UserRepository,
     private val classRepository: ClassRepository,
-    private val faceRepository: FaceRepository,
     private val faceAssignmentRepository: FaceAssignmentRepository,
-    private val checkInRepository: CheckInRepository,
     private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: run {
+            Log.w("AZURA_SYNC", "SyncWorker: No active school ID found. Aborting.")
+            return@withContext Result.failure()
+        }
+
+        Log.d("AZURA_SYNC", "SyncWorker: Starting persistent background sync for school: $schoolId")
+
+        // 1. Push & Sync Check-In Records (Local-First)
+        when (val res = syncCheckInRecordsUseCase.invoke()) {
+            is Result.Failure -> {
+                if (handleSyncError(res.error, "CheckInSync") == Result.retry()) {
+                    return@withContext Result.retry()
+                }
+            }
+            else -> Unit
+        }
+
+        // 2. Sync Faces (Pull Delta + Process Soft-Deletes)
+        when (val res = syncFacesUseCase.invoke()) {
+            is Result.Failure -> {
+                if (handleSyncError(res.error, "FaceSync") == Result.retry()) {
+                    return@withContext Result.retry()
+                }
+            }
+            else -> Unit
+        }
+
+        // 3. Legacy Sync (Classes, Users, Assignments) - Phase 6 candidates
         try {
-            Log.d("AZURA_SYNC", "SyncWorker: Starting persistent background sync...")
-            val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            if (schoolId.isNotEmpty()) {
-                // 1. Push lokal ke Cloud
-                pushPendingRecordsToCloud(schoolId)
-                // 2. Pull Cloud ke Lokal
-                pullWorkspaceData()
-                
-                Log.d("AZURA_SYNC", "SyncWorker: Sync completed successfully.")
-                Result.success()
-            } else {
-                Log.w("AZURA_SYNC", "SyncWorker: No active school ID found. Aborting.")
-                Result.failure()
+            val currentUserId = sessionManager.getCurrentUserId()
+            if (currentUserId != null) {
+                userRepository.syncUserFromCloud(currentUserId)
             }
+            classRepository.performClassDeltaSync()
+            faceAssignmentRepository.performAssignmentSync()
         } catch (e: Exception) {
-            Log.e("AZURA_SYNC", "SyncWorker: Error during sync - ${e.message}")
-            // Jika gagal karena jaringan/timeout, jadwalkan ulang
-            Result.retry()
-        }
-    }
-
-    private suspend fun pullWorkspaceData() {
-        // Sedot Hak Akses
-        val currentUserId = sessionManager.getCurrentUserId()
-        if (currentUserId != null) {
-            userRepository.syncUserFromCloud(currentUserId)
+            Log.w("AZURA_SYNC", "Legacy sync (Class/User/Assign) failed (non-blocking): ${e.message}")
         }
 
-        // Sedot Kelas Delta
-        classRepository.performClassDeltaSync()
-
-        // Sedot Wajah Delta
-        faceRepository.performFaceDeltaSync()
-
-        // Sedot Face Assignments
-        faceAssignmentRepository.performAssignmentSync()
+        Log.d("AZURA_SYNC", "SyncWorker: Sync completed successfully.")
+        Result.success()
     }
 
-    private suspend fun pushPendingRecordsToCloud(schoolId: String) {
-        val unsynced = database.checkInRecordDao().getUnsyncedRecords(schoolId)
-        for (record in unsynced) {
-            try {
-                checkInRepository.saveRecord(record)
-            } catch (e: Exception) {
-                Log.e("AZURA_SYNC", "Failed pushing record: ${record.id}")
-                // Throw exception agar worker melakukan retry
-                throw e
-            }
+    /**
+     * Maps AppError to WorkManager Result and logs the failure.
+     */
+    private fun handleSyncError(error: AppError, stage: String): Result {
+        Log.e("AZURA_SYNC", "Sync Error at $stage: ${error.message}")
+        return when (error) {
+            is AppError.Network -> Result.retry()
+            is AppError.LocalDB -> Result.failure()
+            is AppError.BusinessRule -> Result.failure()
+            is AppError.Unknown -> Result.retry()
         }
     }
 }
