@@ -4,8 +4,10 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repository.ClassRepository
-import com.azuratech.azuratime.data.repository.FaceRepository
 import com.azuratech.azuratime.domain.face.RegisterResult
+import com.azuratech.azuratime.domain.face.usecase.GetFaceWithDetailsUseCase
+import com.azuratech.azuratime.domain.face.usecase.RegisterFaceUseCase
+import com.azuratech.azuratime.domain.face.usecase.UpdateFaceWithPhotoUseCase
 import com.azuratech.azuratime.domain.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -14,7 +16,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
-    private val faceRepository: FaceRepository,
+    private val registerFaceUseCase: RegisterFaceUseCase,
+    private val updateFaceWithPhotoUseCase: UpdateFaceWithPhotoUseCase,
+    private val getFaceWithDetailsUseCase: GetFaceWithDetailsUseCase,
     private val classRepository: ClassRepository
 ) : ViewModel() {
 
@@ -32,17 +36,26 @@ class StudentFormViewModel @Inject constructor(
 
     fun loadStudentForEdit(faceId: String) {
         viewModelScope.launch {
-            val result = faceRepository.getFaceWithDetails(faceId)
-            result.getOrNull()?.let { faceWithDetails ->
-                updateState {
-                    it.copy(
-                        name = faceWithDetails.face.name,
-                        studentId = faceWithDetails.face.faceId,
-                        selectedClassId = faceWithDetails.classId,
-                        embedding = faceWithDetails.face.embedding,
-                        isEditMode = true,
-                        pageTitle = "Edit Profil Siswa"
-                    )
+            when (val result = getFaceWithDetailsUseCase(faceId)) {
+                is Result.Success -> {
+                    result.data?.let { faceWithDetails ->
+                        updateState {
+                            it.copy(
+                                name = faceWithDetails.face.name,
+                                studentId = faceWithDetails.face.faceId,
+                                selectedClassId = faceWithDetails.classId,
+                                embedding = faceWithDetails.face.embedding,
+                                isEditMode = true,
+                                pageTitle = "Edit Profil Siswa"
+                            )
+                        }
+                    }
+                }
+                is Result.Failure -> {
+                    updateState { it.copy(formError = result.error.message ?: "Gagal memuat data") }
+                }
+                is Result.Loading -> {
+                    updateState { it.copy(isSubmitting = true) }
                 }
             }
         }
@@ -87,17 +100,14 @@ class StudentFormViewModel @Inject constructor(
         viewModelScope.launch {
             val registerResult: Result<RegisterResult> = if (currentState.isEditMode) {
                 // Update existing student
-                faceRepository.updateFaceWithPhoto(
+                updateFaceWithPhotoUseCase(
                     face = currentState.toFaceEntity(),
                     photoBitmap = currentState.capturedBitmap,
                     embedding = currentState.embedding!!
-                ).fold(
-                    onSuccess = { Result.Success(RegisterResult.Success) },
-                    onFailure = { Result.Failure(it) }
-                )
+                ).map { RegisterResult.Success }
             } else {
                 // Register new student
-                faceRepository.registerFace(
+                registerFaceUseCase(
                     inputId = currentState.studentId,
                     classId = currentState.selectedClassId!!,
                     name = currentState.name,
@@ -106,9 +116,9 @@ class StudentFormViewModel @Inject constructor(
                 )
             }
 
-            registerResult.fold(
-                onSuccess = { res ->
-                    when (res) {
+            when (registerResult) {
+                is Result.Success -> {
+                    when (val res = registerResult.data) {
                         is RegisterResult.Success -> {
                             val successMessage = if (currentState.isEditMode) "Berhasil diperbarui" else "Berhasil didaftarkan"
                             onSuccess(successMessage)
@@ -120,11 +130,14 @@ class StudentFormViewModel @Inject constructor(
                             updateState { it.copy(isSubmitting = false, formError = res.message) }
                         }
                     }
-                },
-                onFailure = { error ->
-                    updateState { it.copy(isSubmitting = false, formError = error.message ?: "Unknown error") }
                 }
-            )
+                is Result.Failure -> {
+                    updateState { it.copy(isSubmitting = false, formError = registerResult.error.message ?: "Unknown error") }
+                }
+                is Result.Loading -> {
+                    // Already set in updateState above
+                }
+            }
         }
     }
 
@@ -146,6 +159,6 @@ class StudentFormViewModel @Inject constructor(
         faceId = this.studentId,
         name = this.name,
         embedding = this.embedding,
-        photoUrl = null // Photo path is handled by the repository
+        photoUrl = null // Photo path is handled by the UseCase
     )
 }

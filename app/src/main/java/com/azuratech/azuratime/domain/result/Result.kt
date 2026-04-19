@@ -19,4 +19,10 @@ sealed class Result<out T> {
         is Success -> data
         else -> null
     }
+
+    inline fun <R> map(transform: (T) -> R): Result<R> = when (this) {
+        is Success -> Success(transform(data))
+        is Failure -> Failure(error)
+        is Loading -> Loading
+    }
 }
