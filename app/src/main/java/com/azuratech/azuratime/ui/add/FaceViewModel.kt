@@ -4,9 +4,15 @@ import android.app.Application
 import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-// 🔥 PASTIKAN IMPORT DI BAWAH INI SESUAI LOKASI FILE REPOSITORY ANDA
-import com.azuratech.azuratime.data.repository.FaceRepository
-import com.azuratech.azuratime.data.repository.RegisterResult
+
+import com.azuratech.azuratime.domain.face.RegisterResult
+import com.azuratech.azuratime.domain.face.RegisterFaceUseCase
+import com.azuratech.azuratime.domain.face.GetFacesWithDetailsUseCase
+import com.azuratech.azuratime.domain.face.GetEnrolledFacesUseCase
+import com.azuratech.azuratime.domain.face.DeleteFaceUseCase
+import com.azuratech.azuratime.domain.face.UpdateEmployeeClassUseCase
+import com.azuratech.azuratime.domain.face.UpdateFaceUseCase
+import com.azuratech.azuratime.domain.face.GetFacesInClassUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -20,6 +26,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.azuratech.azuratime.domain.result.Result
+
+
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -29,14 +37,20 @@ import kotlinx.coroutines.withContext
 @HiltViewModel
 class FaceViewModel @Inject constructor(
     application: Application,
-    private val repository: FaceRepository, // Parameter ke-2 (yang error di KSP)
+    private val getFacesWithDetailsUseCase: GetFacesWithDetailsUseCase,
+    private val getEnrolledFacesUseCase: GetEnrolledFacesUseCase,
+    private val registerFaceUseCase: RegisterFaceUseCase,
+    private val deleteFaceUseCase: DeleteFaceUseCase,
+    private val updateEmployeeClassUseCase: UpdateEmployeeClassUseCase,
+    private val updateFaceUseCase: UpdateFaceUseCase,
+    private val getFacesInClassUseCase: GetFacesInClassUseCase,
     private val sessionManager: SessionManager // Parameter ke-3
 ) : AndroidViewModel(application) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val faceList: StateFlow<List<com.azuratech.azuratime.data.local.FaceWithDetails>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
-        .flatMapLatest { repository.allFacesWithDetailsFlow }
+        .flatMapLatest { getFacesWithDetailsUseCase() }
         .map { result ->
             when (result) {
                 is Result.Success -> result.data
@@ -52,7 +66,7 @@ class FaceViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val enrolledFaceList: StateFlow<List<com.azuratech.azuratime.data.local.FaceEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
-        .flatMapLatest { repository.facesForScanningFlow }
+        .flatMapLatest { getEnrolledFacesUseCase() }
         .map { result ->
             when (result) {
                 is Result.Success -> result.data
@@ -66,15 +80,14 @@ class FaceViewModel @Inject constructor(
         )
 
     fun getFacesInClassFlow(classId: String): Flow<List<com.azuratech.azuratime.data.local.FaceEntity>> = 
-        repository.getFacesInClassFlow(classId).map { result ->
+        getFacesInClassUseCase(classId).map { result ->
             when (result) {
                 is Result.Success -> result.data
                 else -> emptyList()
             }
         }
 
-    suspend fun getAssignments(faceId: String) = 
-        repository.getAssignmentsForFace(faceId)
+
 
     fun registerFace(
         inputId: String, 
@@ -87,7 +100,7 @@ class FaceViewModel @Inject constructor(
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
-            val result = repository.registerFace(inputId, classId, name, embedding, photoBitmap)
+            val result = registerFaceUseCase(inputId, classId, name, embedding, photoBitmap)
             withContext(Dispatchers.Main) {
                 result.fold(
                     onSuccess = { regResult ->
@@ -106,7 +119,7 @@ class FaceViewModel @Inject constructor(
     fun deleteFace(face: com.azuratech.azuratime.data.local.FaceEntity) { 
         viewModelScope.launch { 
             try {
-                repository.deleteFace(face) 
+                deleteFaceUseCase(face) 
             } catch (e: Exception) {
                 android.util.Log.e("FaceViewModel", "Gagal hapus: ${e.message}")
             }
@@ -114,31 +127,14 @@ class FaceViewModel @Inject constructor(
     }
 
     fun updateEmployeeClass(faceId: String, classId: String?) {
-        viewModelScope.launch { repository.updateEmployeeClass(faceId, classId) }
+        viewModelScope.launch { updateEmployeeClassUseCase(faceId, classId) }
     }
 
     fun updateFace(face: com.azuratech.azuratime.data.local.FaceEntity, onComplete: () -> Unit) {
         viewModelScope.launch { 
-            repository.updateFaceBasic(face)
+            updateFaceUseCase(face)
             withContext(Dispatchers.Main) { onComplete() } 
         }
     }
 
-    fun updateFaceWithPhoto(
-        face: com.azuratech.azuratime.data.local.FaceEntity, 
-        photoBitmap: Bitmap?, 
-        embedding: FloatArray, 
-        onComplete: () -> Unit, 
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            val result = repository.updateFaceWithPhoto(face, photoBitmap, embedding)
-            withContext(Dispatchers.Main) {
-                result.fold(
-                    onSuccess = { onComplete() },
-                    onFailure = { onError("Gagal: ${it.message}") }
-                )
-            }
-        }
-    }
 }

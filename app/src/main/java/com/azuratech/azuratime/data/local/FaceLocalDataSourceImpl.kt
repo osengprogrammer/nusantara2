@@ -56,4 +56,7 @@ class FaceLocalDataSourceImpl @Inject constructor(
 
     override suspend fun deleteAssignmentsByFace(faceId: String, schoolId: String) =
         faceAssignmentDao.deleteAllByFace(faceId, schoolId)
+
+    override suspend fun markPendingDeletion(faceId: String, schoolId: String) =
+        faceDao.markPendingDeletion(faceId, schoolId)
 }
