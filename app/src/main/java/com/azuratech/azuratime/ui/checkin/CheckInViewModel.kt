@@ -7,7 +7,7 @@ import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.data.repository.CheckInRepository
+import com.azuratech.azuratime.domain.checkin.usecase.*
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel // 🔥 Import Hilt
 import javax.inject.Inject // 🔥 Import Inject
@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.map
 import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -34,7 +33,10 @@ import java.time.LocalDateTime
 class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
     application: Application,
     database: AppDatabase,
-    private val checkInRepository: CheckInRepository,
+    private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
+    private val processCheckInUseCase: ProcessCheckInUseCase,
+    private val updateCheckInRecordUseCase: UpdateCheckInRecordUseCase,
+    private val deleteCheckInRecordUseCase: DeleteCheckInRecordUseCase,
     private val sessionManager: SessionManager // 🔥 SessionManager disuntikkan langsung
 ) : AndroidViewModel(application) {
 
@@ -98,64 +100,54 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
         _filterParams
             .flatMapLatest { params ->
                 val targetClassId = if (params.classId == "ALL" || params.classId.isNullOrBlank()) null else params.classId
-                checkInRepository.getFilteredRecords(
-                    nameFilter = params.name,
+                val filters = CheckInFilters(
+                    name = params.name,
                     startDate = params.start,
                     endDate = params.end,
                     userId = params.userId,
                     classId = targetClassId,
                     assignedIds = params.assignedIds
                 )
+                getCheckInRecordsUseCase(filters)
             }
             .map { it.getOrNull() ?: emptyList() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun processScannedFace(scannedFaceId: String, studentName: String, onResult: (isSuccess: Boolean, message: String) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
                 val currentSessionId = _activeClassId.value
                 val teacherEmail = _filterParams.value.userId ?: ""
-                val studentClasses = faceAssignmentDao.getClassIdsForFace(scannedFaceId, schoolId).firstOrNull() ?: emptyList()
+                val studentClasses = withContext(Dispatchers.IO) {
+                    faceAssignmentDao.getClassIdsForFace(scannedFaceId, schoolId).firstOrNull() ?: emptyList()
+                }
 
-                if (currentSessionId != null) {
-                    if (studentClasses.contains(currentSessionId)) {
-                        withContext(Dispatchers.Main) { onResult(true, "✅ Berhasil: $studentName") }
-                        saveRecord(scannedFaceId, studentName, teacherEmail, currentSessionId)
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            onResult(false, "❌ Ditolak: $studentName beda kelas!")
+                val params = ProcessCheckInParams(
+                    faceId = scannedFaceId,
+                    studentName = studentName,
+                    teacherEmail = teacherEmail,
+                    activeClassId = currentSessionId,
+                    studentClassIds = studentClasses
+                )
+
+                val result = processCheckInUseCase(params)
+                
+                withContext(Dispatchers.Main) {
+                    when (result) {
+                        is Result.Success -> {
+                            when (val checkInRes = result.data) {
+                                is CheckInResult.Success -> onResult(true, checkInRes.message)
+                                is CheckInResult.Rejected -> onResult(false, checkInRes.message)
+                            }
                         }
+                        is Result.Failure -> onResult(false, "❌ Error: ${result.error.message}")
+                        is Result.Loading -> { /* Loading not handled in this callback pattern */ }
                     }
-                } else {
-                    val primaryClassId = studentClasses.firstOrNull() ?: "UNASSIGNED"
-                    withContext(Dispatchers.Main) {
-                        val msg = if (primaryClassId == "UNASSIGNED") "⚠️ $studentName absen (Belum Masuk Kelas)"
-                        else "✅ Gerbang: $studentName hadir."
-                        onResult(true, msg)
-                    }
-                    saveRecord(scannedFaceId, studentName, teacherEmail, primaryClassId)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) { onResult(false, "❌ Error: ${e.message}") }
             }
         }
-    }
-
-    private suspend fun saveRecord(faceId: String, name: String, email: String, classId: String) {
-        val record = CheckInRecordEntity(
-            faceId = faceId,
-            name = name,
-            userId = email,
-            classId = classId,
-            className = "Terekam",
-            schoolId = schoolId,
-            status = "H",
-            attendanceDate = LocalDate.now(),
-            checkInTime = LocalDateTime.now(),
-            // 🔥 createdAt dihapus dari sini karena sekarang otomatis di-handle oleh timestamp di dalam Entity
-            isSynced = false
-        )
-        checkInRepository.saveRecord(record) 
     }
 
     fun updateFilters(name: String? = null, start: LocalDate? = null, end: LocalDate? = null) {
@@ -169,20 +161,30 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
     fun updateNameFilter(name: String) { _filterParams.value = _filterParams.value.copy(name = name) }
     
     fun updateRecord(record: CheckInRecordEntity) { 
-        viewModelScope.launch { checkInRepository.updateRecord(record) } 
+        viewModelScope.launch { updateCheckInRecordUseCase(record) } 
     }
     
     fun addRecord(record: CheckInRecordEntity) { 
-        viewModelScope.launch { checkInRepository.saveRecord(record) } 
+        viewModelScope.launch { 
+            // Manual add still uses ProcessCheckInParams but with empty/pre-validated classes
+            val params = ProcessCheckInParams(
+                faceId = record.faceId,
+                studentName = record.name,
+                teacherEmail = record.userId,
+                activeClassId = record.classId,
+                studentClassIds = record.classId?.let { listOf(it) } ?: emptyList()
+            )
+            processCheckInUseCase(params)
+        } 
     }
     
     fun updateRecordClass(record: CheckInRecordEntity, selectedClass: ClassEntity) {
         viewModelScope.launch { 
-            checkInRepository.updateRecordClass(record.id, selectedClass.id, selectedClass.name) 
+            updateCheckInRecordUseCase.updateClass(record.id, selectedClass.id, selectedClass.name) 
         }
     }
     
     fun deleteRecord(record: CheckInRecordEntity) { 
-        viewModelScope.launch { checkInRepository.deleteRecord(record) } 
+        viewModelScope.launch { deleteCheckInRecordUseCase(record.id) } 
     }
 }

@@ -6,6 +6,7 @@ import com.azuratech.azuratime.data.local.CheckInLocalDataSource
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.domain.checkin.usecase.*
 import com.azuratech.azuratime.domain.result.AppError
 import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,12 @@ class CheckInRepository @Inject constructor(
     private val application: Application,
     private val localDataSource: CheckInLocalDataSource,
     private val remoteDataSource: CheckInRemoteDataSource,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
+    private val processCheckInUseCase: ProcessCheckInUseCase,
+    private val updateCheckInRecordUseCase: UpdateCheckInRecordUseCase,
+    private val deleteCheckInRecordUseCase: DeleteCheckInRecordUseCase,
+    private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase
 ) {
     private val schoolId: String get() = sessionManager.getActiveSchoolId() ?: ""
 
@@ -37,7 +43,7 @@ class CheckInRepository @Inject constructor(
     // 📖 READ (FLOWS)
     // =====================================================
 
-    @Deprecated("Route through UseCase layer")
+    @Deprecated("Route through GetCheckInRecordsUseCase", ReplaceWith("getCheckInRecordsUseCase(filters)"))
     fun getFilteredRecords(
         nameFilter: String,
         startDate: LocalDate?,
@@ -46,59 +52,37 @@ class CheckInRepository @Inject constructor(
         classId: String?,
         assignedIds: List<String>,
         schoolId: String = this.schoolId
-    ): Flow<Result<List<CheckInRecordEntity>>> = localDataSource.getFilteredRecords(
-            nameFilter = nameFilter,
+    ): Flow<Result<List<CheckInRecordEntity>>> {
+        val filters = CheckInFilters(
+            name = nameFilter,
             startDate = startDate,
             endDate = endDate,
             userId = userId,
             classId = classId,
-            assignedIds = assignedIds,
-            schoolId = schoolId
-        ).map { Result.Success(it) as Result<List<CheckInRecordEntity>> }
-         .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            assignedIds = assignedIds
+        )
+        return getCheckInRecordsUseCase(filters)
+    }
 
     // =====================================================
     // 📥 PULL & DELTA SYNC
     // =====================================================
 
-    @Deprecated("Route through UseCase layer")
-    suspend fun performRecordsDeltaSync(): Result<Unit> = withContext(Dispatchers.IO) {
-        if (schoolId.isBlank()) return@withContext Result.Success(Unit)
-
-        val lastSync = sessionManager.getLastRecordsSyncTime()
-        try {
-            val syncResult = remoteDataSource.getRecordUpdates(schoolId, lastSync)
-            if (syncResult is Result.Success) {
-                val records = syncResult.data
-                if (records.isNotEmpty()) {
-                    records.forEach { record ->
-                        localDataSource.insert(record)
-                    }
-                    sessionManager.saveLastRecordsSyncTime()
-                    Log.i("CheckInRepository", "✅ Delta Sync: Pulled ${records.size} records")
-                }
-                Result.Success(Unit)
-            } else {
-                syncResult as Result.Failure
-            }
-        } catch (e: Exception) {
-            Result.Failure(AppError.Network(e.message))
-        }
-    }
+    @Deprecated("Route through SyncCheckInRecordsUseCase", ReplaceWith("syncCheckInRecordsUseCase()"))
+    suspend fun performRecordsDeltaSync(): Result<Unit> = syncCheckInRecordsUseCase()
 
     // =====================================================
     // ✍️ WRITE & SYNC
     // =====================================================
 
-    @Deprecated("Route through UseCase layer")
+    @Deprecated("Route through ProcessCheckInUseCase")
     suspend fun saveRecord(record: CheckInRecordEntity): Result<Unit> = withContext(Dispatchers.IO) {
+        // This is a legacy adapter for saveRecord. 
+        // In the new architecture, we should use ProcessCheckInUseCase which handles validation.
         try {
             localDataSource.insert(record)
-
             if (record.schoolId.isNotBlank()) {
-                val syncRes = remoteDataSource.syncRecord(record)
-                if (syncRes is Result.Failure) throw Exception("Sync failed")
-                localDataSource.update(record.copy(isSynced = true))
+                remoteDataSource.syncRecord(record)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -106,61 +90,17 @@ class CheckInRepository @Inject constructor(
         }
     }
 
-    @Deprecated("Route through UseCase layer")
-    suspend fun updateRecordClass(recordId: String, classId: String, className: String): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            val record = localDataSource.getRecordById(recordId, schoolId)
-            record?.let {
-                val updatedRecord = it.copy(
-                    classId = classId,
-                    className = className,
-                    isSynced = false
-                )
-                localDataSource.update(updatedRecord)
+    @Deprecated("Route through UpdateCheckInRecordUseCase", ReplaceWith("updateCheckInRecordUseCase.updateClass(...)"))
+    suspend fun updateRecordClass(recordId: String, classId: String, className: String): Result<Unit> = 
+        updateCheckInRecordUseCase.updateClass(recordId, classId, className)
 
-                if (updatedRecord.schoolId.isNotBlank()) {
-                    val syncRes = remoteDataSource.syncRecord(updatedRecord)
-                    if (syncRes is Result.Failure) throw Exception("Sync failed")
-                    localDataSource.update(updatedRecord.copy(isSynced = true))
-                }
-            }
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Failure(AppError.LocalDB(e.message))
-        }
-    }
+    @Deprecated("Route through UpdateCheckInRecordUseCase", ReplaceWith("updateCheckInRecordUseCase(record)"))
+    suspend fun updateRecord(record: CheckInRecordEntity): Result<Unit> = 
+        updateCheckInRecordUseCase(record)
 
-    @Deprecated("Route through UseCase layer")
-    suspend fun updateRecord(record: CheckInRecordEntity): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            val recordToUpdate = record.copy(isSynced = false)
-            localDataSource.update(recordToUpdate)
-
-            if (recordToUpdate.schoolId.isNotBlank()) {
-                val syncRes = remoteDataSource.syncRecord(recordToUpdate)
-                if (syncRes is Result.Failure) throw Exception("Sync failed")
-                localDataSource.update(recordToUpdate.copy(isSynced = true))
-            }
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Failure(AppError.LocalDB(e.message))
-        }
-    }
-
-    @Deprecated("Route through UseCase layer")
-    suspend fun deleteRecord(record: CheckInRecordEntity): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            localDataSource.delete(record)
-
-            if (record.schoolId.isNotBlank()) {
-                val deleteRes = remoteDataSource.deleteRecord(schoolId, record.id)
-                if (deleteRes is Result.Failure) throw Exception("Delete failed")
-            }
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Failure(AppError.Network(e.message))
-        }
-    }
+    @Deprecated("Route through DeleteCheckInRecordUseCase", ReplaceWith("deleteCheckInRecordUseCase(recordId)"))
+    suspend fun deleteRecord(record: CheckInRecordEntity): Result<Unit> = 
+        deleteCheckInRecordUseCase(record.id)
 
     // =====================================================
     // ☁️ CLOUD OPERATIONS

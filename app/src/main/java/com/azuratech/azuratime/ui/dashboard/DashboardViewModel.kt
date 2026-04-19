@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.repository.AdminRepository
 import com.azuratech.azuratime.data.repository.AuthRepository
-import com.azuratech.azuratime.data.repository.CheckInRepository
 import com.azuratech.azuratime.data.repository.ClassRepository
 import com.azuratech.azuratime.data.repository.DataIntegrityRepository
 import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.domain.checkin.usecase.GetCheckInRecordsUseCase
+import com.azuratech.azuratime.domain.checkin.usecase.CheckInFilters
+import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
 import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
 import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.channels.Channel
@@ -27,7 +29,8 @@ class DashboardViewModel @Inject constructor(
     private val adminRepository: AdminRepository,
     private val userRepository: UserRepository,
     private val classRepository: ClassRepository,
-    private val checkInRepository: CheckInRepository,
+    private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
+    private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
     private val authRepository: AuthRepository,
     private val dataIntegrityRepository: DataIntegrityRepository,
     private val getFacesInClassUseCase: GetFacesInClassUseCase,
@@ -64,11 +67,8 @@ class DashboardViewModel @Inject constructor(
     private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
-            checkInRepository.getFilteredRecords(
-                nameFilter = "", startDate = null, endDate = null,
-                userId = null, classId = null, assignedIds = emptyList(),
-                schoolId = schoolId
-            ).map { it.getOrNull()?.take(5) ?: emptyList() }
+            val filters = CheckInFilters()
+            getCheckInRecordsUseCase(filters).map { it.getOrNull()?.take(5) ?: emptyList() }
         }
 
     private val _sessionStudentsFlow = _userFlow
@@ -94,7 +94,6 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _userFlow.collectLatest { user ->
                 if (user != null) {
-                    checkInRepository.setActiveClass(user.activeClassId)
                     val role = user.activeSchoolId?.let { user.memberships[it]?.role }
                     if (role == "ADMIN" && user.activeSchoolId != null) {
                         adminRepository.startObservingTeachers(user.activeSchoolId)
@@ -194,7 +193,10 @@ class DashboardViewModel @Inject constructor(
             }
         }
         syncViewModel.forceSyncFromCloud {
-            viewModelScope.launch { _syncCompletedEvent.send(Unit) }
+            viewModelScope.launch { 
+                syncCheckInRecordsUseCase()
+                _syncCompletedEvent.send(Unit) 
+            }
         }
     }
 
