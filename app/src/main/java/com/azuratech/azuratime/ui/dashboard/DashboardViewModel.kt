@@ -5,16 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.repository.AdminRepository
 import com.azuratech.azuratime.data.repository.AuthRepository
-import com.azuratech.azuratime.data.repository.ClassRepository
 import com.azuratech.azuratime.data.repository.DataIntegrityRepository
-import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.GetCheckInRecordsUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.CheckInFilters
 import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
-import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
+import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
+import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.data.local.AttendanceConflict
 import com.azuratech.azuratime.ui.sync.SyncViewModel
 import com.azuratech.azuratime.ui.util.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,8 +29,9 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel @Inject constructor(
     private val adminRepository: AdminRepository,
-    private val userRepository: UserRepository,
-    private val classRepository: ClassRepository,
+    private val observeUserUseCase: ObserveUserUseCase,
+    private val syncUserUseCase: SyncUserUseCase,
+    private val updateUserUseCase: UpdateUserUseCase,
     private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
     private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
     private val authRepository: AuthRepository,
@@ -43,26 +46,7 @@ class DashboardViewModel @Inject constructor(
 
     private val _userFlow = sessionManager.currentUserIdFlow
         .filterNotNull()
-        .flatMapLatest { userId -> userRepository.observeUserById(userId) }
-
-    private val _assignedClassesFlow = _userFlow
-        .filterNotNull()
-        .flatMapLatest { user ->
-            val membershipRole = user.activeSchoolId?.let { user.memberships[it]?.role }
-            val role = membershipRole ?: (if (user.status != "PENDING") user.status else "USER")
-            
-            if (role == "ADMIN" || role == "SUPER_USER") {
-                classRepository.allClasses.onEach {
-                    android.util.Log.d("AZURA_SYNC", "Assigned classes emitted (ADMIN): ${it.size}")
-                }
-            } else {
-                userRepository.observeClassIdsForUser(user.userId).combine(classRepository.allClasses) { assignedIds, allClasses ->
-                    val filtered = allClasses.filter { it.id in assignedIds }
-                    android.util.Log.d("AZURA_SYNC", "Assigned classes emitted (TEACHER): ${filtered.size}")
-                    filtered
-                }
-            }
-        }
+        .flatMapLatest { userId -> observeUserUseCase(userId) }
 
     private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
@@ -88,24 +72,13 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = sessionManager.getCurrentUserId()
             if (userId != null) {
-                userRepository.refreshUserFromCloud(userId)
-            }
-        }
-        viewModelScope.launch {
-            _userFlow.collectLatest { user ->
-                if (user != null) {
-                    val role = user.activeSchoolId?.let { user.memberships[it]?.role }
-                    if (role == "ADMIN" && user.activeSchoolId != null) {
-                        adminRepository.startObservingTeachers(user.activeSchoolId)
-                    }
-                }
+                syncUserUseCase(userId)
             }
         }
     }
 
     val state: StateFlow<UiState<DashboardUiState>> = combine(
         _userFlow,
-        _assignedClassesFlow,
         _recentRecordsFlow,
         _sessionStudentsFlow,
         syncViewModel.isSyncing,
@@ -113,23 +86,20 @@ class DashboardViewModel @Inject constructor(
         dataIntegrityRepository.missingAssignment,
         dataIntegrityRepository.brokenAssignments,
         dataIntegrityRepository.globalUnsyncedCount,
-        userRepository.conflicts
+        dataIntegrityRepository.conflicts
     ) { args ->
-        @Suppress("UNCHECKED_CAST")
         val user = args[0] as com.azuratech.azuratime.data.local.UserEntity?
         @Suppress("UNCHECKED_CAST")
-        val assignedClasses = args[1] as List<com.azuratech.azuratime.data.local.ClassEntity>
+        val recentRecords = args[1] as List<com.azuratech.azuratime.data.local.CheckInRecordEntity>
         @Suppress("UNCHECKED_CAST")
-        val recentRecords = args[2] as List<com.azuratech.azuratime.data.local.CheckInRecordEntity>
+        val sessionStudents = args[2] as List<FaceEntity>
+        val isSyncing = args[3] as Boolean
+        val totalFaces = args[4] as Int
+        val unassigned = args[5] as Int
+        val broken = args[6] as Int
+        val unsynced = args[7] as Int
         @Suppress("UNCHECKED_CAST")
-        val sessionStudents = args[3] as List<FaceEntity>
-        val isSyncing = args[4] as Boolean
-        val totalFaces = args[5] as Int
-        val unassigned = args[6] as Int
-        val broken = args[7] as Int
-        val unsynced = args[8] as Int
-        @Suppress("UNCHECKED_CAST")
-        val conflicts = args[9] as List<com.azuratech.azuratime.data.local.AttendanceConflict>
+        val conflicts = args[8] as List<com.azuratech.azuratime.data.local.AttendanceConflict>
 
         if (user == null) {
             return@combine UiState.Loading
@@ -139,18 +109,14 @@ class DashboardViewModel @Inject constructor(
         val membershipRole = currentWorkspaceId?.let { user.memberships[it]?.role }
         val topLevelStatus = user.status
         
-        // Prioritize membership role if it exists, otherwise fallback to top-level status or USER
         val currentRole = membershipRole ?: (if (topLevelStatus != "PENDING") topLevelStatus else "USER")
         val isApproved = currentRole == "ADMIN" || currentRole == "TEACHER"
-        
-        android.util.Log.d("AZURA_DEBUG", "Membership Role: $membershipRole | Top Level Status: $topLevelStatus | Final Current Role: $currentRole")
-        android.util.Log.d("AZURA_ROLE", "Workspace: $currentWorkspaceId | Role: $currentRole | isApproved: $isApproved")
         
         val pendingRequests = user.friends.values.count { it.status == "PENDING_APPROVAL" }
 
         val dashboardState = DashboardUiState(
             user = user,
-            assignedClasses = assignedClasses,
+            assignedClasses = emptyList(),
             recentRecords = recentRecords,
             sessionStudents = sessionStudents,
             isSyncing = isSyncing,
@@ -170,26 +136,11 @@ class DashboardViewModel @Inject constructor(
         initialValue = UiState.Loading
     )
 
-    fun selectActiveClass(classId: String?) {
-        viewModelScope.launch {
-            val user = _userFlow.first()
-            if (user != null) {
-                userRepository.updateActiveClass(user, classId)
-            }
-        }
-    }
-
-    fun resolveConflict(conflict: com.azuratech.azuratime.data.local.AttendanceConflict, useCloud: Boolean) {
-        viewModelScope.launch {
-            userRepository.resolveAttendanceConflict(conflict, useCloud)
-        }
-    }
-
     fun sync() {
         viewModelScope.launch {
             val userId = sessionManager.getCurrentUserId()
             if (userId != null) {
-                userRepository.refreshUserFromCloud(userId)
+                syncUserUseCase(userId)
             }
         }
         syncViewModel.forceSyncFromCloud {
@@ -198,6 +149,21 @@ class DashboardViewModel @Inject constructor(
                 _syncCompletedEvent.send(Unit) 
             }
         }
+    }
+
+    fun selectActiveClass(classId: String?) {
+        viewModelScope.launch {
+            val currentState = state.value
+            if (currentState is UiState.Success) {
+                val user = currentState.data.user ?: return@launch
+                val updatedUser = user.copy(activeClassId = classId)
+                updateUserUseCase(updatedUser)
+            }
+        }
+    }
+
+    fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
+        // TODO: Implement actual conflict resolution logic
     }
 
     fun logout(onComplete: () -> Unit) {

@@ -3,11 +3,12 @@ package com.azuratech.azuratime.ui.add
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repository.ClassRepository
 import com.azuratech.azuratime.domain.face.RegisterResult
 import com.azuratech.azuratime.domain.face.usecase.GetFaceWithDetailsUseCase
 import com.azuratech.azuratime.domain.face.usecase.RegisterFaceUseCase
 import com.azuratech.azuratime.domain.face.usecase.UpdateFaceWithPhotoUseCase
+import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
+import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
 import com.azuratech.azuratime.domain.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -19,19 +20,20 @@ class StudentFormViewModel @Inject constructor(
     private val registerFaceUseCase: RegisterFaceUseCase,
     private val updateFaceWithPhotoUseCase: UpdateFaceWithPhotoUseCase,
     private val getFaceWithDetailsUseCase: GetFaceWithDetailsUseCase,
-    private val classRepository: ClassRepository
+    private val getClassesUseCase: GetClassesUseCase,
+    private val assignStudentToClassUseCase: AssignStudentToClassUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
     val uiState: StateFlow<StudentFormUiState> = _uiState.asStateFlow()
 
     init {
-        // Load available classes once
-        viewModelScope.launch {
-            classRepository.allClasses.collect { classes ->
-                updateState { it.copy(availableClasses = classes) }
+        // Load available classes using GetClassesUseCase
+        getClassesUseCase().onEach { result ->
+            if (result is Result.Success) {
+                updateState { it.copy(availableClasses = result.data) }
             }
-        }
+        }.launchIn(viewModelScope)
     }
 
     fun loadStudentForEdit(faceId: String) {
@@ -116,6 +118,11 @@ class StudentFormViewModel @Inject constructor(
                 )
             }
 
+            // After registration/update, assign to class if needed
+            if (registerResult is Result.Success && currentState.selectedClassId != null) {
+                assignStudentToClassUseCase(currentState.studentId, currentState.selectedClassId!!)
+            }
+
             when (registerResult) {
                 is Result.Success -> {
                     when (val res = registerResult.data) {
@@ -134,9 +141,7 @@ class StudentFormViewModel @Inject constructor(
                 is Result.Failure -> {
                     updateState { it.copy(isSubmitting = false, formError = registerResult.error.message ?: "Unknown error") }
                 }
-                is Result.Loading -> {
-                    // Already set in updateState above
-                }
+                is Result.Loading -> {}
             }
         }
     }

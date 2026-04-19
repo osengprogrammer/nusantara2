@@ -3,6 +3,7 @@ package com.azuratech.azuratime.data.repository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.AttendanceConflict
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -58,6 +59,8 @@ class DataIntegrityRepository @Inject constructor(
         ) { face, record, assignment ->
             face + record + assignment
         }
+
+    val conflicts: Flow<List<AttendanceConflict>> = flowOf(emptyList())
 
     // =====================================================
     // 🔧 CORRECTION MODE — Return the specific people who need fixing

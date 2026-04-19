@@ -12,6 +12,7 @@ import javax.inject.Inject
 
 /**
  * UseCase to synchronize check-in records with the cloud.
+ * Performs both Push (local changes to cloud) and Pull (remote changes to local).
  */
 class SyncCheckInRecordsUseCase @Inject constructor(
     private val localDataSource: CheckInLocalDataSource,
@@ -22,6 +23,26 @@ class SyncCheckInRecordsUseCase @Inject constructor(
         val schoolId = sessionManager.getActiveSchoolId() ?: ""
         if (schoolId.isBlank()) return@withContext Result.Success(Unit)
 
+        // 1. PUSH PHASE: Upload local changes to cloud
+        try {
+            val unsyncedRecords = localDataSource.getUnsyncedRecords(schoolId)
+            for (record in unsyncedRecords) {
+                val syncRes = remoteDataSource.syncRecord(record)
+                if (syncRes is Result.Success) {
+                    localDataSource.update(record.copy(isSynced = true))
+                } else if (syncRes is Result.Failure) {
+                    // If it's a network error, we might want to stop early and retry later
+                    if (syncRes.error is AppError.Network) {
+                        return@withContext Result.Failure(syncRes.error)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SyncCheckInRecordsUseCase", "Error during push phase: ${e.message}")
+            // Continue to pull phase even if push fails, unless it's a critical error
+        }
+
+        // 2. PULL PHASE: Delta sync from cloud to local Room
         val lastSync = sessionManager.getLastRecordsSyncTime()
         try {
             val syncResult = remoteDataSource.getRecordUpdates(schoolId, lastSync)
