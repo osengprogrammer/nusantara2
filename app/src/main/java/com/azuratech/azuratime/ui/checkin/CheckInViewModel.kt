@@ -8,7 +8,6 @@ import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.repository.CheckInRepository
-import com.azuratech.azuratime.data.repository.FaceRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel // 🔥 Import Hilt
 import javax.inject.Inject // 🔥 Import Inject
@@ -35,7 +34,6 @@ import java.time.LocalDateTime
 class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
     application: Application,
     database: AppDatabase,
-    private val faceRepository: FaceRepository,
     private val checkInRepository: CheckInRepository,
     private val sessionManager: SessionManager // 🔥 SessionManager disuntikkan langsung
 ) : AndroidViewModel(application) {

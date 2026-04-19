@@ -7,7 +7,9 @@ import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.FaceWithDetails
 import com.azuratech.azuratime.data.repository.ClassRepository
 import com.azuratech.azuratime.data.repository.FaceAssignmentRepository
-import com.azuratech.azuratime.data.repository.FaceRepository
+import com.azuratech.azuratime.domain.face.usecase.DeleteFaceUseCase
+import com.azuratech.azuratime.domain.face.usecase.GetFacesWithDetailsUseCase
+import com.azuratech.azuratime.domain.face.usecase.UpdateFaceUseCase
 import com.azuratech.azuratime.domain.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,7 +21,9 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class FaceListViewModel @Inject constructor(
-    private val faceRepository: FaceRepository,
+    private val getFacesWithDetailsUseCase: GetFacesWithDetailsUseCase,
+    private val updateFaceUseCase: UpdateFaceUseCase,
+    private val deleteFaceUseCase: DeleteFaceUseCase,
     private val classRepository: ClassRepository,
     private val assignmentRepository: FaceAssignmentRepository
 ) : ViewModel() {
@@ -29,8 +33,8 @@ class FaceListViewModel @Inject constructor(
     private val _editingStudent = MutableStateFlow<FaceWithDetails?>(null)
     private val _assigningStudent = MutableStateFlow<FaceEntity?>(null)
 
-    // Data flows from repositories
-    private val _allFacesFlow = faceRepository.allFacesWithDetailsFlow
+    // Data flows from UseCases
+    private val _allFacesFlow = getFacesWithDetailsUseCase()
     private val _allClassesFlow = classRepository.allClasses
 
     // The "Search Machine" combines all data sources with the search query
@@ -118,20 +122,16 @@ class FaceListViewModel @Inject constructor(
 
     fun onSaveChanges(updatedFace: FaceEntity) {
         viewModelScope.launch {
-            faceRepository.updateFaceBasic(updatedFace)
+            updateFaceUseCase(updatedFace)
             onDismissDialog()
         }
     }
 
     fun onDeleteStudent(student: FaceEntity) {
         viewModelScope.launch {
-            try {
-                faceRepository.deleteFace(student)
-                // Jika butuh Toast context, idealnya dilakukan lewat UI Event.
-                // Tapi setidaknya kita cegah crash disini.
-            } catch (e: Exception) {
-                // Di masa depan bisa emit ke State UI, sementara kita log
-                android.util.Log.e("FaceListViewModel", "Gagal hapus: ${e.message}")
+            val result = deleteFaceUseCase(student.faceId)
+            if (result is Result.Failure) {
+                android.util.Log.e("FaceListViewModel", "Gagal hapus: ${result.error.message}")
             }
         }
     }

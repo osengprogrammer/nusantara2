@@ -3,13 +3,13 @@ package com.azuratech.azuratime.ui.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.repository.AdminRepository
 import com.azuratech.azuratime.data.repository.AuthRepository
 import com.azuratech.azuratime.data.repository.CheckInRepository
 import com.azuratech.azuratime.data.repository.ClassRepository
 import com.azuratech.azuratime.data.repository.DataIntegrityRepository
-import com.azuratech.azuratime.data.repository.FaceRepository
 import com.azuratech.azuratime.data.repository.UserRepository
-import com.azuratech.azuratime.data.repository.AdminRepository
+import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
 import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
@@ -30,7 +30,7 @@ class DashboardViewModel @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val authRepository: AuthRepository,
     private val dataIntegrityRepository: DataIntegrityRepository,
-    private val faceRepository: FaceRepository,
+    private val getFacesInClassUseCase: GetFacesInClassUseCase,
     private val sessionManager: SessionManager,
     private val syncViewModel: SyncViewModel
 ) : ViewModel() {
@@ -76,7 +76,7 @@ class DashboardViewModel @Inject constructor(
         .flatMapLatest { user ->
             val activeClassId = user.activeClassId
             if (activeClassId != null) {
-                faceRepository.getFacesInClassFlow(activeClassId)
+                getFacesInClassUseCase(activeClassId)
                     .map { it.getOrNull() ?: emptyList() }
             } else {
                 flowOf(emptyList())
