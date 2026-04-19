@@ -1,13 +1,10 @@
 package com.azuratech.azuratime.data.repository
 
 import android.util.Log
-import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.AttendanceConflict
-import com.azuratech.azuratime.data.local.Membership
-import com.azuratech.azuratime.data.local.UserClassAccessEntity
-import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.data.local.FriendConnection
+import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.domain.user.usecase.*
+import com.azuratech.azuratime.domain.result.Result
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -27,7 +24,8 @@ import javax.inject.Singleton
 class UserRepository @Inject constructor(
     private val database: AppDatabase,
     private val db: FirebaseFirestore,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val syncUserUseCase: SyncUserUseCase
 ) {
     private val userDao = database.userDao()
     private val userClassAccessDao = database.userClassAccessDao()
@@ -56,6 +54,12 @@ class UserRepository @Inject constructor(
     suspend fun getLocalUserById(userId: String): UserEntity? = withContext(Dispatchers.IO) {
         userDao.getUserById(userId)
     }
+
+    @Deprecated("Route through SyncUserUseCase")
+    suspend fun syncUserFromCloud(userId: String): UserEntity? = syncUserUseCase(userId).getOrNull()
+
+    @Deprecated("Route through SyncUserUseCase")
+    suspend fun refreshUserFromCloud(userId: String): UserEntity? = syncUserFromCloud(userId)
 
     suspend fun getUserByUidFromCloud(uid: String): UserEntity? = withContext(Dispatchers.IO) {
         val snapshot = db.collection("whitelisted_users").document(uid).get().await()
@@ -105,33 +109,6 @@ class UserRepository @Inject constructor(
 
         val doc = snapshot.documents.firstOrNull() ?: return@withContext null
         getUserByUidFromCloud(doc.id)
-    }
-
-    suspend fun syncUserFromCloud(userId: String): UserEntity? = withContext(Dispatchers.IO) {
-        val cloudUser = getUserByUidFromCloud(userId)
-
-        if (cloudUser != null) {
-            userDao.insertUser(cloudUser)
-
-            val currentSchool = cloudUser.activeSchoolId ?: schoolId
-            if (currentSchool.isNotEmpty()) {
-                val cloudClassIds = fetchUserClassesFromCloud(userId)
-
-                userClassAccessDao.clearAllAccessForUserInSchool(userId, currentSchool)
-
-                for (cid in cloudClassIds) {
-                    userClassAccessDao.insertAccess(
-                        UserClassAccessEntity(userId = userId, classId = cid, schoolId = currentSchool)
-                    )
-                }
-            }
-            return@withContext cloudUser
-        }
-        return@withContext null
-    }
-
-    suspend fun refreshUserFromCloud(userId: String): UserEntity? {
-        return syncUserFromCloud(userId)
     }
 
     suspend fun fetchUserClassesFromCloud(userId: String): List<String> = withContext(Dispatchers.IO) {
@@ -232,7 +209,6 @@ class UserRepository @Inject constructor(
         if (useCloud) {
             checkInRecordDao.insert(conflict.cloud)
         }
-        // Remove the conflict from the list once resolved
         _conflicts.value = _conflicts.value.filter { it != conflict }
     }
 
@@ -265,10 +241,6 @@ class UserRepository @Inject constructor(
         activeSchoolId?.let { updates["activeSchoolId"] = it }
         db.collection("whitelisted_users").document(userId).update(updates).await()
     }
-
-    // =====================================================
-    // 🤝 SOCIAL / FRIENDSHIP (Seduluran)
-    // =====================================================
 
     suspend fun sendFriendRequest(myId: String, myName: String, myEmail: String, targetEmail: String): Boolean = withContext(Dispatchers.IO) {
         val query = db.collection("whitelisted_users").whereEqualTo("email", targetEmail.trim().lowercase()).get().await()

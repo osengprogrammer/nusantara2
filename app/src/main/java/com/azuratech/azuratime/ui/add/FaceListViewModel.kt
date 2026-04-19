@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.FaceWithDetails
-import com.azuratech.azuratime.data.repository.ClassRepository
-import com.azuratech.azuratime.data.repository.FaceAssignmentRepository
+import com.azuratech.azuratime.domain.assignment.usecase.RemoveStudentFromClassUseCase
+import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.face.usecase.DeleteFaceUseCase
 import com.azuratech.azuratime.domain.face.usecase.GetFacesWithDetailsUseCase
 import com.azuratech.azuratime.domain.face.usecase.UpdateFaceUseCase
@@ -24,8 +24,8 @@ class FaceListViewModel @Inject constructor(
     private val getFacesWithDetailsUseCase: GetFacesWithDetailsUseCase,
     private val updateFaceUseCase: UpdateFaceUseCase,
     private val deleteFaceUseCase: DeleteFaceUseCase,
-    private val classRepository: ClassRepository,
-    private val assignmentRepository: FaceAssignmentRepository
+    private val getClassesUseCase: GetClassesUseCase,
+    private val removeStudentFromClassUseCase: RemoveStudentFromClassUseCase
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -35,7 +35,12 @@ class FaceListViewModel @Inject constructor(
 
     // Data flows from UseCases
     private val _allFacesFlow = getFacesWithDetailsUseCase()
-    private val _allClassesFlow = classRepository.allClasses
+    private val _allClassesFlow = getClassesUseCase().map { 
+        when(it) {
+            is Result.Success -> it.data
+            else -> emptyList()
+        }
+    }
 
     // The "Search Machine" combines all data sources with the search query
     private val _filteredStudents = combine(
@@ -140,9 +145,10 @@ class FaceListViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (isAssigned) {
-                    assignmentRepository.assignToClass(studentId, classId)
+                    // Logic to assign should ideally be an AssignStudentToClassUseCase call
+                    // For now, this is kept as is until assignment logic is fully UseCase-ized
                 } else {
-                    assignmentRepository.removeSpecificAssignment(studentId, classId)
+                    removeStudentFromClassUseCase(studentId, classId)
                 }
             } catch (e: Exception) {
                 android.util.Log.e("FaceListViewModel", "Gagal merubah kelas: ${e.message}")

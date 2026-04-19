@@ -7,12 +7,12 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.azuratech.azuratime.domain.face.usecase.SyncFacesUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
-import com.azuratech.azuratime.data.repository.ClassRepository
-import com.azuratech.azuratime.data.repository.FaceAssignmentRepository
-import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.domain.classes.usecase.SyncClassesUseCase
+import com.azuratech.azuratime.domain.assignment.usecase.SyncAssignmentsUseCase
+import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.result.Result
 import com.azuratech.azuratime.domain.result.AppError
+import com.azuratech.azuratime.domain.result.Result as DomainResult
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -30,9 +30,9 @@ class SyncWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val syncFacesUseCase: SyncFacesUseCase,
     private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
-    private val userRepository: UserRepository,
-    private val classRepository: ClassRepository,
-    private val faceAssignmentRepository: FaceAssignmentRepository,
+    private val syncClassesUseCase: SyncClassesUseCase,
+    private val syncAssignmentsUseCase: SyncAssignmentsUseCase,
+    private val syncUserUseCase: SyncUserUseCase,
     private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
 
@@ -46,7 +46,7 @@ class SyncWorker @AssistedInject constructor(
 
         // 1. Push & Sync Check-In Records (Local-First)
         when (val res = syncCheckInRecordsUseCase.invoke()) {
-            is Result.Failure -> {
+            is DomainResult.Failure -> {
                 if (handleSyncError(res.error, "CheckInSync") == Result.retry()) {
                     return@withContext Result.retry()
                 }
@@ -56,7 +56,7 @@ class SyncWorker @AssistedInject constructor(
 
         // 2. Sync Faces (Pull Delta + Process Soft-Deletes)
         when (val res = syncFacesUseCase.invoke()) {
-            is Result.Failure -> {
+            is DomainResult.Failure -> {
                 if (handleSyncError(res.error, "FaceSync") == Result.retry()) {
                     return@withContext Result.retry()
                 }
@@ -64,16 +64,16 @@ class SyncWorker @AssistedInject constructor(
             else -> Unit
         }
 
-        // 3. Legacy Sync (Classes, Users, Assignments) - Phase 6 candidates
+        // 3. Modernized Sync (Classes, Users, Assignments)
         try {
             val currentUserId = sessionManager.getCurrentUserId()
             if (currentUserId != null) {
-                userRepository.syncUserFromCloud(currentUserId)
+                syncUserUseCase(currentUserId)
             }
-            classRepository.performClassDeltaSync()
-            faceAssignmentRepository.performAssignmentSync()
+            syncClassesUseCase()
+            syncAssignmentsUseCase()
         } catch (e: Exception) {
-            Log.w("AZURA_SYNC", "Legacy sync (Class/User/Assign) failed (non-blocking): ${e.message}")
+            Log.w("AZURA_SYNC", "UseCase sync failed: ${e.message}")
         }
 
         Log.d("AZURA_SYNC", "SyncWorker: Sync completed successfully.")

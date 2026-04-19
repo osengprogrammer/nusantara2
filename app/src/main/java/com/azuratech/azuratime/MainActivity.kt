@@ -15,7 +15,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.azuratech.azuratime.ui.theme.AzuraTheme
-import com.azuratech.azuratime.data.worker.SyncWorker
+import com.azuratech.azuratime.core.sync.SyncWorker
 import dagger.hilt.android.AndroidEntryPoint // 🔥 Import Hilt ditambahkan
 import java.util.concurrent.TimeUnit
 

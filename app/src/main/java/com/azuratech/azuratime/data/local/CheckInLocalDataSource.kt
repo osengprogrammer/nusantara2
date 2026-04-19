@@ -18,4 +18,5 @@ interface CheckInLocalDataSource {
     suspend fun update(record: CheckInRecordEntity)
     suspend fun delete(record: CheckInRecordEntity)
     suspend fun getRecordById(recordId: String, schoolId: String): CheckInRecordEntity?
+    suspend fun getUnsyncedRecords(schoolId: String): List<CheckInRecordEntity>
 }

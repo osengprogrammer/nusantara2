@@ -1,0 +1,11 @@
+--- app/src/main/java/com/azuratech/azuratime/data/repository/FaceAssignmentRepository.kt
++++ app/src/main/java/com/azuratech/azuratime/data/repository/FaceAssignmentRepository.kt
+@@ -23,8 +21,6 @@
+  * Hilt-ready Singleton.
+  */
+ import com.azuratech.azuratime.domain.assignment.usecase.*
+-import javax.inject.Inject
+-import javax.inject.Singleton
+ 
+ @Singleton
+ class FaceAssignmentRepository @Inject constructor(

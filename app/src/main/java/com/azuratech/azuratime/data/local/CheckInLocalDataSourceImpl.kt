@@ -37,4 +37,7 @@ class CheckInLocalDataSourceImpl @Inject constructor(
 
     override suspend fun getRecordById(recordId: String, schoolId: String): CheckInRecordEntity? =
         checkInRecordDao.getRecordById(recordId, schoolId)
+
+    override suspend fun getUnsyncedRecords(schoolId: String): List<CheckInRecordEntity> =
+        checkInRecordDao.getUnsyncedRecords(schoolId)
 }
