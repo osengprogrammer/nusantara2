@@ -13,6 +13,7 @@ import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
+import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
@@ -32,6 +33,7 @@ class DashboardViewModel @Inject constructor(
     private val observeUserUseCase: ObserveUserUseCase,
     private val syncUserUseCase: SyncUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
+    private val resolveConflictUseCase: ResolveConflictUseCase,
     private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
     private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
     private val authRepository: AuthRepository,
@@ -163,7 +165,9 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
-        // TODO: Implement actual conflict resolution logic
+        viewModelScope.launch {
+            resolveConflictUseCase(conflict, useCloud)
+        }
     }
 
     fun logout(onComplete: () -> Unit) {

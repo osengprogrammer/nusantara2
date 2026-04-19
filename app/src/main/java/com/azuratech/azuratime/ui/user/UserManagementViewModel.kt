@@ -9,6 +9,8 @@ import com.azuratech.azuratime.data.local.AttendanceConflict
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repository.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
+import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,7 +28,9 @@ class UserManagementViewModel @Inject constructor(
     application: Application,
     private val database: AppDatabase,
     private val repository: UserRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val updateUserUseCase: UpdateUserUseCase,
+    private val resolveConflictUseCase: ResolveConflictUseCase
 ) : AndroidViewModel(application) {
 
     // =====================================================
@@ -83,7 +87,8 @@ class UserManagementViewModel @Inject constructor(
     fun selectActiveClass(classId: String?) {
         val user = currentUser.value ?: return
         viewModelScope.launch {
-            repository.updateActiveClass(user, classId)
+            val updatedUser = user.copy(activeClassId = classId)
+            updateUserUseCase(updatedUser)
         }
     }
 
@@ -110,7 +115,7 @@ class UserManagementViewModel @Inject constructor(
 
     fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
         viewModelScope.launch {
-            repository.resolveAttendanceConflict(conflict, useCloud)
+            resolveConflictUseCase(conflict, useCloud)
             _conflicts.value = _conflicts.value.filter { it != conflict }
         }
     }

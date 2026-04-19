@@ -55,11 +55,11 @@ fun ClassManagementScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         // 🔥 ViewModel sekarang sudah menangani URI secara internal atau via UseCase
-        uri?.let {
+        uri?.let { selectedUri ->
             scope.launch {
                 isImporting = true
                 // 🔥 FIX: Hanya memanggil callback onComplete
-                viewModel.importClassesFromCsv {
+                viewModel.importClassesFromCsv(selectedUri) {
                     isImporting = false
                     context.showToast("Impor Kelas Berhasil!")
                 }
