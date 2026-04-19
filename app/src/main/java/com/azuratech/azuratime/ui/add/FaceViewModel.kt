@@ -6,13 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.azuratech.azuratime.domain.face.RegisterResult
-import com.azuratech.azuratime.domain.face.RegisterFaceUseCase
-import com.azuratech.azuratime.domain.face.GetFacesWithDetailsUseCase
-import com.azuratech.azuratime.domain.face.GetEnrolledFacesUseCase
-import com.azuratech.azuratime.domain.face.DeleteFaceUseCase
-import com.azuratech.azuratime.domain.face.UpdateEmployeeClassUseCase
-import com.azuratech.azuratime.domain.face.UpdateFaceUseCase
-import com.azuratech.azuratime.domain.face.GetFacesInClassUseCase
+import com.azuratech.azuratime.domain.face.usecase.*
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,7 +20,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.azuratech.azuratime.domain.result.Result
-
+import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.FaceWithDetails
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,11 +39,12 @@ class FaceViewModel @Inject constructor(
     private val updateEmployeeClassUseCase: UpdateEmployeeClassUseCase,
     private val updateFaceUseCase: UpdateFaceUseCase,
     private val getFacesInClassUseCase: GetFacesInClassUseCase,
-    private val sessionManager: SessionManager // Parameter ke-3
+    private val syncFacesUseCase: SyncFacesUseCase,
+    private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val faceList: StateFlow<List<com.azuratech.azuratime.data.local.FaceWithDetails>> = sessionManager.activeSchoolIdFlow
+    val faceList: StateFlow<List<FaceWithDetails>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { getFacesWithDetailsUseCase() }
         .map { result ->
@@ -64,7 +60,7 @@ class FaceViewModel @Inject constructor(
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val enrolledFaceList: StateFlow<List<com.azuratech.azuratime.data.local.FaceEntity>> = sessionManager.activeSchoolIdFlow
+    val enrolledFaceList: StateFlow<List<FaceEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { getEnrolledFacesUseCase() }
         .map { result ->
@@ -79,15 +75,13 @@ class FaceViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    fun getFacesInClassFlow(classId: String): Flow<List<com.azuratech.azuratime.data.local.FaceEntity>> = 
+    fun getFacesInClassFlow(classId: String): Flow<List<FaceEntity>> = 
         getFacesInClassUseCase(classId).map { result ->
             when (result) {
                 is Result.Success -> result.data
                 else -> emptyList()
             }
         }
-
-
 
     fun registerFace(
         inputId: String, 
@@ -102,39 +96,54 @@ class FaceViewModel @Inject constructor(
         viewModelScope.launch {
             val result = registerFaceUseCase(inputId, classId, name, embedding, photoBitmap)
             withContext(Dispatchers.Main) {
-                result.fold(
-                    onSuccess = { regResult ->
-                        when (regResult) {
+                when (result) {
+                    is Result.Success -> {
+                        when (val regResult = result.data) {
                             is RegisterResult.Success -> onSuccess()
                             is RegisterResult.Duplicate -> onDuplicate(regResult.name)
                             is RegisterResult.Error -> onError(regResult.message)
                         }
-                    },
-                    onFailure = { onError(it.message ?: "Gagal registrasi") }
-                )
+                    }
+                    is Result.Failure -> onError(result.error.message ?: "Gagal registrasi")
+                    is Result.Loading -> { /* Handle loading if needed */ }
+                }
             }
         }
     }
 
-    fun deleteFace(face: com.azuratech.azuratime.data.local.FaceEntity) { 
+    fun deleteFace(face: FaceEntity) { 
         viewModelScope.launch { 
-            try {
-                deleteFaceUseCase(face) 
-            } catch (e: Exception) {
-                android.util.Log.e("FaceViewModel", "Gagal hapus: ${e.message}")
+            val result = deleteFaceUseCase(face.faceId)
+            if (result is Result.Failure) {
+                android.util.Log.e("FaceViewModel", "Gagal hapus: ${result.error.message}")
             }
         } 
     }
 
     fun updateEmployeeClass(faceId: String, classId: String?) {
-        viewModelScope.launch { updateEmployeeClassUseCase(faceId, classId) }
-    }
-
-    fun updateFace(face: com.azuratech.azuratime.data.local.FaceEntity, onComplete: () -> Unit) {
         viewModelScope.launch { 
-            updateFaceUseCase(face)
-            withContext(Dispatchers.Main) { onComplete() } 
+            val result = updateEmployeeClassUseCase(faceId, classId)
+            if (result is Result.Failure) {
+                android.util.Log.e("FaceViewModel", "Gagal update kelas: ${result.error.message}")
+            }
         }
     }
 
+    fun updateFace(face: FaceEntity, onComplete: () -> Unit) {
+        viewModelScope.launch { 
+            val result = updateFaceUseCase(face)
+            withContext(Dispatchers.Main) { 
+                if (result is Result.Failure) {
+                    android.util.Log.e("FaceViewModel", "Gagal update face: ${result.error.message}")
+                }
+                onComplete() 
+            } 
+        }
+    }
+
+    fun refreshFaces() {
+        viewModelScope.launch {
+            syncFacesUseCase()
+        }
+    }
 }
