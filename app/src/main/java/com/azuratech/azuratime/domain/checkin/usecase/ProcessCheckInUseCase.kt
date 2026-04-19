@@ -97,4 +97,22 @@ class ProcessCheckInUseCase @Inject constructor(
             Result.Failure(AppError.LocalDB(e.message))
         }
     }
+
+    /**
+     * Legacy adapter to save a pre-constructed record entity.
+     */
+    suspend operator fun invoke(record: CheckInRecordEntity): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            localDataSource.insert(record)
+            if (record.schoolId.isNotBlank()) {
+                val syncRes = remoteDataSource.syncRecord(record)
+                if (syncRes is Result.Success) {
+                    localDataSource.update(record.copy(isSynced = true))
+                }
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
 }

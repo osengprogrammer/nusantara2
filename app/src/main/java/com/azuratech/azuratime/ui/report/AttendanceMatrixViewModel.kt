@@ -7,6 +7,7 @@ import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.repository.ReportRepository
 import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.domain.report.usecase.GetReportDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +23,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class AttendanceMatrixViewModel @Inject constructor(
     private val reportRepository: ReportRepository,
+    private val getReportDataUseCase: GetReportDataUseCase,
     private val userRepository: UserRepository
 ) : ViewModel() {
 
@@ -50,9 +52,15 @@ class AttendanceMatrixViewModel @Inject constructor(
     .debounce(200)
     .flatMapLatest { (params, policy, dateRange) ->
         combine(
-            reportRepository.getStudentsInReport(params.role, params.classId, params.assigned),
-            reportRepository.getRecordsForMatrix(params.role, params.start, params.end, params.classId, params.assigned),
-            reportRepository.getAvailableClasses(params.role, params.assigned)
+            getReportDataUseCase.getStudentsInReport(params.role, params.classId, params.assigned),
+            reportRepository.getCheckInRecordDao().getFilteredRecords(
+                schoolId = "", // Placeholder, Dao will use current school from SessionManager or local scope if needed
+                startDate = params.start,
+                endDate = params.end,
+                classId = params.classId,
+                assignedIds = params.assigned
+            ),
+            getReportDataUseCase.getAvailableClasses(params.role, params.assigned)
         ) { results: Array<*> ->
             val students = results[0] as List<FaceEntity>
             val logs = results[1] as List<CheckInRecordEntity>
@@ -77,7 +85,7 @@ class AttendanceMatrixViewModel @Inject constructor(
     ) { role, assigned ->
         role to assigned
     }.flatMapLatest { (role, assigned) ->
-        reportRepository.getAvailableClasses(role, assigned)
+        getReportDataUseCase.getAvailableClasses(role, assigned)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isExporting = MutableStateFlow(false)

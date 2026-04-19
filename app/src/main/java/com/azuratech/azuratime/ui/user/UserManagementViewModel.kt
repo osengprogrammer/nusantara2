@@ -11,6 +11,9 @@ import com.azuratech.azuratime.data.repository.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
+import com.azuratech.azuratime.domain.user.usecase.UserManagementUseCase
+import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +24,7 @@ import javax.inject.Inject
 /**
  * 🛠️ USER MANAGEMENT VIEW MODEL
  * Pengelola profil user, hak akses kelas, dan relasi antar pengajar.
- * 🔥 Refactored: Fully Hilt-Injected!
+ * 🔥 Refactored: Fully UseCase-driven!
  */
 @HiltViewModel
 class UserManagementViewModel @Inject constructor(
@@ -30,7 +33,10 @@ class UserManagementViewModel @Inject constructor(
     private val repository: UserRepository,
     private val sessionManager: SessionManager,
     private val updateUserUseCase: UpdateUserUseCase,
-    private val resolveConflictUseCase: ResolveConflictUseCase
+    private val resolveConflictUseCase: ResolveConflictUseCase,
+    private val userManagementUseCase: UserManagementUseCase,
+    private val syncUserUseCase: SyncUserUseCase,
+    private val observeUserUseCase: ObserveUserUseCase
 ) : AndroidViewModel(application) {
 
     // =====================================================
@@ -40,13 +46,14 @@ class UserManagementViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val currentUser: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
         .filterNotNull()
-        .flatMapLatest { uid -> repository.observeUserById(uid) }
+        .flatMapLatest { uid -> observeUserUseCase(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val assignedClassIds: StateFlow<List<String>> = currentUser
+    val assignedClassIds: StateFlow<List<String>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
-        .flatMapLatest { user -> repository.observeClassIdsForUser(user.userId) }
+        .combine(sessionManager.currentUserIdFlow.filterNotNull()) { schoolId, userId -> schoolId to userId }
+        .flatMapLatest { (schoolId, userId) -> repository.getUserClassAccessDao().observeClassIdsForUser(userId, schoolId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // =====================================================
@@ -56,7 +63,11 @@ class UserManagementViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val allUsersInSameSchool: StateFlow<List<UserEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
-        .flatMapLatest { schoolId -> repository.observeUsersBySchool(schoolId) }
+        .flatMapLatest { schoolId ->
+            repository.getUserDao().observeAllUsers().map { users ->
+                users.filter { it.memberships.containsKey(schoolId) }
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // =====================================================
@@ -69,7 +80,8 @@ class UserManagementViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val targetAssignedClassIds: StateFlow<List<String>> = _selectedTargetUser
         .filterNotNull()
-        .flatMapLatest { target -> repository.observeClassIdsForUser(target.userId) }
+        .combine(sessionManager.activeSchoolIdFlow.filterNotNull()) { target, schoolId -> target.userId to schoolId }
+        .flatMapLatest { (targetId, schoolId) -> repository.getUserClassAccessDao().observeClassIdsForUser(targetId, schoolId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setTargetUser(userId: String, name: String, email: String) {
@@ -96,27 +108,26 @@ class UserManagementViewModel @Inject constructor(
         val targetId = targetUserId ?: currentUser.value?.userId ?: return
         val schoolId = currentUser.value?.activeSchoolId ?: return
         viewModelScope.launch {
-            repository.assignClassToUser(targetId, schoolId, classId)
+            userManagementUseCase.assignClassToUser(targetId, schoolId, classId)
         }
     }
 
     fun removeClassAccess(classId: String, targetUserId: String? = null) {
         val targetId = targetUserId ?: currentUser.value?.userId ?: return
+        val schoolId = currentUser.value?.activeSchoolId ?: return
         viewModelScope.launch {
-            repository.removeClassAccess(targetId, classId)
+            userManagementUseCase.removeClassAccess(targetId, classId, schoolId)
         }
     }
 
     // =====================================================
     // 🚪 CONFLICT RESOLUTION
     // =====================================================
-    private val _conflicts = MutableStateFlow<List<AttendanceConflict>>(emptyList())
-    val conflicts = _conflicts.asStateFlow()
+    val conflicts = repository.conflicts
 
     fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
         viewModelScope.launch {
             resolveConflictUseCase(conflict, useCloud)
-            _conflicts.value = _conflicts.value.filter { it != conflict }
         }
     }
 
@@ -124,54 +135,12 @@ class UserManagementViewModel @Inject constructor(
     // ✏️ PROFILE UPDATE
     // =====================================================
 
-    fun updateUserProfile(
-        newName: String,
-        newSchoolName: String,
-        onComplete: (Boolean) -> Unit
-    ) {
-        val user = currentUser.value ?: return
-        val activeId = user.activeSchoolId ?: return // corrected from activeSchoolId as per logic if needed, but usually activeSchoolId
-
-        viewModelScope.launch {
-            try {
-                val updatedMemberships = user.memberships.toMutableMap()
-                val currentMembership = updatedMemberships[activeId]
-                if (currentMembership != null) {
-                    updatedMemberships[activeId] = currentMembership.copy(schoolName = newSchoolName)
-                }
-
-                val updatedUser = user.copy(
-                    name = newName.trim(),
-                    memberships = updatedMemberships
-                )
-
-                database.userDao().insertUser(updatedUser)
-
-                // Logic moved to UserRepository
-                val success = repository.updateUserMemberships(
-                    userId = user.userId,
-                    newMemberships = updatedMemberships,
-                    activeSchoolId = activeId
-                )
-
-                // Note: The original firestoreManager.updateUserWorkspaceName handled both name and schoolName
-                // We can implement a similar method in UserRepository if needed,
-                // for now we use updateUserMemberships as a proxy or a custom method.
-
-                onComplete(true)
-            } catch (e: Exception) {
-                Log.e("AZURA_UPDATE", "Gagal update profil: ${e.message}")
-                onComplete(false)
-            }
-        }
-    }
-
     fun updateDisplayName(newName: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         val user = currentUser.value ?: return
         viewModelScope.launch {
             try {
                 val updatedUser = user.copy(name = newName.trim())
-                repository.updateDisplayName(updatedUser)
+                updateUserUseCase(updatedUser)
                 onSuccess()
             } catch (e: Exception) {
                 onError(e.message ?: "Gagal memperbarui nama")
@@ -185,15 +154,7 @@ class UserManagementViewModel @Inject constructor(
     fun refreshCurrentUserFromCloud() {
         viewModelScope.launch(Dispatchers.IO) {
             val currentUserId = currentUser.value?.userId ?: return@launch
-            try {
-                val freshUser = repository.getUserByUidFromCloud(currentUserId)
-                if (freshUser != null) {
-                    database.userDao().insertUser(freshUser)
-                    Log.i("AZURA_SYNC", "✅ Data user disinkronkan!")
-                }
-            } catch (e: Exception) {
-                Log.e("AZURA_SYNC", "🚨 Gagal refresh: ${e.message}")
-            }
+            syncUserUseCase(currentUserId)
         }
     }
 }

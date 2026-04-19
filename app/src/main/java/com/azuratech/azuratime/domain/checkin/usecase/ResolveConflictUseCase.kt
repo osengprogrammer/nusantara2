@@ -13,11 +13,18 @@ import javax.inject.Inject
  * Resolves a data collision between Local and Cloud records.
  */
 class ResolveConflictUseCase @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val database: com.azuratech.azuratime.data.local.AppDatabase
 ) {
+    private val checkInRecordDao = database.checkInRecordDao()
+
     suspend operator fun invoke(conflict: AttendanceConflict, useCloud: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            userRepository.resolveAttendanceConflict(conflict, useCloud)
+            if (useCloud) {
+                checkInRecordDao.insert(conflict.cloud)
+            }
+            val currentConflicts = userRepository.conflicts.value
+            userRepository.setConflicts(currentConflicts.filter { it != conflict })
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.BusinessRule(e.message ?: "Gagal menyelesaikan konflik"))
