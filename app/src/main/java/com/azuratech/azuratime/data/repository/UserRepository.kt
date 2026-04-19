@@ -15,6 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -40,7 +42,11 @@ class UserRepository @Inject constructor(
     fun observeUserById(userId: String): Flow<UserEntity?> = userDao.observeUserById(userId)
 
     fun observeClassIdsForUser(userId: String): Flow<List<String>> =
-        userClassAccessDao.observeClassIdsForUser(userId, schoolId)
+        sessionManager.activeSchoolIdFlow
+            .filterNotNull()
+            .flatMapLatest { schoolId ->
+                userClassAccessDao.observeClassIdsForUser(userId, schoolId)
+            }
 
     fun observeUsersBySchool(targetSchoolId: String): Flow<List<UserEntity>> =
         userDao.observeAllUsers().map { users ->

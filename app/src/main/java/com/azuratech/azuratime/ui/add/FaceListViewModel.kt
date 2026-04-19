@@ -8,6 +8,7 @@ import com.azuratech.azuratime.data.local.FaceWithDetails
 import com.azuratech.azuratime.data.repository.ClassRepository
 import com.azuratech.azuratime.data.repository.FaceAssignmentRepository
 import com.azuratech.azuratime.data.repository.FaceRepository
+import com.azuratech.azuratime.domain.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -31,14 +32,14 @@ class FaceListViewModel @Inject constructor(
     // Data flows from repositories
     private val _allFacesFlow = faceRepository.allFacesWithDetailsFlow
     private val _allClassesFlow = classRepository.allClasses
-    private val _allAssignmentsFlow = assignmentRepository.allAssignedClassesMap
 
     // The "Search Machine" combines all data sources with the search query
     private val _filteredStudents = combine(
         _searchQuery.debounce(300),
         _selectedClassName,
         _allFacesFlow
-    ) { query, className, faces ->
+    ) { query, className, facesResult ->
+        val faces = facesResult.getOrNull() ?: emptyList()
         faces.filter { face ->
             val matchesQuery = if (query.isBlank()) true else face.face.name.contains(query, ignoreCase = true)
             val matchesClass = if (className == null) true else face.className == className
@@ -47,17 +48,13 @@ class FaceListViewModel @Inject constructor(
     }
 
     // This flow creates the display-ready items
-    private val _studentDisplayItems = combine(
-        _filteredStudents,
-        _allAssignmentsFlow
-    ) { students, assignments ->
+    private val _studentDisplayItems = _filteredStudents.map { students ->
         students.distinctBy { it.face.faceId }.map { student ->
-            val assignedClasses = assignments[student.face.faceId] ?: emptyList()
             StudentDisplayItem(
                 faceWithDetails = student,
-                assignedClassNames = assignedClasses.joinToString { it.name }.ifEmpty { "Belum ada kelas" },
+                assignedClassNames = student.className ?: "Belum ada kelas",
                 isBiometricReady = student.face.photoUrl?.let { it.startsWith("http") || File(it).exists() } == true,
-                assignedClassIds = assignedClasses.map { it.id }
+                assignedClassIds = student.classId?.let { listOf(it) } ?: emptyList()
             )
         }
     }
@@ -128,16 +125,27 @@ class FaceListViewModel @Inject constructor(
 
     fun onDeleteStudent(student: FaceEntity) {
         viewModelScope.launch {
-            faceRepository.deleteFace(student)
+            try {
+                faceRepository.deleteFace(student)
+                // Jika butuh Toast context, idealnya dilakukan lewat UI Event.
+                // Tapi setidaknya kita cegah crash disini.
+            } catch (e: Exception) {
+                // Di masa depan bisa emit ke State UI, sementara kita log
+                android.util.Log.e("FaceListViewModel", "Gagal hapus: ${e.message}")
+            }
         }
     }
 
     fun onToggleStudentClassAssignment(studentId: String, classId: String, isAssigned: Boolean) {
         viewModelScope.launch {
-            if (isAssigned) {
-                assignmentRepository.assignToClass(studentId, classId)
-            } else {
-                assignmentRepository.removeSpecificAssignment(studentId, classId)
+            try {
+                if (isAssigned) {
+                    assignmentRepository.assignToClass(studentId, classId)
+                } else {
+                    assignmentRepository.removeSpecificAssignment(studentId, classId)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("FaceListViewModel", "Gagal merubah kelas: ${e.message}")
             }
         }
     }

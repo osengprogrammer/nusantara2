@@ -10,6 +10,7 @@ import com.azuratech.azuratime.data.repository.DataIntegrityRepository
 import com.azuratech.azuratime.data.repository.FaceRepository
 import com.azuratech.azuratime.data.repository.UserRepository
 import com.azuratech.azuratime.data.repository.AdminRepository
+import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.ui.sync.SyncViewModel
@@ -44,12 +45,18 @@ class DashboardViewModel @Inject constructor(
     private val _assignedClassesFlow = _userFlow
         .filterNotNull()
         .flatMapLatest { user ->
-            val role = user.memberships[user.activeSchoolId]?.role ?: user.status
+            val membershipRole = user.activeSchoolId?.let { user.memberships[it]?.role }
+            val role = membershipRole ?: (if (user.status != "PENDING") user.status else "USER")
+            
             if (role == "ADMIN" || role == "SUPER_USER") {
-                classRepository.allClasses
+                classRepository.allClasses.onEach {
+                    android.util.Log.d("AZURA_SYNC", "Assigned classes emitted (ADMIN): ${it.size}")
+                }
             } else {
                 userRepository.observeClassIdsForUser(user.userId).combine(classRepository.allClasses) { assignedIds, allClasses ->
-                    allClasses.filter { it.id in assignedIds }
+                    val filtered = allClasses.filter { it.id in assignedIds }
+                    android.util.Log.d("AZURA_SYNC", "Assigned classes emitted (TEACHER): ${filtered.size}")
+                    filtered
                 }
             }
         }
@@ -61,7 +68,7 @@ class DashboardViewModel @Inject constructor(
                 nameFilter = "", startDate = null, endDate = null,
                 userId = null, classId = null, assignedIds = emptyList(),
                 schoolId = schoolId
-            ).map { it.take(5) }
+            ).map { it.getOrNull()?.take(5) ?: emptyList() }
         }
 
     private val _sessionStudentsFlow = _userFlow
@@ -70,6 +77,7 @@ class DashboardViewModel @Inject constructor(
             val activeClassId = user.activeClassId
             if (activeClassId != null) {
                 faceRepository.getFacesInClassFlow(activeClassId)
+                    .map { it.getOrNull() ?: emptyList() }
             } else {
                 flowOf(emptyList())
             }

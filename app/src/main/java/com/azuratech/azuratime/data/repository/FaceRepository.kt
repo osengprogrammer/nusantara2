@@ -4,16 +4,13 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.util.Log
 import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
 import com.azuratech.azuratime.domain.media.PhotoStorageUtils
 import com.azuratech.azuratime.core.session.SessionManager
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import com.google.firebase.storage.FirebaseStorage
+import com.azuratech.azuratime.domain.result.AppError
+import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,85 +24,129 @@ sealed class RegisterResult {
 @Singleton
 class FaceRepository @Inject constructor(
     private val application: Application,
-    private val database: AppDatabase,
-    private val db: FirebaseFirestore,
-    private val storage: FirebaseStorage,
+    private val localDataSource: FaceLocalDataSource,
+    private val remoteDataSource: FaceRemoteDataSource,
     private val sessionManager: SessionManager
 ) {
-    private val faceDao = database.faceDao()
-    private val faceAssignmentDao = database.faceAssignmentDao()
-
     private val schoolId: String
         get() = sessionManager.getActiveSchoolId() ?: ""
 
-    private fun getTenantRef(schoolId: String) = db.collection("schools").document(schoolId)
-
-    val allFacesWithDetailsFlow: Flow<List<FaceWithDetails>>
-        get() = faceDao.getAllFacesWithDetailsFlow(schoolId)
-
-    val facesForScanningFlow: Flow<List<FaceEntity>>
-        get() = faceDao.getAllFacesForScanning(schoolId)
-
-    fun getFacesInClassFlow(classId: String): Flow<List<FaceEntity>> =
-        faceAssignmentDao.getFacesByClass(classId, schoolId)
-
-    suspend fun getFaceWithDetails(faceId: String): FaceWithDetails? = withContext(Dispatchers.IO) {
-        return@withContext faceDao.getFaceWithDetails(faceId, schoolId)
-    }
-
-    suspend fun getAssignmentsForFace(faceId: String): List<String> = withContext(Dispatchers.IO) {
-        return@withContext faceAssignmentDao.getClassIdsForFace(faceId, schoolId).firstOrNull() ?: emptyList()
-    }
-
-    suspend fun performFaceDeltaSync() = withContext(Dispatchers.IO) {
-        val lastSync = sessionManager.getLastFacesSyncTime()
-        val lastTimestamp = com.google.firebase.Timestamp(java.util.Date(lastSync))
-        val snapshot = getTenantRef(schoolId).collection("master_faces")
-            .whereGreaterThan("lastUpdated", lastTimestamp).get().await()
-
-        val updatedData = snapshot.documents.mapNotNull { doc ->
-            try {
-                val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
-                val entity = FaceEntity(
-                    faceId = doc.id,
-                    schoolId = schoolId,
-                    name = doc.getString("name") ?: "",
-                    embedding = embedding,
-                    photoUrl = doc.getString("photoUrl"),
-                    isSynced = true
-                )
-                Pair(entity, doc.getBoolean("isActive") ?: true)
-            } catch (e: Exception) { null }
-        }
-
-        if (updatedData.isNotEmpty()) {
-            val toUpsert = updatedData.filter { pair -> pair.second }.map { pair -> pair.first }
-            val toDelete = updatedData.filter { pair -> !pair.second }.map { pair -> pair.first }
-
-            if (toUpsert.isNotEmpty()) faceDao.upsertAll(toUpsert)
-
-            if (toDelete.isNotEmpty()) {
-                for (face in toDelete) {
-                    faceDao.deleteFaceById(face.faceId, schoolId)
+    @Deprecated("Route through UseCase layer")
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val allFacesWithDetailsFlow: Flow<Result<List<FaceWithDetails>>> =
+        sessionManager.activeSchoolIdFlow
+            .filterNotNull()
+            .flatMapLatest { schoolId ->
+                kotlinx.coroutines.flow.combine(
+                    localDataSource.getAllFacesFlow(schoolId),
+                    localDataSource.observeClassesBySchool(schoolId),
+                    localDataSource.getAllAssignmentsFlow(schoolId)
+                ) { faces, classes, assignments ->
+                    val classMap = classes.associateBy { it.id }
+                    val assignmentMap = assignments.groupBy { it.faceId }
+                    
+                    val detailedFaces = faces.map { face ->
+                        val userAssignments = assignmentMap[face.faceId] ?: emptyList()
+                        val classNames = userAssignments.mapNotNull { classMap[it.classId]?.name }.joinToString(", ")
+                        
+                        FaceWithDetails(
+                            face = face,
+                            className = classNames.ifEmpty { null },
+                            classId = userAssignments.firstOrNull()?.classId
+                        )
+                    }.sortedBy { it.face.name }
+                    
+                    Result.Success(detailedFaces) as Result<List<FaceWithDetails>>
                 }
             }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
 
-            FaceCache.refresh(application, schoolId)
-            sessionManager.saveLastFacesSyncTime(System.currentTimeMillis())
+    @Deprecated("Route through UseCase layer")
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val facesForScanningFlow: Flow<Result<List<FaceEntity>>> =
+        sessionManager.activeSchoolIdFlow
+            .filterNotNull()
+            .flatMapLatest { schoolId ->
+                localDataSource.getAllFacesForScanningFlow(schoolId)
+            }
+            .map { Result.Success(it) as Result<List<FaceEntity>> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+
+    @Deprecated("Route through UseCase layer")
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    fun getFacesInClassFlow(classId: String): Flow<Result<List<FaceEntity>>> =
+        sessionManager.activeSchoolIdFlow
+            .filterNotNull()
+            .flatMapLatest { schoolId ->
+                localDataSource.getFacesInClassFlow(classId, schoolId)
+            }
+            .map { Result.Success(it) as Result<List<FaceEntity>> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+
+    @Deprecated("Route through UseCase layer")
+    suspend fun getFaceWithDetails(faceId: String): Result<FaceWithDetails?> = withContext(Dispatchers.IO) {
+        try {
+            Result.Success(localDataSource.getFaceWithDetails(faceId, schoolId))
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
         }
     }
 
+    @Deprecated("Route through UseCase layer")
+    suspend fun getAssignmentsForFace(faceId: String): Result<List<String>> = withContext(Dispatchers.IO) {
+        try {
+            Result.Success(localDataSource.getClassIdsForFace(faceId, schoolId))
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    @Deprecated("Route through UseCase layer")
+    suspend fun performFaceDeltaSync(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val lastSync = sessionManager.getLastFacesSyncTime()
+            val syncResult = remoteDataSource.getFaceUpdates(schoolId, lastSync)
+            
+            if (syncResult is Result.Success) {
+                val updatedData = syncResult.data
+                if (updatedData.isNotEmpty()) {
+                    val toUpsert = updatedData.filter { pair -> pair.second }.map { pair -> pair.first }
+                    val toDelete = updatedData.filter { pair -> !pair.second }.map { pair -> pair.first }
+
+                    if (toUpsert.isNotEmpty()) {
+                        localDataSource.upsertAll(toUpsert)
+                    }
+
+                    if (toDelete.isNotEmpty()) {
+                        for (face in toDelete) {
+                            localDataSource.deleteFaceById(face.faceId, schoolId)
+                        }
+                    }
+
+                    FaceCache.refresh(application, schoolId)
+                    sessionManager.saveLastFacesSyncTime(System.currentTimeMillis())
+                }
+                Result.Success(Unit)
+            } else {
+                syncResult as Result.Failure
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    @Deprecated("Route through UseCase layer")
     suspend fun registerFace(
         inputId: String,
         classId: String,
         name: String,
         embedding: FloatArray,
         photoBitmap: Bitmap?
-    ): RegisterResult = withContext(Dispatchers.IO) {
+    ): Result<RegisterResult> = withContext(Dispatchers.IO) {
         try {
             performFaceDeltaSync()
 
-            val allEnrolled = faceDao.getAllFacesForScanningList(schoolId)
+            val allEnrolled = localDataSource.getAllFacesForScanningList(schoolId)
             val currentGallery = allEnrolled.map { it.name to (it.embedding ?: floatArrayOf()) }
 
             if (currentGallery.isNotEmpty()) {
@@ -115,13 +156,13 @@ class FaceRepository @Inject constructor(
                     isRegistrationMode = true
                 )
                 if (matchResult is com.azuratech.azuratime.ml.matcher.FaceEngine.MatchResult.DuplicateFound) {
-                    return@withContext RegisterResult.Duplicate(matchResult.existingName)
+                    return@withContext Result.Success(RegisterResult.Duplicate(matchResult.existingName))
                 }
             }
 
             val finalFaceId = if (inputId.contains("--")) inputId else "${classId}--${inputId}"
-            val existingFace = faceDao.getFaceById(finalFaceId, schoolId)
-            if (existingFace != null) return@withContext RegisterResult.Duplicate(existingFace.name)
+            val existingFace = localDataSource.getFaceById(finalFaceId, schoolId)
+            if (existingFace != null) return@withContext Result.Success(RegisterResult.Duplicate(existingFace.name))
 
             var finalPhotoUrl: String? = photoBitmap?.let {
                 PhotoStorageUtils.saveFacePhoto(application, it, finalFaceId)
@@ -130,123 +171,132 @@ class FaceRepository @Inject constructor(
             photoBitmap?.let { bmp ->
                 val stream = java.io.ByteArrayOutputStream()
                 bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-                val cloudUrl = uploadFacePhotoToCloud(schoolId, finalFaceId, stream.toByteArray())
-                if (cloudUrl != null) finalPhotoUrl = cloudUrl
+                val uploadResult = remoteDataSource.uploadFacePhoto(schoolId, finalFaceId, stream.toByteArray())
+                if (uploadResult is Result.Success) {
+                    finalPhotoUrl = uploadResult.data
+                }
             }
 
             val face = FaceEntity(faceId = finalFaceId, name = name, photoUrl = finalPhotoUrl, embedding = embedding, schoolId = schoolId, isSynced = false)
-            faceDao.upsertFace(face)
+            localDataSource.upsertFace(face)
 
             val assignment = FaceAssignmentEntity(faceId = finalFaceId, classId = classId, schoolId = schoolId, isSynced = false)
-            faceAssignmentDao.insertAssignment(assignment)
+            localDataSource.insertAssignment(assignment)
 
             try {
-                bulkSyncFacesToCloud(schoolId, listOf(face))
-                syncFaceAssignmentToCloud(assignment)
-                faceDao.upsertFace(face.copy(isSynced = true))
+                val syncRes1 = remoteDataSource.bulkSyncFaces(schoolId, listOf(face))
+                if (syncRes1 is Result.Failure) throw Exception("Sync failed")
+                
+                val syncRes2 = remoteDataSource.syncFaceAssignment(assignment)
+                if (syncRes2 is Result.Failure) throw Exception("Assignment sync failed")
+                
+                localDataSource.upsertFace(face.copy(isSynced = true))
             } catch (e: Exception) {
-                Log.e("AZURA_SYNC", "Gagal sync cloud: ${e.message}")
+                Log.e("FaceRepository", "Gagal sync cloud: ${e.message}")
             }
 
             FaceCache.refresh(application, schoolId)
-            return@withContext RegisterResult.Success
+            Result.Success(RegisterResult.Success)
 
         } catch (e: Exception) {
-            return@withContext RegisterResult.Error(e.message ?: "Unknown Error")
+            Result.Failure(AppError.BusinessRule(e.message))
         }
     }
 
-    suspend fun deleteFace(face: FaceEntity) = withContext(Dispatchers.IO) {
-        face.photoUrl?.let { PhotoStorageUtils.deleteFacePhoto(it) }
-        faceDao.deleteFace(face)
-        faceAssignmentDao.deleteAllByFace(face.faceId, schoolId)
-        FaceCache.refresh(application, schoolId)
-    }
-
-    suspend fun updateEmployeeClass(faceId: String, newClassId: String?) = withContext(Dispatchers.IO) {
-        faceAssignmentDao.deleteAllByFace(faceId, schoolId)
-        if (newClassId != null) {
-            val assignment = FaceAssignmentEntity(faceId = faceId, classId = newClassId, schoolId = schoolId, isSynced = false)
-            faceAssignmentDao.insertAssignment(assignment)
-            try { syncFaceAssignmentToCloud(assignment) } catch (e: Exception) {}
-        }
-    }
-
-    suspend fun updateFaceBasic(face: FaceEntity) = withContext(Dispatchers.IO) {
-        val updatedFace = face.copy(lastUpdated = System.currentTimeMillis(), isSynced = false)
-        faceDao.upsertFace(updatedFace)
+    @Deprecated("Route through UseCase layer")
+    suspend fun deleteFace(face: FaceEntity): Result<Unit> = withContext(Dispatchers.IO) {
+        val targetSchoolId = face.schoolId.ifEmpty { schoolId }
         try {
-            bulkSyncFacesToCloud(schoolId, listOf(updatedFace))
-            faceDao.upsertFace(updatedFace.copy(isSynced = true))
-        } catch (e: Exception) {}
-        FaceCache.refresh(application, schoolId)
+            face.photoUrl?.let { PhotoStorageUtils.deleteFacePhoto(it) }
+
+            val classIds = localDataSource.getClassIdsForFace(face.faceId, targetSchoolId)
+            val remoteDeleteRes = remoteDataSource.deleteFace(face.faceId, targetSchoolId, classIds)
+            
+            if (remoteDeleteRes is Result.Failure) {
+                Log.e("FaceRepository", "Gagal hapus di Cloud: ${remoteDeleteRes.error}")
+            }
+
+            localDataSource.deleteFace(face)
+            localDataSource.deleteAssignmentsByFace(face.faceId, targetSchoolId)
+
+            FaceCache.refresh(application, targetSchoolId)
+            Result.Success(Unit)
+            
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
     }
 
+    @Deprecated("Route through UseCase layer")
+    suspend fun updateEmployeeClass(faceId: String, newClassId: String?): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            localDataSource.deleteAssignmentsByFace(faceId, schoolId)
+            if (newClassId != null) {
+                val assignment = FaceAssignmentEntity(faceId = faceId, classId = newClassId, schoolId = schoolId, isSynced = false)
+                localDataSource.insertAssignment(assignment)
+                val syncRes = remoteDataSource.syncFaceAssignment(assignment)
+                if (syncRes is Result.Failure) throw Exception("Sync failed")
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    @Deprecated("Route through UseCase layer")
+    suspend fun updateFaceBasic(face: FaceEntity): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val updatedFace = face.copy(lastUpdated = System.currentTimeMillis(), isSynced = false)
+            localDataSource.upsertFace(updatedFace)
+            
+            val syncRes = remoteDataSource.bulkSyncFaces(schoolId, listOf(updatedFace))
+            if (syncRes is Result.Failure) throw Exception("Sync failed")
+            
+            localDataSource.upsertFace(updatedFace.copy(isSynced = true))
+            FaceCache.refresh(application, schoolId)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    @Deprecated("Route through UseCase layer")
     suspend fun updateFaceWithPhoto(face: FaceEntity, photoBitmap: Bitmap?, embedding: FloatArray): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             var finalPhotoUrl = photoBitmap?.let { PhotoStorageUtils.saveFacePhoto(application, it, face.faceId) } ?: face.photoUrl
             
-            // Upload to cloud if we have a new bitmap
             if (photoBitmap != null) {
                 val stream = java.io.ByteArrayOutputStream()
                 photoBitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-                val cloudUrl = uploadFacePhotoToCloud(schoolId, face.faceId, stream.toByteArray())
-                if (cloudUrl != null) finalPhotoUrl = cloudUrl
+                val uploadResult = remoteDataSource.uploadFacePhoto(schoolId, face.faceId, stream.toByteArray())
+                if (uploadResult is Result.Success) {
+                    finalPhotoUrl = uploadResult.data
+                }
             }
 
             val updatedFace = face.copy(photoUrl = finalPhotoUrl, embedding = embedding, lastUpdated = System.currentTimeMillis(), isSynced = false)
-            faceDao.upsertFace(updatedFace)
-            try {
-                bulkSyncFacesToCloud(schoolId, listOf(updatedFace))
-                faceDao.upsertFace(updatedFace.copy(isSynced = true))
-            } catch (e: Exception) {}
+            localDataSource.upsertFace(updatedFace)
+            
+            val syncRes = remoteDataSource.bulkSyncFaces(schoolId, listOf(updatedFace))
+            if (syncRes is Result.Failure) throw Exception("Sync failed")
+            
+            localDataSource.upsertFace(updatedFace.copy(isSynced = true))
             FaceCache.refresh(application, schoolId)
-            return@withContext Result.success(Unit)
+            Result.Success(Unit)
         } catch (e: Exception) {
-            return@withContext Result.failure(e)
+            Result.Failure(AppError.BusinessRule(e.message))
         }
     }
 
-    // =====================================================
-    // ☁️ CLOUD OPERATIONS (Migrated from FirestoreManager)
-    // =====================================================
+    @Deprecated("Route through UseCase layer")
+    suspend fun uploadFacePhotoToCloud(schoolId: String, faceId: String, imageBytes: ByteArray): Result<String?> =
+        remoteDataSource.uploadFacePhoto(schoolId, faceId, imageBytes)
 
-    suspend fun uploadFacePhotoToCloud(schoolId: String, faceId: String, imageBytes: ByteArray): String? {
-        val ref = storage.reference.child("schools/$schoolId/faces/$faceId.jpg")
-        return try {
-            ref.putBytes(imageBytes).await()
-            val downloadUrl = ref.downloadUrl.await().toString()
-            Log.d("AZURA_STORAGE", "UPLOAD SUKSES! URL: $downloadUrl")
-            downloadUrl
-        } catch (e: Exception) {
-            Log.e("AZURA_STORAGE", "UPLOAD GAGAL: ${e.message}", e)
-            null
-        }
-    }
+    @Deprecated("Route through UseCase layer")
+    suspend fun bulkSyncFacesToCloud(schoolId: String, faces: List<FaceEntity>): Result<Unit> =
+        remoteDataSource.bulkSyncFaces(schoolId, faces)
 
-    suspend fun bulkSyncFacesToCloud(schoolId: String, faces: List<FaceEntity>) {
-        if (faces.isEmpty()) return
-        faces.chunked(500).forEach { chunk ->
-            val batch = db.batch()
-            chunk.forEach { face ->
-                val safePhotoUrl = if (face.photoUrl?.startsWith("http") == true) face.photoUrl else null
-                val data = hashMapOf(
-                    "faceId" to face.faceId,
-                    "name" to face.name,
-                    "photoUrl" to safePhotoUrl,
-                    "embedding" to face.embedding?.toList(),
-                    "isActive" to true,
-                    "lastUpdated" to FieldValue.serverTimestamp()
-                )
-                batch.set(getTenantRef(schoolId).collection("master_faces").document(face.faceId), data, SetOptions.merge())
-            }
-            batch.commit().await()
-        }
-    }
-
-    suspend fun syncFaceAssignmentToCloud(assignment: FaceAssignmentEntity) {
-        val docId = "${assignment.faceId}_${assignment.classId}"
-        val data = hashMapOf("faceId" to assignment.faceId, "classId" to assignment.classId, "lastUpdated" to FieldValue.serverTimestamp())
-        getTenantRef(assignment.schoolId).collection("face_assignments").document(docId).set(data, SetOptions.merge()).await()
-    }
+    @Deprecated("Route through UseCase layer")
+    suspend fun syncFaceAssignmentToCloud(assignment: FaceAssignmentEntity): Result<Unit> =
+        remoteDataSource.syncFaceAssignment(assignment)
 }

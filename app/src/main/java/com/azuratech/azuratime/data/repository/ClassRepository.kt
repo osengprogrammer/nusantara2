@@ -37,7 +37,9 @@ class ClassRepository @Inject constructor(
     val allClasses: Flow<List<ClassEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
-            classDao.observeClassesBySchool(schoolId)
+            classDao.observeClassesBySchool(schoolId).onEach { classes ->
+                Log.d("AZURA_SYNC", "ClassRepository allClasses emitted ${classes.size} classes for school $schoolId")
+            }
         }
         .flowOn(Dispatchers.IO)
 

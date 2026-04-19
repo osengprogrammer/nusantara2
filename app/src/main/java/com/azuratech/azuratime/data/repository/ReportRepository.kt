@@ -7,6 +7,8 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -39,52 +41,58 @@ class ReportRepository @Inject constructor(
     // 📖 DATA FETCHING
     // =====================================================
 
-    fun getAvailableClasses(role: String, assignedIds: List<String>): Flow<List<ClassEntity>> {
-        return if (role == "ADMIN" || role == "SUPER_USER") {
-            classDao.observeClassesBySchool(schoolId)
-        } else {
-            if (assignedIds.isEmpty()) {
-                flowOf(emptyList())
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    fun getAvailableClasses(role: String, assignedIds: List<String>): Flow<List<ClassEntity>> =
+        sessionManager.activeSchoolIdFlow.filterNotNull().flatMapLatest { schoolId ->
+            if (role == "ADMIN" || role == "SUPER_USER") {
+                classDao.observeClassesBySchool(schoolId)
             } else {
-                classDao.getClassesByIdsFlow(schoolId, assignedIds)
-            }
-        }
-    }
-
-    fun getStudentsInReport(role: String, selectedClassId: String?, assignedIds: List<String>): Flow<List<FaceEntity>> {
-        val isAdmin = role == "ADMIN" || role == "SUPER_USER"
-
-        return if (isAdmin) {
-            if (selectedClassId == "ALL" || selectedClassId == null) {
-                faceDao.getAllFacesFlow(schoolId)
-            } else {
-                faceAssignmentDao.getFacesByClass(selectedClassId, schoolId)
-            }
-        } else {
-            if (assignedIds.isEmpty()) return flowOf(emptyList())
-            if (selectedClassId == "ALL" || selectedClassId == null) {
-                faceAssignmentDao.getFacesByMultipleClasses(assignedIds, schoolId)
-            } else {
-                if (assignedIds.contains(selectedClassId)) {
-                    faceAssignmentDao.getFacesByClass(selectedClassId, schoolId)
+                if (assignedIds.isEmpty()) {
+                    kotlinx.coroutines.flow.flowOf(emptyList())
                 } else {
-                    flowOf(emptyList())
+                    classDao.getClassesByIdsFlow(schoolId, assignedIds)
                 }
             }
         }
-    }
 
-    fun getTargetIdsFlow(classId: String?, assignedIds: List<String>): Flow<List<String>> {
-        return if (classId == "ALL" || classId == null) {
-            if (assignedIds.isEmpty()) {
-                classDao.observeClassesBySchool(schoolId).map { list -> list.map { it.id } }
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    fun getStudentsInReport(role: String, selectedClassId: String?, assignedIds: List<String>): Flow<List<FaceEntity>> =
+        sessionManager.activeSchoolIdFlow.filterNotNull().flatMapLatest { schoolId ->
+            val isAdmin = role == "ADMIN" || role == "SUPER_USER"
+
+            if (isAdmin) {
+                if (selectedClassId == "ALL" || selectedClassId == null) {
+                    faceDao.getAllFacesFlow(schoolId)
+                } else {
+                    faceAssignmentDao.getFacesByClass(selectedClassId, schoolId)
+                }
             } else {
-                flowOf(assignedIds)
+                if (assignedIds.isEmpty()) return@flatMapLatest kotlinx.coroutines.flow.flowOf(emptyList())
+                if (selectedClassId == "ALL" || selectedClassId == null) {
+                    faceAssignmentDao.getFacesByMultipleClasses(assignedIds, schoolId)
+                } else {
+                    if (assignedIds.contains(selectedClassId)) {
+                        faceAssignmentDao.getFacesByClass(selectedClassId, schoolId)
+                    } else {
+                        kotlinx.coroutines.flow.flowOf(emptyList())
+                    }
+                }
             }
-        } else {
-            flowOf(listOf(classId))
         }
-    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    fun getTargetIdsFlow(classId: String?, assignedIds: List<String>): Flow<List<String>> =
+        sessionManager.activeSchoolIdFlow.filterNotNull().flatMapLatest { schoolId ->
+            if (classId == "ALL" || classId == null) {
+                if (assignedIds.isEmpty()) {
+                    classDao.observeClassesBySchool(schoolId).map { list -> list.map { it.id } }
+                } else {
+                    kotlinx.coroutines.flow.flowOf(assignedIds)
+                }
+            } else {
+                kotlinx.coroutines.flow.flowOf(listOf(classId))
+            }
+        }
 
     fun getReportsByMultipleClasses(targetIds: List<String>, start: LocalDate, end: LocalDate): Flow<List<CheckInRecordEntity>> {
         if (targetIds.isEmpty()) return flowOf(emptyList())
