@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.data.repository.AdminRepository
+import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.domain.admin.usecase.AdminUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

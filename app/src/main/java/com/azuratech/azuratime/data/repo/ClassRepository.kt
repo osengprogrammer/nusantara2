@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.data.repository
+package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.domain.classes.usecase.*
 import javax.inject.Inject

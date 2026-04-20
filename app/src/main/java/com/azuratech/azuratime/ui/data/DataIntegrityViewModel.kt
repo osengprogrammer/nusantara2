@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.ui.data
 
 import androidx.lifecycle.ViewModel
-import com.azuratech.azuratime.data.repository.DataIntegrityRepository
+import com.azuratech.azuratime.data.repo.DataIntegrityRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

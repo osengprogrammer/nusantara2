@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.*
-import com.azuratech.azuratime.data.repository.ReportRepository
+import com.azuratech.azuratime.data.repo.ReportRepository
 import com.azuratech.azuratime.domain.report.usecase.GetReportDataUseCase
 import com.azuratech.azuratime.domain.sync.usecase.SyncMasterDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

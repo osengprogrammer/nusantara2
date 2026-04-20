@@ -6,7 +6,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repository.RegistrationRepository
+import com.azuratech.azuratime.data.repo.RegistrationRepository
 import com.azuratech.azuratime.domain.model.ProcessResult
 import com.azuratech.azuratime.domain.sync.usecase.ProcessCsvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

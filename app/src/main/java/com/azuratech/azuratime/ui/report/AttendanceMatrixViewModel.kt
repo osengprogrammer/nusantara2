@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.data.repository.ReportRepository
-import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.data.repo.ReportRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.domain.report.usecase.GetReportDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

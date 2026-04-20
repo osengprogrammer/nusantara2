@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.data.repository.WorkspaceRepository
-import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.data.repo.WorkspaceRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase

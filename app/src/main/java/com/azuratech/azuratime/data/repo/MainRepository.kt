@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.data.repository
+package com.azuratech.azuratime.data.repo
 
 import android.content.Context
 import android.util.Log

@@ -3,9 +3,9 @@ package com.azuratech.azuratime.ui.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.data.repository.AdminRepository
-import com.azuratech.azuratime.data.repository.AuthRepository
-import com.azuratech.azuratime.data.repository.DataIntegrityRepository
+import com.azuratech.azuratime.data.repo.AdminRepository
+import com.azuratech.azuratime.data.repo.AuthRepository
+import com.azuratech.azuratime.data.repo.DataIntegrityRepository
 import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.GetCheckInRecordsUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.CheckInFilters

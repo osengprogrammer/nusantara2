@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.data.repository
+package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.BuildConfig
 import com.azuratech.azuratime.data.local.AppDatabase
