@@ -45,6 +45,6 @@ class ArchitectureTest {
     val repositories_must_reside_in_data_layer: ArchRule = classes()
         .that().haveSimpleNameEndingWith("Repository")
         .and().areNotInterfaces()
-        .should().resideInAnyPackage("..data.repository..", "..data.repo..", "..repository..")
+        .should().resideInAnyPackage("..data.repository..", "..data.repo..", "..data.repo..", "..repository..")
         .because("All repositories must be in the data layer.")
 }
