@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.domain.admin.usecase
 
 import com.azuratech.azuratime.data.local.*
-import com.azuratech.azuratime.data.repository.AdminRepository
+import com.azuratech.azuratime.data.repo.AdminRepository
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions

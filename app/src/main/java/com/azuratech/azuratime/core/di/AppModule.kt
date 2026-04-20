@@ -1,4 +1,4 @@
-package com.azuratech.azuratech.azuratime.di
+package com.azuratech.azuratime.core.di
 
 import android.content.Context
 import com.azuratech.azuratime.core.session.SessionManager

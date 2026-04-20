@@ -2,8 +2,8 @@ package com.azuratech.azuratime.ui.membership
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repository.MembershipDocUpdate
-import com.azuratech.azuratime.data.repository.MembershipRepository
+import com.azuratech.azuratime.data.repo.MembershipDocUpdate
+import com.azuratech.azuratime.data.repo.MembershipRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers

@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.domain.user.usecase.UserManagementUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow

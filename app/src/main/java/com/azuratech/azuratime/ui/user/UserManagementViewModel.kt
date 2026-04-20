@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.AttendanceConflict
 import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase

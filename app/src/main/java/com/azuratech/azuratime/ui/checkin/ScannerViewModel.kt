@@ -3,8 +3,8 @@ package com.azuratech.azuratime.ui.checkin
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repository.CheckInResult
-import com.azuratech.azuratime.data.repository.ScannerRepository
+import com.azuratech.azuratime.data.repo.CheckInResult
+import com.azuratech.azuratime.data.repo.ScannerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay

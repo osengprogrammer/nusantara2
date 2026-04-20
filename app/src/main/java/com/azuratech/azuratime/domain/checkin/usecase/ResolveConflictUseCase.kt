@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.domain.checkin.usecase
 
 import com.azuratech.azuratime.data.local.AttendanceConflict
-import com.azuratech.azuratime.data.repository.UserRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.domain.result.AppError
 import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.Dispatchers
