@@ -52,7 +52,7 @@ class ReportViewModel @Inject constructor(
 
     @Suppress("UNCHECKED_CAST")
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val matrixReport: StateFlow<List<MatrixRowModel>> =
+    val uiState: StateFlow<ReportUiState> =
         combine(
             _startDate, _endDate, _selectedClassId, _userRole, _assignedClasses, _reportPolicy
         ) { args: Array<*> ->
@@ -75,16 +75,37 @@ class ReportViewModel @Inject constructor(
                     classId = params.classId,
                     assignedIds = params.assigned
                 ),
-                availableClasses
+                availableClasses,
+                _startDate,
+                _endDate,
+                _selectedClassId,
+                _reportPolicy
             ) { results: Array<*> ->
                 val students = results[0] as List<FaceEntity>
                 val logs = results[1] as List<CheckInRecordEntity>
                 val classes = results[2] as List<ClassEntity>
-                buildMatrix(students, logs, dateRange, policy, classes.associate { it.id to it.name })
+                val start = results[3] as LocalDate
+                val end = results[4] as LocalDate
+                val classId = results[5] as String?
+                val policy = results[6] as String
+
+                val rows = buildMatrix(students, logs, dateRange, policy, classes.associate { it.id to it.name })
+                
+                ReportUiState.Success(
+                    ReportData(
+                        rows = rows,
+                        availableClasses = classes,
+                        dateRange = dateRange,
+                        startDate = start,
+                        endDate = end,
+                        selectedClassId = classId,
+                        policy = policy
+                    )
+                )
             }
         }
-        .flowOn(Dispatchers.Default) // Run the entire chain on a background thread
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReportUiState.Loading)
 
     // --- The Engine ---
     private suspend fun buildMatrix(

@@ -21,7 +21,7 @@ import java.time.LocalDate
 
 @Composable
 fun AttendanceMatrixContent(
-    uiState: AttendanceMatrixUiState,
+    data: AttendanceMatrixData,
     onSearchChange: (String) -> Unit,
     onDateRangeSelected: (LocalDate, LocalDate) -> Unit,
     onClassSelected: (String?) -> Unit,
@@ -32,7 +32,7 @@ fun AttendanceMatrixContent(
     AzuraScreen(
         title = "Rekap Kehadiran",
         actions = {
-            if (uiState.isExporting) {
+            if (data.isExporting) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .size(24.dp)
@@ -54,11 +54,11 @@ fun AttendanceMatrixContent(
                 verticalArrangement = Arrangement.Top
             ) {
                 ReportFilterSection(
-                    startDate = uiState.startDate,
-                    endDate = uiState.endDate,
-                    searchQuery = uiState.searchQuery,
-                    selectedClassId = uiState.selectedClassId,
-                    availableClasses = uiState.availableClasses,
+                    startDate = data.startDate,
+                    endDate = data.endDate,
+                    searchQuery = data.searchQuery,
+                    selectedClassId = data.selectedClassId,
+                    availableClasses = data.availableClasses,
                     onSearchChange = onSearchChange,
                     onDateRangeSelected = onDateRangeSelected,
                     onClassSelected = onClassSelected
@@ -67,7 +67,7 @@ fun AttendanceMatrixContent(
                 ReportTabSection(
                     selectedTabIndex = 0,
                     historyCount = 0,
-                    currentPolicy = uiState.policy,
+                    currentPolicy = data.policy,
                     onTabSelected = { /* TODO */ },
                     onPolicySelected = onPolicySelected
                 )
@@ -75,16 +75,14 @@ fun AttendanceMatrixContent(
                 HorizontalDivider()
 
                 Box(modifier = Modifier.weight(1f)) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    } else if (uiState.rows.isEmpty()) {
+                    if (data.rows.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text("Tidak ada data untuk ditampilkan.")
                         }
                     } else {
                         MatrixTableView(
-                            rows = uiState.rows,
-                            dateRange = uiState.dateRange,
+                            rows = data.rows,
+                            dateRange = data.dateRange,
                             onCellClick = onCellClick
                         )
                     }
@@ -101,7 +99,7 @@ fun AttendanceMatrixContentSuccessPreview() {
     AzuraTheme {
         Surface {
             AttendanceMatrixContent(
-                uiState = PreviewMocks.mockMatrixStateSuccess,
+                data = PreviewMocks.mockMatrixData,
                 onSearchChange = {},
                 onDateRangeSelected = { _, _ -> },
                 onClassSelected = {},
@@ -119,7 +117,7 @@ fun AttendanceMatrixContentLoadingPreview() {
     AzuraTheme {
         Surface {
             AttendanceMatrixContent(
-                uiState = PreviewMocks.mockMatrixStateLoading,
+                data = AttendanceMatrixData(),
                 onSearchChange = {},
                 onDateRangeSelected = { _, _ -> },
                 onClassSelected = {},

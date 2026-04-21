@@ -39,20 +39,38 @@ data class DailyAttendance(
     val logs: List<CheckInRecordEntity>
 )
 
-data class AttendanceMatrixUiState(
-    val isLoading: Boolean = true,
+data class AttendanceMatrixData(
     val rows: List<MatrixRowModel> = emptyList(),
     val dateRange: List<LocalDate> = emptyList(),
     val availableClasses: List<ClassEntity> = emptyList(),
-
-    // Filter States
     val searchQuery: String = "",
     val startDate: LocalDate = LocalDate.now().withDayOfMonth(1),
     val endDate: LocalDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()),
     val selectedClassId: String? = "ALL",
     val policy: String = "SCHOOL",
-    
-    // Export States
     val isExporting: Boolean = false,
     val exportedFile: File? = null
 )
+
+sealed class AttendanceMatrixUiState {
+    object Loading : AttendanceMatrixUiState()
+    data class Success(val data: AttendanceMatrixData) : AttendanceMatrixUiState()
+    data class Error(val message: String) : AttendanceMatrixUiState()
+}
+
+data class ReportData(
+    val rows: List<MatrixRowModel> = emptyList(),
+    val dateRange: List<LocalDate> = emptyList(),
+    val availableClasses: List<ClassEntity> = emptyList(),
+    val searchQuery: String = "",
+    val startDate: LocalDate = LocalDate.now().withDayOfMonth(1),
+    val endDate: LocalDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()),
+    val selectedClassId: String? = "ALL",
+    val policy: String = "SCHOOL"
+)
+
+sealed class ReportUiState {
+    object Loading : ReportUiState()
+    data class Success(val data: ReportData) : ReportUiState()
+    data class Error(val message: String) : ReportUiState()
+}

@@ -36,41 +36,60 @@ fun FaceListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Dialogs handled in the Screen wrapper
-    uiState.studentForQuickEdit?.let { faceWithDetails ->
-        QuickEditFaceDialog(
-            face = faceWithDetails.face,
-            onDismiss = { viewModel.onDismissDialog() },
-            onSave = { updatedFace -> viewModel.onSaveChanges(updatedFace) }
-        )
-    }
-
-    uiState.studentForClassAssignment?.let { student ->
-        val studentDisplayItem = uiState.students.find { it.faceWithDetails.face.faceId == student.faceId }
-        MultiClassAssignmentDialog(
-            studentName = student.name,
-            allClasses = uiState.allClasses,
-            assignedClassIds = studentDisplayItem?.assignedClassIds ?: emptyList(),
-            onDismiss = { viewModel.onDismissDialog() },
-            onToggle = { classId, isChecked ->
-                viewModel.onToggleStudentClassAssignment(student.faceId, classId, isChecked)
+    when (val state = uiState) {
+        is FaceListUiState.Loading -> {
+            AzuraScreen(title = "Manajemen Personil") {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        )
-    }
+        }
+        is FaceListUiState.Success -> {
+            val data = state.data
+            // Dialogs handled in the Screen wrapper
+            data.studentForQuickEdit?.let { faceWithDetails ->
+                QuickEditFaceDialog(
+                    face = faceWithDetails.face,
+                    onDismiss = { viewModel.onDismissDialog() },
+                    onSave = { updatedFace -> viewModel.onSaveChanges(updatedFace) }
+                )
+            }
 
-    FaceListContent(
-        uiState = uiState,
-        onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
-        onQuickEdit = { faceWithDetails -> viewModel.onEditStudentClicked(faceWithDetails) },
-        onFullEdit = onEditUser,
-        onManageClasses = { face -> viewModel.onAssignClassesClicked(face) },
-        onDelete = { face -> viewModel.onDeleteStudent(face) }
-    )
+            data.studentForClassAssignment?.let { student ->
+                val studentDisplayItem = data.students.find { it.faceWithDetails.face.faceId == student.faceId }
+                MultiClassAssignmentDialog(
+                    studentName = student.name,
+                    allClasses = data.allClasses,
+                    assignedClassIds = studentDisplayItem?.assignedClassIds ?: emptyList(),
+                    onDismiss = { viewModel.onDismissDialog() },
+                    onToggle = { classId, isChecked ->
+                        viewModel.onToggleStudentClassAssignment(student.faceId, classId, isChecked)
+                    }
+                )
+            }
+
+            FaceListContent(
+                data = data,
+                onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
+                onQuickEdit = { faceWithDetails -> viewModel.onEditStudentClicked(faceWithDetails) },
+                onFullEdit = onEditUser,
+                onManageClasses = { face -> viewModel.onAssignClassesClicked(face) },
+                onDelete = { face -> viewModel.onDeleteStudent(face) }
+            )
+        }
+        is FaceListUiState.Error -> {
+            AzuraScreen(title = "Manajemen Personil") {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    }
 }
 
 @Composable
 fun FaceListContent(
-    uiState: FaceListUiState,
+    data: FaceListData,
     onSearchQueryChanged: (String) -> Unit,
     onQuickEdit: (com.azuratech.azuratime.data.local.FaceWithDetails) -> Unit,
     onFullEdit: (String) -> Unit,
@@ -82,7 +101,7 @@ fun FaceListContent(
         content = {
             Column(modifier = Modifier.fillMaxSize()) {
                 AzuraTextField(
-                    value = uiState.searchQuery,
+                    value = data.searchQuery,
                     onValueChange = onSearchQueryChanged,
                     label = "Cari nama...",
                     modifier = Modifier.fillMaxWidth().padding(top = AzuraSpacing.md),
@@ -91,7 +110,7 @@ fun FaceListContent(
 
                 Spacer(modifier = Modifier.height(AzuraSpacing.md))
 
-                if (uiState.students.isEmpty() && !uiState.isLoading) {
+                if (data.students.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("Tidak ada pengguna ditemukan", color = Color.Gray)
                     }
@@ -101,7 +120,7 @@ fun FaceListContent(
                         verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
-                        items(uiState.students, key = { it.faceWithDetails.face.faceId }) { student ->
+                        items(data.students, key = { it.faceWithDetails.face.faceId }) { student ->
                             FaceListItemCard(
                                 student = student,
                                 onQuickEdit = { onQuickEdit(student.faceWithDetails) },
@@ -185,7 +204,7 @@ fun FaceListContentSuccessPreview() {
     AzuraTheme {
         Surface {
             FaceListContent(
-                uiState = PreviewMocks.mockFaceListStateSuccess,
+                data = PreviewMocks.mockFaceListData,
                 onSearchQueryChanged = {},
                 onQuickEdit = {},
                 onFullEdit = {},
@@ -202,7 +221,7 @@ fun FaceListContentLoadingPreview() {
     AzuraTheme {
         Surface {
             FaceListContent(
-                uiState = PreviewMocks.mockFaceListStateLoading,
+                data = FaceListData(),
                 onSearchQueryChanged = {},
                 onQuickEdit = {},
                 onFullEdit = {},

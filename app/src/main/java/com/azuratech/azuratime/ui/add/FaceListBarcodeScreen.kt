@@ -52,103 +52,142 @@ fun FaceListBarcodeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var expandedFace by remember { mutableStateOf<FaceWithDetails?>(null) }
 
-    Scaffold(
-        topBar = {
-            Column(modifier = Modifier.background(MaterialTheme.colorScheme.primary)) {
-                TopAppBar(
-                    title = { Text("Generator QR Siswa", fontWeight = FontWeight.Bold) },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+    when (val state = uiState) {
+        is FaceListUiState.Loading -> {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Generator QR Siswa", fontWeight = FontWeight.Bold) },
+                        navigationIcon = {
+                            IconButton(onClick = onNavigateBack) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+            ) { padding ->
+                Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+        is FaceListUiState.Success -> {
+            val data = state.data
+            Scaffold(
+                topBar = {
+                    Column(modifier = Modifier.background(MaterialTheme.colorScheme.primary)) {
+                        TopAppBar(
+                            title = { Text("Generator QR Siswa", fontWeight = FontWeight.Bold) },
+                            navigationIcon = {
+                                IconButton(onClick = onNavigateBack) {
+                                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                                navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                        
+                        OutlinedTextField(
+                            value = data.searchQuery,
+                            onValueChange = { viewModel.onSearchQueryChanged(it) },
+                            placeholder = { Text("Cari nama siswa...", color = Color.White.copy(alpha = 0.7f)) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.White) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
+                            singleLine = true,
+                            shape = AzuraShapes.medium,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                                focusedBorderColor = Color.White,
+                                cursorColor = Color.White,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
+                        )
+
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
+                            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+                        ) {
+                            item {
+                                FilterChip(
+                                    selected = data.selectedClassName == null,
+                                    onClick = { viewModel.onClassFilterChanged(null) },
+                                    label = { Text("Semua Kelas", color = if (data.selectedClassName == null) Color.Black else Color.White) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = Color.White,
+                                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                    )
+                                )
+                            }
+                            items(data.allClasses) { classEntity ->
+                                FilterChip(
+                                    selected = data.selectedClassName == classEntity.name,
+                                    onClick = { viewModel.onClassFilterChanged(classEntity.name) },
+                                    label = { Text(classEntity.name, color = if (data.selectedClassName == classEntity.name) Color.Black else Color.White) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = Color.White,
+                                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                    )
+                                )
+                            }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                )
-                
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChanged(it) },
-                    placeholder = { Text("Cari nama siswa...", color = Color.White.copy(alpha = 0.7f)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.White) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
-                    singleLine = true,
-                    shape = AzuraShapes.medium,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                        focusedBorderColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    )
-                )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+            ) { paddingValues ->
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues)
+                ) {
+                    if (data.students.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Data siswa tidak ditemukan di kelas ini.", color = Color.Gray)
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(top = AzuraSpacing.md, start = AzuraSpacing.md, end = AzuraSpacing.md, bottom = 100.dp),
+                            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+                        ) {
+                            items(data.students, key = { it.faceWithDetails.face.faceId }) { student ->
+                                StudentBarcodeCard(
+                                    detail = student.faceWithDetails,
+                                    onClick = { expandedFace = student.faceWithDetails }
+                                )
+                            }
+                        }
+                    }
+                }
 
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
-                    horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
-                ) {
-                    item {
-                        FilterChip(
-                            selected = uiState.selectedClassName == null,
-                            onClick = { viewModel.onClassFilterChanged(null) },
-                            label = { Text("Semua Kelas", color = if (uiState.selectedClassName == null) Color.Black else Color.White) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color.White,
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                            )
-                        )
-                    }
-                    items(uiState.allClasses) { classEntity ->
-                        FilterChip(
-                            selected = uiState.selectedClassName == classEntity.name,
-                            onClick = { viewModel.onClassFilterChanged(classEntity.name) },
-                            label = { Text(classEntity.name, color = if (uiState.selectedClassName == classEntity.name) Color.Black else Color.White) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color.White,
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                            )
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues)
-        ) {
-            if (uiState.students.isEmpty() && !uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Data siswa tidak ditemukan di kelas ini.", color = Color.Gray)
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = AzuraSpacing.md, start = AzuraSpacing.md, end = AzuraSpacing.md, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
-                ) {
-                    items(uiState.students, key = { it.faceWithDetails.face.faceId }) { student ->
-                        StudentBarcodeCard(
-                            detail = student.faceWithDetails,
-                            onClick = { expandedFace = student.faceWithDetails }
-                        )
-                    }
+                if (expandedFace != null) {
+                    BarcodeExpandedDialog(
+                        detail = expandedFace!!,
+                        onDismiss = { expandedFace = null }
+                    )
                 }
             }
         }
-
-        if (expandedFace != null) {
-            BarcodeExpandedDialog(
-                detail = expandedFace!!,
-                onDismiss = { expandedFace = null }
-            )
+        is FaceListUiState.Error -> {
+            Scaffold(
+                topBar = {
+                    TopAppBar(title = { Text("Error") })
+                }
+            ) { padding ->
+                Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+                }
+            }
         }
     }
 }
