@@ -16,16 +16,22 @@ data class StudentDisplayItem(
 )
 
 /**
- * Represents the complete state of the FaceListScreen.
+ * Represents the core data of the FaceListScreen.
  */
-data class FaceListUiState(
-    val isLoading: Boolean = true,
-    val searchQuery: String = "",
-    val selectedClassName: String? = null,
+data class FaceListData(
     val students: List<StudentDisplayItem> = emptyList(),
     val allClasses: List<ClassEntity> = emptyList(),
-
-    // State for driving dialogs
+    val searchQuery: String = "",
+    val selectedClassName: String? = null,
     val studentForClassAssignment: FaceEntity? = null,
     val studentForQuickEdit: FaceWithDetails? = null
 )
+
+/**
+ * Represents the complete state of the FaceListScreen using a sealed class pattern.
+ */
+sealed class FaceListUiState {
+    object Loading : FaceListUiState()
+    data class Success(val data: FaceListData) : FaceListUiState()
+    data class Error(val message: String) : FaceListUiState()
+}

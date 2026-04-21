@@ -113,37 +113,41 @@ class AttendanceMatrixViewModel @Inject constructor(
         val isExporting = args[7] as Boolean
         val exportedFile = args[8] as java.io.File?
         
-        AttendanceMatrixUiState(
-            isLoading = false,
-            rows = rows,
-            availableClasses = classes,
-            dateRange = generateDateRange(start, end),
-            searchQuery = query,
-            startDate = start,
-            endDate = end,
-            selectedClassId = classId,
-            policy = policy,
-            isExporting = isExporting,
-            exportedFile = exportedFile
+        AttendanceMatrixUiState.Success(
+            AttendanceMatrixData(
+                rows = rows,
+                availableClasses = classes,
+                dateRange = generateDateRange(start, end),
+                searchQuery = query,
+                startDate = start,
+                endDate = end,
+                selectedClassId = classId,
+                policy = policy,
+                isExporting = isExporting,
+                exportedFile = exportedFile
+            )
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = AttendanceMatrixUiState()
+        initialValue = AttendanceMatrixUiState.Loading
     )
 
     fun exportReport(context: android.content.Context) {
         viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState !is AttendanceMatrixUiState.Success) return@launch
+
             _isExporting.value = true
             _exportedFile.value = null
             
-            val currentState = uiState.value
-            val className = currentState.availableClasses.find { it.id == currentState.selectedClassId }?.name ?: "All Classes"
+            val data = currentState.data
+            val className = data.availableClasses.find { it.id == data.selectedClassId }?.name ?: "All Classes"
             
             val file = com.azuratech.azuratime.domain.sync.ExportUtils.exportMatrixToCsv(
                 context = context,
-                rows = currentState.rows,
-                dateRange = currentState.dateRange,
+                rows = data.rows,
+                dateRange = data.dateRange,
                 className = className
             )
             

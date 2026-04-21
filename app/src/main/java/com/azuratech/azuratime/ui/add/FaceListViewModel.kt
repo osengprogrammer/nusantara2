@@ -87,19 +87,20 @@ class FaceListViewModel @Inject constructor(
         @Suppress("UNCHECKED_CAST")
         val assigning = args[5] as FaceEntity?
 
-        FaceListUiState(
-            isLoading = false, // Can be enhanced later
-            students = students,
-            allClasses = allClasses,
-            searchQuery = query,
-            selectedClassName = className,
-            studentForQuickEdit = editing,
-            studentForClassAssignment = assigning
+        FaceListUiState.Success(
+            FaceListData(
+                students = students,
+                allClasses = allClasses,
+                searchQuery = query,
+                selectedClassName = className,
+                studentForQuickEdit = editing,
+                studentForClassAssignment = assigning
+            )
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = FaceListUiState()
+        initialValue = FaceListUiState.Loading
     )
 
     // --- Event Handlers ---

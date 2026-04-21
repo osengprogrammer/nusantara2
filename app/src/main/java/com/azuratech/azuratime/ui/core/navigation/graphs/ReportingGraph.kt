@@ -32,9 +32,6 @@ fun NavGraphBuilder.reportingGraph(
                 faceId = entry.arguments?.getString("faceId") ?: "",
                 studentName = entry.arguments?.getString("name") ?: "",
                 dateString = entry.arguments?.getString("date") ?: "",
-                checkInViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onBack = { navController.popBackStack() },
                 onNavigateToManual = { fId, dStr ->
                     navController.navigate(Screen.ManualAttendance.createRoute(fId, dStr))

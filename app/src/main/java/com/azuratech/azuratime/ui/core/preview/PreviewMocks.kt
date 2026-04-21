@@ -119,19 +119,22 @@ object PreviewMocks {
         )
     )
 
-    val mockMatrixStateSuccess = AttendanceMatrixUiState(
-        isLoading = false,
+    val mockMatrixData = com.azuratech.azuratime.ui.report.AttendanceMatrixData(
         rows = mockMatrixRows,
-        dateRange = listOf(LocalDate.now().minusDays(2), LocalDate.now().minusDays(1), LocalDate.now()),
         availableClasses = mockClasses,
+        dateRange = listOf(LocalDate.now().minusDays(2), LocalDate.now().minusDays(1), LocalDate.now()),
         searchQuery = "",
         startDate = LocalDate.now().minusDays(2),
         endDate = LocalDate.now(),
         selectedClassId = "cls_1",
         policy = "SCHOOL"
     )
+
+    val mockMatrixStateSuccess = com.azuratech.azuratime.ui.report.AttendanceMatrixUiState.Success(
+        mockMatrixData
+    )
     
-    val mockMatrixStateLoading = AttendanceMatrixUiState(isLoading = true)
+    val mockMatrixStateLoading = com.azuratech.azuratime.ui.report.AttendanceMatrixUiState.Loading
 
     // For FaceList
     val mockStudentDisplayItems = listOf(
@@ -149,8 +152,7 @@ object PreviewMocks {
         )
     )
 
-    val mockFaceListStateSuccess = com.azuratech.azuratime.ui.add.FaceListUiState(
-        isLoading = false,
+    val mockFaceListData = com.azuratech.azuratime.ui.add.FaceListData(
         searchQuery = "",
         selectedClassName = null,
         students = mockStudentDisplayItems,
@@ -159,7 +161,9 @@ object PreviewMocks {
         studentForQuickEdit = null
     )
 
-    val mockFaceListStateLoading = com.azuratech.azuratime.ui.add.FaceListUiState(
-        isLoading = true
+    val mockFaceListStateSuccess = com.azuratech.azuratime.ui.add.FaceListUiState.Success(
+        mockFaceListData
     )
+
+    val mockFaceListStateLoading = com.azuratech.azuratime.ui.add.FaceListUiState.Loading
 }
