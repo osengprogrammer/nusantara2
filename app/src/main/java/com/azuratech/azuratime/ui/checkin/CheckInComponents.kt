@@ -21,37 +21,34 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 fun StatusLabel(text: String, color: Color) {
     Text(
         text = text,
-        color = Color.White,
-        fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
+        color = MaterialTheme.colorScheme.onPrimary,
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
         modifier = Modifier
-            .background(color, RoundedCornerShape(8.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(color, AzuraShapes.medium)
+            .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm)
     )
 }
 
 @Composable
 fun MatchResultLabel(name: String, isAlreadyIn: Boolean, primaryColor: Color) {
-    val bgColor = if (isAlreadyIn) Color(0xFFFFA000) else primaryColor
+    val bgColor = if (isAlreadyIn) MaterialTheme.colorScheme.tertiary else primaryColor
     val status = if (isAlreadyIn) "SUDAH ABSEN" else "BERHASIL"
     
     Column(
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(bgColor, RoundedCornerShape(12.dp))
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .background(bgColor, AzuraShapes.large)
+            .padding(horizontal = AzuraSpacing.lg, vertical = AzuraSpacing.md)
     ) {
         Text(
             text = name,
-            color = Color.White,
-            fontWeight = FontWeight.Black,
-            fontSize = 28.sp
+            color = MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black)
         )
         Text(
             text = status,
-            color = Color.White.copy(alpha = 0.8f),
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
+            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
         )
     }
 }
@@ -71,11 +68,11 @@ fun HeaderOverlay(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            color = Color.Black.copy(alpha = 0.7f),
+            color = Color.Black.copy(alpha = 0.7f), // Preserved for camera overlay contrast
             shape = AzuraShapes.medium,
             border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.2f))
         ) {
-            Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Column(Modifier.padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm)) {
                 Text(
                     "AZURA TIME: FACE",
                     style = MaterialTheme.typography.labelSmall.copy(
@@ -86,7 +83,7 @@ fun HeaderOverlay(
                 val display = if (activeClass.isBlank()) "SCAN BEBAS" else activeClass.uppercase()
                 Text(
                     display,
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.White)
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.White) // Preserved for camera overlay contrast
                 )
             }
         }
@@ -117,10 +114,9 @@ fun LivenessLabel(text: String) {
     Text(
         text = text,
         color = Color.White,
-        fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
+        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
         modifier = Modifier
-            .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(Color.Black.copy(alpha = 0.5f), AzuraShapes.medium)
+            .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm)
     )
 }

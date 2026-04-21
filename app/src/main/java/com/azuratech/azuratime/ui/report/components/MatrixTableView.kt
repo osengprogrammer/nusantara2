@@ -92,8 +92,8 @@ fun MatrixTableView(
                         item { TableContentCell(text = row.summaryH, width = SummaryCellWidth, fontWeight = FontWeight.Bold) }
                         item { TableContentCell(text = row.summaryS, width = SummaryCellWidth) }
                         item { TableContentCell(text = row.summaryI, width = SummaryCellWidth) }
-                        item { TableContentCell(text = row.summaryA, width = SummaryCellWidth, textColor = if (row.summaryA != "0") Color.Red else Color.Unspecified) }
-                        item { TableContentCell(text = row.estimatedSalary, width = SalaryCellWidth, fontWeight = FontWeight.ExtraBold, textColor = Color(0xFF2E7D32)) }
+                        item { TableContentCell(text = row.summaryA, width = SummaryCellWidth, textColor = if (row.summaryA != "0") MaterialTheme.colorScheme.error else Color.Unspecified) }
+                        item { TableContentCell(text = row.estimatedSalary, width = SalaryCellWidth, fontWeight = FontWeight.ExtraBold, textColor = MaterialTheme.colorScheme.primary) }
                     }
                 }
             }
@@ -106,7 +106,7 @@ private fun TableHeaderCell(text: String, width: Dp) {
     Surface(
         color = MaterialTheme.colorScheme.secondaryContainer,
         modifier = Modifier.width(width),
-        border = BorderStroke(0.1.dp, Color.LightGray)
+        border = BorderStroke(0.1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Text(
             text = text,
@@ -132,7 +132,7 @@ private fun TableContentCell(
     Surface(
         color = backgroundColor,
         modifier = modifier.width(width).fillMaxHeight(),
-        border = BorderStroke(0.1.dp, Color.LightGray)
+        border = BorderStroke(0.1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Box(
             modifier = Modifier.fillMaxSize().padding(horizontal = 2.dp, vertical = 4.dp),

@@ -182,11 +182,11 @@ fun LogItemRow(record: CheckInRecordEntity, onClick: () -> Unit) {
     val timeString = record.checkInTime?.format(timeFormatter) ?: "--:--"
     
     val (statusLabel, statusColor) = when (record.status) {
-        "H" -> "Hadir" to Color(0xFF4CAF50)
-        "S" -> "Sakit" to Color(0xFF2196F3)
-        "I" -> "Izin" to Color(0xFFFFC107)
-        "A" -> "Alpa" to Color(0xFFF44336)
-        else -> "Unknown" to Color.Gray
+        "H" -> "Hadir" to MaterialTheme.colorScheme.primary
+        "S" -> "Sakit" to MaterialTheme.colorScheme.tertiary
+        "I" -> "Izin" to MaterialTheme.colorScheme.secondary
+        "A" -> "Alpa" to MaterialTheme.colorScheme.error
+        else -> "Unknown" to MaterialTheme.colorScheme.outline
     }
 
     Card(
@@ -207,14 +207,14 @@ fun LogItemRow(record: CheckInRecordEntity, onClick: () -> Unit) {
             ) {
                 Text(
                     text = timeString,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = AzuraSpacing.sm, vertical = AzuraSpacing.xs),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
             
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(AzuraSpacing.md))
             
             // Details
             Column(modifier = Modifier.weight(1f)) {
@@ -238,7 +238,7 @@ fun LogItemRow(record: CheckInRecordEntity, onClick: () -> Unit) {
             ) {
                 Text(
                     text = statusLabel,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = AzuraSpacing.sm, vertical = AzuraSpacing.xs),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = statusColor

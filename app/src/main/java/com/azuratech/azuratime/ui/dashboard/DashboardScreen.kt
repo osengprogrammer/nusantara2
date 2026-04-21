@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.ui.dashboard
 
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.azuratech.azuratime.MainActivity
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.ui.components.ConflictResolverDialog
+import com.azuratech.azuratime.ui.core.UiEvent
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.WorkspaceSelector
@@ -36,10 +36,17 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.syncCompletedEvent.collect {
-            Toast.makeText(context, "Sinkronisasi Selesai!", Toast.LENGTH_SHORT).show()
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+                is UiEvent.NavigateTo -> navController.navigate(event.route)
+                is UiEvent.NavigateUp -> navController.navigateUp()
+            }
         }
     }
 
@@ -62,6 +69,7 @@ fun DashboardScreen(
             DashboardContent(
                 navController = navController,
                 data = data,
+                snackbarHostState = snackbarHostState,
                 onSyncClick = { viewModel.sync() },
                 onSelectClass = { classId -> viewModel.selectActiveClass(classId) },
                 onLogout = {
@@ -90,12 +98,14 @@ fun DashboardScreen(
 fun DashboardContent(
     navController: NavController,
     data: DashboardUiState,
+    snackbarHostState: SnackbarHostState,
     onSyncClick: () -> Unit,
     onSelectClass: (String?) -> Unit,
     onLogout: () -> Unit
 ) {
     AzuraScreen(
         title = data.user?.schoolName?.let { "Azura - $it" } ?: "Azura IMS",
+        snackbarHostState = snackbarHostState,
         actions = {
             WorkspaceSelector(
                 currentUser = data.user,
@@ -211,6 +221,7 @@ fun DashboardContentSuccessPreview() {
             DashboardContent(
                 navController = rememberNavController(),
                 data = PreviewMocks.mockDashboardStateSuccess,
+                snackbarHostState = remember { SnackbarHostState() },
                 onSyncClick = {},
                 onSelectClass = {},
                 onLogout = {}
@@ -227,6 +238,7 @@ fun DashboardContentLoadingPreview() {
             DashboardContent(
                 navController = rememberNavController(),
                 data = PreviewMocks.mockDashboardStateLoading,
+                snackbarHostState = remember { SnackbarHostState() },
                 onSyncClick = {},
                 onSelectClass = {},
                 onLogout = {}

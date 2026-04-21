@@ -19,6 +19,7 @@ import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
+import com.azuratech.azuratime.ui.util.UiState
 
 @Composable
 fun ClassListScreen(
@@ -28,8 +29,8 @@ fun ClassListScreen(
 ) {
     val context = LocalContext.current 
     
-    // 🔥 Now using the cleaner 'classes' flow from ClassViewModel
-    val classes by classViewModel.classes.collectAsStateWithLifecycle()
+    // 🔥 Consume UiState instead of raw list
+    val uiState by classViewModel.uiState.collectAsStateWithLifecycle()
     
     var showAddDialog by remember { mutableStateOf(false) }
     var classToEdit by remember { mutableStateOf<ClassEntity?>(null) }
@@ -48,12 +49,24 @@ fun ClassListScreen(
             }
         }
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            if (classes.isEmpty()) {
+        when (val state = uiState) {
+            is UiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is UiState.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = state.message ?: "Unknown Error", color = MaterialTheme.colorScheme.error)
+                }
+            }
+            is UiState.Empty -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Belum ada kelas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            } else {
+            }
+            is UiState.Success -> {
+                val classes = state.data
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),

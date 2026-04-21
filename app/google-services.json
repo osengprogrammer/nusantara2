@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "735604901610-dg2efbq7c1bb7n7t0jachb157nolfbb4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.azura.parent",
+            "certificate_hash": "743892ff084dbebe619e40740794e1ea6f9199ac"
+          }
+        },
+        {
           "client_id": "735604901610-rcknkvu6hj9em6ha5mbj4m0cqtnsbi8o.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -48,6 +56,14 @@
           "android_info": {
             "package_name": "com.azuratech.azuratime",
             "certificate_hash": "1a3090e4b112f0cf111940c934c18fdc0bd44b32"
+          }
+        },
+        {
+          "client_id": "735604901610-8rm85eu2dbkg5clseqfv2ls4ihhulvm8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.azuratech.azuratime",
+            "certificate_hash": "743892ff084dbebe619e40740794e1ea6f9199ac"
           }
         },
         {

@@ -58,10 +58,8 @@ fun EditUserScreen(
         onCapturePhoto = { showFaceCapture = true },
         onUploadPhoto = { /* TODO */ },
         onSubmit = {
-            viewModel.saveStudent { message ->
-                context.showToast(message)
+            viewModel.saveStudent()
                 onNavigateBack()
-            }
         },
         isClassExpanded = isClassExpanded,
         onExpandedChange = { isClassExpanded = it }

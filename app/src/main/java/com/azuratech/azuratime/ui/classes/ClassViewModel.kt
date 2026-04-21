@@ -8,6 +8,7 @@ import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
 import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuratime.ui.util.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -31,18 +32,27 @@ class ClassViewModel @Inject constructor(
     // 📊 CLASS FLOWS (State Management)
     // =====================================================
 
-    val classes: StateFlow<List<ClassEntity>> = getClassesUseCase()
+    private val _uiState = MutableStateFlow<UiState<List<ClassEntity>>>(UiState.Loading)
+    val uiState: StateFlow<UiState<List<ClassEntity>>> = getClassesUseCase()
         .map { result ->
             when(result) {
-                is Result.Success -> result.data
-                else -> emptyList()
+                is Result.Success -> {
+                    if (result.data.isEmpty()) UiState.Empty
+                    else UiState.Success(result.data)
+                }
+                is Result.Failure -> UiState.Error(result.error.message ?: "Unknown error")
+                is Result.Loading -> UiState.Loading
             }
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
+            initialValue = UiState.Loading
         )
+
+    val classes: StateFlow<List<ClassEntity>> = uiState.map {
+        if (it is UiState.Success) it.data else emptyList()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // =====================================================
     // ➕ CRUD OPERATIONS

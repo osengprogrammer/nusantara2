@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 
@@ -14,6 +15,7 @@ fun AzuraScreen(
     title: String,
     onBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     floatingActionButton: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable BoxScope.() -> Unit
@@ -26,6 +28,7 @@ fun AzuraScreen(
                 actions = actions
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = floatingActionButton,
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier.fillMaxSize()
