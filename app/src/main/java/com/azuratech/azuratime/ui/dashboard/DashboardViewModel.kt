@@ -15,6 +15,7 @@ import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuratime.ui.core.UiEvent
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AttendanceConflict
@@ -43,8 +44,8 @@ class DashboardViewModel @Inject constructor(
     private val syncViewModel: SyncViewModel
 ) : ViewModel() {
 
-    private val _syncCompletedEvent = Channel<Unit>()
-    val syncCompletedEvent = _syncCompletedEvent.receiveAsFlow()
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     private val _userFlow = sessionManager.currentUserIdFlow
         .filterNotNull()
@@ -148,7 +149,7 @@ class DashboardViewModel @Inject constructor(
         syncViewModel.forceSyncFromCloud {
             viewModelScope.launch { 
                 syncCheckInRecordsUseCase()
-                _syncCompletedEvent.send(Unit) 
+                _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!")) 
             }
         }
     }

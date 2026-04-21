@@ -10,6 +10,7 @@ import com.azuratech.azuratime.domain.face.usecase.UpdateFaceWithPhotoUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
 import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -26,6 +27,9 @@ class StudentFormViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
     val uiState: StateFlow<StudentFormUiState> = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     init {
         // Load available classes using GetClassesUseCase
@@ -93,7 +97,7 @@ class StudentFormViewModel @Inject constructor(
 
     // --- Main Action ---
 
-    fun saveStudent(onSuccess: (String) -> Unit) {
+    fun saveStudent() {
         val currentState = _uiState.value
         if (!currentState.isFormValid) return
 
@@ -128,7 +132,8 @@ class StudentFormViewModel @Inject constructor(
                     when (val res = registerResult.data) {
                         is RegisterResult.Success -> {
                             val successMessage = if (currentState.isEditMode) "Berhasil diperbarui" else "Berhasil didaftarkan"
-                            onSuccess(successMessage)
+                            _uiEvent.emit(UiEvent.ShowSnackbar(successMessage))
+                            _uiEvent.emit(UiEvent.NavigateUp)
                         }
                         is RegisterResult.Duplicate -> {
                             updateState { it.copy(isSubmitting = false, formError = "Wajah ini mirip dengan ${res.name}") }

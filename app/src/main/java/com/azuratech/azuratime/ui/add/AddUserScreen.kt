@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.core.util.showToast
+import com.azuratech.azuratime.ui.core.UiEvent
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraUserFormContent
@@ -25,14 +25,27 @@ fun AddUserScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
     var showFaceCapture by remember { mutableStateOf(false) }
     var captureMode by remember { mutableStateOf(CaptureMode.PHOTO) }
     var isClassExpanded by remember { mutableStateOf(false) }
 
     // Handle submission feedback
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+                is UiEvent.NavigateUp -> onNavigateBack()
+                is UiEvent.NavigateTo -> {} // Handle if needed
+            }
+        }
+    }
+
     LaunchedEffect(uiState.formError) {
         uiState.formError?.let {
-            context.showToast("Error: $it")
+            snackbarHostState.showSnackbar("Error: $it")
         }
     }
 
@@ -51,14 +64,12 @@ fun AddUserScreen(
         },
         onUploadPhoto = { /* TODO */ },
         onSubmit = {
-            viewModel.saveStudent { message ->
-                context.showToast(message)
-                onNavigateBack()
-            }
+            viewModel.saveStudent()
         },
         onFlipCamera = { /* Camera logic managed in capture screen */ },
         isClassExpanded = isClassExpanded,
-        onExpandedChange = { isClassExpanded = it }
+        onExpandedChange = { isClassExpanded = it },
+        snackbarHostState = snackbarHostState
     )
 
     if (showFaceCapture) {

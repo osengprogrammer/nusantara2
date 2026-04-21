@@ -9,11 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.ui.theme.AzuraShapes
+import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import java.time.format.DateTimeFormatter
 
 /**
@@ -30,9 +30,9 @@ fun CheckInRecordEntityCard(
 
     // 🔥 DYNAMIC COLOR LOGIC
     val statusColor = when (record.status) {
-        "H", "In", "Hadir" -> Color(0xFF2E7D32) // Success Green
-        "S" -> Color(0xFFF9A825)               // Sakit Yellow
-        "I" -> Color(0xFF1565C0)               // Izin Blue
+        "H", "In", "Hadir" -> MaterialTheme.colorScheme.primary // Success Green -> primary
+        "S" -> MaterialTheme.colorScheme.tertiary               // Sakit Yellow -> tertiary
+        "I" -> MaterialTheme.colorScheme.secondary               // Izin Blue -> secondary
         "A", "Alpa" -> MaterialTheme.colorScheme.error
         else -> MaterialTheme.colorScheme.primary
     }
@@ -40,12 +40,12 @@ fun CheckInRecordEntityCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp),
+            .padding(horizontal = AzuraSpacing.xs, vertical = AzuraSpacing.sm),
         shape = AzuraShapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(AzuraSpacing.md)) {
             // --- Row 1: Name & Status Badge ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -65,7 +65,7 @@ fun CheckInRecordEntityCard(
                 ) {
                     Text(
                         text = record.status,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = AzuraSpacing.sm, vertical = AzuraSpacing.xs),
                         style = MaterialTheme.typography.labelMedium,
                         color = statusColor,
                         fontWeight = FontWeight.Black
@@ -73,23 +73,23 @@ fun CheckInRecordEntityCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
             // --- Row 2: Time & Date Info ---
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.History, null, modifier = Modifier.size(14.dp), tint = Color.Gray)
-                Spacer(modifier = Modifier.width(4.dp))
+                Icon(Icons.Default.History, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.width(AzuraSpacing.xs))
                 val timeToDisplay = record.checkInTime ?: record.createdAtDateTime
                 Text(
                     text = "${timeToDisplay.format(timeFormatter)} • ${record.attendanceDate.format(dateFormatter)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(AzuraSpacing.md))
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(AzuraSpacing.md))
 
             // --- Row 3: Class Assignment & Edit ---
             Row(
@@ -99,7 +99,7 @@ fun CheckInRecordEntityCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.School, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(AzuraSpacing.sm))
                     val displayClass = if (record.className.isNullOrBlank()) "Mode Gerbang" else record.className
                     Text(
                         text = displayClass,
@@ -111,12 +111,12 @@ fun CheckInRecordEntityCard(
 
                 FilledTonalButton(
                     onClick = { onEditRequested(record) },
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                    contentPadding = PaddingValues(horizontal = AzuraSpacing.sm, vertical = 0.dp),
                     modifier = Modifier.height(32.dp),
                     shape = AzuraShapes.small
                 ) {
                     Icon(Icons.Default.Edit, null, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(AzuraSpacing.xs))
                     Text("Koreksi", style = MaterialTheme.typography.labelSmall)
                 }
             }

@@ -33,6 +33,7 @@ fun AddUserContent(
     onFlipCamera: () -> Unit, // Added for consistency with a potential capture flow
     isClassExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     modifier: Modifier = Modifier
 ) {
     val selectedClassName = remember(uiState.selectedClassId, uiState.availableClasses) {
@@ -41,6 +42,7 @@ fun AddUserContent(
 
     AzuraScreen(
         title = uiState.pageTitle,
+        snackbarHostState = snackbarHostState,
         content = {
             Column(
                 modifier = modifier

@@ -40,6 +40,49 @@ android {
         }
     }
 
+    // 🔐 SIGNING CONFIGS
+    signingConfigs {
+        create("release") {
+            // 🔹 For internal testing: use debug keystore temporarily
+            // 🔹 For Play Store: replace with your production .jks/.keystore
+            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
+    buildTypes {
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false
+            // applicationIdSuffix = ".debug"
+            // versionNameSuffix = "-debug"
+        }
+        release {
+            isMinifyEnabled = true          // ✅ Enable R8 code shrinking
+            isShrinkResources = true        // ✅ Remove unused resources
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
+            // Optional: keep Hilt/Room/Firebase classes if R8 removes them incorrectly
+            proguardFiles("proguard-rules.pro")
+        }
+    }
+
+    // 📉 ABI SPLITS: Generate separate APKs per CPU architecture (cuts native lib bloat)
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            // Keep only modern ARM architectures (drop x86 unless needed for emulators)
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
+
     buildFeatures {
         compose = true
         mlModelBinding = true 
@@ -67,7 +110,30 @@ android {
             version = "3.22.1"
         }
     }
+
+    // 📦 PACKAGING OPTIONS: Exclude duplicate META-INF files that can cause merge conflicts
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/NOTICE"
+            excludes += "/META-INF/NOTICE.txt"
+            excludes += "/META-INF/ASL2.0"
+            excludes += "/META-INF/*.kotlin_module"
+        }
+    }
 }
+
+// 🔧 HILT: Ensure KSP runs before Java compilation
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+        freeCompilerArgs += "-opt-in=kotlinx.coroutines.FlowPreview"
+    }
+}
+
 dependencies {
     // --- ANDROIDX & UI CORE ---
     implementation(libs.androidx.core.ktx)
@@ -144,15 +210,17 @@ dependencies {
     
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.7.3") // For CameraX .await()
-implementation("com.google.firebase:firebase-functions-ktx:20.4.0") // For Firebase Functions
+    implementation("com.google.firebase:firebase-functions-ktx:20.4.0") // For Firebase Functions
 
-// --- TESTING ---
-testImplementation(libs.junit)
-testImplementation("com.tngtech.archunit:archunit-junit4:1.3.0")
-androidTestImplementation(libs.androidx.junit)
-androidTestImplementation(libs.androidx.espresso.core)
-androidTestImplementation(platform(libs.androidx.compose.bom))
-androidTestImplementation(libs.androidx.ui.test.junit4)
-debugImplementation(libs.androidx.ui.tooling)
-debugImplementation(libs.androidx.ui.test.manifest)
+    // --- TESTING ---
+    testImplementation(libs.junit)
+    testImplementation("com.tngtech.archunit:archunit-junit4:1.3.0")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

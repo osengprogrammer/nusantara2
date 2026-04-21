@@ -40,14 +40,14 @@ fun TeacherTasksGrid(
             DashboardActionCard(
                 title = "Scan Barcode", 
                 icon = Icons.Default.QrCodeScanner, 
-                color = Color(0xFFE53935), 
+                color = MaterialTheme.colorScheme.error, 
                 onClick = { navController.navigate(Screen.BarcodeScan.route) }, 
                 modifier = Modifier.weight(1f)
             )
             DashboardActionCard(
                 title = "Input Manual", 
                 icon = Icons.Default.EditCalendar, 
-                color = Color(0xFF0288D1), 
+                color = MaterialTheme.colorScheme.tertiary, 
                 onClick = { navController.navigate(Screen.ManualAttendance.createRoute("", "")) }, 
                 modifier = Modifier.weight(1f)
             )
@@ -63,7 +63,7 @@ fun TeacherTasksGrid(
             DashboardActionCard("Scanner Wajah", Icons.Default.CameraAlt, MaterialTheme.colorScheme.primary,
                 { navController.navigate(Screen.CheckIn.route) }, Modifier.weight(1f))
 
-            DashboardActionCard("Cetak Barcode", Icons.Default.QrCode, Color(0xFF673AB7), 
+            DashboardActionCard("Cetak Barcode", Icons.Default.QrCode, MaterialTheme.colorScheme.secondary, 
                 { navController.navigate(Screen.FaceListBarcode.route) }, Modifier.weight(1f))
         }
 
@@ -89,7 +89,7 @@ fun TeacherTasksGrid(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
         ) {
-            DashboardActionCard("Laporan Matriks", Icons.Default.GridOn, Color(0xFF2E7D32), {
+            DashboardActionCard("Laporan Matriks", Icons.Default.GridOn, MaterialTheme.colorScheme.primaryContainer, {
                 navController.navigate(Screen.AttendanceMatrix.route)
             }, Modifier.weight(1f))
         }
@@ -102,9 +102,9 @@ fun TeacherTasksGrid(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
             ) {
-                DashboardActionCard("Registrasi Baru", Icons.Default.PersonAdd, Color(0xFFF57C00),
+                DashboardActionCard("Registrasi Baru", Icons.Default.PersonAdd, MaterialTheme.colorScheme.tertiary,
                     { navController.navigate(Screen.RegistrationMenu.route) }, Modifier.weight(1f))
-                DashboardActionCard("Debug System", Icons.Default.BugReport, Color.Gray,
+                DashboardActionCard("Debug System", Icons.Default.BugReport, MaterialTheme.colorScheme.outline,
                     { navController.navigate(Screen.Debug.route) }, Modifier.weight(1f))
             }
         }
