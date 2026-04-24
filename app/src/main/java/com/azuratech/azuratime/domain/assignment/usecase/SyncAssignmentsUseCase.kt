@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.assignment.usecase
 
-import android.util.Log
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.FaceAssignmentEntity
@@ -58,7 +57,7 @@ class SyncAssignmentsUseCase @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.w("SyncAssignments", "Root fetch failed: ${e.message}")
+                println("[SyncAssignments] Root fetch failed: ${e.message}")
             }
 
             // 3. Auto-Healing
