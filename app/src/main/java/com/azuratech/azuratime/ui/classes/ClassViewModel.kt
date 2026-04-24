@@ -72,7 +72,7 @@ class ClassViewModel @Inject constructor(
 
     fun importClassesFromCsv(uri: Uri, onComplete: () -> Unit) {
         viewModelScope.launch {
-            val result = importClassesUseCase(uri)
+            val result = importClassesUseCase(uri.toString())
             // Even if it fails, we call onComplete to stop loading UI
             // The result handling for errors could be added here if we had a snackbar state
             onComplete()
