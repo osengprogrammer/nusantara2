@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.classes.usecase
 
-import android.util.Log
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
@@ -66,7 +65,7 @@ class SyncClassesUseCase @Inject constructor(
                     
                     if (newRootClasses.isNotEmpty()) {
                         classEntities.addAll(newRootClasses)
-                        Log.i("SyncClassesUseCase", "✅ Migrated ${newRootClasses.size} classes from root collection")
+                        println("[SyncClassesUseCase] ✅ Migrated ${newRootClasses.size} classes from root collection")
                         
                         // Auto-migrate them to the correct tenant path
                         newRootClasses.forEach { legacyClass ->
@@ -75,7 +74,7 @@ class SyncClassesUseCase @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.w("SyncClassesUseCase", "Legacy root fetch failed: ${e.message}")
+                println("[SyncClassesUseCase] Legacy root fetch failed: ${e.message}")
             }
 
             // 3. Merge with local DB
@@ -91,7 +90,7 @@ class SyncClassesUseCase @Inject constructor(
                 classDao.insertAll(classEntities)
                 
                 sessionManager.saveLastClassesSyncTime()
-                Log.i("SyncClassesUseCase", "✅ Class Full Sync: Updated ${classEntities.size} classes")
+                println("[SyncClassesUseCase] ✅ Class Full Sync: Updated ${classEntities.size} classes")
             }
             Result.Success(Unit)
         } catch (e: Exception) {
