@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.assignment.usecase
 
-import android.util.Log
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.FaceAssignmentEntity
@@ -51,7 +50,7 @@ class AssignStudentToClassUseCase @Inject constructor(
             
             Result.Success(Unit)
         } catch (e: Exception) {
-            Log.e("AssignStudentToClass", "❌ Gagal sync assignment: ${e.message}")
+            println("ERROR: [AssignStudentToClass] ❌ Gagal sync assignment: ${e.message}")
             // Return failure to UI as per legacy repo requirements
             Result.Failure(AppError.Network("Gagal sinkronisasi ke server. Periksa koneksi internet."))
         }
