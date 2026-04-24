@@ -4,14 +4,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Base64
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import java.util.concurrent.TimeUnit
 
 /**
@@ -45,7 +45,7 @@ object BulkPhotoProcessor {
         }
         
         try {
-            Log.d(TAG, "Processing photo for $faceId: ${photoSource.take(100)}...")
+            println("[$TAG] Processing photo for $faceId: ${photoSource.take(100)}...")
             
             val bitmap = when {
                 photoSource.startsWith("http://") || photoSource.startsWith("https://") -> {
@@ -87,7 +87,7 @@ object BulkPhotoProcessor {
             )
             
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing photo for $faceId", e)
+            println("ERROR: [$TAG] Error processing photo for $faceId: ${e.message}")
             PhotoProcessResult(success = false, error = "Processing failed: ${e.message}")
         }
     }
@@ -121,7 +121,7 @@ object BulkPhotoProcessor {
                     PhotoStorageUtils.loadBitmapFromUri(context, Uri.fromFile(it), MAX_PHOTO_SIZE)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to download photo from $url", e)
+                println("ERROR: [$TAG] Failed to download photo from $url: ${e.message}")
                 null
             } finally {
                 // Critical: Always delete the temp file immediately
@@ -130,10 +130,11 @@ object BulkPhotoProcessor {
         }
     }
     
+    @OptIn(ExperimentalEncodingApi::class)
     private fun decodeBase64Photo(dataUrl: String): Bitmap? {
         return try {
             val base64Data = if (dataUrl.contains(",")) dataUrl.substringAfter(",") else dataUrl
-            val decodedBytes = Base64.decode(base64Data, Base64.DEFAULT)
+            val decodedBytes = Base64.decode(base64Data)
             
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size, options)
@@ -144,7 +145,7 @@ object BulkPhotoProcessor {
             
             BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size, options)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to decode base64 photo", e)
+            println("ERROR: [$TAG] Failed to decode base64 photo: ${e.message}")
             null
         }
     }
