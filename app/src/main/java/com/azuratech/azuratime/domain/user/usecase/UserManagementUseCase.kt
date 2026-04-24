@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.user.usecase
 
-import android.util.Log
 import com.azuratech.azuratime.data.local.*
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -36,7 +35,7 @@ class UserManagementUseCase @Inject constructor(
                 }
             }.await()
         } catch (e: Exception) {
-            Log.e("UserManagementUseCase", "Failed to sync class assignment: ${e.message}")
+            println("ERROR: [UserManagementUseCase] Failed to sync class assignment: ${e.message}")
         }
     }
 
@@ -47,7 +46,7 @@ class UserManagementUseCase @Inject constructor(
             db.collection("whitelisted_users").document(targetId)
                 .set(mapOf("assignedClassIds" to currentIds), SetOptions.merge()).await()
         } catch (e: Exception) {
-            Log.e("UserManagementUseCase", "Failed to remove class access: ${e.message}")
+            println("ERROR: [UserManagementUseCase] Failed to remove class access: ${e.message}")
         }
     }
 
