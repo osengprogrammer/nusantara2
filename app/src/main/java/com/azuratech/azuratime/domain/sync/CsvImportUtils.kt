@@ -1,17 +1,22 @@
 package com.azuratech.azuratime.domain.sync
 
-import android.content.Context
-import android.net.Uri
+import com.azuratech.azuratime.domain.core.StorageProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
+import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * AZURA CSV IMPORT UTILS
  * Mesin pembaca data massal yang tahan banting terhadap berbagai format Excel/CSV.
  */
-object CsvImportUtils {
+@Singleton
+class CsvImportUtils @Inject constructor(
+    private val storageProvider: StorageProvider
+) {
     
     // 🔥 DATA RAMPING: Hanya data identitas inti dan metadata fleksibel
     data class CsvStudentData(
@@ -30,56 +35,59 @@ object CsvImportUtils {
     )
 
     // 🔥 JEMBATAN KE VIEWMODEL: Memastikan sinkron dengan RegisterViewModel
-    suspend fun parseCsvToStudentData(context: Context, uri: Uri): List<CsvStudentData> {
-        return parseCsvFile(context, uri).students
+    suspend fun parseCsvToStudentData(uriString: String): List<CsvStudentData> {
+        return parseCsvFile(uriString).students
     }
 
     // MESIN UTAMA PARSING CSV
-    suspend fun parseCsvFile(context: Context, uri: Uri): CsvParseResult = withContext(Dispatchers.IO) {
+    suspend fun parseCsvFile(uriString: String): CsvParseResult = withContext(Dispatchers.IO) {
         val students = mutableListOf<CsvStudentData>()
         val errors = mutableListOf<String>()
         var totalRows = 0
         var validRows = 0
         
         try {
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                    var line: String?
-                    var lineNumber = 0
-                    var headers: List<String>? = null
+            val bytes = storageProvider.read(uriString)
+            if (bytes.isEmpty()) {
+                return@withContext CsvParseResult(emptyList(), listOf("File kosong atau tidak dapat dibaca"), 0, 0)
+            }
+
+            BufferedReader(InputStreamReader(ByteArrayInputStream(bytes))).use { reader ->
+                var line: String?
+                var lineNumber = 0
+                var headers: List<String>? = null
+                
+                while (reader.readLine().also { line = it } != null) {
+                    lineNumber++
+                    val currentLine = line?.trim() ?: continue
+                    if (currentLine.isEmpty()) continue
                     
-                    while (reader.readLine().also { line = it } != null) {
-                        lineNumber++
-                        val currentLine = line?.trim() ?: continue
-                        if (currentLine.isEmpty()) continue
-                        
-                        val columns = parseCsvLine(currentLine)
-                        if (columns.isEmpty()) continue
+                    val columns = parseCsvLine(currentLine)
+                    if (columns.isEmpty()) continue
 
-                        // 🔥 KUNCI PERBAIKAN: Bersihkan spasi, underscore (_), dan BOM
-                        if (lineNumber == 1) {
-                            headers = columns.map { it.lowercase().replace(" ", "").replace("_", "").replace("\uFEFF", "") }
-                            continue
-                        }
+                    // 🔥 KUNCI PERBAIKAN: Bersihkan spasi, underscore (_), dan BOM
+                    if (lineNumber == 1) {
+                        headers = columns.map { it.lowercase().replace(" ", "").replace("_", "").replace("\uFEFF", "") }
+                        continue
+                    }
 
-                        if (headers == null) {
-                            errors.add("Baris $lineNumber: Header tidak ditemukan.")
-                            continue
-                        }
+                    if (headers == null) {
+                        errors.add("Baris $lineNumber: Header tidak ditemukan.")
+                        continue
+                    }
 
-                        totalRows++
-                        
-                        try {
-                            val student = parseStudentRow(headers, columns)
-                            if (student != null) {
-                                students.add(student)
-                                validRows++
-                            } else {
-                                errors.add("Baris $lineNumber: ID (face_id) wajib diisi.")
-                            }
-                        } catch (e: Exception) {
-                            errors.add("Baris $lineNumber: Error format (${e.message})")
+                    totalRows++
+                    
+                    try {
+                        val student = parseStudentRow(headers, columns)
+                        if (student != null) {
+                            students.add(student)
+                            validRows++
+                        } else {
+                            errors.add("Baris $lineNumber: ID (face_id) wajib diisi.")
                         }
+                    } catch (e: Exception) {
+                        errors.add("Baris $lineNumber: Error format (${e.message})")
                     }
                 }
             }

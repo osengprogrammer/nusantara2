@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import com.azuratech.azuratime.domain.sync.ExportUtils
 import com.azuratech.azuratime.domain.result.Result
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
@@ -37,7 +38,8 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
     private val processCheckInUseCase: ProcessCheckInUseCase,
     private val updateCheckInRecordUseCase: UpdateCheckInRecordUseCase,
     private val deleteCheckInRecordUseCase: DeleteCheckInRecordUseCase,
-    private val sessionManager: SessionManager // 🔥 SessionManager disuntikkan langsung
+    private val sessionManager: SessionManager, // 🔥 SessionManager disuntikkan langsung
+    private val exportUtils: ExportUtils
 ) : AndroidViewModel(application) {
 
     private val faceAssignmentDao = database.faceAssignmentDao()
@@ -186,5 +188,9 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
     
     fun deleteRecord(record: CheckInRecordEntity) { 
         viewModelScope.launch { deleteCheckInRecordUseCase(record.id) } 
+    }
+
+    fun exportRecords(records: List<CheckInRecordEntity>) {
+        viewModelScope.launch { exportUtils.exportRawLogsToCsv(records) }
     }
 }

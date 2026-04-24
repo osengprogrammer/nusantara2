@@ -94,7 +94,8 @@ class FaceViewModel @Inject constructor(
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
-            val result = registerFaceUseCase(inputId, classId, name, embedding, photoBitmap)
+            val photoBytes = photoBitmap?.let { bitmapToByteArray(it) }
+            val result = registerFaceUseCase(inputId, classId, name, embedding, photoBytes)
             withContext(Dispatchers.Main) {
                 when (result) {
                     is Result.Success -> {
@@ -109,6 +110,12 @@ class FaceViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
+        val stream = java.io.ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        return stream.toByteArray()
     }
 
     fun deleteFace(face: FaceEntity) { 

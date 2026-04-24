@@ -1,56 +1,26 @@
 package com.azuratech.azuratime.domain.media
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
-import androidx.core.graphics.scale
-import android.net.Uri
-import androidx.exifinterface.media.ExifInterface // Make sure this is in your build.gradle!
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
+import com.azuratech.azuratime.domain.core.ImageProcessor
+import com.azuratech.azuratime.domain.core.StorageProvider
+import javax.inject.Inject
 
-object PhotoStorageUtils {
-    private const val FACE_FOLDER_NAME = "faces"
-    private const val TAG = "PhotoStorageUtils"
-    
-    fun getFacesDirectory(context: Context): File {
-        val facesDir = File(context.filesDir, FACE_FOLDER_NAME)
-        if (!facesDir.exists()) {
-            facesDir.mkdirs()
-        }
-        return facesDir
-    }
-    
-    fun saveFacePhoto(context: Context, bitmap: Bitmap, faceId: String): String? {
+class PhotoStorageUtils @Inject constructor(
+    private val imageProcessor: ImageProcessor,
+    private val storageProvider: StorageProvider
+) {
+    fun saveFacePhoto(imageBytes: ByteArray, faceId: String): String? {
+        val fileName = "${faceId}_${System.currentTimeMillis()}.jpg"
         return try {
-            val facesDir = getFacesDirectory(context)
-            val fileName = "${faceId}_${System.currentTimeMillis()}.jpg"
-            val file = File(facesDir, fileName)
-            
-            FileOutputStream(file).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
-            }
-            
-            println("[$TAG] Photo saved: ${file.absolutePath}")
-            file.absolutePath
-        } catch (e: IOException) {
+            storageProvider.save(imageBytes, fileName)
+        } catch (e: Exception) {
             println("ERROR: [$TAG] Failed to save photo: ${e.message}")
             null
         }
     }
     
-    fun loadFacePhoto(filePath: String): Bitmap? {
+    fun loadFacePhoto(filePath: String): ByteArray? {
         return try {
-            val file = File(filePath)
-            if (file.exists()) {
-                BitmapFactory.decodeFile(filePath)
-            } else {
-                println("[$TAG] Photo file not found: $filePath")
-                null
-            }
+            storageProvider.read(filePath)
         } catch (e: Exception) {
             println("ERROR: [$TAG] Failed to load photo: $filePath: ${e.message}")
             null
@@ -58,113 +28,31 @@ object PhotoStorageUtils {
     }
     
     /**
-     * Load a bitmap from URI (for gallery selection)
-     * URIs are dangerous! They can be massive and rotated. We must load them safely.
+     * Load an image from URI/Path safely and resize it.
      */
-    fun loadBitmapFromUri(context: Context, uri: Uri, maxDimension: Int = 1024): Bitmap? {
+    fun loadPhoto(uriString: String, maxDimension: Int = 1024): ByteArray? {
         return try {
-            // 1. Decode ONLY the bounds to check the image size without loading into RAM
-            val options = BitmapFactory.Options().apply {
-                inJustDecodeBounds = true
-            }
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                BitmapFactory.decodeStream(stream, null, options)
-            }
-
-            // 2. Calculate the optimal downsampling ratio to prevent OOM
-            options.inSampleSize = calculateInSampleSize(options, maxDimension, maxDimension)
-            options.inJustDecodeBounds = false
-
-            // 3. Decode the actual bitmap, shrunk down to a safe size
-            val rawBitmap = context.contentResolver.openInputStream(uri)?.use { stream ->
-                BitmapFactory.decodeStream(stream, null, options)
-            } ?: return null
-
-            // 4. Fix the EXIF Rotation (Gallery images are often sideways)
-            rotateImageIfRequired(context, rawBitmap, uri)
+            val rawBytes = storageProvider.read(uriString)
+            if (rawBytes.isEmpty()) return null
             
+            imageProcessor.resize(rawBytes, maxDimension, maxDimension)
         } catch (e: Exception) {
-            println("ERROR: [$TAG] Failed to load bitmap from URI: $uri: ${e.message}")
+            println("ERROR: [$TAG] Failed to load photo from URI: $uriString: ${e.message}")
             null
         }
     }
 
-    /**
-     * Calculates the factor by which to shrink the image during loading.
-     * NOW PUBLIC: Shared across the app to prevent duplicate math functions.
-     */
-    fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-        val (height: Int, width: Int) = options.outHeight to options.outWidth
-        var inSampleSize = 1
-
-        if (height > reqHeight || width > reqWidth) {
-            val halfHeight: Int = height / 2
-            val halfWidth: Int = width / 2
-            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
-    }
-
-    /**
-     * Reads the EXIF metadata from the URI and rotates the Bitmap so it is upright.
-     */
-    private fun rotateImageIfRequired(context: Context, img: Bitmap, selectedImage: Uri): Bitmap {
-        val input: InputStream? = context.contentResolver.openInputStream(selectedImage)
-        val ei = input?.use { ExifInterface(it) } ?: return img
-
-        val orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-
-        return when (orientation) {
-            ExifInterface.ORIENTATION_ROTATE_90 -> rotateImage(img, 90f)
-            ExifInterface.ORIENTATION_ROTATE_180 -> rotateImage(img, 180f)
-            ExifInterface.ORIENTATION_ROTATE_270 -> rotateImage(img, 270f)
-            else -> img
-        }
-    }
-
-    private fun rotateImage(img: Bitmap, degree: Float): Bitmap {
-        val matrix = Matrix()
-        matrix.postRotate(degree)
-        val rotatedImg = Bitmap.createBitmap(img, 0, 0, img.width, img.height, matrix, true)
-        if (rotatedImg != img) {
-            img.recycle() // Clean up the raw sideways image
-        }
-        return rotatedImg
-    }
-    
     fun deleteFacePhoto(filePath: String?): Boolean {
-        return try {
-            if (filePath != null) {
-                val file = File(filePath)
-                if (file.exists()) file.delete() else true
-            } else true
-        } catch (e: Exception) { false }
+        return if (filePath != null) {
+            storageProvider.delete(filePath)
+        } else true
     }
     
-    fun getPhotoFileSize(filePath: String?): Long {
-        return try {
-            if (filePath != null) File(filePath).let { if (it.exists()) it.length() else 0L } else 0L
-        } catch (e: Exception) { 0L }
+    fun resizeImage(imageBytes: ByteArray, maxDimension: Int): ByteArray {
+        return imageProcessor.resize(imageBytes, maxDimension, maxDimension)
     }
-    
-    fun cleanupOldPhotos(context: Context, faceId: String, keepFilePath: String?) {
-        try {
-            val facesDir = getFacesDirectory(context)
-            facesDir.listFiles { file -> file.name.startsWith("${faceId}_") && file.absolutePath != keepFilePath }
-                ?.forEach { it.delete() }
-        } catch (e: Exception) {
-            println("ERROR: [$TAG] Failed to cleanup old photos: ${e.message}")
-        }
-    }
-    
-    fun resizeBitmap(bitmap: Bitmap, maxDimension: Int): Bitmap {
-        val width = bitmap.width
-        val height = bitmap.height
-        if (width <= maxDimension && height <= maxDimension) return bitmap
-        
-        val ratio = if (width > height) maxDimension.toFloat() / width else maxDimension.toFloat() / height
-        return bitmap.scale((width * ratio).toInt(), (height * ratio).toInt())
+
+    companion object {
+        private const val TAG = "PhotoStorageUtils"
     }
 }

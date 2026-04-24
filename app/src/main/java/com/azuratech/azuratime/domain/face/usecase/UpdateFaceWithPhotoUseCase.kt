@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.domain.face.usecase
 
 import android.app.Application
-import android.graphics.Bitmap
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.FaceCache
 import com.azuratech.azuratime.data.local.FaceEntity
@@ -22,11 +21,12 @@ class UpdateFaceWithPhotoUseCase @Inject constructor(
     private val application: Application,
     private val localDataSource: FaceLocalDataSource,
     private val remoteDataSource: FaceRemoteDataSource,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val photoStorageUtils: PhotoStorageUtils
 ) {
     suspend operator fun invoke(
         face: FaceEntity,
-        photoBitmap: Bitmap?,
+        photoBytes: ByteArray?,
         embedding: FloatArray
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
@@ -38,14 +38,12 @@ class UpdateFaceWithPhotoUseCase @Inject constructor(
 
             // 2. If new photo provided: upload to Firebase Storage -> get URL
             var finalPhotoUrl = face.photoUrl
-            if (photoBitmap != null) {
+            if (photoBytes != null) {
                 // Save locally first for immediate use
-                finalPhotoUrl = PhotoStorageUtils.saveFacePhoto(application, photoBitmap, face.faceId)
+                finalPhotoUrl = photoStorageUtils.saveFacePhoto(photoBytes, face.faceId)
                 
                 // Upload to remote storage
-                val stream = java.io.ByteArrayOutputStream()
-                photoBitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-                val uploadResult = remoteDataSource.uploadFacePhoto(schoolId, face.faceId, stream.toByteArray())
+                val uploadResult = remoteDataSource.uploadFacePhoto(schoolId, face.faceId, photoBytes)
                 
                 if (uploadResult is Result.Success) {
                     finalPhotoUrl = uploadResult.data ?: finalPhotoUrl

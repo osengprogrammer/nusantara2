@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.classes.usecase
 
-import android.net.Uri
 import com.azuratech.azuratime.domain.sync.usecase.ProcessCsvUseCase
 import com.azuratech.azuratime.domain.result.AppError
 import com.azuratech.azuratime.domain.result.Result
@@ -16,11 +15,11 @@ import javax.inject.Inject
 class ImportClassesUseCase @Inject constructor(
     private val processCsvUseCase: ProcessCsvUseCase
 ) {
-    suspend operator fun invoke(uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(uriString: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             // Collecting the flow to completion. Progress is handled by UseCase internally if needed,
             // but for this UseCase we just wait for success/fail.
-            processCsvUseCase(uri, "ASSIGNMENT").collect()
+            processCsvUseCase(uriString, "ASSIGNMENT").collect()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.BusinessRule(e.message ?: "Gagal memproses file CSV"))

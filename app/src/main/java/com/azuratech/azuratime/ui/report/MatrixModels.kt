@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.ClassEntity
 import java.time.LocalDate
-import java.io.File
 
 /**
  * A display-ready model for a single cell in the attendance grid.
@@ -49,7 +48,7 @@ data class AttendanceMatrixData(
     val selectedClassId: String? = "ALL",
     val policy: String = "SCHOOL",
     val isExporting: Boolean = false,
-    val exportedFile: File? = null
+    val exportedFile: String? = null
 )
 
 sealed class AttendanceMatrixUiState {
