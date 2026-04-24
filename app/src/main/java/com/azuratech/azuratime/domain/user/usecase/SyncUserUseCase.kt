@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.user.usecase
 
-import android.util.Log
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.domain.result.AppError
