@@ -2,7 +2,6 @@ package com.azuratech.azuratime.domain.sync
 
 import android.content.Context
 import android.os.Environment
-import android.util.Log
 import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.FaceEntity
@@ -89,10 +88,10 @@ object ExportUtils {
                     writer.println(row.joinToString(",") { escapeCsv(it) })
                 }
             }
-            Log.d("Azura_Export", "✅ Report generated: ${file.absolutePath}")
+            println("[Azura_Export] ✅ Report generated: ${file.absolutePath}")
             file
         } catch (e: Exception) {
-            Log.e("Azura_Export", "❌ Export failed: ${e.message}")
+            println("ERROR: [Azura_Export] ❌ Export failed: ${e.message}")
             null
         }
     }
@@ -146,10 +145,10 @@ object ExportUtils {
                     writer.println(rowData.joinToString(",") { escapeCsv(it) })
                 }
             }
-            Log.d("Azura_Export", "✅ Master Data exported: ${file.absolutePath}")
+            println("[Azura_Export] ✅ Master Data exported: ${file.absolutePath}")
             file
         } catch (e: Exception) {
-            Log.e("Azura_Export", "❌ Master Export failed: ${e.message}")
+            println("ERROR: [Azura_Export] ❌ Master Export failed: ${e.message}")
             null
         }
     }
