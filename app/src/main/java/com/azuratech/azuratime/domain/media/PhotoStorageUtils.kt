@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import androidx.core.graphics.scale
 import android.net.Uri
-import android.util.Log
 import androidx.exifinterface.media.ExifInterface // Make sure this is in your build.gradle!
 import java.io.File
 import java.io.FileOutputStream
@@ -35,10 +34,10 @@ object PhotoStorageUtils {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
             }
             
-            Log.d(TAG, "Photo saved: ${file.absolutePath}")
+            println("[$TAG] Photo saved: ${file.absolutePath}")
             file.absolutePath
         } catch (e: IOException) {
-            Log.e(TAG, "Failed to save photo", e)
+            println("ERROR: [$TAG] Failed to save photo: ${e.message}")
             null
         }
     }
@@ -49,11 +48,11 @@ object PhotoStorageUtils {
             if (file.exists()) {
                 BitmapFactory.decodeFile(filePath)
             } else {
-                Log.w(TAG, "Photo file not found: $filePath")
+                println("[$TAG] Photo file not found: $filePath")
                 null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load photo: $filePath", e)
+            println("ERROR: [$TAG] Failed to load photo: $filePath: ${e.message}")
             null
         }
     }
@@ -85,7 +84,7 @@ object PhotoStorageUtils {
             rotateImageIfRequired(context, rawBitmap, uri)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load bitmap from URI: $uri", e)
+            println("ERROR: [$TAG] Failed to load bitmap from URI: $uri: ${e.message}")
             null
         }
     }
@@ -156,7 +155,7 @@ object PhotoStorageUtils {
             facesDir.listFiles { file -> file.name.startsWith("${faceId}_") && file.absolutePath != keepFilePath }
                 ?.forEach { it.delete() }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to cleanup old photos", e)
+            println("ERROR: [$TAG] Failed to cleanup old photos: ${e.message}")
         }
     }
     
