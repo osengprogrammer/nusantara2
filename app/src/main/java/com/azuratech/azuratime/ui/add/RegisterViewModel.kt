@@ -47,7 +47,7 @@ class RegisterViewModel @Inject constructor(
             val resultLogs = mutableListOf<ProcessResult>()
 
             try {
-                processCsvUseCase(uri, dataType).collect { result ->
+                processCsvUseCase(uri.toString(), dataType).collect { result ->
                     if (result.status != "Syncing") {
                         resultLogs.add(result)
                     }

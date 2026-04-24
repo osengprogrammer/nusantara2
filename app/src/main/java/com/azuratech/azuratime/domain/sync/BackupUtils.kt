@@ -8,8 +8,6 @@ import javax.inject.Singleton
 class BackupUtils @Inject constructor(
     private val storageProvider: StorageProvider
 ) {
-    private const val DB_NAME = "azura.db" // Nama database sesuai AppDatabase.kt
-
     fun backupAndShareDatabase() {
         try {
             // 1. Dapatkan lokasi database original
@@ -40,7 +38,7 @@ class BackupUtils @Inject constructor(
             // 2. Lakukan penyalinan file dengan membaca URI lewat StorageProvider
             val backupBytes = storageProvider.read(backupUriString)
             if (backupBytes.isNotEmpty()) {
-                storageProvider.save(backupBytes, DB_NAME, "databases") // Need to ensure "databases" is handled or use absolute path
+                storageProvider.save(backupBytes, DB_NAME, "databases") // Need to ensure \"databases\" is handled or use absolute path
                 // Actually, saving directly to dbPath is better.
                 java.io.File(dbPath).writeBytes(backupBytes)
                 onComplete()
@@ -48,5 +46,9 @@ class BackupUtils @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    companion object {
+        private const val DB_NAME = "azura.db" // Nama database sesuai AppDatabase.kt
     }
 }
