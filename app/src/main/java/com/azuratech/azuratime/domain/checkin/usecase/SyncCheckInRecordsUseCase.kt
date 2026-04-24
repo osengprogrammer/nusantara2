@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.checkin.usecase
 
-import android.util.Log
 import com.azuratech.azuratime.data.local.CheckInLocalDataSource
 import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
 import com.azuratech.azuratime.core.session.SessionManager
@@ -38,7 +37,7 @@ class SyncCheckInRecordsUseCase @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("SyncCheckInRecordsUseCase", "Error during push phase: ${e.message}")
+            println("ERROR: [SyncCheckInRecordsUseCase] Error during push phase: ${e.message}")
             // Continue to pull phase even if push fails, unless it's a critical error
         }
 
@@ -53,7 +52,7 @@ class SyncCheckInRecordsUseCase @Inject constructor(
                         localDataSource.insert(record)
                     }
                     sessionManager.saveLastRecordsSyncTime()
-                    Log.i("SyncCheckInRecordsUseCase", "✅ Delta Sync: Pulled ${records.size} records")
+                    println("[SyncCheckInRecordsUseCase] ✅ Delta Sync: Pulled ${records.size} records")
                 }
                 Result.Success(Unit)
             } else {
