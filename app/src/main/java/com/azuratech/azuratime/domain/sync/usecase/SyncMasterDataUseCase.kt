@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.sync.usecase
 
-import android.util.Log
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.*
 import com.google.firebase.firestore.FirebaseFirestore
@@ -24,7 +23,7 @@ class SyncMasterDataUseCase @Inject constructor(
     suspend operator fun invoke(): Int = withContext(Dispatchers.IO) {
         val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext 0
         try {
-            Log.d("AZURA_SYNC", "🔄 Refreshing Master Data for school: $schoolId")
+            println("[AZURA_SYNC] 🔄 Refreshing Master Data for school: $schoolId")
 
             val cloudClasses = db.collection("schools").document(schoolId).collection("classes").get().await()
             cloudClasses.documents.map { doc ->
@@ -51,10 +50,10 @@ class SyncMasterDataUseCase @Inject constructor(
                 FaceAssignmentEntity(faceId = faceId, classId = classId, schoolId = schoolId, isSynced = true)
             }.forEach { faceAssignmentDao.insertAssignment(it) }
 
-            Log.d("AZURA_SYNC", "✅ Master Data Sync Complete")
+            println("[AZURA_SYNC] ✅ Master Data Sync Complete")
             return@withContext cloudFaces.size()
         } catch (e: Exception) {
-            Log.e("AZURA_SYNC", "🚨 Sync Master Data Failed: ${e.message}")
+            println("ERROR: [AZURA_SYNC] 🚨 Sync Master Data Failed: ${e.message}")
             throw e
         }
     }
