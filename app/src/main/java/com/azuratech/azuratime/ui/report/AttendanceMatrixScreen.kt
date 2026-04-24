@@ -30,8 +30,9 @@ fun AttendanceMatrixScreen(
 
     LaunchedEffect(uiState) {
         if (uiState is AttendanceMatrixUiState.Success) {
-            val file = (uiState as AttendanceMatrixUiState.Success).data.exportedFile
-            if (file != null) {
+            val filePath = (uiState as AttendanceMatrixUiState.Success).data.exportedFile
+            if (filePath != null) {
+                val file = java.io.File(filePath)
                 val uri = FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.provider",
@@ -64,7 +65,7 @@ fun AttendanceMatrixScreen(
                 onClassSelected = { viewModel.onClassSelected(it) },
                 onPolicySelected = { viewModel.onPolicySelected(it) },
                 onCellClick = onCellClick,
-                onExportClick = { viewModel.exportReport(context) }
+                onExportClick = { viewModel.exportReport() }
             )
         }
         is AttendanceMatrixUiState.Error -> {

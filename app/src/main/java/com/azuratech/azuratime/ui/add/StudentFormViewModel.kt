@@ -104,11 +104,12 @@ class StudentFormViewModel @Inject constructor(
         updateState { it.copy(isSubmitting = true) }
 
         viewModelScope.launch {
+            val photoBytes = currentState.capturedBitmap?.let { bitmapToByteArray(it) }
             val registerResult: Result<RegisterResult> = if (currentState.isEditMode) {
                 // Update existing student
                 updateFaceWithPhotoUseCase(
                     face = currentState.toFaceEntity(),
-                    photoBitmap = currentState.capturedBitmap,
+                    photoBytes = photoBytes,
                     embedding = currentState.embedding!!
                 ).map { RegisterResult.Success }
             } else {
@@ -118,7 +119,7 @@ class StudentFormViewModel @Inject constructor(
                     classId = currentState.selectedClassId!!,
                     name = currentState.name,
                     embedding = currentState.embedding!!,
-                    photoBitmap = currentState.capturedBitmap
+                    photoBytes = photoBytes
                 )
             }
 
@@ -152,6 +153,12 @@ class StudentFormViewModel @Inject constructor(
     }
 
     // --- Private Helper ---
+
+    private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
+        val stream = java.io.ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        return stream.toByteArray()
+    }
 
     private fun updateState(update: (StudentFormUiState) -> StudentFormUiState) {
         val newState = update(_uiState.value)

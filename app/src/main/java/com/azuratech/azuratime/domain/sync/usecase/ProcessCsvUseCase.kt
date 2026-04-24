@@ -1,13 +1,13 @@
 package com.azuratech.azuratime.domain.sync.usecase
 
 import android.app.Application
-import android.net.Uri
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.domain.media.BulkPhotoProcessor
 import com.azuratech.azuratime.domain.media.PhotoManager
 import com.azuratech.azuratime.domain.model.ProcessResult
 import com.azuratech.azuratime.domain.sync.CsvImportUtils
+import com.azuratech.azuratime.domain.core.ImageProcessor
 import com.azuratech.azuratime.ml.matcher.NativeSecurityVault
 import com.azuratech.azuratime.ml.recognizer.FaceNetConstants
 import com.azuratech.azuratime.ml.utils.PhotoProcessingUtils
@@ -31,20 +31,23 @@ class ProcessCsvUseCase @Inject constructor(
     private val database: AppDatabase,
     private val db: FirebaseFirestore,
     private val storage: FirebaseStorage,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val bulkPhotoProcessor: BulkPhotoProcessor,
+    private val photoManager: PhotoManager,
+    private val csvImportUtils: CsvImportUtils,
+    private val imageProcessor: ImageProcessor
 ) {
     private val faceDao = database.faceDao()
     private val faceAssignmentDao = database.faceAssignmentDao()
     private val classDao = database.classDao()
-    private val photoManager = PhotoManager(application)
 
-    suspend operator fun invoke(uri: Uri, type: String): Flow<ProcessResult> = flow {
+    suspend operator fun invoke(uriString: String, type: String): Flow<ProcessResult> = flow {
         val schoolId = sessionManager.getActiveSchoolId() ?: return@flow
         
         emit(ProcessResult("", "", "Syncing", type, "Updating Biometric Database..."))
         performFaceDeltaSync(schoolId)
 
-        val parsedData = CsvImportUtils.parseCsvToStudentData(application, uri)
+        val parsedData = csvImportUtils.parseCsvToStudentData(uriString)
         val existingFaces = faceDao.getAllFacesForScanningList(schoolId)
 
         val newlyRegisteredFaces = mutableListOf<FaceEntity>()
@@ -142,39 +145,33 @@ class ProcessCsvUseCase @Inject constructor(
         if (student.name.isBlank() || student.photoUrl.isBlank()) {
             return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Nama & Photo URL wajib"), null)
         }
+val photoResult = bulkPhotoProcessor.processPhotoSource(student.photoUrl, finalFaceId)
+if (!photoResult.success || photoResult.imageBytes == null) {
+    return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Gagal memuat foto"), null)
+}
 
-        val photoResult = BulkPhotoProcessor.processPhotoSource(application, student.photoUrl, finalFaceId)
-        if (!photoResult.success || photoResult.bitmap == null) {
-            return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Gagal memuat foto"), null)
-        }
+val embeddingResult = imageProcessor.extractFaceEmbedding(photoResult.imageBytes)
+if (embeddingResult == null) {
+    return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Wajah tak terdeteksi"), null)
+}
 
-        val embeddingResult = PhotoProcessingUtils.processBitmapForFaceEmbedding(application, photoResult.bitmap)
-        if (embeddingResult == null) {
-            photoResult.bitmap.recycle()
-            return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Wajah tak terdeteksi"), null)
-        }
+val (faceBytes, embedding) = embeddingResult
 
-        val (faceBitmap, embedding) = embeddingResult
-        val isDuplicate = existingFaces.any {
-            it.embedding?.let { saved ->
-                val dist = NativeSecurityVault.calculateDistanceNative(saved, embedding)
-                NativeSecurityVault.verifyMatchNative(dist, FaceNetConstants.DUPLICATE_THRESHOLD)
-            } ?: false
-        }
+val isDuplicate = existingFaces.any {
+    it.embedding?.let { saved ->
+        val dist = NativeSecurityVault.calculateDistanceNative(saved, embedding)
+        NativeSecurityVault.verifyMatchNative(dist, FaceNetConstants.DUPLICATE_THRESHOLD)
+    } ?: false
+}
 
-        if (isDuplicate) {
-            faceBitmap.recycle()
-            return Pair(ProcessResult(student.faceId, student.name, "Duplicate Biometric", category), null)
-        }
+if (isDuplicate) {
+    return Pair(ProcessResult(student.faceId, student.name, "Duplicate Biometric", category), null)
+}
 
-        val localPhotoPath = photoManager.saveFacePhoto(faceBitmap, finalFaceId)
-        val stream = java.io.ByteArrayOutputStream()
-        faceBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, stream)
-        val imageBytes = stream.toByteArray()
-        faceBitmap.recycle()
+val localPhotoPath = photoManager.saveFacePhoto(faceBytes, finalFaceId)
+val imageBytes = faceBytes
 
-        if (localPhotoPath == null) return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Gagal simpan foto lokal"), null)
-
+if (localPhotoPath == null) return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Gagal simpan foto lokal"), null)
         val cloudUrl = uploadFacePhotoToCloud(schoolId, finalFaceId, imageBytes)
         val finalPhotoPath = cloudUrl ?: localPhotoPath
 

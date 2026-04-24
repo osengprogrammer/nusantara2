@@ -1,5 +1,7 @@
 package com.azuratech.azuratime.di
 
+import com.azuratech.azuratime.data.core.AndroidImageProcessor
+import com.azuratech.azuratime.data.core.AndroidStorageProvider
 import com.azuratech.azuratime.data.local.CheckInLocalDataSource
 import com.azuratech.azuratime.data.local.CheckInLocalDataSourceImpl
 import com.azuratech.azuratime.data.local.FaceLocalDataSource
@@ -8,6 +10,8 @@ import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
 import com.azuratech.azuratime.data.remote.CheckInRemoteDataSourceImpl
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSourceImpl
+import com.azuratech.azuratime.domain.core.ImageProcessor
+import com.azuratech.azuratime.domain.core.StorageProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -17,6 +21,18 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DataSourceModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindImageProcessor(
+        impl: AndroidImageProcessor
+    ): ImageProcessor
+
+    @Binds
+    @Singleton
+    abstract fun bindStorageProvider(
+        impl: AndroidStorageProvider
+    ): StorageProvider
 
     @Binds
     @Singleton

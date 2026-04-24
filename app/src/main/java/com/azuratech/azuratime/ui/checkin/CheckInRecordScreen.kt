@@ -21,7 +21,6 @@ import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.theme.*
-import com.azuratech.azuratime.domain.sync.ExportUtils
 import com.azuratech.azuratime.ui.classes.ClassViewModel
 import com.azuratech.azuratime.ui.user.UserManagementViewModel
 import kotlinx.coroutines.launch
@@ -84,7 +83,7 @@ fun CheckInRecordScreen(
                 )
 
                 Button(
-                    onClick = { scope.launch { ExportUtils.exportRawLogsToCsv(context, records) } },
+                    onClick = { checkInViewModel.exportRecords(records) },
                     shape = AzuraShapes.medium,
                     enabled = records.isNotEmpty()
                 ) {

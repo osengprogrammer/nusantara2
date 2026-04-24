@@ -8,6 +8,7 @@ import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.repo.ReportRepository
 import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.domain.report.usecase.GetReportDataUseCase
+import com.azuratech.azuratime.domain.sync.ExportUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,7 +25,8 @@ import javax.inject.Inject
 class AttendanceMatrixViewModel @Inject constructor(
     private val reportRepository: ReportRepository,
     private val getReportDataUseCase: GetReportDataUseCase,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val exportUtils: ExportUtils
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -54,7 +56,7 @@ class AttendanceMatrixViewModel @Inject constructor(
         combine(
             getReportDataUseCase.getStudentsInReport(params.role, params.classId, params.assigned),
             reportRepository.getCheckInRecordDao().getFilteredRecords(
-                schoolId = "", // Placeholder, Dao will use current school from SessionManager or local scope if needed
+                schoolId = "", // Placeholder
                 startDate = params.start,
                 endDate = params.end,
                 classId = params.classId,
@@ -89,7 +91,7 @@ class AttendanceMatrixViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isExporting = MutableStateFlow(false)
-    private val _exportedFile = MutableStateFlow<java.io.File?>(null)
+    private val _exportedFile = MutableStateFlow<String?>(null)
 
     @Suppress("UNCHECKED_CAST")
     val uiState: StateFlow<AttendanceMatrixUiState> = combine(
@@ -111,7 +113,7 @@ class AttendanceMatrixViewModel @Inject constructor(
         val classId = args[5] as String?
         val policy = args[6] as String
         val isExporting = args[7] as Boolean
-        val exportedFile = args[8] as java.io.File?
+        val exportedFile = args[8] as String?
         
         AttendanceMatrixUiState.Success(
             AttendanceMatrixData(
@@ -133,7 +135,7 @@ class AttendanceMatrixViewModel @Inject constructor(
         initialValue = AttendanceMatrixUiState.Loading
     )
 
-    fun exportReport(context: android.content.Context) {
+    fun exportReport() {
         viewModelScope.launch {
             val currentState = uiState.value
             if (currentState !is AttendanceMatrixUiState.Success) return@launch
@@ -144,14 +146,13 @@ class AttendanceMatrixViewModel @Inject constructor(
             val data = currentState.data
             val className = data.availableClasses.find { it.id == data.selectedClassId }?.name ?: "All Classes"
             
-            val file = com.azuratech.azuratime.domain.sync.ExportUtils.exportMatrixToCsv(
-                context = context,
+            val filePath = exportUtils.exportMatrixToCsv(
                 rows = data.rows,
                 dateRange = data.dateRange,
                 className = className
             )
             
-            _exportedFile.value = file
+            _exportedFile.value = filePath
             _isExporting.value = false
         }
     }

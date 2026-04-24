@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.data.local
 
-import android.util.Base64
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -10,11 +9,14 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.Instant
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * 🛠️ AZURA CONVERTERS - THE DATABASE INTERPRETER
  * Handling complex data types for ML Embeddings, Multi-Tenant Maps, ISO Dates, and Friendships.
  */
+@OptIn(ExperimentalEncodingApi::class)
 class Converters {
     private val gson = Gson()
 
@@ -34,7 +36,7 @@ class Converters {
             buffer.putFloat(value)
         }
         
-        return Base64.encodeToString(buffer.array(), Base64.NO_WRAP)
+        return Base64.encode(buffer.array())
     }
 
     @TypeConverter
@@ -42,7 +44,7 @@ class Converters {
         if (base64Str.isNullOrEmpty()) return null
         
         return try {
-            val bytes = Base64.decode(base64Str, Base64.NO_WRAP)
+            val bytes = Base64.decode(base64Str)
             val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
             
             val array = FloatArray(bytes.size / 4)

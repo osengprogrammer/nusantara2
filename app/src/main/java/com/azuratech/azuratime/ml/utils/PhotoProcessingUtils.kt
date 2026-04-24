@@ -15,7 +15,6 @@ import kotlin.coroutines.resume
 import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
 import com.azuratech.azuratime.ml.recognizer.FacePreprocessor
 import com.azuratech.azuratime.ml.utils.FaceGeometryUtils
-import com.azuratech.azuratime.domain.media.PhotoStorageUtils
 
 object PhotoProcessingUtils {
     private const val TAG = "PhotoProcessingUtils"
@@ -40,13 +39,14 @@ object PhotoProcessingUtils {
         try {
             // Resize bitmap if too large for better performance
             processedBitmap = if (bitmap.width > 1024 || bitmap.height > 1024) {
-                PhotoStorageUtils.resizeBitmap(bitmap, 1024)
+                val ratio = if (bitmap.width > bitmap.height) 1024.toFloat() / bitmap.width else 1024.toFloat() / bitmap.height
+                Bitmap.createScaledBitmap(bitmap, (bitmap.width * ratio).toInt(), (bitmap.height * ratio).toInt(), true)
             } else {
                 bitmap
             }
 
             // Detect faces in the bitmap using ML Kit
-            val faces = detectFacesInBitmap(processedBitmap)
+            val faces = detectFacesInBitmap(processedBitmap!!)
 
             if (faces.isEmpty()) {
                 Log.w(TAG, "No faces detected in the image")

@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.domain.face.usecase
 
 import android.app.Application
-import android.graphics.Bitmap
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.FaceAssignmentEntity
 import com.azuratech.azuratime.data.local.FaceCache
@@ -22,14 +21,15 @@ class RegisterFaceUseCase @Inject constructor(
     private val localDataSource: FaceLocalDataSource,
     private val remoteDataSource: FaceRemoteDataSource,
     private val sessionManager: SessionManager,
-    private val syncFaces: SyncFacesUseCase // I might need this since registerFace calls performFaceDeltaSync
+    private val syncFaces: SyncFacesUseCase,
+    private val photoStorageUtils: PhotoStorageUtils
 ) {
     suspend operator fun invoke(
         inputId: String,
         classId: String,
         name: String,
         embedding: FloatArray,
-        photoBitmap: Bitmap?
+        photoBytes: ByteArray?
     ): Result<RegisterResult> = withContext(Dispatchers.IO) {
         try {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
@@ -55,14 +55,12 @@ class RegisterFaceUseCase @Inject constructor(
             val existingFace = localDataSource.getFaceById(finalFaceId, schoolId)
             if (existingFace != null) return@withContext Result.Success(RegisterResult.Duplicate(existingFace.name))
 
-            var finalPhotoUrl: String? = photoBitmap?.let {
-                PhotoStorageUtils.saveFacePhoto(application, it, finalFaceId)
+            var finalPhotoUrl: String? = photoBytes?.let {
+                photoStorageUtils.saveFacePhoto(it, finalFaceId)
             }
 
-            photoBitmap?.let { bmp ->
-                val stream = java.io.ByteArrayOutputStream()
-                bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-                val uploadResult = remoteDataSource.uploadFacePhoto(schoolId, finalFaceId, stream.toByteArray())
+            photoBytes?.let { bytes ->
+                val uploadResult = remoteDataSource.uploadFacePhoto(schoolId, finalFaceId, bytes)
                 if (uploadResult is Result.Success) {
                     finalPhotoUrl = uploadResult.data
                 }
