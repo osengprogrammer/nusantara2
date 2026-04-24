@@ -2,7 +2,6 @@ package com.azuratech.azuratime.domain.face.usecase
 
 import android.app.Application
 import android.graphics.Bitmap
-import android.util.Log
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.FaceAssignmentEntity
 import com.azuratech.azuratime.data.local.FaceCache
@@ -96,7 +95,7 @@ class RegisterFaceUseCase @Inject constructor(
                 
                 localDataSource.upsertFace(face.copy(isSynced = true))
             } catch (e: Exception) {
-                Log.e("RegisterFaceUseCase", "Gagal sync cloud: ${e.message}")
+                println("ERROR: [RegisterFaceUseCase] Gagal sync cloud: ${e.message}")
             }
 
             FaceCache.refresh(application, schoolId)
