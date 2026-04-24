@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.domain.classes.usecase
 
-import android.util.Log
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
@@ -50,7 +49,7 @@ class UpdateClassUseCase @Inject constructor(
             
             Result.Success(Unit)
         } catch (e: Exception) {
-            Log.e("UpdateClassUseCase", "Error: ${e.message}")
+            println("ERROR: [UpdateClassUseCase] Error: ${e.message}")
             // Return success anyway as it's saved locally
             Result.Success(Unit)
         }
