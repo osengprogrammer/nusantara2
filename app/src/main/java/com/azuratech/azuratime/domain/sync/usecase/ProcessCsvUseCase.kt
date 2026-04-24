@@ -2,7 +2,6 @@ package com.azuratech.azuratime.domain.sync.usecase
 
 import android.app.Application
 import android.net.Uri
-import android.util.Log
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.domain.media.BulkPhotoProcessor
@@ -63,7 +62,7 @@ class ProcessCsvUseCase @Inject constructor(
                 val syncedFaces = newlyRegisteredFaces.map { it.copy(isSynced = true) }
                 faceDao.upsertAll(syncedFaces)
             } catch (e: Exception) {
-                Log.e("ProcessCsvUseCase", "Bulk sync failed: ${e.message}")
+                println("ERROR: [ProcessCsvUseCase] Bulk sync failed: ${e.message}")
             }
         }
     }
