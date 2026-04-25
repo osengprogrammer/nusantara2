@@ -70,3 +70,7 @@ find src/commonMain -name "*.kt" -exec grep -l "android\|Context\|Bitmap" {} \;
 2. It only uses: `Result<T>`, `AppError`, KMP interfaces, pure Kotlin/Java stdlib
 3. There is a business requirement to share this logic with iOS/Desktop/Web
 4. Platform-specific behavior is abstracted via `expect/actual` or injected interfaces
+
+## 📌 Data Interfaces Boundary
+- Interfaces referencing Room `@Entity`, Firebase, or Android SDK remain in `:app/data/local`
+- Pure abstract interfaces (e.g., `ImageProcessor`, `StorageProvider`) live in `commonMain`
