@@ -11,8 +11,8 @@ import com.azuratech.azuratime.domain.classes.usecase.SyncClassesUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.SyncAssignmentsUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result as DomainResult
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result as DomainResult
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers

@@ -10,8 +10,8 @@ import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
 import com.azuratech.azuratime.data.remote.CheckInRemoteDataSourceImpl
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSourceImpl
-import com.azuratech.azuratime.domain.core.ImageProcessor
-import com.azuratech.azuratime.domain.core.StorageProvider
+import com.azuratech.azuraengine.core.ImageProcessor
+import com.azuratech.azuraengine.core.StorageProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

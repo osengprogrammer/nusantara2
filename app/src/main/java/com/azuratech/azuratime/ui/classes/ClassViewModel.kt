@@ -7,7 +7,7 @@ import com.azuratech.azuratime.domain.classes.usecase.DeleteClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

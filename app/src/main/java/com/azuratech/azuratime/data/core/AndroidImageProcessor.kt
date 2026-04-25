@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import com.azuratech.azuratime.domain.core.ImageProcessor
+import com.azuratech.azuraengine.core.ImageProcessor
 import com.azuratech.azuratime.ml.utils.PhotoProcessingUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.ByteArrayOutputStream

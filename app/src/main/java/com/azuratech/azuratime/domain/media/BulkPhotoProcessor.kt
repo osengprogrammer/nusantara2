@@ -1,7 +1,8 @@
 package com.azuratech.azuratime.domain.media
 
-import com.azuratech.azuratime.domain.core.ImageProcessor
-import com.azuratech.azuratime.domain.core.StorageProvider
+import com.azuratech.azuraengine.core.ImageProcessor
+import com.azuratech.azuraengine.core.StorageProvider
+import com.azuratech.azuraengine.media.PhotoProcessResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -13,11 +14,6 @@ class BulkPhotoProcessor @Inject constructor(
     private val imageProcessor: ImageProcessor,
     private val storageProvider: StorageProvider
 ) {
-    data class PhotoProcessResult(
-        val success: Boolean,
-        val imageBytes: ByteArray? = null,
-        val error: String? = null
-    )
     
     // --- THREADING FIX: The entire pipeline runs safely on the IO thread ---
     suspend fun processPhotoSource(

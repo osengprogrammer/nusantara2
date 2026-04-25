@@ -5,9 +5,10 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.domain.media.BulkPhotoProcessor
 import com.azuratech.azuratime.domain.media.PhotoManager
-import com.azuratech.azuratime.domain.model.ProcessResult
+import com.azuratech.azuraengine.model.ProcessResult
 import com.azuratech.azuratime.domain.sync.CsvImportUtils
-import com.azuratech.azuratime.domain.core.ImageProcessor
+import com.azuratech.azuraengine.sync.CsvStudentData
+import com.azuratech.azuraengine.core.ImageProcessor
 import com.azuratech.azuratime.ml.matcher.NativeSecurityVault
 import com.azuratech.azuratime.ml.recognizer.FaceNetConstants
 import com.azuratech.azuratime.ml.utils.PhotoProcessingUtils
@@ -105,7 +106,7 @@ class ProcessCsvUseCase @Inject constructor(
     }
 
     private suspend fun processStudent(
-        student: CsvImportUtils.CsvStudentData,
+        student: CsvStudentData,
         dataType: String,
         existingFaces: List<FaceEntity>,
         schoolId: String
@@ -130,7 +131,7 @@ class ProcessCsvUseCase @Inject constructor(
     }
 
     private suspend fun handleFaceRegistration(
-        student: CsvImportUtils.CsvStudentData,
+        student: CsvStudentData,
         finalFaceId: String,
         isRegistered: Boolean,
         existingFaces: List<FaceEntity>,
@@ -146,11 +147,12 @@ class ProcessCsvUseCase @Inject constructor(
             return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Nama & Photo URL wajib"), null)
         }
 val photoResult = bulkPhotoProcessor.processPhotoSource(student.photoUrl, finalFaceId)
-if (!photoResult.success || photoResult.imageBytes == null) {
+val imageBytesForEmbedding = photoResult.imageBytes
+if (!photoResult.success || imageBytesForEmbedding == null) {
     return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Gagal memuat foto"), null)
 }
 
-val embeddingResult = imageProcessor.extractFaceEmbedding(photoResult.imageBytes)
+val embeddingResult = imageProcessor.extractFaceEmbedding(imageBytesForEmbedding)
 if (embeddingResult == null) {
     return Pair(ProcessResult(student.faceId, student.name, "Error", category, "Wajah tak terdeteksi"), null)
 }
@@ -189,7 +191,7 @@ if (localPhotoPath == null) return Pair(ProcessResult(student.faceId, student.na
         return Pair(ProcessResult(student.faceId, student.name, "Registered", category), faceEntity)
     }
 
-    private suspend fun saveStudentAssignments(faceId: String, student: CsvImportUtils.CsvStudentData, schoolId: String) {
+    private suspend fun saveStudentAssignments(faceId: String, student: CsvStudentData, schoolId: String) {
         val className = student.rawMetadata.entries.find { it.key.equals("CLASS", ignoreCase = true) }?.value
         if (className.isNullOrBlank()) return
 

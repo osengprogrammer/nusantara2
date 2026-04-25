@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 
-import com.azuratech.azuratime.domain.face.RegisterResult
+import com.azuratech.azuraengine.face.RegisterResult
 import com.azuratech.azuratime.domain.face.usecase.*
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.FaceWithDetails
 

@@ -2,7 +2,7 @@ package com.azuratech.azuratime.data.remote
 
 import com.azuratech.azuratime.data.local.FaceAssignmentEntity
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 
 interface FaceRemoteDataSource {
     suspend fun getFaceUpdates(schoolId: String, lastSync: Long): Result<List<Pair<FaceEntity, Boolean>>>

@@ -3,8 +3,8 @@ package com.azuratech.azuratime.data.remote
 import android.util.Log
 import com.azuratech.azuratime.data.local.FaceAssignmentEntity
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions

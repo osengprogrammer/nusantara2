@@ -135,6 +135,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 }
 
 dependencies {
+    implementation(project(":azura-engine-kmp"))
     // --- ANDROIDX & UI CORE ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -216,7 +217,14 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation("com.tngtech.archunit:archunit-junit4:1.3.0")
     testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("io.mockk:mockk-agent-jvm:1.13.8")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("app.cash.turbine:turbine:1.0.0")
+    
+    // Hilt Testing
+    testImplementation("com.google.dagger:hilt-android-testing:2.48.1")
+    kspTest("com.google.dagger:hilt-android-compiler:2.48.1")
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

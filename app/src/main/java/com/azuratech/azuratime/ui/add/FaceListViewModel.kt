@@ -10,7 +10,7 @@ import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.face.usecase.DeleteFaceUseCase
 import com.azuratech.azuratime.domain.face.usecase.GetFacesWithDetailsUseCase
 import com.azuratech.azuratime.domain.face.usecase.UpdateFaceUseCase
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*

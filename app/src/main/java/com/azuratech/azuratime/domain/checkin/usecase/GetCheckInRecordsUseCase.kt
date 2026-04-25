@@ -3,8 +3,8 @@ package com.azuratech.azuratime.domain.checkin.usecase
 import com.azuratech.azuratime.data.local.CheckInLocalDataSource
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
 import javax.inject.Inject

@@ -4,8 +4,8 @@ import com.azuratech.azuratime.data.local.CheckInLocalDataSource
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate

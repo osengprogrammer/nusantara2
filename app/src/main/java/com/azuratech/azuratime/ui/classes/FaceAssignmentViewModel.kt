@@ -8,7 +8,7 @@ import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.RemoveStudentFromClassUseCase
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

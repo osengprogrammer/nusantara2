@@ -3,8 +3,8 @@ package com.azuratech.azuratime.domain.classes.usecase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
