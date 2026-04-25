@@ -9,6 +9,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [
+        SchoolEntity::class,
         ClassEntity::class,           // 🔥 NEW: Pure class table
         FaceEntity::class,
         FaceAssignmentEntity::class,
@@ -16,7 +17,7 @@ import androidx.room.TypeConverters
         UserEntity::class,
         UserClassAccessEntity::class
     ],
-    version = 22, // 🚀 BUMP TO 22: Removing Salary and Options for good!
+    version = 23, // 🚀 BUMP TO 23: Adding SchoolEntity
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -25,6 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun faceDao(): FaceDao
     abstract fun faceAssignmentDao(): FaceAssignmentDao
     abstract fun classDao(): ClassDao // 🔥 NEW DAO
+    abstract fun schoolClassDao(): SchoolClassDao
     abstract fun checkInRecordDao(): CheckInRecordDao
     abstract fun userDao(): UserDao
     abstract fun userClassAccessDao(): UserClassAccessDao

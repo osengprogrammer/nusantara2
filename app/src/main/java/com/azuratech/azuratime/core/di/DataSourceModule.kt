@@ -18,9 +18,18 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+import com.azuratech.azuratime.data.remote.SchoolRemoteDataSource
+import com.azuratech.azuratime.data.remote.SchoolRemoteDataSourceImpl
+
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DataSourceModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindSchoolRemoteDataSource(
+        impl: SchoolRemoteDataSourceImpl
+    ): SchoolRemoteDataSource
 
     @Binds
     @Singleton

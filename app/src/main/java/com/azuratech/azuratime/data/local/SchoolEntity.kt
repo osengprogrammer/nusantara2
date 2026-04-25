@@ -2,17 +2,24 @@ package com.azuratech.azuratime.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.azuratech.azuraengine.model.School
+import java.util.UUID
 
 @Entity(tableName = "schools")
 data class SchoolEntity(
-    @PrimaryKey val id: String, // Matches the Firestore document ID
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val accountId: String,
     val name: String,
-    val address: String? = null,
-    val logoUrl: String? = null,
-    
-    // Optional: Global settings for this specific school that the app needs to know
-    val timezone: String = "Asia/Jakarta", 
-    val isActive: Boolean = true,
-    
-    val lastUpdated: Long = System.currentTimeMillis()
-)
+    val timezone: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
+) {
+    fun toDomain(): School = School(
+        id = id,
+        accountId = accountId,
+        name = name,
+        timezone = timezone,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+}

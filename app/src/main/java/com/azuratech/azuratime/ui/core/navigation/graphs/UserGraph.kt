@@ -1,7 +1,9 @@
 package com.azuratech.azuratime.ui.core.navigation.graphs
 
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.Screen
 
@@ -17,6 +19,19 @@ fun NavGraphBuilder.userGraph(
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 workspaceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = Screen.SchoolList.route,
+            arguments = listOf(navArgument("accountId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val accountId = backStackEntry.arguments?.getString("accountId") ?: ""
+            com.azuratech.azuratime.ui.school.SchoolListScreen(
+                accountId = accountId,
+                onNavigateBack = { navController.popBackStack() },
+                onSchoolClick = { schoolId ->
+                    navController.navigate(Screen.ClassList.createRoute(schoolId))
+                }
             )
         }
         composable(Screen.MyAssignedClass.route) {

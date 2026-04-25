@@ -58,7 +58,7 @@ fun ReportFilterSection(
             AzuraDropdownField(
                 label = "Kelas",
                 selectedValue = selectedClassName,
-                options = listOf(ClassEntity(id = "ALL", name = "Semua Kelas")) + availableClasses,
+                options = listOf(ClassEntity(id = "ALL", schoolId = "", name = "Semua Kelas")) + availableClasses,
                 isExpanded = isClassExpanded,
                 onExpandedChange = { isClassExpanded = it },
                 onOptionSelected = {
