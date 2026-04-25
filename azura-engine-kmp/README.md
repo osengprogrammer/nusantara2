@@ -59,3 +59,14 @@ find src/commonMain -name "*.kt" -exec grep -l "android\|Context\|Bitmap" {} \;
 - 📍 Kept in `:app`: UseCases, DataSources, SessionManager, DI Modules
 - 🔄 Why: UseCases orchestrate Android-specific data (Room, DataStore). 
    Phase 2 will abstract `LocalDataSource` interfaces to `commonMain`.
+
+## 📌 UseCase Strategy
+- Orchestrator UseCases (Room/Firebase/Android-dependent) remain in `:app/domain`
+- Pure logic UseCases may be migrated to `commonMain` when cross-platform sharing is required
+- Interfaces in `data/local/` and `data/repo/` are ready for future platform implementations
+
+## 🔄 When to Migrate a UseCase to KMP
+1. The UseCase has ZERO dependencies on: `Context`, `Application`, `Room`, `Firebase`, `Android SDK`
+2. It only uses: `Result<T>`, `AppError`, KMP interfaces, pure Kotlin/Java stdlib
+3. There is a business requirement to share this logic with iOS/Desktop/Web
+4. Platform-specific behavior is abstracted via `expect/actual` or injected interfaces
