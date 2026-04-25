@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.data.remote
 
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 
 interface CheckInRemoteDataSource {
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<CheckInRecordEntity>>

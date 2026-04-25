@@ -2,8 +2,8 @@ package com.azuratech.azuratime.domain.user.usecase
 
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.*
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await

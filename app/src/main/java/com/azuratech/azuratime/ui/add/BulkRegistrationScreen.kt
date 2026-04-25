@@ -26,7 +26,7 @@ import java.io.File
 
 // 🔥 Utils & ViewModels
 import com.azuratech.azuratime.core.util.showToast
-import com.azuratech.azuratime.domain.model.ProcessResult
+import com.azuratech.azuraengine.model.ProcessResult
 
 // 🔥 Azura Design System Imports
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen

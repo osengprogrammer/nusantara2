@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import com.azuratech.azuratime.domain.sync.ExportUtils
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf

@@ -1,6 +1,8 @@
 package com.azuratech.azuratime.domain.sync
 
-import com.azuratech.azuratime.domain.core.StorageProvider
+import com.azuratech.azuraengine.core.StorageProvider
+import com.azuratech.azuraengine.sync.CsvStudentData
+import com.azuratech.azuraengine.sync.CsvParseResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -18,22 +20,6 @@ class CsvImportUtils @Inject constructor(
     private val storageProvider: StorageProvider
 ) {
     
-    // 🔥 DATA RAMPING: Hanya data identitas inti dan metadata fleksibel
-    data class CsvStudentData(
-        val faceId: String,
-        val name: String = "",
-        val photoUrl: String = "",
-        // Metadata mentah (String) dari CSV untuk diproses ke FaceAssignment & FaceSalaryConfig
-        val rawMetadata: Map<String, String> = emptyMap() 
-    )
-    
-    data class CsvParseResult(
-        val students: List<CsvStudentData>,
-        val errors: List<String>,
-        val totalRows: Int,
-        val validRows: Int
-    )
-
     // 🔥 JEMBATAN KE VIEWMODEL: Memastikan sinkron dengan RegisterViewModel
     suspend fun parseCsvToStudentData(uriString: String): List<CsvStudentData> {
         return parseCsvFile(uriString).students

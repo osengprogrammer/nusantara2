@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.domain.sync
 
-import com.azuratech.azuratime.domain.core.StorageProvider
+import com.azuratech.azuraengine.core.StorageProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 

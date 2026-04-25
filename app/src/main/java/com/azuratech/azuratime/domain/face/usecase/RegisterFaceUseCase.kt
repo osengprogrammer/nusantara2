@@ -7,10 +7,10 @@ import com.azuratech.azuratime.data.local.FaceCache
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.FaceLocalDataSource
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
-import com.azuratech.azuratime.domain.face.RegisterResult
+import com.azuratech.azuraengine.face.RegisterResult
 import com.azuratech.azuratime.domain.media.PhotoStorageUtils
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ml.matcher.FaceEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

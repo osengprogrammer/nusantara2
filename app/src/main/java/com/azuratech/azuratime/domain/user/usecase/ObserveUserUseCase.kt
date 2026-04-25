@@ -2,8 +2,8 @@ package com.azuratech.azuratime.domain.user.usecase
 
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext

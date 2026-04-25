@@ -3,13 +3,13 @@ package com.azuratech.azuratime.ui.add
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.domain.face.RegisterResult
+import com.azuratech.azuraengine.face.RegisterResult
 import com.azuratech.azuratime.domain.face.usecase.GetFaceWithDetailsUseCase
 import com.azuratech.azuratime.domain.face.usecase.RegisterFaceUseCase
 import com.azuratech.azuratime.domain.face.usecase.UpdateFaceWithPhotoUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

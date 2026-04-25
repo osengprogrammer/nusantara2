@@ -14,7 +14,7 @@ import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.core.UiEvent
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager

@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.domain.media
 
-import com.azuratech.azuratime.domain.core.ImageProcessor
-import com.azuratech.azuratime.domain.core.StorageProvider
+import com.azuratech.azuraengine.core.ImageProcessor
+import com.azuratech.azuraengine.core.StorageProvider
 import javax.inject.Inject
 
 class PhotoStorageUtils @Inject constructor(

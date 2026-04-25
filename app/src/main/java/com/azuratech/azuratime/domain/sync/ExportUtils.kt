@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.domain.sync
 
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.domain.core.StorageProvider
+import com.azuratech.azuraengine.core.StorageProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate

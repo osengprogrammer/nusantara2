@@ -23,7 +23,7 @@ import com.azuratech.azuratime.ui.add.RegisterState
 
 // 🔥 ViewModels & Utils
 import com.azuratech.azuratime.ui.add.RegisterViewModel
-import com.azuratech.azuratime.domain.model.ProcessResult
+import com.azuratech.azuraengine.model.ProcessResult
 
 // 🔥 Azura Design System
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen

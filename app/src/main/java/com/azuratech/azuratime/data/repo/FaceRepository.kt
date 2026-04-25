@@ -6,7 +6,7 @@ import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
 import com.azuratech.azuratime.domain.face.usecase.*
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.Result
 import javax.inject.Inject
 import javax.inject.Singleton
 

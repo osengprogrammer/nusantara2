@@ -2,8 +2,8 @@ package com.azuratech.azuratime.domain.user.usecase
 
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions

@@ -2,8 +2,8 @@ package com.azuratech.azuratime.domain.face.usecase
 
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.FaceLocalDataSource
-import com.azuratech.azuratime.domain.result.AppError
-import com.azuratech.azuratime.domain.result.Result
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
