@@ -53,3 +53,9 @@ find src/commonMain -name "*.kt" -exec grep -l "android\|Context\|Bitmap" {} \;
 - [ ] Migrate pure UseCases (RegisterFaceUseCase, SyncClassesUseCase, etc.) to commonMain
 - [ ] Add shared unit tests for Result & AppError
 - [ ] Publish to internal Maven repository for cross-project reuse
+
+## 📌 Phase 1 Scope (Current)
+- ✅ Migrated: Models, Errors, Abstract Interfaces (`core/`)
+- 📍 Kept in `:app`: UseCases, DataSources, SessionManager, DI Modules
+- 🔄 Why: UseCases orchestrate Android-specific data (Room, DataStore). 
+   Phase 2 will abstract `LocalDataSource` interfaces to `commonMain`.
