@@ -50,7 +50,10 @@ fun NavGraphBuilder.managementGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.ClassList.route) {
+        composable(
+            route = Screen.ClassList.route,
+            arguments = listOf(androidx.navigation.navArgument("schoolId") { androidx.navigation.NavType.StringType })
+        ) { 
             com.azuratech.azuratime.ui.classes.ClassManagementScreen(
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() },

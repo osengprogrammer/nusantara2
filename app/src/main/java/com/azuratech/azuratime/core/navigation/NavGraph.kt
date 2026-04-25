@@ -55,7 +55,12 @@ sealed class Screen(val route: String) {
     // --- 🏫 USER & CLASS MANAGEMENT ---
     data object AdminDashboard : Screen("admin_dashboard")
     data object Profile : Screen("user_profile")
-    data object ClassList : Screen("class_list")
+    data object SchoolList : Screen("school_list/{accountId}") {
+        fun createRoute(accountId: String) = "school_list/$accountId"
+    }
+    data object ClassList : Screen("class_list/{schoolId}") {
+        fun createRoute(schoolId: String) = "class_list/$schoolId"
+    }
     
     // 🔥 PERBAIKAN BUG: Encode nama kelas jika nama kelasnya "12 / IPA"
     data object ClassDetail : Screen("class_detail/{id}/{name}") {
