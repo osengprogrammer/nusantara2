@@ -1,5 +1,7 @@
 package com.azuratech.azuratime.domain.result
 
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import org.junit.Assert.assertTrue
 import org.junit.Test
 

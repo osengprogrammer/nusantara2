@@ -3,11 +3,17 @@ package com.azuratech.azuratime.ui.classes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.SavedStateHandle
+import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.domain.school.usecase.GetSchoolsUseCase
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.domain.classes.usecase.DeleteClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
+import com.azuratech.azuratime.domain.classes.usecase.GetAllClassesUseCase
+import com.azuratech.azuratime.domain.classes.usecase.CreateClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
+import com.azuratech.azuratime.domain.classes.usecase.ReassignClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
+import com.azuratech.azuratime.domain.classes.usecase.GetAvailableClassesUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
@@ -26,9 +32,14 @@ import android.net.Uri
 class ClassViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getClassesUseCase: GetClassesUseCase,
+    private val getAllClassesUseCase: GetAllClassesUseCase,
+    private val createClassUseCase: CreateClassUseCase,
     private val updateClassUseCase: UpdateClassUseCase,
     private val deleteClassUseCase: DeleteClassUseCase,
+    private val reassignClassUseCase: ReassignClassUseCase,
     private val importClassesUseCase: ImportClassesUseCase,
+    private val getAvailableClassesUseCase: GetAvailableClassesUseCase,
+    private val getSchoolsUseCase: GetSchoolsUseCase,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -64,15 +75,52 @@ class ClassViewModel @Inject constructor(
         if (it is UiState.Success) it.data else emptyList()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // 🔥 Added Available Classes Flow
+    val availableClasses: StateFlow<List<String>> = getAvailableClassesUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // 🔥 Added All Classes for Account Flow
+    val allAccountClasses: StateFlow<UiState<List<ClassModel>>> = getAllClassesUseCase(accountId)
+        .map { result ->
+            when(result) {
+                is Result.Success -> if (result.data.isEmpty()) UiState.Empty else UiState.Success(result.data)
+                is Result.Failure -> UiState.Error(result.error.message ?: "Unknown error")
+                is Result.Loading -> UiState.Loading
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
+
+    val schools: StateFlow<List<School>> = getSchoolsUseCase(accountId)
+        .map { result ->
+            if (result is Result.Success) result.data else emptyList()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // =====================================================
     // ➕ CRUD OPERATIONS
     // =====================================================
 
-    fun addClass(name: String) {
-        if (schoolId.isBlank()) return
-        viewModelScope.launch {
-            updateClassUseCase(accountId, schoolId, name)
+    fun createClass(name: String, grade: String = "") {
+        val targetSchoolId = schoolId.ifBlank { schools.value.firstOrNull()?.id ?: "" }
+        
+        if (targetSchoolId.isBlank()) {
+            println("❌ DEBUG: Save failed: No school found for account $accountId")
+            return
         }
+
+        println("💾 DEBUG: ViewModel creating class: $name")
+        viewModelScope.launch {
+            val result = createClassUseCase(accountId, targetSchoolId, name)
+            when (result) {
+                is Result.Success -> println("✅ DEBUG: Class created successfully")
+                is Result.Failure -> println("❌ DEBUG: Save failed: ${result.error}")
+                else -> Unit
+            }
+        }
+    }
+
+    fun addClass(name: String) {
+        createClass(name)
     }
 
     fun updateClass(classId: String, newName: String) {
@@ -105,6 +153,12 @@ class ClassViewModel @Inject constructor(
                     else -> Unit
                 }
             }
+        }
+    }
+
+    fun reassignClass(classId: String, newSchoolId: String) {
+        viewModelScope.launch {
+            reassignClassUseCase(accountId, classId, newSchoolId)
         }
     }
 }

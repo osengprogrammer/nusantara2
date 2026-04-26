@@ -10,6 +10,8 @@ import com.azuratech.azuratime.core.navigation.Screen
 fun NavGraphBuilder.userGraph(
     navController: androidx.navigation.NavController
 ) {
+    val uri = "azuratime://azuratech.com"
+
     navigation(
         startDestination = Screen.Profile.route,
         route = "user_graph"
@@ -23,11 +25,10 @@ fun NavGraphBuilder.userGraph(
         }
         composable(
             route = Screen.SchoolList.route,
-            arguments = listOf(navArgument("accountId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val accountId = backStackEntry.arguments?.getString("accountId") ?: ""
+            arguments = listOf(navArgument("accountId") { type = NavType.StringType }),
+            deepLinks = listOf(androidx.navigation.navDeepLink { uriPattern = "$uri/schools/{accountId}" })
+        ) { 
             com.azuratech.azuratime.ui.school.SchoolListScreen(
-                accountId = accountId,
                 onNavigateBack = { navController.popBackStack() },
                 onSchoolClick = { schoolId ->
                     navController.navigate(Screen.ClassList.createRoute(schoolId))

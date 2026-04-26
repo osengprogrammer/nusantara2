@@ -8,31 +8,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
+import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 
 @Composable
 fun SchoolListScreen(
-    accountId: String,
     viewModel: SchoolViewModel = hiltViewModel(),
     onSchoolClick: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val allAccountClasses by viewModel.allAccountClasses.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(accountId) {
-        viewModel.loadSchools(accountId)
-    }
 
     AzuraScreen(
         title = "Manajemen Sekolah",
@@ -53,7 +52,8 @@ fun SchoolListScreen(
                 SchoolList(
                     schools = state.schools,
                     onSchoolClick = onSchoolClick,
-                    onDeleteSchool = { viewModel.deleteSchool(it.id, accountId) }
+                    onDeleteSchool = { viewModel.deleteSchool(it.id) },
+                    onAddSchool = { showAddDialog = true }
                 )
             }
             is SchoolUiState.Error -> {
@@ -66,9 +66,10 @@ fun SchoolListScreen(
 
     if (showAddDialog) {
         AddSchoolDialog(
+            availableClasses = allAccountClasses,
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, timezone ->
-                viewModel.addSchool(accountId, name, timezone)
+            onConfirm = { name, timezone, selectedClassIds ->
+                viewModel.createSchool(name, timezone, selectedClassIds)
                 showAddDialog = false
             }
         )
@@ -77,11 +78,19 @@ fun SchoolListScreen(
 
 @Composable
 fun AddSchoolDialog(
+    availableClasses: List<com.azuratech.azuraengine.model.ClassModel> = emptyList(),
     onDismiss: () -> Unit,
-    onConfirm: (String, String) -> Unit
+    onConfirm: (String, String, List<String>) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var timezone by remember { mutableStateOf("Asia/Jakarta") }
+    var selectedClassIds by remember { mutableStateOf(setOf<String>()) }
+    var classSearchQuery by remember { mutableStateOf("") }
+
+    val filteredClasses = remember(classSearchQuery, availableClasses) {
+        availableClasses.filter { it.name.contains(classSearchQuery, ignoreCase = true) }
+    }
+
     val isNameValid = name.isNotBlank()
 
     AlertDialog(
@@ -103,11 +112,64 @@ fun AddSchoolDialog(
                     label = "Timezone",
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+                Text("Pilih Kelas Tersedia", style = MaterialTheme.typography.titleSmall)
+
+                if (availableClasses.isEmpty()) {
+                    Text(
+                        "Belum ada kelas. Buat di Manajemen Kelas dulu.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                } else {
+                    OutlinedTextField(
+                        value = classSearchQuery,
+                        onValueChange = { classSearchQuery = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Cari kelas...") },
+                        leadingIcon = { Icon(Icons.Default.Search, null) },
+                        shape = AzuraShapes.medium,
+                        singleLine = true
+                    )
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp),
+                        shape = AzuraShapes.medium,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    ) {
+                        LazyColumn {
+                            items(filteredClasses) { classItem ->
+                                val isSelected = selectedClassIds.contains(classItem.id)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            selectedClassIds = if (isSelected) {
+                                                selectedClassIds - classItem.id
+                                            } else {
+                                                selectedClassIds + classItem.id
+                                            }
+                                        }
+                                        .padding(AzuraSpacing.sm),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = isSelected,
+                                        onCheckedChange = null // Handled by row click
+                                    )
+                                    Spacer(modifier = Modifier.width(AzuraSpacing.sm))
+                                    Text(classItem.name, style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(name, timezone) },
+                onClick = { onConfirm(name, timezone, selectedClassIds.toList()) },
                 enabled = isNameValid
             ) {
                 Text("Simpan")
@@ -125,11 +187,22 @@ fun AddSchoolDialog(
 fun SchoolList(
     schools: List<School>,
     onSchoolClick: (String) -> Unit,
-    onDeleteSchool: (School) -> Unit
+    onDeleteSchool: (School) -> Unit,
+    onAddSchool: () -> Unit
 ) {
     if (schools.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Belum ada sekolah.")
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Belum ada sekolah.", style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.height(AzuraSpacing.md))
+            Button(onClick = onAddSchool) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(AzuraSpacing.sm))
+                Text("Tambah Sekolah")
+            }
         }
     } else {
         LazyColumn(

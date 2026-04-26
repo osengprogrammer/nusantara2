@@ -10,13 +10,14 @@ import javax.inject.Inject
 class CreateSchoolUseCase @Inject constructor(
     private val repository: SchoolRepository
 ) {
-    suspend operator fun invoke(accountId: String, name: String, timezone: String): Result<Unit> {
+    suspend operator fun invoke(accountId: String, name: String, timezone: String): Result<String> {
         if (name.isBlank()) {
             return Result.Failure(AppError.BusinessRule("Nama sekolah tidak boleh kosong"))
         }
         
+        val newId = UUID.randomUUID().toString()
         val newSchool = School(
-            id = UUID.randomUUID().toString(),
+            id = newId,
             accountId = accountId,
             name = name.trim(),
             timezone = timezone,
@@ -24,6 +25,8 @@ class CreateSchoolUseCase @Inject constructor(
             updatedAt = System.currentTimeMillis()
         )
         
-        return repository.saveSchool(newSchool)
+        val result = repository.saveSchool(newSchool)
+        return if (result is Result.Success) Result.Success(newId)
+        else Result.Failure((result as Result.Failure).error)
     }
 }

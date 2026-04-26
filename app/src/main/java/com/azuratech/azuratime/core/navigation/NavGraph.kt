@@ -62,11 +62,15 @@ sealed class Screen(val route: String) {
         fun createRoute(schoolId: String) = "class_list/$schoolId"
     }
     
+    data object ClassManagement : Screen("class_management/{accountId}") {
+        fun createRoute(accountId: String) = "class_management/$accountId"
+    }
+
     // 🔥 PERBAIKAN BUG: Encode nama kelas jika nama kelasnya "12 / IPA"
-    data object ClassDetail : Screen("class_detail/{id}/{name}") {
-        fun createRoute(id: String, name: String): String {
-            val safeName = Uri.encode(name)
-            return "class_detail/$id/$safeName"
+    data object ClassDetail : Screen("class_detail/{classId}/{className}") {
+        fun createRoute(classId: String, className: String): String {
+            val safeName = Uri.encode(className)
+            return "class_detail/$classId/$safeName"
         }
     }
 
