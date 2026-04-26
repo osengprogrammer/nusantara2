@@ -1,7 +1,9 @@
 package com.azuratech.azuratime.ui.classes
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.domain.classes.usecase.DeleteClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
@@ -36,16 +38,24 @@ class ClassViewModelTest {
     @MockK
     lateinit var importClassesUseCase: ImportClassesUseCase
 
+    @MockK
+    lateinit var sessionManager: SessionManager
+
     private lateinit var viewModel: ClassViewModel
     private val testDispatcher = StandardTestDispatcher()
+    private val schoolId = "school123"
+    private val accountId = "account123"
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
         Dispatchers.setMain(testDispatcher)
         
+        every { sessionManager.getActiveSchoolId() } returns schoolId
+        every { sessionManager.getCurrentUserId() } returns accountId
+        
         // Default behavior for getClassesUseCase
-        every { getClassesUseCase() } returns MutableStateFlow(Result.Loading)
+        every { getClassesUseCase(schoolId) } returns MutableStateFlow(Result.Loading)
     }
 
     @After
@@ -53,19 +63,23 @@ class ClassViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun createViewModel() = ClassViewModel(
+        SavedStateHandle(mapOf("schoolId" to schoolId, "accountId" to accountId)),
+        getClassesUseCase,
+        updateClassUseCase,
+        deleteClassUseCase,
+        importClassesUseCase,
+        sessionManager
+    )
+
     @Test
     fun `uiState should emit Loading initially then Success when data is loaded`() = runTest {
         // Arrange
-        val classes = listOf(ClassEntity(id = "1", name = "Class A"))
-        val classesFlow = MutableStateFlow<Result<List<ClassEntity>>>(Result.Loading)
-        every { getClassesUseCase() } returns classesFlow
+        val classes = listOf(ClassModel(id = "1", schoolId = schoolId, name = "Class A", grade = "", teacherId = null, createdAt = 0L))
+        val classesFlow = MutableStateFlow<Result<List<ClassModel>>>(Result.Loading)
+        every { getClassesUseCase(schoolId) } returns classesFlow
 
-        viewModel = ClassViewModel(
-            getClassesUseCase,
-            updateClassUseCase,
-            deleteClassUseCase,
-            importClassesUseCase
-        )
+        viewModel = createViewModel()
 
         viewModel.uiState.test {
             // Assert Loading (Initial)
@@ -84,15 +98,10 @@ class ClassViewModelTest {
     @Test
     fun `uiState should emit Empty when data is empty`() = runTest {
         // Arrange
-        val classesFlow = MutableStateFlow<Result<List<ClassEntity>>>(Result.Success(emptyList()))
-        every { getClassesUseCase() } returns classesFlow
+        val classesFlow = MutableStateFlow<Result<List<ClassModel>>>(Result.Success(emptyList()))
+        every { getClassesUseCase(schoolId) } returns classesFlow
 
-        viewModel = ClassViewModel(
-            getClassesUseCase,
-            updateClassUseCase,
-            deleteClassUseCase,
-            importClassesUseCase
-        )
+        viewModel = createViewModel()
 
         viewModel.uiState.test {
             assertEquals(UiState.Loading, awaitItem()) // Initial from stateIn
@@ -104,15 +113,10 @@ class ClassViewModelTest {
     fun `uiState should emit Error when use case fails`() = runTest {
         // Arrange
         val errorMessage = "Network Error"
-        val classesFlow = MutableStateFlow<Result<List<ClassEntity>>>(Result.Failure(AppError.Network(errorMessage)))
-        every { getClassesUseCase() } returns classesFlow
+        val classesFlow = MutableStateFlow<Result<List<ClassModel>>>(Result.Failure(AppError.Network(errorMessage)))
+        every { getClassesUseCase(schoolId) } returns classesFlow
 
-        viewModel = ClassViewModel(
-            getClassesUseCase,
-            updateClassUseCase,
-            deleteClassUseCase,
-            importClassesUseCase
-        )
+        viewModel = createViewModel()
 
         viewModel.uiState.test {
             assertEquals(UiState.Loading, awaitItem()) // Initial from stateIn
@@ -125,42 +129,31 @@ class ClassViewModelTest {
     @Test
     fun `addClass should call UpdateClassUseCase`() = runTest {
         // Arrange
-        coEvery { updateClassUseCase(any(), any()) } returns Result.Success(Unit)
-        viewModel = ClassViewModel(
-            getClassesUseCase,
-            updateClassUseCase,
-            deleteClassUseCase,
-            importClassesUseCase
-        )
+        coEvery { updateClassUseCase(accountId, schoolId, any()) } returns Result.Success(Unit)
+        viewModel = createViewModel()
 
         // Act
         viewModel.addClass("New Class")
         advanceUntilIdle()
 
         // Assert
-        coVerify { updateClassUseCase("New Class", null) }
+        coVerify { updateClassUseCase(accountId, schoolId, "New Class") }
     }
 
     @Test
     fun `deleteClass should call DeleteClassUseCase and trigger callback on success`() = runTest {
         // Arrange
-        val classEntity = ClassEntity(id = "1", name = "Class A")
-        coEvery { deleteClassUseCase(any()) } returns Result.Success(Unit)
-        viewModel = ClassViewModel(
-            getClassesUseCase,
-            updateClassUseCase,
-            deleteClassUseCase,
-            importClassesUseCase
-        )
+        coEvery { deleteClassUseCase(accountId, schoolId, any()) } returns Result.Success(Unit)
+        viewModel = createViewModel()
         
         var successCalled = false
         
         // Act
-        viewModel.deleteClass(classEntity, onSuccess = { successCalled = true })
+        viewModel.deleteClass("1", onSuccess = { successCalled = true })
         advanceUntilIdle()
 
         // Assert
-        coVerify { deleteClassUseCase("1") }
+        coVerify { deleteClassUseCase(accountId, schoolId, "1") }
         assertTrue(successCalled)
     }
 }

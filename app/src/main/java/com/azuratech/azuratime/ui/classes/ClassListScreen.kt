@@ -31,6 +31,7 @@ fun ClassListScreen(
     
     // 🔥 Consume UiState instead of raw list
     val uiState by classViewModel.uiState.collectAsStateWithLifecycle()
+    val availableClasses by classViewModel.availableClasses.collectAsStateWithLifecycle()
     
     var showAddDialog by remember { mutableStateOf(false) }
     var classToEdit by remember { mutableStateOf<ClassModel?>(null) }
@@ -86,9 +87,8 @@ fun ClassListScreen(
 
         // --- ➕ DIALOG ADD ---
         if (showAddDialog) {
-            ClassInputDialog(
-                title = "Tambah Kelas Baru",
-                initialValue = "",
+            AddClassDialog(
+                availableClasses = availableClasses,
                 onDismiss = { showAddDialog = false },
                 onConfirm = { newName ->
                     classViewModel.addClass(newName) // 🔥 Simplified call
@@ -99,9 +99,9 @@ fun ClassListScreen(
 
         // --- ✏️ DIALOG EDIT ---
         classToEdit?.let { item ->
-            ClassInputDialog(
-                title = "Edit Nama Kelas",
-                initialValue = item.name,
+            AddClassDialog(
+                editingClass = item,
+                availableClasses = availableClasses,
                 onDismiss = { classToEdit = null },
                 onConfirm = { newName ->
                     classViewModel.updateClass(item.id, newName) // 🔥 Simplified call
@@ -181,40 +181,4 @@ fun ClassItemCard(
             }
         }
     }
-}
-
-@Composable
-fun ClassInputDialog(
-    title: String,
-    initialValue: String = "",
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var text by remember(initialValue) { mutableStateOf(initialValue) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text("Nama Kelas") },
-                placeholder = { Text("Contoh: 12-IPA-1") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = AzuraShapes.medium
-            )
-        },
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(text) },
-                enabled = text.isNotBlank(),
-                shape = AzuraShapes.medium
-            ) { Text("Simpan") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Batal") }
-        }
-    )
 }

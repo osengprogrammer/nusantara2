@@ -25,4 +25,15 @@ interface SchoolClassDao {
 
     @Query("DELETE FROM classes WHERE id = :id")
     suspend fun deleteClassById(id: String)
+
+    @Query("""
+        SELECT classes.* FROM classes 
+        INNER JOIN schools ON classes.schoolId = schools.id 
+        WHERE schools.accountId = :accountId 
+        ORDER BY schools.name, classes.name ASC
+    """)
+    fun getAllClassesForAccount(accountId: String): Flow<List<ClassEntity>>
+
+    @Query("UPDATE classes SET schoolId = :newSchoolId WHERE id = :classId")
+    suspend fun reassignClass(classId: String, newSchoolId: String)
 }

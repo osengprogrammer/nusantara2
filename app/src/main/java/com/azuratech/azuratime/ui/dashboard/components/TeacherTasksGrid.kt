@@ -22,6 +22,7 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 fun TeacherTasksGrid(
     navController: NavController,
     isAdmin: Boolean,
+    accountId: String? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -76,7 +77,11 @@ fun TeacherTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
             ) {
                 DashboardActionCard("Manajemen Kelas", Icons.Default.Groups, MaterialTheme.colorScheme.primary,
-                    { navController.navigate(Screen.ClassList.route) }, Modifier.weight(1f))
+                    { 
+                        if (accountId != null) {
+                            navController.navigate(Screen.ClassManagement.createRoute(accountId))
+                        }
+                    }, Modifier.weight(1f))
                 DashboardActionCard("Manajemen Siswa", Icons.Default.People, MaterialTheme.colorScheme.secondary,
                     { navController.navigate(Screen.Manage.route) }, Modifier.weight(1f))
             }

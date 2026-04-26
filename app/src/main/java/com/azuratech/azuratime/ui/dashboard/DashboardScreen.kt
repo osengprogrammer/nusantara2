@@ -23,8 +23,11 @@ import com.azuratech.azuratime.ui.core.designsystem.WorkspaceSelector
 import com.azuratech.azuratime.ui.core.preview.AzuraPreviews
 import com.azuratech.azuratime.ui.core.preview.PreviewMocks
 import com.azuratech.azuratime.ui.dashboard.components.*
+import com.azuratech.azuratime.ui.school.SchoolViewModel
+import com.azuratech.azuratime.ui.school.AddSchoolDialog
 import com.azuratech.azuratime.ui.data.IntegritySummaryWidget
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.ui.theme.AzuraTheme
 import com.azuratech.azuratime.ui.util.UiState
 import com.google.firebase.auth.FirebaseAuth
@@ -34,9 +37,11 @@ fun DashboardScreen(
     navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
+    val schoolViewModel: SchoolViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    var showAddSchoolDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
@@ -58,6 +63,13 @@ fun DashboardScreen(
         }
         is UiState.Success -> {
             val data = state.data
+            
+            // Sync schoolViewModel accountId
+            data.user?.userId?.let { userId ->
+                LaunchedEffect(userId) {
+                    schoolViewModel.setAccountId(userId)
+                }
+            }
 
             if (data.conflicts.isNotEmpty()) {
                 ConflictResolverDialog(
@@ -69,7 +81,11 @@ fun DashboardScreen(
             DashboardContent(
                 navController = navController,
                 data = data,
+                schoolViewModel = schoolViewModel,
                 snackbarHostState = snackbarHostState,
+                showAddSchoolDialog = showAddSchoolDialog,
+                onAddSchoolClick = { showAddSchoolDialog = true },
+                onDismissAddSchool = { showAddSchoolDialog = false },
                 onSyncClick = { viewModel.sync() },
                 onSelectClass = { classId -> viewModel.selectActiveClass(classId) },
                 onLogout = {
@@ -98,7 +114,11 @@ fun DashboardScreen(
 fun DashboardContent(
     navController: NavController,
     data: DashboardUiState,
+    schoolViewModel: SchoolViewModel,
     snackbarHostState: SnackbarHostState,
+    showAddSchoolDialog: Boolean,
+    onAddSchoolClick: () -> Unit,
+    onDismissAddSchool: () -> Unit,
     onSyncClick: () -> Unit,
     onSelectClass: (String?) -> Unit,
     onLogout: () -> Unit
@@ -120,94 +140,129 @@ fun DashboardContent(
         val user = data.user ?: return@AzuraScreen
         val photoUrl = FirebaseAuth.getInstance().currentUser?.photoUrl
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.lg)
-        ) {
-            if (!data.isApproved) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 100.dp),
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.lg)
+            ) {
+                if (!data.isApproved) {
+                    item {
+                        AzuraCard(
+                            title = "Akses Dibatasi",
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                        ) {
+                            Text(
+                                text = "Akun Anda sedang menunggu verifikasi Admin. Fitur scanner akan muncul setelah disetujui.",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+
                 item {
-                    AzuraCard(
-                        title = "Akses Dibatasi",
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-                    ) {
-                        Text(
-                            text = "Akun Anda sedang menunggu verifikasi Admin. Fitur scanner akan muncul setelah disetujui.",
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            style = MaterialTheme.typography.bodyMedium
+                    ProfileHeader(
+                        name = user.name,
+                        email = user.email,
+                        schoolName = user.schoolName ?: "",
+                        photoUrl = photoUrl,
+                        onLogout = onLogout,
+                        onProfileClick = { navController.navigate(Screen.Profile.route) }
+                    )
+                }
+
+                item {
+                    SedulurNetworkButton(
+                        pendingRequests = data.pendingRequests,
+                        onClick = { navController.navigate(Screen.Network.route) }
+                    )
+                }
+
+                if (data.currentRole == "ADMIN") {
+                    item {
+                        IntegritySummaryWidget(
+                            totalFaces = data.totalFaces,
+                            unassignedCount = data.unassignedStudents,
+                            brokenLinks = data.brokenAssignments,
+                            unsyncedCount = data.unsyncedRecords
                         )
                     }
                 }
-            }
 
-            item {
-                ProfileHeader(
-                    name = user.name,
-                    email = user.email,
-                    schoolName = user.schoolName ?: "",
-                    photoUrl = photoUrl,
-                    onLogout = onLogout,
-                    onProfileClick = { navController.navigate(Screen.Profile.route) }
-                )
-            }
+                if (data.isSyncing) {
+                    item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp)) }
+                }
 
-            item {
-                SedulurNetworkButton(
-                    pendingRequests = data.pendingRequests,
-                    onClick = { navController.navigate(Screen.Network.route) }
-                )
-            }
+                if (data.isApproved) {
+                    item {
+                        ActiveSessionCard(
+                            allClasses = data.assignedClasses,
+                            activeClassId = user.activeClassId,
+                            onSelectClass = onSelectClass
+                        )
+                    }
 
-            if (data.currentRole == "ADMIN") {
+                    if (data.currentRole == "ADMIN") {
+                        item {
+                            MySchoolsCard(
+                                viewModel = schoolViewModel,
+                                accountId = user.userId,
+                                onSchoolClick = {
+                                    if (user.userId.isNullOrEmpty()) {
+                                        println("🚫 DEBUG: userId is null/empty")
+                                        return@MySchoolsCard
+                                    }
+                                    println("🏫 DEBUG: userId=${user.userId}, route=${Screen.SchoolList.createRoute(user.userId)}")
+                                    navController.navigate(Screen.SchoolList.createRoute(user.userId))
+                                },
+                                onAddSchool = {
+                                    println("➕ DEBUG: Add School clicked")
+                                    onAddSchoolClick()
+                                }
+                            )
+                        }
+                    }
+
+                    if (data.sessionStudents.isNotEmpty()) {
+                        item { SessionStudentsList(students = data.sessionStudents) }
+                    }
+
+                    item {
+                        MyAssignedClassesSection(
+                            myClasses = data.assignedClasses,
+                            onNavigateToAll = { navController.navigate(Screen.MyAssignedClass.route) }
+                        )
+                    }
+                }
+
                 item {
-                    IntegritySummaryWidget(
-                        totalFaces = data.totalFaces,
-                        unassignedCount = data.unassignedStudents,
-                        brokenLinks = data.brokenAssignments,
-                        unsyncedCount = data.unsyncedRecords
+                    TeacherTasksGrid(
+                        navController = navController,
+                        isAdmin = data.currentRole == "ADMIN",
+                        accountId = user.userId
                     )
                 }
-            }
-
-            if (data.isSyncing) {
-                item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp)) }
-            }
-
-            if (data.isApproved) {
-                item {
-                    ActiveSessionCard(
-                        allClasses = data.assignedClasses,
-                        activeClassId = user.activeClassId,
-                        onSelectClass = onSelectClass
-                    )
-                }
-
-                if (data.sessionStudents.isNotEmpty()) {
-                    item { SessionStudentsList(students = data.sessionStudents) }
-                }
 
                 item {
-                    MyAssignedClassesSection(
-                        myClasses = data.assignedClasses,
-                        onNavigateToAll = { navController.navigate(Screen.MyAssignedClass.route) }
-                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    RecentScansHeader(navController = navController)
+                }
+
+                items(data.recentRecords) { record ->
+                    DashboardCheckInItem(record)
                 }
             }
 
-            item {
-                TeacherTasksGrid(
-                    navController = navController,
-                    isAdmin = data.currentRole == "ADMIN"
+            if (showAddSchoolDialog) {
+                AddSchoolDialog(
+                    availableClasses = emptyList(), // Not needed on dashboard quick add
+                    onDismiss = onDismissAddSchool,
+                    onConfirm = { name, timezone, selectedClassIds ->
+                        schoolViewModel.createSchool(name, timezone, selectedClassIds)
+                        onDismissAddSchool()
+                    }
                 )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                RecentScansHeader(navController = navController)
-            }
-
-            items(data.recentRecords) { record ->
-                DashboardCheckInItem(record)
             }
         }
     }
@@ -221,7 +276,11 @@ fun DashboardContentSuccessPreview() {
             DashboardContent(
                 navController = rememberNavController(),
                 data = PreviewMocks.mockDashboardStateSuccess,
+                schoolViewModel = hiltViewModel(),
                 snackbarHostState = remember { SnackbarHostState() },
+                showAddSchoolDialog = false,
+                onAddSchoolClick = {},
+                onDismissAddSchool = {},
                 onSyncClick = {},
                 onSelectClass = {},
                 onLogout = {}
@@ -238,7 +297,11 @@ fun DashboardContentLoadingPreview() {
             DashboardContent(
                 navController = rememberNavController(),
                 data = PreviewMocks.mockDashboardStateLoading,
+                schoolViewModel = hiltViewModel(),
                 snackbarHostState = remember { SnackbarHostState() },
+                showAddSchoolDialog = false,
+                onAddSchoolClick = {},
+                onDismissAddSchool = {},
                 onSyncClick = {},
                 onSelectClass = {},
                 onLogout = {}

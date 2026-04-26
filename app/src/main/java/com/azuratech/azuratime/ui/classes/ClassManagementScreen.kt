@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 
 // 🔥 KMP Models
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.ui.util.UiState
 
 // 🔥 Azura Design System & Utils
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
@@ -32,7 +33,6 @@ import com.azuratech.azuratime.core.util.showToast
  * 🏰 CLASS MANAGEMENT SCREEN
  * Refactored to use ClassModel and match School pattern.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClassManagementScreen(
     viewModel: ClassViewModel = hiltViewModel(),
@@ -43,9 +43,12 @@ fun ClassManagementScreen(
     val scope = rememberCoroutineScope()
     
     // State Observation
-    val classes by viewModel.classes.collectAsStateWithLifecycle(emptyList())
+    val allClassState by viewModel.allAccountClasses.collectAsStateWithLifecycle()
+    val schools by viewModel.schools.collectAsStateWithLifecycle()
+    val availableClasses by viewModel.availableClasses.collectAsStateWithLifecycle()
     
     // UI Local State
+    var searchQuery by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var editingClass by remember { mutableStateOf<ClassModel?>(null) }
     var isImporting by remember { mutableStateOf(false) }
@@ -66,7 +69,7 @@ fun ClassManagementScreen(
     }
 
     AzuraScreen(
-        title = "Manajemen Kelas",
+        title = "Manajemen Kelas Terpusat",
         onBack = onNavigateBack,
         floatingActionButton = {
             FloatingActionButton(
@@ -94,46 +97,66 @@ fun ClassManagementScreen(
             }
         }
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(top = AzuraSpacing.md)) {
-            
-            Text(
-                text = "Daftar Kelas Aktif",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Search Bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth().padding(AzuraSpacing.md),
+                placeholder = { Text("Cari kelas atau sekolah...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                shape = AzuraShapes.medium,
+                singleLine = true
             )
-            
-            Spacer(modifier = Modifier.height(AzuraSpacing.md))
 
-            if (classes.isEmpty()) {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.outline)
-                        Spacer(modifier = Modifier.height(8.dp))
+            when (val state = allClassState) {
+                is UiState.Loading -> {
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is UiState.Empty -> {
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text("Belum ada data kelas", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    items(classes, key = { it.id }) { classItem ->
-                        ClassItemRow(
-                            classItem = classItem,
-                            onClick = { onClassClick(classItem.id, classItem.name) },
-                            onEdit = {
-                                editingClass = classItem
-                                showDialog = true
-                            },
-                            onDelete = {
-                                viewModel.deleteClass(
-                                    classId = classItem.id,
-                                    onFailure = { msg -> context.showToast(msg) }
-                                )
-                            }
-                        )
+                is UiState.Error -> {
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                is UiState.Success -> {
+                    val filteredClasses: List<ClassModel> = remember(searchQuery, state.data, schools) {
+                        state.data.filter { cls ->
+                            val schoolName = schools.find { it.id == cls.schoolId }?.name ?: ""
+                            cls.name.contains(searchQuery, ignoreCase = true) || 
+                            schoolName.contains(searchQuery, ignoreCase = true)
+                        }
+                    }
+
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                        contentPadding = PaddingValues(start = AzuraSpacing.md, end = AzuraSpacing.md, bottom = 80.dp)
+                    ) {
+                        items(filteredClasses, key = { it.id }) { classItem ->
+                            val schoolName = schools.find { it.id == classItem.schoolId }?.name
+                            ClassItemRow(
+                                classItem = classItem,
+                                schoolName = schoolName,
+                                onClick = { onClassClick(classItem.id, classItem.name) },
+                                onEdit = {
+                                    editingClass = classItem
+                                    showDialog = true
+                                },
+                                onDelete = {
+                                    viewModel.deleteClass(
+                                        classId = classItem.id,
+                                        onFailure = { msg -> context.showToast(msg) }
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -141,12 +164,14 @@ fun ClassManagementScreen(
     }
 
     if (showDialog) {
-        AddEditClassDialog(
+        AddClassDialog(
             editingClass = editingClass,
+            availableClasses = availableClasses,
             onDismiss = { showDialog = false },
             onConfirm = { name ->
                 if (editingClass == null) {
-                    viewModel.addClass(name)
+                    println("📡 DEBUG: Passing class to ViewModel: $name")
+                    viewModel.createClass(name)
                 } else {
                     viewModel.updateClass(editingClass!!.id, name)
                 }
@@ -156,50 +181,11 @@ fun ClassManagementScreen(
     }
 }
 
-@Composable
-fun AddEditClassDialog(
-    editingClass: ClassModel?,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var name by remember { mutableStateOf(editingClass?.name ?: "") }
-    val isNameValid = name.isNotBlank()
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (editingClass == null) "Tambah Kelas" else "Ubah Nama Kelas") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
-                AzuraTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = "Nama Kelas",
-                    placeholder = "Contoh: 10-IPA-1",
-                    errorText = if (name.isNotEmpty() && !isNameValid) "Nama tidak boleh kosong" else null,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(name) },
-                enabled = isNameValid
-            ) {
-                Text("Simpan")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
-            }
-        }
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClassItemRow(
     classItem: ClassModel,
+    schoolName: String?,
     onClick: () -> Unit = {},
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -214,14 +200,20 @@ fun ClassItemRow(
             modifier = Modifier.padding(AzuraSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Groups, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(AzuraSpacing.md))
-            Text(
-                text = classItem.name, 
-                style = MaterialTheme.typography.bodyLarge, 
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = classItem.name, 
+                    style = MaterialTheme.typography.titleMedium, 
+                    fontWeight = FontWeight.Bold
+                )
+                if (schoolName != null) {
+                    SuggestionChip(
+                        onClick = {},
+                        label = { Text(schoolName, style = MaterialTheme.typography.labelSmall) },
+                        icon = { Icon(Icons.Default.School, null, modifier = Modifier.size(14.dp)) }
+                    )
+                }
+            }
             Row {
                 IconButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)

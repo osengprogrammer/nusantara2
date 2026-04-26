@@ -46,6 +46,7 @@ class SchoolRepository @Inject constructor(
                 updatedAt = System.currentTimeMillis()
             )
         )
+        println("✅ DEBUG: School saved to Room: ${school.id}")
         
         // Async Sync to Remote
         repositoryScope.launch {
@@ -133,5 +134,22 @@ class SchoolRepository @Inject constructor(
 
     fun getLocalClasses(schoolId: String): Flow<List<ClassEntity>> {
         return dao.getClasses(schoolId)
+    }
+
+    fun observeAllClassesForAccount(accountId: String): Flow<Result<List<ClassModel>>> =
+        dao.getAllClassesForAccount(accountId)
+            .map { entities ->
+                Result.Success(entities.map { it.toDomain() }) as Result<List<ClassModel>>
+            }
+            .catch { e ->
+                emit(Result.Failure(AppError.LocalDB(e.message)))
+            }
+
+    suspend fun reassignClass(accountId: String, classId: String, newSchoolId: String): Result<Unit> = try {
+        dao.reassignClass(classId, newSchoolId)
+        // Note: In a real app, we'd also sync this to remote
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(AppError.LocalDB(e.message))
     }
 }
