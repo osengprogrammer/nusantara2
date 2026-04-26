@@ -58,6 +58,9 @@ class SchoolRepository @Inject constructor(
         Result.Failure(AppError.LocalDB(e.message))
     }
 
+    suspend fun getSchoolById(id: String): School? = 
+        dao.getSchoolById(id)?.toDomain()
+
     suspend fun deleteSchool(id: String, accountId: String): Result<Unit> = try {
         dao.deleteSchoolById(id)
         

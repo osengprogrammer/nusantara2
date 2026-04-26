@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 // 🔥 KMP Models
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.util.UiState
+import com.azuratech.azuratime.ui.core.UiEvent
 
 // 🔥 Azura Design System & Utils
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
@@ -41,6 +42,17 @@ fun ClassManagementScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // UI Event Collection
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                else -> Unit
+            }
+        }
+    }
     
     // State Observation
     val allClassState by viewModel.allAccountClasses.collectAsStateWithLifecycle()
@@ -71,6 +83,7 @@ fun ClassManagementScreen(
     AzuraScreen(
         title = "Manajemen Kelas Terpusat",
         onBack = onNavigateBack,
+        snackbarHostState = snackbarHostState,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {

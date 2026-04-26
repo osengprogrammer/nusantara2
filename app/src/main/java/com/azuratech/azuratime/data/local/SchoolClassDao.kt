@@ -11,6 +11,9 @@ interface SchoolClassDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertSchool(school: SchoolEntity)
 
+    @Query("SELECT * FROM schools WHERE id = :id")
+    suspend fun getSchoolById(id: String): SchoolEntity?
+
     @Query("SELECT * FROM classes WHERE schoolId = :schoolId ORDER BY grade, name ASC")
     fun getClasses(schoolId: String): Flow<List<ClassEntity>>
 
