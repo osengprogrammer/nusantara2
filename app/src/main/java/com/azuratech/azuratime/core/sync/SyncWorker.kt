@@ -66,11 +66,11 @@ class SyncWorker @AssistedInject constructor(
 
         // 3. Modernized Sync (Classes, Users, Assignments)
         try {
-            val currentUserId = sessionManager.getCurrentUserId()
-            if (currentUserId != null) {
+            val currentUserId = sessionManager.getCurrentUserId() ?: ""
+            if (currentUserId.isNotEmpty()) {
                 syncUserUseCase(currentUserId)
             }
-            syncClassesUseCase()
+            syncClassesUseCase(currentUserId, schoolId)
             syncAssignmentsUseCase()
         } catch (e: Exception) {
             Log.w("AZURA_SYNC", "UseCase sync failed: ${e.message}")

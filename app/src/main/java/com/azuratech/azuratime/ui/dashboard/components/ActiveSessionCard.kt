@@ -6,13 +6,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActiveSessionCard(
-    allClasses: List<ClassEntity>,
+    allClasses: List<ClassModel>,
     activeClassId: String?,
     onSelectClass: (String?) -> Unit,
     modifier: Modifier = Modifier

@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.ui.add
 
-import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.FaceWithDetails
+import com.azuratech.azuraengine.model.ClassModel
 
 /**
  * A display-ready data class that acts as a "ViewModel" for each item in the student list.
@@ -20,7 +20,7 @@ data class StudentDisplayItem(
  */
 data class FaceListData(
     val students: List<StudentDisplayItem> = emptyList(),
-    val allClasses: List<ClassEntity> = emptyList(),
+    val allClasses: List<ClassModel> = emptyList(),
     val searchQuery: String = "",
     val selectedClassName: String? = null,
     val studentForClassAssignment: FaceEntity? = null,

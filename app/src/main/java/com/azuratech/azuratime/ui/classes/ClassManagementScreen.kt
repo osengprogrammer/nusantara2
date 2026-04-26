@@ -14,27 +14,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel // 🔥 Gunakan Hilt
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 
-// 🔥 Database Entities
-import com.azuratech.azuratime.data.local.ClassEntity
+// 🔥 KMP Models
+import com.azuratech.azuraengine.model.ClassModel
 
 // 🔥 Azura Design System & Utils
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
+import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
 
 /**
  * 🏰 CLASS MANAGEMENT SCREEN
- * Updated to use Hilt and cleaned up parameters.
+ * Refactored to use ClassModel and match School pattern.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClassManagementScreen(
-    viewModel: ClassViewModel = hiltViewModel(), // 🔥 Pakai hiltViewModel()
+    viewModel: ClassViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
     onClassClick: (id: String, name: String) -> Unit = { _, _ -> }
 ) {
@@ -46,19 +47,16 @@ fun ClassManagementScreen(
     
     // UI Local State
     var showDialog by remember { mutableStateOf(false) }
-    var editingClass by remember { mutableStateOf<ClassEntity?>(null) }
-    var inputText by remember { mutableStateOf("") }
+    var editingClass by remember { mutableStateOf<ClassModel?>(null) }
     var isImporting by remember { mutableStateOf(false) }
 
-    // CSV Launcher (Simplified)
+    // CSV Launcher
     val csvLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        // 🔥 ViewModel sekarang sudah menangani URI secara internal atau via UseCase
         uri?.let { selectedUri ->
             scope.launch {
                 isImporting = true
-                // 🔥 FIX: Hanya memanggil callback onComplete
                 viewModel.importClassesFromCsv(selectedUri) {
                     isImporting = false
                     context.showToast("Impor Kelas Berhasil!")
@@ -74,7 +72,6 @@ fun ClassManagementScreen(
             FloatingActionButton(
                 onClick = {
                     editingClass = null
-                    inputText = ""
                     showDialog = true
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -99,7 +96,6 @@ fun ClassManagementScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(top = AzuraSpacing.md)) {
             
-            // Header Info
             Text(
                 text = "Daftar Kelas Aktif",
                 style = MaterialTheme.typography.titleMedium,
@@ -129,12 +125,11 @@ fun ClassManagementScreen(
                             onClick = { onClassClick(classItem.id, classItem.name) },
                             onEdit = {
                                 editingClass = classItem
-                                inputText = classItem.name
                                 showDialog = true
                             },
                             onDelete = {
                                 viewModel.deleteClass(
-                                    classEntity = classItem,
+                                    classId = classItem.id,
                                     onFailure = { msg -> context.showToast(msg) }
                                 )
                             }
@@ -145,46 +140,66 @@ fun ClassManagementScreen(
         }
     }
 
-    // CREATE / UPDATE DIALOG
     if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(if (editingClass == null) "Tambah Kelas" else "Ubah Nama Kelas") },
-            text = {
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    label = { Text("Nama Kelas") },
-                    placeholder = { Text("Contoh: 10-IPA-1") },
-                    singleLine = true,
-                    shape = AzuraShapes.medium,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(
-                    enabled = inputText.isNotBlank(),
-                    onClick = {
-                        if (editingClass == null) {
-                            viewModel.addClass(inputText)
-                        } else {
-                            viewModel.updateClass(editingClass!!.id, inputText)
-                        }
-                        showDialog = false
-                    }
-                ) { Text("Simpan") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) { Text("Batal") }
+        AddEditClassDialog(
+            editingClass = editingClass,
+            onDismiss = { showDialog = false },
+            onConfirm = { name ->
+                if (editingClass == null) {
+                    viewModel.addClass(name)
+                } else {
+                    viewModel.updateClass(editingClass!!.id, name)
+                }
+                showDialog = false
             }
         )
     }
 }
 
+@Composable
+fun AddEditClassDialog(
+    editingClass: ClassModel?,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var name by remember { mutableStateOf(editingClass?.name ?: "") }
+    val isNameValid = name.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (editingClass == null) "Tambah Kelas" else "Ubah Nama Kelas") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
+                AzuraTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = "Nama Kelas",
+                    placeholder = "Contoh: 10-IPA-1",
+                    errorText = if (name.isNotEmpty() && !isNameValid) "Nama tidak boleh kosong" else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(name) },
+                enabled = isNameValid
+            ) {
+                Text("Simpan")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClassItemRow(
-    classItem: ClassEntity,
+    classItem: ClassModel,
     onClick: () -> Unit = {},
     onEdit: () -> Unit,
     onDelete: () -> Unit

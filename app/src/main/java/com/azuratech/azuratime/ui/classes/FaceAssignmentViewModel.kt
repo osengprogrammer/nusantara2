@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.azuratech.azuraengine.model.ClassModel
+
 /**
  * 🛠️ FACE ASSIGNMENT VIEW MODEL - Migrated to UseCases
  */
@@ -31,25 +33,29 @@ class FaceAssignmentViewModel @Inject constructor(
     private val faceDao = database.faceDao()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val allAssignedClassesMap: StateFlow<Map<String, List<ClassEntity>>> =
+    val allAssignedClassesMap: StateFlow<Map<String, List<ClassModel>>> =
         sessionManager.activeSchoolIdFlow
             .flatMapLatest { schoolId: String? ->
                 faceDao.getAllFacesFlow(schoolId ?: "")
             }
             .flatMapLatest { faces: List<com.azuratech.azuratime.data.local.FaceEntity> ->
-                if (faces.isEmpty()) return@flatMapLatest flowOf(emptyMap<String, List<ClassEntity>>())
+                if (faces.isEmpty()) return@flatMapLatest flowOf(emptyMap<String, List<ClassModel>>())
                 // Simplified for brevity, logic remains similar
-                flowOf(emptyMap<String, List<ClassEntity>>()) 
+                flowOf(emptyMap<String, List<ClassModel>>()) 
             }
             .flowOn(Dispatchers.IO)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    val availableClasses: Flow<List<ClassEntity>> = getClassesUseCase().map { result: Result<List<ClassEntity>> -> 
-        when(result) {
-            is Result.Success -> result.data
-            else -> emptyList()
+    val availableClasses: Flow<List<ClassModel>> = sessionManager.activeSchoolIdFlow
+        .filterNotNull()
+        .flatMapLatest { schoolId ->
+            getClassesUseCase(schoolId).map { result: Result<List<ClassModel>> -> 
+                when(result) {
+                    is Result.Success -> result.data
+                    else -> emptyList()
+                }
+            }
         }
-    }
 
     fun assignToClass(faceId: String, classId: String) {
         viewModelScope.launch {

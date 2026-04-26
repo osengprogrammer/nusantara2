@@ -18,7 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // 🔥 Database Entities & ViewModels
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.checkin.CheckInViewModel
 import com.azuratech.azuratime.ui.classes.ClassViewModel
 import com.azuratech.azuratime.ui.user.UserManagementViewModel
@@ -120,7 +120,7 @@ fun DailyDetailScreen(
 
                 showClassCorrectionDialog?.let { recordToCorrect ->
                     val filteredClasses = if (data.isAdmin) data.globalClasses else data.globalClasses.filter { it.id in data.assignedIds }
-                    var selectedClass by remember { mutableStateOf<ClassEntity?>(null) }
+                    var selectedClass by remember { mutableStateOf<ClassModel?>(null) }
 
                     AlertDialog(
                         onDismissRequest = { showClassCorrectionDialog = null },

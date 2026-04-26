@@ -7,7 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceWithDetails
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
@@ -28,9 +28,9 @@ fun ManualAttendanceContent(
     onDateSelected: (LocalDate) -> Unit,
     selectedTime: LocalTime,
     onTimeSelected: (LocalTime) -> Unit,
-    selectedClass: ClassEntity?,
-    onClassSelected: (ClassEntity?) -> Unit,
-    availableClasses: List<ClassEntity>,
+    selectedClass: ClassModel?,
+    onClassSelected: (ClassModel?) -> Unit,
+    availableClasses: List<ClassModel>,
     isLocked: Boolean,
     onSave: () -> Unit,
     onBack: () -> Unit

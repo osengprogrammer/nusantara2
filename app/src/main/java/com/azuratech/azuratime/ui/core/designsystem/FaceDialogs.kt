@@ -9,8 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 
 @Composable
@@ -44,7 +44,7 @@ fun QuickEditFaceDialog(
 @Composable
 fun MultiClassAssignmentDialog(
     studentName: String,
-    allClasses: List<ClassEntity>,
+    allClasses: List<ClassModel>,
     assignedClassIds: List<String>,
     onDismiss: () -> Unit,
     onToggle: (String, Boolean) -> Unit

@@ -2,9 +2,9 @@ package com.azuratech.azuratime.ui.add
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.FaceWithDetails
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.domain.assignment.usecase.RemoveStudentFromClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.face.usecase.DeleteFaceUseCase
@@ -25,7 +25,8 @@ class FaceListViewModel @Inject constructor(
     private val updateFaceUseCase: UpdateFaceUseCase,
     private val deleteFaceUseCase: DeleteFaceUseCase,
     private val getClassesUseCase: GetClassesUseCase,
-    private val removeStudentFromClassUseCase: RemoveStudentFromClassUseCase
+    private val removeStudentFromClassUseCase: RemoveStudentFromClassUseCase,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -35,7 +36,7 @@ class FaceListViewModel @Inject constructor(
 
     // Data flows from UseCases
     private val _allFacesFlow = getFacesWithDetailsUseCase()
-    private val _allClassesFlow = getClassesUseCase().map { 
+    private val _allClassesFlow = getClassesUseCase(sessionManager.getActiveSchoolId() ?: "").map { 
         when(it) {
             is Result.Success -> it.data
             else -> emptyList()
@@ -79,7 +80,7 @@ class FaceListViewModel @Inject constructor(
         @Suppress("UNCHECKED_CAST")
         val students = args[0] as List<StudentDisplayItem>
         @Suppress("UNCHECKED_CAST")
-        val allClasses = args[1] as List<ClassEntity>
+        val allClasses = args[1] as List<ClassModel>
         val query = args[2] as String
         val className = args[3] as String?
         @Suppress("UNCHECKED_CAST")

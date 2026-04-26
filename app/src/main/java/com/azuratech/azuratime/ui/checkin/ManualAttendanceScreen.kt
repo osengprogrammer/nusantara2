@@ -2,7 +2,7 @@ package com.azuratech.azuratime.ui.checkin
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle 
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.add.FaceViewModel
 import com.azuratech.azuratime.ui.classes.ClassViewModel
 import com.azuratech.azuratime.ui.user.UserManagementViewModel
@@ -44,7 +44,7 @@ fun ManualAttendanceScreen(
     }
     var selectedTime by remember { mutableStateOf(LocalTime.now()) }
     var selectedClass by remember(availableClasses) { 
-        mutableStateOf<ClassEntity?>(null) 
+        mutableStateOf<ClassModel?>(null) 
     }
 
     val isLocked = initialFaceId.isNotEmpty()

@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.domain.checkin.usecase.*
 import com.azuratech.azuratime.core.session.SessionManager
@@ -180,7 +180,7 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
         } 
     }
     
-    fun updateRecordClass(record: CheckInRecordEntity, selectedClass: ClassEntity) {
+    fun updateRecordClass(record: CheckInRecordEntity, selectedClass: ClassModel) {
         viewModelScope.launch { 
             updateCheckInRecordUseCase.updateClass(record.id, selectedClass.id, selectedClass.name) 
         }

@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
@@ -65,8 +66,8 @@ fun MyAssignedClassScreen(
 @Composable
 fun MyAssignedClassContent(
     title: String,
-    myClasses: List<com.azuratech.azuratime.data.local.ClassEntity>,
-    availableClasses: List<com.azuratech.azuratime.data.local.ClassEntity>,
+    myClasses: List<ClassModel>,
+    availableClasses: List<ClassModel>,
     searchQuery: String,
     onSearchQueryChanged: (String) -> Unit,
     onRemoveClass: (String) -> Unit,

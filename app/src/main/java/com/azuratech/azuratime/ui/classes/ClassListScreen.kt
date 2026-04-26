@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
@@ -33,8 +33,8 @@ fun ClassListScreen(
     val uiState by classViewModel.uiState.collectAsStateWithLifecycle()
     
     var showAddDialog by remember { mutableStateOf(false) }
-    var classToEdit by remember { mutableStateOf<ClassEntity?>(null) }
-    var classToDelete by remember { mutableStateOf<ClassEntity?>(null) }
+    var classToEdit by remember { mutableStateOf<ClassModel?>(null) }
+    var classToDelete by remember { mutableStateOf<ClassModel?>(null) }
 
     AzuraScreen(
         title = "Manajemen Kelas",
@@ -121,7 +121,7 @@ fun ClassListScreen(
                     Button(
                         onClick = {
                             classViewModel.deleteClass(
-                                classEntity = item,
+                                classId = item.id,
                                 onFailure = { msg ->
                                     context.showToast(msg) 
                                     classToDelete = null
@@ -144,7 +144,7 @@ fun ClassListScreen(
 
 @Composable
 fun ClassItemCard(
-    classItem: ClassEntity, // 🔥 Changed from OptionEntity
+    classItem: ClassModel, // 🔥 Changed from OptionEntity
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit

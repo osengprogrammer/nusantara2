@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.CheckInRecordEntityCard
 import com.azuratech.azuratime.ui.core.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
@@ -193,7 +193,7 @@ fun FilterToggleButton(isActive: Boolean, onClick: () -> Unit) {
 fun LocalFilterPanel(
     startDate: LocalDate?,
     endDate: LocalDate?,
-    classes: List<ClassEntity>,
+    classes: List<ClassModel>,
     selectedClassId: String?,
     onDatesChanged: (LocalDate?, LocalDate?) -> Unit,
     onClassSelected: (String?) -> Unit
@@ -242,9 +242,9 @@ fun LocalEmptyPlaceholder(msg: String) {
 @Composable
 fun LocalClassCorrectionDialog(
     currentClassName: String,
-    userClasses: List<ClassEntity>,
+    userClasses: List<ClassModel>,
     onDismiss: () -> Unit,
-    onClassSelected: (ClassEntity) -> Unit
+    onClassSelected: (ClassModel) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,

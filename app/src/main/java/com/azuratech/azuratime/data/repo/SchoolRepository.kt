@@ -1,11 +1,12 @@
 package com.azuratech.azuratime.data.repo
 
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.SchoolEntity
 import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuratime.data.local.SchoolEntity
 import com.azuratech.azuratime.data.remote.SchoolRemoteDataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,10 +70,68 @@ class SchoolRepository @Inject constructor(
         Result.Failure(AppError.LocalDB(e.message))
     }
 
-    // Class Operations
+    // =====================================================
+    // 🏫 CLASS OPERATIONS
+    // =====================================================
+
+    fun observeClasses(schoolId: String): Flow<Result<List<ClassModel>>> =
+        dao.getClasses(schoolId)
+            .map { entities ->
+                Result.Success(entities.map { it.toDomain() }) as Result<List<ClassModel>>
+            }
+            .catch { e ->
+                emit(Result.Failure(AppError.LocalDB(e.message)))
+            }
+
+    suspend fun saveClass(accountId: String, schoolId: String, classModel: ClassModel): Result<Unit> {
+        return try {
+            val entity = ClassEntity(
+                id = classModel.id,
+                schoolId = schoolId,
+                name = classModel.name,
+                grade = classModel.grade,
+                teacherId = classModel.teacherId,
+                studentCount = classModel.studentCount,
+                createdAt = classModel.createdAt
+            )
+            dao.upsertClass(entity)
+
+            // Async Sync to Remote
+            repositoryScope.launch {
+                remoteDataSource.saveClass(accountId, schoolId, classModel)
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    suspend fun deleteClass(accountId: String, schoolId: String, classId: String): Result<Unit> {
+        return try {
+            val studentCount = dao.getStudentCountForClass(schoolId, classId)
+            if (studentCount > 0) {
+                return Result.Failure(AppError.BusinessRule("Gagal! Masih ada $studentCount siswa di kelas ini."))
+            }
+
+            dao.deleteClassById(classId)
+
+            // Async Sync to Remote
+            repositoryScope.launch {
+                remoteDataSource.deleteClass(accountId, schoolId, classId)
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
     suspend fun saveClassLocally(classEntity: ClassEntity) {
         dao.upsertClass(classEntity)
     }
 
-    fun getLocalClasses(schoolId: String) = dao.getClasses(schoolId)
+    fun getLocalClasses(schoolId: String): Flow<List<ClassEntity>> {
+        return dao.getClasses(schoolId)
+    }
 }

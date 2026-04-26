@@ -2,7 +2,7 @@ package com.azuratech.azuratime.ui.core.preview
 
 import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.ui.dashboard.DashboardUiState
@@ -28,9 +28,9 @@ object PreviewMocks {
     )
 
     val mockClasses = listOf(
-        ClassEntity(id = "cls_1", schoolId = "sch_1", name = "Kelas 10A"),
-        ClassEntity(id = "cls_2", schoolId = "sch_1", name = "Kelas 10B"),
-        ClassEntity(id = "cls_3", schoolId = "sch_1", name = "Garmen Shift Pagi")
+        ClassModel(id = "cls_1", schoolId = "sch_1", name = "Kelas 10A", grade = "10", teacherId = null, studentCount = 0, createdAt = 0L),
+        ClassModel(id = "cls_2", schoolId = "sch_1", name = "Kelas 10B", grade = "10", teacherId = null, studentCount = 0, createdAt = 0L),
+        ClassModel(id = "cls_3", schoolId = "sch_1", name = "Garmen Shift Pagi", grade = "N/A", teacherId = null, studentCount = 0, createdAt = 0L)
     )
 
     val mockStudents = listOf(
