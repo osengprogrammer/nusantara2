@@ -17,6 +17,7 @@ import com.azuratech.azuratime.domain.classes.usecase.GetAvailableClassesUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
+import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +43,9 @@ class ClassViewModel @Inject constructor(
     private val getSchoolsUseCase: GetSchoolsUseCase,
     private val sessionManager: SessionManager
 ) : ViewModel() {
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     private val schoolId: String = savedStateHandle.get<String>("schoolId") 
         ?: sessionManager.getActiveSchoolId() ?: ""
@@ -105,15 +109,24 @@ class ClassViewModel @Inject constructor(
         
         if (targetSchoolId.isBlank()) {
             println("❌ DEBUG: Save failed: No school found for account $accountId")
+            viewModelScope.launch {
+                _uiEvent.emit(UiEvent.ShowSnackbar("Gagal: Akun ini belum memiliki sekolah. Buat sekolah dulu."))
+            }
             return
         }
 
-        println("💾 DEBUG: ViewModel creating class: $name")
+        println("💾 DEBUG: ViewModel creating class: $name for school: $targetSchoolId")
         viewModelScope.launch {
             val result = createClassUseCase(accountId, targetSchoolId, name)
             when (result) {
-                is Result.Success -> println("✅ DEBUG: Class created successfully")
-                is Result.Failure -> println("❌ DEBUG: Save failed: ${result.error}")
+                is Result.Success -> {
+                    println("✅ DEBUG: Class created successfully")
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Kelas '$name' berhasil dibuat!"))
+                }
+                is Result.Failure -> {
+                    println("❌ DEBUG: Save failed: ${result.error}")
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal membuat kelas: ${result.error.message}"))
+                }
                 else -> Unit
             }
         }
