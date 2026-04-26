@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 fun ActiveSessionCard(
     user: UserEntity?,
-    allClasses: List<ClassEntity>, // 🔥 Changed from OptionEntity
+    allClasses: List<ClassModel>, // 🔥 Changed from OptionEntity
     checkInViewModel: CheckInViewModel?,
     onSelectClass: (String?) -> Unit
 ) {
@@ -176,7 +176,7 @@ fun SessionStudentsList(students: List<FaceEntity>) {
  * Shows the classes the teacher is actually responsible for.
  */
 @Composable
-fun MyAssignedClassesSection(myClasses: List<ClassEntity>, onNavigateToAll: () -> Unit) {
+fun MyAssignedClassesSection(myClasses: List<ClassModel>, onNavigateToAll: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = AzuraSpacing.md)) {
         Row(
             modifier = Modifier.fillMaxWidth(),

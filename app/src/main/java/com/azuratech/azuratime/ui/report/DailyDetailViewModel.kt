@@ -52,9 +52,13 @@ class DailyDetailViewModel @Inject constructor(
         )
     ).map { it.getOrNull() ?: emptyList() }
 
-    private val classes = getClassesUseCase().map { 
-        if (it is Result.Success) it.data else emptyList() 
-    }
+    private val classes = sessionManager.activeSchoolIdFlow
+        .filterNotNull()
+        .flatMapLatest { schoolId ->
+            getClassesUseCase(schoolId).map { 
+                if (it is Result.Success) it.data else emptyList() 
+            }
+        }
 
     val uiState: StateFlow<DailyDetailUiState> = combine(
         checkInRecords,
@@ -90,7 +94,7 @@ class DailyDetailViewModel @Inject constructor(
         viewModelScope.launch { updateCheckInRecordUseCase(record) }
     }
 
-    fun updateRecordClass(record: CheckInRecordEntity, selectedClass: ClassEntity) {
+    fun updateRecordClass(record: CheckInRecordEntity, selectedClass: com.azuratech.azuraengine.model.ClassModel) {
         viewModelScope.launch {
             updateCheckInRecordUseCase.updateClass(record.id, selectedClass.id, selectedClass.name)
         }

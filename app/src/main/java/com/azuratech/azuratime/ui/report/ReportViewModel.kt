@@ -8,6 +8,8 @@ import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.data.repo.ReportRepository
 import com.azuratech.azuratime.domain.report.usecase.GetReportDataUseCase
 import com.azuratech.azuratime.domain.sync.usecase.SyncMasterDataUseCase
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuraengine.model.ClassModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,23 +19,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
-
-data class MatrixParams(
-    val start: LocalDate,
-    val end: LocalDate,
-    val classId: String?,
-    val role: String,
-    val assigned: List<String>
-)
 
 @HiltViewModel
 class ReportViewModel @Inject constructor(
     application: Application,
     private val repository: ReportRepository,
     private val getReportDataUseCase: GetReportDataUseCase,
-    private val syncMasterDataUseCase: SyncMasterDataUseCase
+    private val syncMasterDataUseCase: SyncMasterDataUseCase,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : AndroidViewModel(application) {
 
     private val _startDate = MutableStateFlow(LocalDate.now().withDayOfMonth(1))
@@ -44,17 +38,19 @@ class ReportViewModel @Inject constructor(
     private val _reportPolicy = MutableStateFlow("SCHOOL")
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val availableClasses: StateFlow<List<ClassEntity>> = combine(_userRole, _assignedClasses) { role, assigned ->
-        role to assigned
-    }.flatMapLatest { (role, assigned) ->
-        getReportDataUseCase.getAvailableClasses(role, assigned)
+    val availableClasses: StateFlow<List<ClassModel>> = combine(
+        _userRole, _assignedClasses, sessionManager.activeSchoolIdFlow
+    ) { role, assigned, schoolId ->
+        Triple(role, assigned, schoolId ?: "")
+    }.flatMapLatest { (role, assigned, schoolId) ->
+        getReportDataUseCase.getAvailableClasses(schoolId, role, assigned)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @Suppress("UNCHECKED_CAST")
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     val uiState: StateFlow<ReportUiState> =
         combine(
-            _startDate, _endDate, _selectedClassId, _userRole, _assignedClasses, _reportPolicy
+            _startDate, _endDate, _selectedClassId, _userRole, _assignedClasses, _reportPolicy, sessionManager.activeSchoolIdFlow
         ) { args: Array<*> ->
             val start = args[0] as LocalDate
             val end = args[1] as LocalDate
@@ -62,14 +58,15 @@ class ReportViewModel @Inject constructor(
             val role = args[3] as String
             val assigned = args[4] as List<String>
             val policy = args[5] as String
-            Triple(MatrixParams(start, end, classId, role, assigned), policy, generateDateRange(start, end))
+            val schoolId = args[6] as String? ?: ""
+            Triple(MatrixParams(start, end, classId, role, assigned, schoolId), policy, generateDateRange(start, end))
         }
         .debounce(200)
         .flatMapLatest { (params, policy, dateRange) ->
             combine(
-                getReportDataUseCase.getStudentsInReport(params.role, params.classId, params.assigned),
+                getReportDataUseCase.getStudentsInReport(params.schoolId, params.role, params.classId, params.assigned),
                 repository.getCheckInRecordDao().getFilteredRecords(
-                    schoolId = "",
+                    schoolId = params.schoolId,
                     startDate = params.start,
                     endDate = params.end,
                     classId = params.classId,
@@ -83,7 +80,7 @@ class ReportViewModel @Inject constructor(
             ) { results: Array<*> ->
                 val students = results[0] as List<FaceEntity>
                 val logs = results[1] as List<CheckInRecordEntity>
-                val classes = results[2] as List<ClassEntity>
+                val classes = results[2] as List<ClassModel>
                 val start = results[3] as LocalDate
                 val end = results[4] as LocalDate
                 val classId = results[5] as String?

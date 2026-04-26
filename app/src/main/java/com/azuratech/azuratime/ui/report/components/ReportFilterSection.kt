@@ -7,7 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
@@ -20,7 +20,7 @@ fun ReportFilterSection(
     endDate: LocalDate,
     searchQuery: String,
     selectedClassId: String?,
-    availableClasses: List<ClassEntity>,
+    availableClasses: List<ClassModel>,
     onSearchChange: (String) -> Unit,
     onDateRangeSelected: (LocalDate, LocalDate) -> Unit,
     onClassSelected: (String?) -> Unit,
@@ -38,14 +38,19 @@ fun ReportFilterSection(
                 modifier = Modifier.weight(1f)
             )
             AzuraDatePickerButton(
-                label = "Hingga",
+                label = "Sampai",
                 selectedDate = endDate,
                 onDateSelected = { onDateRangeSelected(startDate, it) },
                 modifier = Modifier.weight(1f)
             )
         }
-        Spacer(modifier = Modifier.height(AzuraSpacing.sm))
-        Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
+
+        Spacer(modifier = Modifier.height(AzuraSpacing.md))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+        ) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
@@ -58,7 +63,7 @@ fun ReportFilterSection(
             AzuraDropdownField(
                 label = "Kelas",
                 selectedValue = selectedClassName,
-                options = listOf(ClassEntity(id = "ALL", schoolId = "", name = "Semua Kelas")) + availableClasses,
+                options = listOf(ClassModel(id = "ALL", schoolId = "", name = "Semua Kelas", grade = "", teacherId = null, createdAt = 0L)) + availableClasses,
                 isExpanded = isClassExpanded,
                 onExpandedChange = { isClassExpanded = it },
                 onOptionSelected = {

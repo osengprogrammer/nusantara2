@@ -9,6 +9,8 @@ import com.azuratech.azuratime.data.repo.ReportRepository
 import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.domain.report.usecase.GetReportDataUseCase
 import com.azuratech.azuratime.domain.sync.ExportUtils
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuraengine.model.ClassModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,7 +28,8 @@ class AttendanceMatrixViewModel @Inject constructor(
     private val reportRepository: ReportRepository,
     private val getReportDataUseCase: GetReportDataUseCase,
     private val userRepository: UserRepository,
-    private val exportUtils: ExportUtils
+    private val exportUtils: ExportUtils,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -41,7 +44,7 @@ class AttendanceMatrixViewModel @Inject constructor(
 
     @Suppress("UNCHECKED_CAST")
     private val _matrixRows = combine(
-        _startDate, _endDate, _selectedClassId, _userRole, _assignedClasses, _policy
+        _startDate, _endDate, _selectedClassId, _userRole, _assignedClasses, _policy, sessionManager.activeSchoolIdFlow
     ) { args: Array<*> ->
         val start = args[0] as LocalDate
         val end = args[1] as LocalDate
@@ -49,24 +52,25 @@ class AttendanceMatrixViewModel @Inject constructor(
         val role = args[3] as String
         val assigned = args[4] as List<String>
         val policy = args[5] as String
-        Triple(MatrixParams(start, end, classId, role, assigned), policy, generateDateRange(start, end))
+        val schoolId = args[6] as String? ?: ""
+        Triple(MatrixParams(start, end, classId, role, assigned, schoolId), policy, generateDateRange(start, end))
     }
     .debounce(200)
     .flatMapLatest { (params, policy, dateRange) ->
         combine(
-            getReportDataUseCase.getStudentsInReport(params.role, params.classId, params.assigned),
+            getReportDataUseCase.getStudentsInReport(params.schoolId, params.role, params.classId, params.assigned),
             reportRepository.getCheckInRecordDao().getFilteredRecords(
-                schoolId = "", // Placeholder
+                schoolId = params.schoolId,
                 startDate = params.start,
                 endDate = params.end,
                 classId = params.classId,
                 assignedIds = params.assigned
             ),
-            getReportDataUseCase.getAvailableClasses(params.role, params.assigned)
+            getReportDataUseCase.getAvailableClasses(params.schoolId, params.role, params.assigned)
         ) { results: Array<*> ->
             val students = results[0] as List<FaceEntity>
             val logs = results[1] as List<CheckInRecordEntity>
-            val classes = results[2] as List<com.azuratech.azuratime.data.local.ClassEntity>
+            val classes = results[2] as List<ClassModel>
             buildMatrix(students, logs, dateRange, policy, classes.associate { it.id to it.name })
         }
     }
@@ -82,12 +86,12 @@ class AttendanceMatrixViewModel @Inject constructor(
             }
         }
 
-    private val availableClasses: StateFlow<List<com.azuratech.azuratime.data.local.ClassEntity>> = combine(
-        _userRole, _assignedClasses
-    ) { role, assigned ->
-        role to assigned
-    }.flatMapLatest { (role, assigned) ->
-        getReportDataUseCase.getAvailableClasses(role, assigned)
+    private val availableClasses: StateFlow<List<ClassModel>> = combine(
+        _userRole, _assignedClasses, sessionManager.activeSchoolIdFlow
+    ) { role, assigned, schoolId ->
+        Triple(role, assigned, schoolId ?: "")
+    }.flatMapLatest { (role, assigned, schoolId) ->
+        getReportDataUseCase.getAvailableClasses(schoolId, role, assigned)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isExporting = MutableStateFlow(false)
@@ -106,7 +110,7 @@ class AttendanceMatrixViewModel @Inject constructor(
         _exportedFile
     ) { args: Array<*> ->
         val rows = args[0] as List<MatrixRowModel>
-        val classes = args[1] as List<com.azuratech.azuratime.data.local.ClassEntity>
+        val classes = args[1] as List<ClassModel>
         val query = args[2] as String
         val start = args[3] as LocalDate
         val end = args[4] as LocalDate

@@ -22,7 +22,8 @@ class StudentFormViewModel @Inject constructor(
     private val updateFaceWithPhotoUseCase: UpdateFaceWithPhotoUseCase,
     private val getFaceWithDetailsUseCase: GetFaceWithDetailsUseCase,
     private val getClassesUseCase: GetClassesUseCase,
-    private val assignStudentToClassUseCase: AssignStudentToClassUseCase
+    private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
@@ -33,7 +34,7 @@ class StudentFormViewModel @Inject constructor(
 
     init {
         // Load available classes using GetClassesUseCase
-        getClassesUseCase().onEach { result ->
+        getClassesUseCase(sessionManager.getActiveSchoolId() ?: "").onEach { result ->
             if (result is Result.Success) {
                 updateState { it.copy(availableClasses = result.data) }
             }

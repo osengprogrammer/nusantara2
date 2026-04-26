@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.ui.add
 
 import android.graphics.Bitmap
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 
 /**
  * Represents the state of the student registration/edit form.
@@ -16,7 +16,7 @@ data class StudentFormUiState(
     val embedding: FloatArray? = null,
 
     // UI State
-    val availableClasses: List<ClassEntity> = emptyList(),
+    val availableClasses: List<ClassModel> = emptyList(),
     val isSubmitting: Boolean = false,
     val formError: String? = null,
     val isEditMode: Boolean = false,

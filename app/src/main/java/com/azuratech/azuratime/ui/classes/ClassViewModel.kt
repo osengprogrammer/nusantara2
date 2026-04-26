@@ -2,11 +2,13 @@ package com.azuratech.azuratime.ui.classes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.ClassEntity
+import androidx.lifecycle.SavedStateHandle
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.domain.classes.usecase.DeleteClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,22 +20,30 @@ import kotlinx.coroutines.withContext
 import android.net.Uri
 
 /**
- * 🛠️ CLASS VIEW MODEL - Migrated to UseCases
+ * 🛠️ CLASS VIEW MODEL - Refactored to match School pattern
  */
 @HiltViewModel
 class ClassViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val getClassesUseCase: GetClassesUseCase,
     private val updateClassUseCase: UpdateClassUseCase,
     private val deleteClassUseCase: DeleteClassUseCase,
-    private val importClassesUseCase: ImportClassesUseCase
+    private val importClassesUseCase: ImportClassesUseCase,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
+
+    private val schoolId: String = savedStateHandle.get<String>("schoolId") 
+        ?: sessionManager.getActiveSchoolId() ?: ""
+        
+    private val accountId: String = savedStateHandle.get<String>("accountId")
+        ?: sessionManager.getCurrentUserId() ?: ""
 
     // =====================================================
     // 📊 CLASS FLOWS (State Management)
     // =====================================================
 
-    private val _uiState = MutableStateFlow<UiState<List<ClassEntity>>>(UiState.Loading)
-    val uiState: StateFlow<UiState<List<ClassEntity>>> = getClassesUseCase()
+    private val _uiState = MutableStateFlow<UiState<List<ClassModel>>>(UiState.Loading)
+    val uiState: StateFlow<UiState<List<ClassModel>>> = getClassesUseCase(schoolId)
         .map { result ->
             when(result) {
                 is Result.Success -> {
@@ -50,7 +60,7 @@ class ClassViewModel @Inject constructor(
             initialValue = UiState.Loading
         )
 
-    val classes: StateFlow<List<ClassEntity>> = uiState.map {
+    val classes: StateFlow<List<ClassModel>> = uiState.map {
         if (it is UiState.Success) it.data else emptyList()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -59,33 +69,35 @@ class ClassViewModel @Inject constructor(
     // =====================================================
 
     fun addClass(name: String) {
+        if (schoolId.isBlank()) return
         viewModelScope.launch {
-            updateClassUseCase(name)
+            updateClassUseCase(accountId, schoolId, name)
         }
     }
 
     fun updateClass(classId: String, newName: String) {
+        if (schoolId.isBlank()) return
         viewModelScope.launch {
-            updateClassUseCase(newName, classId)
+            updateClassUseCase(accountId, schoolId, newName, classId)
         }
     }
 
     fun importClassesFromCsv(uri: Uri, onComplete: () -> Unit) {
         viewModelScope.launch {
-            val result = importClassesUseCase(uri.toString())
-            // Even if it fails, we call onComplete to stop loading UI
-            // The result handling for errors could be added here if we had a snackbar state
+            // NOTE: ImportClassesUseCase might also need refactoring if it uses sessionManager
+            importClassesUseCase(uri.toString())
             onComplete()
         }
     }
 
     fun deleteClass(
-        classEntity: ClassEntity,
+        classId: String,
         onFailure: (String) -> Unit = {},
         onSuccess: () -> Unit = {}
     ) {
+        if (schoolId.isBlank()) return
         viewModelScope.launch {
-            val result = deleteClassUseCase(classEntity.id)
+            val result = deleteClassUseCase(accountId, schoolId, classId)
             withContext(Dispatchers.Main) {
                 when (result) {
                     is Result.Success -> onSuccess()

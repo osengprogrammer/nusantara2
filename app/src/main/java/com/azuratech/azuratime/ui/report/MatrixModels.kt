@@ -2,7 +2,7 @@ package com.azuratech.azuratime.ui.report
 
 import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuraengine.model.ClassModel
 import java.time.LocalDate
 
 /**
@@ -41,7 +41,7 @@ data class DailyAttendance(
 data class AttendanceMatrixData(
     val rows: List<MatrixRowModel> = emptyList(),
     val dateRange: List<LocalDate> = emptyList(),
-    val availableClasses: List<ClassEntity> = emptyList(),
+    val availableClasses: List<ClassModel> = emptyList(),
     val searchQuery: String = "",
     val startDate: LocalDate = LocalDate.now().withDayOfMonth(1),
     val endDate: LocalDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()),
@@ -60,7 +60,7 @@ sealed class AttendanceMatrixUiState {
 data class ReportData(
     val rows: List<MatrixRowModel> = emptyList(),
     val dateRange: List<LocalDate> = emptyList(),
-    val availableClasses: List<ClassEntity> = emptyList(),
+    val availableClasses: List<ClassModel> = emptyList(),
     val searchQuery: String = "",
     val startDate: LocalDate = LocalDate.now().withDayOfMonth(1),
     val endDate: LocalDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()),
@@ -73,3 +73,12 @@ sealed class ReportUiState {
     data class Success(val data: ReportData) : ReportUiState()
     data class Error(val message: String) : ReportUiState()
 }
+
+data class MatrixParams(
+    val start: LocalDate,
+    val end: LocalDate,
+    val classId: String?,
+    val role: String,
+    val assigned: List<String>,
+    val schoolId: String
+)
