@@ -30,7 +30,7 @@ fun ManualAttendanceContent(
     onTimeSelected: (LocalTime) -> Unit,
     selectedClass: ClassModel?,
     onClassSelected: (ClassModel?) -> Unit,
-    availableClasses: List<ClassModel>,
+    availableClasses: List<ClassModel?>,
     isLocked: Boolean,
     onSave: () -> Unit,
     onBack: () -> Unit
@@ -108,11 +108,11 @@ fun ManualAttendanceContent(
 
                 // 4. Session/Class Dropdown
                 ManualAttendanceFilterDropdown(
-                    label = "Pilih Sesi/Kelas",
+                    label = "Pilih Sesi/Kelas (Opsional)",
                     options = availableClasses,
                     selectedOption = selectedClass,
                     onOptionSelected = onClassSelected,
-                    getLabel = { it.name }
+                    getLabel = { it?.name ?: "Umum / Tanpa Kelas" }
                 )
 
                 Spacer(Modifier.weight(1f))

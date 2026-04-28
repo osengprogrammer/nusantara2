@@ -50,6 +50,16 @@ fun ActiveSessionCard(
                             }
                         )
                     }
+                    if (activeClassId != null) {
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("Hapus Sesi / General Scan", color = MaterialTheme.colorScheme.error) },
+                            onClick = {
+                                onSelectClass(null)
+                                expanded = false
+                            }
+                        )
+                    }
                 }
             }
         }

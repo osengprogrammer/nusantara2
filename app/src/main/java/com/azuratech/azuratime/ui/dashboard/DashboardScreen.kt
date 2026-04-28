@@ -89,7 +89,11 @@ fun DashboardScreen(
                 onAddSchoolClick = { showAddSchoolDialog = true },
                 onDismissAddSchool = { showAddSchoolDialog = false },
                 onSyncClick = { viewModel.sync() },
-                onSelectClass = { classId -> viewModel.selectActiveClass(classId) },
+                onSelectClass = { classId -> 
+                    println("🖱 DASHBOARD: Ganti Kelas clicked for $classId")
+                    println("💾 DASHBOARD: Updating activeClassId in ViewModel")
+                    viewModel.selectActiveClass(classId) 
+                },
                 onLogout = {
                     viewModel.logout {
                         val intent = Intent(context, MainActivity::class.java)

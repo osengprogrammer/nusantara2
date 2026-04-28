@@ -50,6 +50,10 @@ fun MyAssignedClassScreen(
     val screenTitle = if (targetUserId == null) "Otoritas Kelas Saya"
                       else "Otoritas Kelas: ${targetUser?.name ?: targetUserId}"
 
+    LaunchedEffect(user?.activeClassId) {
+        println("✅ DEBUG: UI received updated activeClassId=${user?.activeClassId}")
+    }
+
     MyAssignedClassContent(
         title = screenTitle,
         myClasses = myClasses,
@@ -57,7 +61,10 @@ fun MyAssignedClassScreen(
         searchQuery = searchQuery,
         onSearchQueryChanged = { searchQuery = it },
         onRemoveClass = { classId -> userViewModel.removeClassAccess(classId, targetUserId) },
-        onSelectActiveClass = { classId -> userViewModel.selectActiveClass(classId) },
+        onSelectActiveClass = { classId -> 
+            println("🖱 DEBUG: Pilih Sesi clicked for classId=$classId")
+            userViewModel.selectActiveClass(classId, targetUserId) 
+        },
         onAssignClass = { classId -> userViewModel.assignClassToUser(classId, targetUserId) },
         user = user
     )
@@ -141,7 +148,10 @@ fun MyAssignedClassContent(
                                             } else {
                                                 AzuraButton(
                                                     text = "Pilih Sesi",
-                                                    onClick = { onSelectActiveClass(classItem.id) },
+                                                    onClick = { 
+                                                        println("🚨 HARD LOG: Button Clicked for ${classItem.id}")
+                                                        onSelectActiveClass(classItem.id) 
+                                                    },
                                                     modifier = Modifier.height(32.dp)
                                                 )
                                             }

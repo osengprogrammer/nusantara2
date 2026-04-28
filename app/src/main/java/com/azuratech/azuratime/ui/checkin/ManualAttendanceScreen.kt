@@ -31,6 +31,11 @@ fun ManualAttendanceScreen(
         if (isAdmin) globalClasses else globalClasses.filter { it.id in assignedIds }
     }
 
+    // 🔥 Make Class Selection Optional
+    val classOptions = remember(availableClasses) {
+        listOf(null) + availableClasses
+    }
+
     // --- State Management ---
     var selectedFace by remember(faces, initialFaceId) {
         mutableStateOf(faces.find { it.face.faceId == initialFaceId })
@@ -61,7 +66,7 @@ fun ManualAttendanceScreen(
         onTimeSelected = { selectedTime = it },
         selectedClass = selectedClass,
         onClassSelected = { selectedClass = it },
-        availableClasses = availableClasses,
+        availableClasses = classOptions,
         isLocked = isLocked,
         onSave = {
             selectedFace?.let { faceWithDetails ->
@@ -69,8 +74,8 @@ fun ManualAttendanceScreen(
                 val newRecord = AttendanceService.createRecord(
                     face = faceWithDetails.face,
                     teacherEmail = currentUser?.email ?: "admin@azuratech.com",
-                    activeClassId = selectedClass?.id ?: "",
-                    activeClassName = selectedClass?.name ?: "General Scan",
+                    activeClassId = selectedClass?.id,
+                    activeClassName = selectedClass?.name ?: "Umum / Tanpa Kelas",
                     status = selectedStatus,
                     attendanceDate = selectedDate,
                     checkInTime = finalDateTime
