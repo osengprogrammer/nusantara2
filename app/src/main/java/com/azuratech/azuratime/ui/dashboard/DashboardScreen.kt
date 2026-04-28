@@ -203,7 +203,7 @@ fun DashboardContent(
                     )
                 }
 
-                if (data.currentRole == "ADMIN") {
+                if (data.currentRole == "ADMIN" || data.currentRole == "SUPER_ADMIN") {
                     item {
                         IntegritySummaryWidget(
                             totalFaces = data.totalFaces,
@@ -294,7 +294,7 @@ fun DashboardContent(
                 item {
                     TeacherTasksGrid(
                         navController = navController,
-                        isAdmin = data.currentRole == "ADMIN",
+                        isAdmin = data.currentRole == "ADMIN" || data.currentRole == "SUPER_ADMIN",
                         accountId = user.userId,
                         isEnabled = activeSchool?.status == "ACTIVE" // 🔥 Added
                     )

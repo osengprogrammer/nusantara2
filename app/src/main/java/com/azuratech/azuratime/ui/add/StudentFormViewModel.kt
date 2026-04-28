@@ -3,9 +3,8 @@ package com.azuratech.azuratime.ui.add
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.face.RegisterResult
 import com.azuratech.azuratime.domain.face.usecase.GetFaceWithDetailsUseCase
-import com.azuratech.azuratime.domain.face.usecase.RegisterFaceUseCase
+import com.azuratech.azuratime.domain.student.usecase.CreateStudentUseCase
 import com.azuratech.azuratime.domain.face.usecase.UpdateFaceWithPhotoUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
@@ -18,12 +17,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
-    private val registerFaceUseCase: RegisterFaceUseCase,
+    private val createStudentUseCase: CreateStudentUseCase,
     private val updateFaceWithPhotoUseCase: UpdateFaceWithPhotoUseCase,
     private val getFaceWithDetailsUseCase: GetFaceWithDetailsUseCase,
     private val getClassesUseCase: GetClassesUseCase,
     private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
-    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
+    private val database: com.azuratech.azuratime.data.local.AppDatabase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
@@ -86,6 +86,10 @@ class StudentFormViewModel @Inject constructor(
         updateState { it.copy(studentId = studentId) }
     }
 
+    fun onStudentCodeChange(studentCode: String) {
+        updateState { it.copy(studentCode = studentCode) }
+    }
+
     fun onClassSelected(classId: String) {
         updateState { it.copy(selectedClassId = classId) }
     }
@@ -114,49 +118,55 @@ class StudentFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             val photoBytes = currentState.capturedBitmap?.let { bitmapToByteArray(it) }
-            val registerResult: Result<RegisterResult> = if (currentState.isEditMode) {
-                // Update existing student
-                updateFaceWithPhotoUseCase(
+            val activeSchoolId = sessionManager.getActiveSchoolId()
+            val currentUserId = sessionManager.getCurrentUserId()
+            val user = currentUserId?.let { database.userDao().getUserById(it) }
+
+            if (activeSchoolId == null && user?.role == "SUPER_ADMIN") {
+                updateState { it.copy(isSubmitting = false) }
+                _uiEvent.emit(UiEvent.ShowSnackbar("Please select a school first"))
+                return@launch
+            }
+
+            if (currentState.isEditMode) {
+                // Update existing student/face
+                val result = updateFaceWithPhotoUseCase(
                     face = currentState.toFaceEntity(),
                     photoBytes = photoBytes,
                     embedding = currentState.embedding!!
-                ).map { RegisterResult.Success }
+                )
+                
+                when (result) {
+                    is Result.Success -> {
+                        _uiEvent.emit(UiEvent.ShowSnackbar("Berhasil diperbarui"))
+                        _uiEvent.emit(UiEvent.NavigateUp)
+                    }
+                    is Result.Failure -> {
+                        updateState { it.copy(isSubmitting = false, formError = result.error.message ?: "Update gagal") }
+                    }
+                    else -> {}
+                }
             } else {
-                // Register new student
-                registerFaceUseCase(
-                    inputId = currentState.studentId,
-                    classId = currentState.selectedClassId!!,
+                // Create new student identity & biometric
+                val result = createStudentUseCase(
+                    schoolId = activeSchoolId,
                     name = currentState.name,
-                    embedding = currentState.embedding!!,
+                    studentCode = currentState.studentCode,
+                    classId = currentState.selectedClassId,
+                    faceEmbedding = currentState.embedding,
                     photoBytes = photoBytes
                 )
-            }
 
-            // After registration/update, assign to class if needed
-            if (registerResult is Result.Success && currentState.selectedClassId != null) {
-                assignStudentToClassUseCase(currentState.studentId, currentState.selectedClassId!!)
-            }
-
-            when (registerResult) {
-                is Result.Success -> {
-                    when (val res = registerResult.data) {
-                        is RegisterResult.Success -> {
-                            val successMessage = if (currentState.isEditMode) "Berhasil diperbarui" else "Berhasil didaftarkan"
-                            _uiEvent.emit(UiEvent.ShowSnackbar(successMessage))
-                            _uiEvent.emit(UiEvent.NavigateUp)
-                        }
-                        is RegisterResult.Duplicate -> {
-                            updateState { it.copy(isSubmitting = false, formError = "Wajah ini mirip dengan ${res.name}") }
-                        }
-                        is RegisterResult.Error -> {
-                            updateState { it.copy(isSubmitting = false, formError = res.message) }
-                        }
+                when (result) {
+                    is Result.Success -> {
+                        _uiEvent.emit(UiEvent.ShowSnackbar("Siswa berhasil didaftarkan"))
+                        _uiEvent.emit(UiEvent.NavigateUp)
                     }
+                    is Result.Failure -> {
+                        updateState { it.copy(isSubmitting = false, formError = result.error.message ?: "Pendaftaran gagal") }
+                    }
+                    is Result.Loading -> {}
                 }
-                is Result.Failure -> {
-                    updateState { it.copy(isSubmitting = false, formError = registerResult.error.message ?: "Unknown error") }
-                }
-                is Result.Loading -> {}
             }
         }
     }

@@ -65,4 +65,38 @@ data class UserEntity(
 
     /** Cek status pertemanan dengan guru lain */
     fun getFriendStatus(targetUserId: String): String? = friends[targetUserId]?.status
+
+    /**
+     * 🔄 MAPPER: Entity -> Domain
+     * Critical: ensure global role is mapped correctly for Dashboard logic.
+     */
+    fun toDomain(): com.azuratech.azuraengine.model.User {
+        println("🔄 UserEntity.toDomain: role=$role")
+        return com.azuratech.azuraengine.model.User(
+            userId = userId,
+            email = email,
+            name = name,
+            memberships = memberships.mapValues {
+                com.azuratech.azuraengine.model.Membership(
+                    schoolName = it.value.schoolName,
+                    role = it.value.role,
+                    assignedClassIds = it.value.assignedClassIds
+                )
+            },
+            friends = friends.mapValues {
+                com.azuratech.azuraengine.model.FriendConnection(
+                    friendName = it.value.friendName,
+                    friendEmail = it.value.friendEmail,
+                    status = it.value.status
+                )
+            },
+            activeSchoolId = activeSchoolId,
+            status = status,
+            isActive = isActive,
+            activeClassId = activeClassId,
+            role = role,
+            deviceId = deviceId,
+            createdAt = createdAt
+        )
+    }
 }

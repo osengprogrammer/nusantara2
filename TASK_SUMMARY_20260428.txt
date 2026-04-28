@@ -1,0 +1,25 @@
+🚀 AZURA TIME - TASK SUMMARY (April 28, 2026)
+
+1. SUPER_ADMIN REGISTRATION SUPPORT
+   - Updated 'CreateStudentUseCase.kt' to support nullable schoolId.
+   - Implemented schoolId resolution logic: 
+     * Uses provided schoolId -> Session active school -> Returns Failure for SUPER_ADMIN if neither is set (prompting selection).
+   - Updated 'StudentFormViewModel.kt' to inject AppDatabase and validate school context before submission.
+   - Added snackbar feedback to prompt SUPER_ADMIN for school selection if context is missing.
+
+2. DASHBOARD VISIBILITY FIXES
+   - Audited 'DashboardScreen.kt' for role-based visibility guards.
+   - Updated 'IntegritySummaryWidget' visibility to include SUPER_ADMIN (previously ADMIN only).
+   - Fixed 'TeacherTasksGrid' to show Admin Tools (including "Registrasi Baru") to SUPER_ADMIN users.
+   - Verified that all navigation routes in 'ManagementGraph' are now reachable for high-privilege users.
+
+3. CLEAN ARCHITECTURE: USER DOMAIN MAPPING
+   - Created new domain models in 'azura-engine-kmp':
+     * User
+     * Membership
+     * FriendConnection
+   - Added 'toDomain()' mapper to 'UserEntity.kt' to ensure global role propagation.
+   - Implemented debug logging in the mapper to track role resolution issues.
+   - Updated 'ObserveUserUseCase.kt' to return the domain 'User' model instead of the Room Entity, enforcing layer separation.
+
+✅ All changes verified via successful compilation: ./gradlew :app:compileDebugKotlin

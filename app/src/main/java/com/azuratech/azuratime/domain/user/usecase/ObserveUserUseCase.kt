@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+import com.azuratech.azuraengine.model.User
+
 /**
  * UseCase to observe user details.
  */
@@ -17,5 +19,6 @@ class ObserveUserUseCase @Inject constructor(
 ) {
     private val userDao = database.userDao()
 
-    operator fun invoke(userId: String): Flow<UserEntity?> = userDao.observeUserById(userId)
+    operator fun invoke(userId: String): Flow<User?> = 
+        userDao.observeUserById(userId).map { it?.toDomain() }
 }

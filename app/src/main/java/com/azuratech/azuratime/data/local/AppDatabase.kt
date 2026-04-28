@@ -16,9 +16,10 @@ import androidx.room.TypeConverters
         FaceAssignmentEntity::class,
         CheckInRecordEntity::class,
         UserEntity::class,
-        UserClassAccessEntity::class
+        UserClassAccessEntity::class,
+        StudentEntity::class          // 🔥 NEW: Student Identity
     ],
-    version = 26, // 🚀 BUMP TO 24: Adding SchoolClassAssignment
+    version = 27, // 🚀 BUMP TO 27: Adding Student Identity
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -31,6 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun checkInRecordDao(): CheckInRecordDao
     abstract fun userDao(): UserDao
     abstract fun userClassAccessDao(): UserClassAccessDao
+    abstract fun studentDao(): StudentDao // 🔥 NEW DAO
 
     companion object {
 

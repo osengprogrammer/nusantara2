@@ -11,6 +11,7 @@ data class StudentFormUiState(
     // Form Fields
     val name: String = "",
     val studentId: String = "",
+    val studentCode: String? = null,
     val selectedClassId: String? = null,
     val capturedBitmap: Bitmap? = null,
     val embedding: FloatArray? = null,
