@@ -39,6 +39,7 @@ fun DashboardScreen(
 ) {
     val schoolViewModel: SchoolViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val availableClasses by schoolViewModel.availableClasses.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddSchoolDialog by remember { mutableStateOf(false) }
@@ -82,6 +83,7 @@ fun DashboardScreen(
                 navController = navController,
                 data = data,
                 schoolViewModel = schoolViewModel,
+                availableClasses = availableClasses,
                 snackbarHostState = snackbarHostState,
                 showAddSchoolDialog = showAddSchoolDialog,
                 onAddSchoolClick = { showAddSchoolDialog = true },
@@ -115,6 +117,7 @@ fun DashboardContent(
     navController: NavController,
     data: DashboardUiState,
     schoolViewModel: SchoolViewModel,
+    availableClasses: List<com.azuratech.azuraengine.model.ClassModel>,
     snackbarHostState: SnackbarHostState,
     showAddSchoolDialog: Boolean,
     onAddSchoolClick: () -> Unit,
@@ -123,12 +126,15 @@ fun DashboardContent(
     onSelectClass: (String?) -> Unit,
     onLogout: () -> Unit
 ) {
+    val activeSchool by schoolViewModel.activeSchool.collectAsStateWithLifecycle()
+    val schools by schoolViewModel.allSchools.collectAsStateWithLifecycle()
+
     AzuraScreen(
-        title = data.user?.schoolName?.let { "Azura - $it" } ?: "Azura IMS",
+        title = activeSchool?.name?.let { "Azura - $it" } ?: "Azura IMS",
         snackbarHostState = snackbarHostState,
         actions = {
             WorkspaceSelector(
-                currentUser = data.user,
+                schoolViewModel = schoolViewModel,
                 workspaceViewModel = hiltViewModel()
             )
             DashboardSyncButton(
@@ -165,7 +171,7 @@ fun DashboardContent(
                     ProfileHeader(
                         name = user.name,
                         email = user.email,
-                        schoolName = user.schoolName ?: "",
+                        schoolName = activeSchool?.name ?: user.schoolName ?: "",
                         photoUrl = photoUrl,
                         onLogout = onLogout,
                         onProfileClick = { navController.navigate(Screen.Profile.route) }
@@ -194,6 +200,31 @@ fun DashboardContent(
                     item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp)) }
                 }
 
+                // 🏫 School Management Section (Exempt from isApproved for first-time creation)
+                val showSchoolCard = schools.isEmpty() || data.isApproved || data.currentRole == "ADMIN"
+                if (showSchoolCard) {
+                    item {
+                        println("🔓 DEBUG: School card access (count=${schools.size}, approved=${data.isApproved})")
+                        MySchoolsCard(
+                            viewModel = schoolViewModel,
+                            accountId = user.userId,
+                            isApproved = data.isApproved,
+                            onSchoolClick = {
+                                if (user.userId.isNullOrEmpty()) {
+                                    println("🚫 DEBUG: userId is null/empty")
+                                    return@MySchoolsCard
+                                }
+                                println("🏫 DEBUG: userId=${user.userId}, route=${Screen.SchoolList.createRoute(user.userId)}")
+                                navController.navigate(Screen.SchoolList.createRoute(user.userId))
+                            },
+                            onAddSchool = {
+                                println("➕ DEBUG: Add School clicked")
+                                onAddSchoolClick()
+                            }
+                        )
+                    }
+                }
+
                 if (data.isApproved) {
                     item {
                         ActiveSessionCard(
@@ -201,27 +232,6 @@ fun DashboardContent(
                             activeClassId = user.activeClassId,
                             onSelectClass = onSelectClass
                         )
-                    }
-
-                    if (data.currentRole == "ADMIN") {
-                        item {
-                            MySchoolsCard(
-                                viewModel = schoolViewModel,
-                                accountId = user.userId,
-                                onSchoolClick = {
-                                    if (user.userId.isNullOrEmpty()) {
-                                        println("🚫 DEBUG: userId is null/empty")
-                                        return@MySchoolsCard
-                                    }
-                                    println("🏫 DEBUG: userId=${user.userId}, route=${Screen.SchoolList.createRoute(user.userId)}")
-                                    navController.navigate(Screen.SchoolList.createRoute(user.userId))
-                                },
-                                onAddSchool = {
-                                    println("➕ DEBUG: Add School clicked")
-                                    onAddSchoolClick()
-                                }
-                            )
-                        }
                     }
 
                     if (data.sessionStudents.isNotEmpty()) {
@@ -256,7 +266,7 @@ fun DashboardContent(
 
             if (showAddSchoolDialog) {
                 AddSchoolDialog(
-                    availableClasses = emptyList(), // Not needed on dashboard quick add
+                    availableClasses = availableClasses,
                     onDismiss = onDismissAddSchool,
                     onConfirm = { name, timezone, selectedClassIds ->
                         schoolViewModel.createSchool(name, timezone, selectedClassIds)
@@ -277,6 +287,7 @@ fun DashboardContentSuccessPreview() {
                 navController = rememberNavController(),
                 data = PreviewMocks.mockDashboardStateSuccess,
                 schoolViewModel = hiltViewModel(),
+                availableClasses = emptyList(),
                 snackbarHostState = remember { SnackbarHostState() },
                 showAddSchoolDialog = false,
                 onAddSchoolClick = {},
@@ -298,6 +309,7 @@ fun DashboardContentLoadingPreview() {
                 navController = rememberNavController(),
                 data = PreviewMocks.mockDashboardStateLoading,
                 schoolViewModel = hiltViewModel(),
+                availableClasses = emptyList(),
                 snackbarHostState = remember { SnackbarHostState() },
                 showAddSchoolDialog = false,
                 onAddSchoolClick = {},

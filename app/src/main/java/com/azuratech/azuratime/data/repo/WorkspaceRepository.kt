@@ -67,13 +67,20 @@ class WorkspaceRepository @Inject constructor(
             val newClasses = classSnapshot.documents.map { doc ->
                 ClassEntity(
                     id = doc.id,
+                    accountId = userId,
                     schoolId = newSchoolId,
                     name = doc.getString("name") ?: "",
                     displayOrder = doc.getLong("displayOrder")?.toInt() ?: 0,
                     isSynced = true
                 )
             }
-            newClasses.forEach { classDao.insert(it) }
+            newClasses.forEach { 
+                classDao.insert(it) 
+                // 🔥 Also create assignment in the new join table
+                database.schoolClassDao().assignClass(
+                    com.azuratech.azuratime.data.local.SchoolClassAssignment(newSchoolId, it.id)
+                )
+            }
 
             // Download Faces & Biometric Embedding (Full Sync)
             val faceSnapshot = getTenantRef(newSchoolId).collection("master_faces").get().await()
@@ -106,6 +113,41 @@ class WorkspaceRepository @Inject constructor(
             FaceCache.refresh(application, newSchoolId)
 
             Log.w("AZURA_WORKSPACE", "✅ Workspace berhasil dipindah!")
+        }
+
+    /**
+     * 🔑 ASSIGN SCHOOL ROLE
+     * Menetapkan role user di sebuah sekolah baik lokal maupun cloud (Firestore & SQLite).
+     */
+    suspend fun assignSchoolRole(userId: String, schoolId: String, role: String, schoolName: String) =
+        withContext(Dispatchers.IO) {
+            val newMembership = Membership(
+                schoolName = schoolName,
+                role = role
+            )
+
+            // 1. Update Cloud (Firestore)
+            try {
+                db.collection("whitelisted_users").document(userId)
+                    .update(
+                        mapOf(
+                            "memberships.$schoolId.schoolName" to schoolName,
+                            "memberships.$schoolId.role" to role
+                        )
+                    ).await()
+            } catch (e: Exception) {
+                Log.e("AZURA_WORKSPACE", "⚠️ Gagal update role di Firestore: ${e.message}")
+            }
+
+            // 2. Update Local (Room)
+            val user = userDao.getUserById(userId)
+            user?.let {
+                val updatedMemberships = it.memberships.toMutableMap().apply {
+                    put(schoolId, newMembership)
+                }
+                userDao.updateUser(it.copy(memberships = updatedMemberships))
+                println("🔑 DEBUG: Assigned $role role for school $schoolId to user $userId")
+            }
         }
 
     /**

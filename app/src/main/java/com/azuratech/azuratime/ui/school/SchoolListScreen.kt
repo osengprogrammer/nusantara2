@@ -30,7 +30,7 @@ fun SchoolListScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val allAccountClasses by viewModel.allAccountClasses.collectAsStateWithLifecycle()
+    val availableClasses by viewModel.availableClasses.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 
     AzuraScreen(
@@ -66,7 +66,7 @@ fun SchoolListScreen(
 
     if (showAddDialog) {
         AddSchoolDialog(
-            availableClasses = allAccountClasses,
+            availableClasses = availableClasses,
             onDismiss = { showAddDialog = false },
             onConfirm = { name, timezone, selectedClassIds ->
                 viewModel.createSchool(name, timezone, selectedClassIds)

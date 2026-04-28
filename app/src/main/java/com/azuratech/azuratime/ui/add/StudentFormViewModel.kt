@@ -33,12 +33,20 @@ class StudentFormViewModel @Inject constructor(
     val uiEvent = _uiEvent.asSharedFlow()
 
     init {
-        // Load available classes using GetClassesUseCase
-        getClassesUseCase(sessionManager.getActiveSchoolId() ?: "").onEach { result ->
-            if (result is Result.Success) {
-                updateState { it.copy(availableClasses = result.data) }
+        // Reactive collection of active school classes
+        sessionManager.activeSchoolIdFlow
+            .filterNotNull()
+            .flatMapLatest { schoolId ->
+                println("📚 DEBUG: Loading classes for active school $schoolId")
+                getClassesUseCase(schoolId)
             }
-        }.launchIn(viewModelScope)
+            .onEach { result ->
+                if (result is Result.Success) {
+                    println("📦 DEBUG: Fetched ${result.data.size} classes for reactive collection")
+                    updateState { it.copy(availableClasses = result.data) }
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun loadStudentForEdit(faceId: String) {

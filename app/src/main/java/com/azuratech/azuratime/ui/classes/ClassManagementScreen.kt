@@ -58,6 +58,7 @@ fun ClassManagementScreen(
     val allClassState by viewModel.allAccountClasses.collectAsStateWithLifecycle()
     val schools by viewModel.schools.collectAsStateWithLifecycle()
     val availableClasses by viewModel.availableClasses.collectAsStateWithLifecycle()
+    val user by viewModel.user.collectAsStateWithLifecycle()
     
     // UI Local State
     var searchQuery by remember { mutableStateOf("") }
@@ -183,8 +184,8 @@ fun ClassManagementScreen(
             onDismiss = { showDialog = false },
             onConfirm = { name ->
                 if (editingClass == null) {
-                    println("📡 DEBUG: Passing class to ViewModel: $name")
-                    viewModel.createClass(name)
+                    user?.let { println("📡 DEBUG: Calling createClass with accountId=${it.userId}") }
+                    viewModel.createClass(name, schoolId = null)
                 } else {
                     viewModel.updateClass(editingClass!!.id, name)
                 }

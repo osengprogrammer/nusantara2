@@ -9,19 +9,12 @@ import java.util.UUID
 
 @Entity(
     tableName = "classes",
-    indices = [Index(value = ["schoolId"])],
-    foreignKeys = [
-        ForeignKey(
-            entity = SchoolEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["schoolId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
+    indices = [Index(value = ["schoolId"])]
 )
 data class ClassEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val schoolId: String,
+    val accountId: String,
+    val schoolId: String? = null,
     val name: String,
     val grade: String = "",
     val teacherId: String? = null,

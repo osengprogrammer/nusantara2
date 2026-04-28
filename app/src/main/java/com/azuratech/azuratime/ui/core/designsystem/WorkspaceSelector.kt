@@ -12,22 +12,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.ui.school.SchoolViewModel
 import com.azuratech.azuratime.ui.user.WorkspaceViewModel
 
 @Composable
 fun WorkspaceSelector(
-    currentUser: UserEntity?,
+    schoolViewModel: SchoolViewModel,
     workspaceViewModel: WorkspaceViewModel
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val schools by schoolViewModel.allSchools.collectAsStateWithLifecycle()
+    val activeSchoolId by schoolViewModel.activeSchoolId.collectAsStateWithLifecycle()
+    val activeSchool by schoolViewModel.activeSchool.collectAsStateWithLifecycle()
     val uiState by workspaceViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Hide when user hasn't loaded or has no workspace
-    if (currentUser == null || currentUser.memberships.isEmpty()) return
+    // Hide when no schools are available
+    if (schools.isEmpty()) return
 
-    val activeSchoolId   = currentUser.activeSchoolId
-    val activeSchoolName = currentUser.memberships[activeSchoolId]?.schoolName ?: "Pilih Workspace"
+    val activeSchoolName = activeSchool?.name ?: "Pilih Workspace"
 
     Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
 
@@ -46,34 +48,25 @@ fun WorkspaceSelector(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            currentUser.memberships.forEach { (schoolId, membership) ->
-                val isActive = schoolId == activeSchoolId
+            schools.forEach { school ->
+                val isActive = school.id == activeSchoolId
                 DropdownMenuItem(
                     text = {
                         Column {
                             Text(
-                                text = membership.schoolName,
+                                text = school.name,
                                 fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                                 color     = if (isActive)
                                     MaterialTheme.colorScheme.primary
                                 else
                                     MaterialTheme.colorScheme.onSurface
                             )
-                            Text(
-                                text  = "Role: ${membership.role}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
                     },
                     onClick = {
                         expanded = false
                         if (!isActive) {
-                            workspaceViewModel.changeWorkspace(
-                                userId        = currentUser.userId,
-                                newSchoolId   = schoolId,
-                                newSchoolName = membership.schoolName
-                            )
+                            schoolViewModel.selectSchool(school)
                         }
                     },
                     // Show a checkmark on the active item

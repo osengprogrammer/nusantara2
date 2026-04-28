@@ -47,28 +47,31 @@ object DatabaseSeeder {
                 userDao.insertUser(defaultAdmin)
                 
                 // 3. Seed Default Classes (Pure-Class 2.0 Logic)
-                seedDefaultClasses(classDao, defaultSchoolId)
+                seedDefaultClasses(classDao, defaultSchoolId, defaultAdmin.userId)
             }
         }
     }
 
-    private suspend fun seedDefaultClasses(classDao: ClassDao, schoolId: String) {
+    private suspend fun seedDefaultClasses(classDao: ClassDao, schoolId: String, accountId: String) {
         val existingClasses = classDao.getClassesBySchoolOnce(schoolId)
         
         if (existingClasses.isEmpty()) {
             val defaultClasses = listOf(
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
+                    accountId = accountId,
                     schoolId = schoolId,
                     name = "X IPA 1"
                 ),
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
+                    accountId = accountId,
                     schoolId = schoolId,
                     name = "XI IPA 1"
                 ),
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
+                    accountId = accountId,
                     schoolId = schoolId,
                     name = "XII IPA 1"
                 )

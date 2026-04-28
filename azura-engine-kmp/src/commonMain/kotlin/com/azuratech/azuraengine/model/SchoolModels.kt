@@ -15,7 +15,7 @@ data class School(
 @Serializable
 data class ClassModel(
     val id: String,
-    val schoolId: String,
+    val schoolId: String?,
     val name: String,
     val grade: String,
     val teacherId: String?,

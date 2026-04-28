@@ -33,6 +33,7 @@ class SyncSchoolsUseCase @Inject constructor(
                         repository.saveClassLocally(
                             ClassEntity(
                                 id = classModel.id,
+                                accountId = accountId,
                                 schoolId = classModel.schoolId,
                                 name = classModel.name,
                                 grade = classModel.grade,

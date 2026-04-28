@@ -26,10 +26,13 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 fun MySchoolsCard(
     viewModel: SchoolViewModel,
     accountId: String,
+    isApproved: Boolean,
     onSchoolClick: () -> Unit,
     onAddSchool: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val schools = (uiState as? SchoolUiState.Success)?.schools ?: emptyList()
+    val canAddMore = schools.isEmpty() || isApproved
 
     AzuraCard {
         Column(modifier = Modifier.padding(AzuraSpacing.sm)) {
@@ -44,8 +47,17 @@ fun MySchoolsCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                IconButton(onClick = onAddSchool) {
-                    Icon(Icons.Default.Add, contentDescription = "Tambah Sekolah", tint = MaterialTheme.colorScheme.primary)
+                if (canAddMore) {
+                    IconButton(onClick = onAddSchool) {
+                        Icon(Icons.Default.Add, contentDescription = "Tambah Sekolah", tint = MaterialTheme.colorScheme.primary)
+                    }
+                } else {
+                    Text(
+                        text = "Verifikasi diperlukan untuk menambah lebih dari 1 sekolah",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f).padding(start = 8.dp)
+                    )
                 }
             }
 

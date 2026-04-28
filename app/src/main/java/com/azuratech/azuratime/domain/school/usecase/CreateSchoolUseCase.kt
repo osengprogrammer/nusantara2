@@ -4,11 +4,13 @@ import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.data.repo.WorkspaceRepository
 import java.util.*
 import javax.inject.Inject
 
 class CreateSchoolUseCase @Inject constructor(
-    private val repository: SchoolRepository
+    private val repository: SchoolRepository,
+    private val workspaceRepository: WorkspaceRepository
 ) {
     suspend operator fun invoke(accountId: String, name: String, timezone: String): Result<String> {
         if (name.isBlank()) {
@@ -26,7 +28,12 @@ class CreateSchoolUseCase @Inject constructor(
         )
         
         val result = repository.saveSchool(newSchool)
-        return if (result is Result.Success) Result.Success(newId)
-        else Result.Failure((result as Result.Failure).error)
+        if (result is Result.Success) {
+            // 🔥 Auto-assign ADMIN role for the creator
+            workspaceRepository.assignSchoolRole(accountId, newId, "ADMIN", name.trim())
+            return Result.Success(newId)
+        }
+        
+        return Result.Failure((result as Result.Failure).error)
     }
 }

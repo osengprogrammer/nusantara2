@@ -3,6 +3,7 @@ package com.azuratech.azuratime.domain.classes.usecase
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.repo.SchoolRepository
 import java.util.UUID
 import javax.inject.Inject
@@ -11,24 +12,25 @@ import javax.inject.Inject
  * UseCase to create a new class.
  */
 class CreateClassUseCase @Inject constructor(
-    private val repository: SchoolRepository
+    private val repository: SchoolRepository,
+    private val sessionManager: SessionManager
 ) {
-    suspend operator fun invoke(accountId: String, schoolId: String, name: String): Result<Unit> {
-        // 1. Validate school existence to avoid FK failure
-        val school = repository.getSchoolById(schoolId)
-        if (school == null) {
-            return Result.Failure(AppError.BusinessRule("Gagal: Sekolah dengan ID '$schoolId' tidak ditemukan. Pilih sekolah yang valid."))
-        }
+    suspend operator fun invoke(accountId: String, name: String, schoolId: String? = null): Result<Unit> {
+        val resolvedSchoolId = schoolId ?: sessionManager.getActiveSchoolId() ?: ""
+        println("🔗 DEBUG: Creating class '$name' for schoolId=$resolvedSchoolId")
+        println("🔗 DEBUG: Setting direct schoolId=$resolvedSchoolId on ClassEntity")
 
         val classModel = ClassModel(
             id = UUID.randomUUID().toString(),
-            schoolId = schoolId,
+            schoolId = resolvedSchoolId, 
             name = name,
-            grade = "", // Default grade
+            grade = "", 
             teacherId = null,
             studentCount = 0,
             createdAt = System.currentTimeMillis()
         )
-        return repository.saveClass(accountId, schoolId, classModel)
+        
+        val targetSchoolId = if (resolvedSchoolId.isBlank()) null else resolvedSchoolId
+        return repository.saveClass(accountId, targetSchoolId, classModel)
     }
 }

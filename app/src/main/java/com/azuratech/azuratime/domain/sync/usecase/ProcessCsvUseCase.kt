@@ -192,15 +192,26 @@ if (localPhotoPath == null) return Pair(ProcessResult(student.faceId, student.na
     }
 
     private suspend fun saveStudentAssignments(faceId: String, student: CsvStudentData, schoolId: String) {
+        val accountId = sessionManager.getCurrentUserId() ?: return
         val className = student.rawMetadata.entries.find { it.key.equals("CLASS", ignoreCase = true) }?.value
         if (className.isNullOrBlank()) return
 
-        var classEntity = classDao.getClassByName(schoolId, className)
+        var classEntity = classDao.getClassByName(className)
         if (classEntity == null) {
-            classEntity = ClassEntity(id = UUID.randomUUID().toString(), name = className, schoolId = schoolId, isSynced = false)
+            classEntity = ClassEntity(
+                id = UUID.randomUUID().toString(),
+                accountId = accountId,
+                name = className,
+                schoolId = schoolId,
+                isSynced = false
+            )
             classDao.insert(classEntity)
             try { syncClassToCloud(schoolId, classEntity) } catch (e: Exception) {}
         }
+        
+        // 🔥 Ensure class is assigned to school in the new join table
+        val schoolAssignment = com.azuratech.azuratime.data.local.SchoolClassAssignment(schoolId, classEntity.id)
+        database.schoolClassDao().assignClass(schoolAssignment)
 
         val assignment = FaceAssignmentEntity(faceId = faceId, classId = classEntity.id, schoolId = schoolId, isSynced = false)
         faceAssignmentDao.insertAssignment(assignment)

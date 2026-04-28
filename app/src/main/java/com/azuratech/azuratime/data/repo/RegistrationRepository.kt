@@ -26,7 +26,7 @@ class RegistrationRepository @Inject constructor(
     suspend fun upsertFace(face: FaceEntity) = faceDao.upsertFace(face)
     suspend fun upsertAllFaces(faces: List<FaceEntity>) = faceDao.upsertAll(faces)
     
-    suspend fun getClassByName(schoolId: String, name: String) = classDao.getClassByName(schoolId, name)
+    suspend fun getClassByName(name: String) = classDao.getClassByName(name)
     suspend fun insertClass(classEntity: ClassEntity) = classDao.insert(classEntity)
     
     suspend fun insertAssignment(assignment: FaceAssignmentEntity) = faceAssignmentDao.insertAssignment(assignment)

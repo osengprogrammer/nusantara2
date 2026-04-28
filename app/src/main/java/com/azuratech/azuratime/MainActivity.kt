@@ -16,11 +16,17 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.azuratech.azuratime.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.sync.SyncWorker
+import com.azuratech.azuratime.domain.classes.usecase.BackfillOrphanedClassesUseCase
 import dagger.hilt.android.AndroidEntryPoint // 🔥 Import Hilt ditambahkan
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint // 🔥 Anotasi krusial agar UI Compose di bawahnya bisa menggunakan hiltViewModel()
 class MainActivity : ComponentActivity() {
+
+    @Inject lateinit var backfillUseCase: BackfillOrphanedClassesUseCase
 
     // Menggunakan variabel biasa agar lebih responsif di level sistem
     private var isBootReady = false
@@ -30,6 +36,17 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         
         super.onCreate(savedInstanceState)
+
+        // 🔥 4. Backfill orphaned classes (Debug Only)
+        if (BuildConfig.DEBUG) {
+            val prefs = getSharedPreferences("azura_dev_prefs", android.content.Context.MODE_PRIVATE)
+            if (!prefs.getBoolean("backfill_v1_done", false)) {
+                lifecycleScope.launch {
+                    backfillUseCase.execute()
+                    prefs.edit().putBoolean("backfill_v1_done", true).apply()
+                }
+            }
+        }
 
         // 🔥 2. Tahan Splash Screen dengan kondisi yang stabil
         splashScreen.setKeepOnScreenCondition { !isBootReady }
