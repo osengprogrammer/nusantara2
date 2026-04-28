@@ -48,6 +48,8 @@ data class UserEntity(
     // Class currently selected for scanning (UUID String)
     val activeClassId: String? = null,
 
+    val role: String = "USER", // 🔥 GLOBAL ROLE: SUPER_ADMIN, ADMIN, USER
+
     val deviceId: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 ) {
@@ -56,7 +58,7 @@ data class UserEntity(
     // =====================================================
 
     /** The role in the currently active school workspace, or null if no active school. */
-    val role: String? get() = memberships[activeSchoolId]?.role
+    val membershipRole: String? get() = memberships[activeSchoolId]?.role
 
     /** The name of the currently active school workspace, or null if no active school. */
     val schoolName: String? get() = memberships[activeSchoolId]?.schoolName

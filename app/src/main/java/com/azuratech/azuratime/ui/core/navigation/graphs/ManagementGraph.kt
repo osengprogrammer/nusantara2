@@ -11,6 +11,7 @@ import com.azuratech.azuratime.core.navigation.Screen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.ui.add.*
 import com.azuratech.azuratime.ui.classes.*
+import com.azuratech.azuratime.ui.admin.PendingSchoolsScreen
 
 fun NavGraphBuilder.managementGraph(
     navController: NavController
@@ -97,6 +98,12 @@ fun NavGraphBuilder.managementGraph(
                 faceViewModel = hiltViewModel(),
                 onBack = { navController.popBackStack() },
                 onAddStudent = { navController.navigate(Screen.Manage.route) }
+            )
+        }
+
+        composable(Screen.PendingSchools.route) {
+            PendingSchoolsScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

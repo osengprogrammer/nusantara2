@@ -54,7 +54,7 @@ fun CheckInRecordScreen(
 
     // 2. Filter Sync
     LaunchedEffect(user, startDate, endDate, selectedClassId) {
-        @Suppress("UNUSED_VARIABLE") val filterUserId = if (user?.role == "ADMIN") null else userEmail
+        @Suppress("UNUSED_VARIABLE") val filterUserId = if (user?.role == "SUPER_ADMIN" || user?.membershipRole == "ADMIN") null else userEmail
         checkInViewModel.updateFilters(
             start = startDate,
             end = endDate
@@ -62,7 +62,7 @@ fun CheckInRecordScreen(
     }
 
     val availableClasses = remember(globalClasses, assignedIds) {
-        if (user?.role == "ADMIN") globalClasses else globalClasses.filter { it.id in assignedIds }
+        if (user?.role == "SUPER_ADMIN" || user?.membershipRole == "ADMIN") globalClasses else globalClasses.filter { it.id in assignedIds }
     }
 
     AzuraScreen(

@@ -57,6 +57,7 @@ class SyncUserUseCase @Inject constructor(
                 status = data["status"] as? String ?: "PENDING",
                 isActive = data["isActive"] as? Boolean ?: true,
                 activeClassId = data["activeClassId"] as? String,
+                role = data["role"] as? String ?: "USER",
                 deviceId = data["deviceId"] as? String,
                 createdAt = data["createdAt"] as? Long ?: System.currentTimeMillis()
             )
@@ -121,6 +122,7 @@ class SyncUserUseCase @Inject constructor(
                 status = data["status"] as? String ?: "PENDING",
                 isActive = data["isActive"] as? Boolean ?: true,
                 activeClassId = data["activeClassId"] as? String,
+                role = data["role"] as? String ?: "USER",
                 deviceId = data["deviceId"] as? String,
                 createdAt = data["createdAt"] as? Long ?: System.currentTimeMillis()
             )

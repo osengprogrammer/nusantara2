@@ -6,8 +6,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,6 +28,7 @@ import com.azuratech.azuratime.ui.dashboard.components.*
 import com.azuratech.azuratime.ui.school.SchoolViewModel
 import com.azuratech.azuratime.ui.school.AddSchoolDialog
 import com.azuratech.azuratime.ui.data.IntegritySummaryWidget
+import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.ui.theme.AzuraTheme
@@ -208,6 +211,33 @@ fun DashboardContent(
                             brokenLinks = data.brokenAssignments,
                             unsyncedCount = data.unsyncedRecords
                         )
+                    }
+                }
+
+                // 👑 SUPER ADMIN MODERATION
+                if (data.currentRole == "SUPER_ADMIN") {
+                    item {
+                        AzuraCard(
+                            title = "Moderasi Sistem",
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("Persetujuan Sekolah", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    Text("Lihat pendaftaran sekolah yang menunggu verifikasi.", style = MaterialTheme.typography.bodySmall)
+                                }
+                                Button(
+                                    onClick = { navController.navigate(Screen.PendingSchools.route) },
+                                    shape = AzuraShapes.medium
+                                ) {
+                                    Text("Buka")
+                                }
+                            }
+                        }
                     }
                 }
 
