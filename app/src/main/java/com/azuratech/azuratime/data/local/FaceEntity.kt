@@ -7,10 +7,14 @@ import java.util.UUID
 
 @Entity(
     tableName = "faces",
-    indices = [Index(value = ["schoolId"])]
+    indices = [
+        Index(value = ["schoolId"]),
+        Index(value = ["studentId"])
+    ]
 )
 data class FaceEntity(
     @PrimaryKey val faceId: String = UUID.randomUUID().toString(),
+    val studentId: String? = null,
     val schoolId: String = "",
     val name: String,
     val photoUrl: String? = null,
