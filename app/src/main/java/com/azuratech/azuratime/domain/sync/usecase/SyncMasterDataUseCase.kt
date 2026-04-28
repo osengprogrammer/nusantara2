@@ -22,6 +22,7 @@ class SyncMasterDataUseCase @Inject constructor(
 
     suspend operator fun invoke(): Int = withContext(Dispatchers.IO) {
         val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext 0
+        val accountId = sessionManager.getCurrentUserId() ?: return@withContext 0
         try {
             println("[AZURA_SYNC] 🔄 Refreshing Master Data for school: $schoolId")
 
@@ -29,6 +30,7 @@ class SyncMasterDataUseCase @Inject constructor(
             cloudClasses.documents.map { doc ->
                 ClassEntity(
                     id = doc.id,
+                    accountId = accountId,
                     schoolId = schoolId,
                     name = doc.getString("name") ?: "",
                     displayOrder = doc.getLong("displayOrder")?.toInt() ?: 0,

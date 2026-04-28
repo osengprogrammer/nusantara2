@@ -14,10 +14,12 @@ import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ReassignClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetAvailableClassesUseCase
+import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
 import com.azuratech.azuratime.ui.core.UiEvent
+import com.azuratech.azuratime.data.local.UserEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +43,7 @@ class ClassViewModel @Inject constructor(
     private val importClassesUseCase: ImportClassesUseCase,
     private val getAvailableClassesUseCase: GetAvailableClassesUseCase,
     private val getSchoolsUseCase: GetSchoolsUseCase,
+    private val observeUserUseCase: ObserveUserUseCase,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -52,6 +55,12 @@ class ClassViewModel @Inject constructor(
         
     private val accountId: String = savedStateHandle.get<String>("accountId")
         ?: sessionManager.getCurrentUserId() ?: ""
+
+    // 🔥 User Flow for UI
+    val user: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
+        .filterNotNull()
+        .flatMapLatest { observeUserUseCase(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // =====================================================
     // 📊 CLASS FLOWS (State Management)
@@ -104,20 +113,11 @@ class ClassViewModel @Inject constructor(
     // ➕ CRUD OPERATIONS
     // =====================================================
 
-    fun createClass(name: String, grade: String = "") {
-        val targetSchoolId = schoolId.ifBlank { schools.value.firstOrNull()?.id ?: "" }
-        
-        if (targetSchoolId.isBlank()) {
-            println("❌ DEBUG: Save failed: No school found for account $accountId")
-            viewModelScope.launch {
-                _uiEvent.emit(UiEvent.ShowSnackbar("Gagal: Akun ini belum memiliki sekolah. Buat sekolah dulu."))
-            }
-            return
-        }
-
-        println("💾 DEBUG: ViewModel creating class: $name for school: $targetSchoolId")
+    fun createClass(name: String, schoolId: String? = null, grade: String = "") {
+        val targetSchoolId = schoolId ?: this.schoolId
+        println("💾 DEBUG: ViewModel creating class: $name for schoolId=$targetSchoolId")
         viewModelScope.launch {
-            val result = createClassUseCase(accountId, targetSchoolId, name)
+            val result = createClassUseCase(accountId, name, targetSchoolId)
             when (result) {
                 is Result.Success -> {
                     println("✅ DEBUG: Class created successfully")
@@ -137,15 +137,14 @@ class ClassViewModel @Inject constructor(
     }
 
     fun updateClass(classId: String, newName: String) {
-        if (schoolId.isBlank()) return
         viewModelScope.launch {
-            updateClassUseCase(accountId, schoolId, newName, classId)
+            // Update class in pool (schoolId is optional/null here for pool update)
+            updateClassUseCase(accountId, null, newName, classId)
         }
     }
 
     fun importClassesFromCsv(uri: Uri, onComplete: () -> Unit) {
         viewModelScope.launch {
-            // NOTE: ImportClassesUseCase might also need refactoring if it uses sessionManager
             importClassesUseCase(uri.toString())
             onComplete()
         }
@@ -156,8 +155,9 @@ class ClassViewModel @Inject constructor(
         onFailure: (String) -> Unit = {},
         onSuccess: () -> Unit = {}
     ) {
-        if (schoolId.isBlank()) return
         viewModelScope.launch {
+            // schoolId is now less critical for delete if it's in a pool, 
+            // but we might still want to check if it's used in ANY school
             val result = deleteClassUseCase(accountId, schoolId, classId)
             withContext(Dispatchers.Main) {
                 when (result) {
@@ -171,6 +171,7 @@ class ClassViewModel @Inject constructor(
 
     fun reassignClass(classId: String, newSchoolId: String) {
         viewModelScope.launch {
+            // This now adds/updates assignment
             reassignClassUseCase(accountId, classId, newSchoolId)
         }
     }

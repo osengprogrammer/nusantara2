@@ -61,6 +61,10 @@ class SchoolRepository @Inject constructor(
     suspend fun getSchoolById(id: String): School? = 
         dao.getSchoolById(id)?.toDomain()
 
+    suspend fun getFirstSchoolId(accountId: String): String? = dao.getFirstSchoolId(accountId)
+
+    suspend fun schoolExists(schoolId: String): Boolean = dao.getSchoolById(schoolId) != null
+
     suspend fun deleteSchool(id: String, accountId: String): Result<Unit> = try {
         dao.deleteSchoolById(id)
         
@@ -87,11 +91,12 @@ class SchoolRepository @Inject constructor(
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
-    suspend fun saveClass(accountId: String, schoolId: String, classModel: ClassModel): Result<Unit> {
+    suspend fun saveClass(accountId: String, schoolId: String?, classModel: ClassModel): Result<Unit> {
         return try {
             val entity = ClassEntity(
                 id = classModel.id,
-                schoolId = schoolId,
+                accountId = accountId,
+                schoolId = schoolId, // Link if provided, otherwise independent
                 name = classModel.name,
                 grade = classModel.grade,
                 teacherId = classModel.teacherId,
@@ -100,9 +105,15 @@ class SchoolRepository @Inject constructor(
             )
             dao.upsertClass(entity)
 
+            // If schoolId is provided, also create an assignment
+            if (schoolId != null) {
+                dao.assignClass(com.azuratech.azuratime.data.local.SchoolClassAssignment(schoolId, classModel.id))
+            }
+
             // Async Sync to Remote
             repositoryScope.launch {
-                remoteDataSource.saveClass(accountId, schoolId, classModel)
+                // We still pass schoolId to remote if it exists, or handle as global class
+                remoteDataSource.saveClass(accountId, schoolId ?: "global", classModel)
             }
 
             Result.Success(Unit)
@@ -110,6 +121,22 @@ class SchoolRepository @Inject constructor(
             Result.Failure(AppError.LocalDB(e.message))
         }
     }
+
+    suspend fun assignClassToSchool(schoolId: String, classId: String): Result<Unit> = try {
+        dao.assignClass(com.azuratech.azuratime.data.local.SchoolClassAssignment(schoolId, classId))
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(AppError.LocalDB(e.message))
+    }
+
+    suspend fun unassignClassFromSchool(schoolId: String, classId: String): Result<Unit> = try {
+        dao.unassignClass(schoolId, classId)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(AppError.LocalDB(e.message))
+    }
+
+    suspend fun getAssignedClassIds(schoolId: String): List<String> = dao.getAssignedClassIds(schoolId)
 
     suspend fun deleteClass(accountId: String, schoolId: String, classId: String): Result<Unit> {
         return try {
@@ -140,8 +167,7 @@ class SchoolRepository @Inject constructor(
     }
 
     fun observeAllClassesForAccount(accountId: String): Flow<Result<List<ClassModel>>> =
-        dao.getAllClassesForAccount(accountId)
-            .map { entities ->
+        dao.getAllClasses(accountId).map { entities ->
                 Result.Success(entities.map { it.toDomain() }) as Result<List<ClassModel>>
             }
             .catch { e ->
@@ -149,10 +175,17 @@ class SchoolRepository @Inject constructor(
             }
 
     suspend fun reassignClass(accountId: String, classId: String, newSchoolId: String): Result<Unit> = try {
-        dao.reassignClass(classId, newSchoolId)
-        // Note: In a real app, we'd also sync this to remote
+        dao.reassignClass(com.azuratech.azuratime.data.local.SchoolClassAssignment(newSchoolId, classId))
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(AppError.LocalDB(e.message))
+    }
+
+    suspend fun getOrphanedClasses(): List<ClassModel> =
+        dao.getOrphanedClasses().map { it.toDomain() }
+
+    suspend fun updateClassSchool(classId: String, schoolId: String) {
+        dao.updateClassSchool(classId, schoolId)
+        dao.assignClass(com.azuratech.azuratime.data.local.SchoolClassAssignment(schoolId, classId))
     }
 }

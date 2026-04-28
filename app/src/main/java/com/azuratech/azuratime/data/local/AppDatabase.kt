@@ -11,13 +11,14 @@ import androidx.room.TypeConverters
     entities = [
         SchoolEntity::class,
         ClassEntity::class,           // 🔥 NEW: Pure class table
+        SchoolClassAssignment::class, // 🔥 NEW: Join table
         FaceEntity::class,
         FaceAssignmentEntity::class,
         CheckInRecordEntity::class,
         UserEntity::class,
         UserClassAccessEntity::class
     ],
-    version = 23, // 🚀 BUMP TO 23: Adding SchoolEntity
+    version = 26, // 🚀 BUMP TO 24: Adding SchoolClassAssignment
     exportSchema = false
 )
 @TypeConverters(Converters::class)

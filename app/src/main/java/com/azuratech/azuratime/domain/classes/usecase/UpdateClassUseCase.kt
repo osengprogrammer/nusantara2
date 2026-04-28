@@ -12,10 +12,10 @@ import javax.inject.Inject
 class UpdateClassUseCase @Inject constructor(
     private val repository: SchoolRepository
 ) {
-    suspend operator fun invoke(accountId: String, schoolId: String, name: String, id: String? = null): Result<Unit> {
+    suspend operator fun invoke(accountId: String, schoolId: String?, name: String, id: String? = null): Result<Unit> {
         val classModel = ClassModel(
             id = id ?: UUID.randomUUID().toString(),
-            schoolId = schoolId,
+            schoolId = schoolId ?: "",
             name = name,
             grade = "", // Default grade
             teacherId = null,

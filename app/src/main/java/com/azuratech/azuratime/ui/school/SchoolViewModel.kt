@@ -32,16 +32,41 @@ class SchoolViewModel @Inject constructor(
     private val createSchoolUseCase: CreateSchoolUseCase,
     private val deleteSchoolUseCase: DeleteSchoolUseCase,
     private val getAllClassesUseCase: GetAllClassesUseCase,
-    private val reassignClassUseCase: ReassignClassUseCase
+    private val assignClassToSchoolUseCase: com.azuratech.azuratime.domain.classes.usecase.AssignClassToSchoolUseCase,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
+    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
+    private val workspaceRepository: com.azuratech.azuratime.data.repo.WorkspaceRepository
 ) : ViewModel() {
 
     private val _accountId = MutableStateFlow(savedStateHandle.get<String>("accountId") ?: "")
     val accountId: StateFlow<String> = _accountId.asStateFlow()
 
+    // 🔥 Observation of active school ID from SessionManager
+    val activeSchoolId: StateFlow<String?> = sessionManager.activeSchoolIdFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), sessionManager.getActiveSchoolId())
+
+    // 🔥 Observation of active school details from Repository
+    val activeSchool: StateFlow<School?> = activeSchoolId
+        .flatMapLatest { id ->
+            if (id != null) {
+                flow<School?> { emit(schoolRepository.getSchoolById(id)) }
+            } else {
+                flowOf(null)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val uiState: StateFlow<SchoolUiState> = _accountId
         .filter { it.isNotEmpty() }
         .flatMapLatest { id ->
-            getSchoolsUseCase(id).map { result ->
+            getSchoolsUseCase(id).onEach { result ->
+                // 🔥 Auto-select first school if none active
+                if (result is Result.Success && result.data.isNotEmpty() && sessionManager.getActiveSchoolId() == null) {
+                    val firstSchool = result.data.first()
+                    println("🚀 AUTO-INIT: Selecting first available school: ${firstSchool.name}")
+                    selectSchool(firstSchool)
+                }
+            }.map { result ->
                 when (result) {
                     is Result.Success -> SchoolUiState.Success(result.data)
                     is Result.Failure -> SchoolUiState.Error(result.error)
@@ -55,11 +80,20 @@ class SchoolViewModel @Inject constructor(
             initialValue = SchoolUiState.Loading
         )
 
-    // 🔥 Added All Classes flow for selection
-    val allAccountClasses: StateFlow<List<ClassModel>> = _accountId
+    // 🔥 Observation of all schools for pickers/selectors
+    val allSchools: StateFlow<List<School>> = uiState.map { 
+        if (it is SchoolUiState.Success) it.schools else emptyList() 
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // 🔥 Added Available Classes flow for selection
+    val availableClasses: StateFlow<List<ClassModel>> = _accountId
         .filter { it.isNotEmpty() }
         .flatMapLatest { id ->
-            getAllClassesUseCase(id).map { result ->
+            getAllClassesUseCase(id).onEach { result ->
+                if (result is Result.Success) {
+                    println("📚 DEBUG: Loaded ${result.data.size} classes from DB for picker")
+                }
+            }.map { result ->
                 if (result is Result.Success) result.data else emptyList()
             }
         }
@@ -68,6 +102,25 @@ class SchoolViewModel @Inject constructor(
     fun setAccountId(id: String) {
         if (id.isNotEmpty() && _accountId.value != id) {
             _accountId.value = id
+        }
+    }
+
+    /**
+     * 🔥 SELECT SCHOOL & PERSIST
+     * Updates local session and cloud context through WorkspaceRepository.
+     */
+    fun selectSchool(school: School) {
+        viewModelScope.launch {
+            val userId = _accountId.value
+            if (userId.isEmpty()) return@launch
+            
+            println("🔄 Switching school to: ${school.name} (${school.id})")
+            sessionManager.saveActiveSchoolId(school.id)
+            try {
+                workspaceRepository.switchWorkspace(userId, school.id)
+            } catch (e: Exception) {
+                println("⚠️ Error switching workspace: ${e.message}")
+            }
         }
     }
 
@@ -81,7 +134,13 @@ class SchoolViewModel @Inject constructor(
             if (result is Result.Success) {
                 val newSchoolId = result.data
                 selectedClassIds.forEach { classId ->
-                    reassignClassUseCase(currentId, classId, newSchoolId)
+                    assignClassToSchoolUseCase(newSchoolId, classId)
+                }
+                
+                // 🔥 Auto-select if it's the first one
+                if (sessionManager.getActiveSchoolId() == null) {
+                    val newSchool = schoolRepository.getSchoolById(newSchoolId)
+                    newSchool?.let { selectSchool(it) }
                 }
             }
         }

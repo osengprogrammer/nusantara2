@@ -16,11 +16,21 @@ interface ClassDao {
     // =====================================================
 
     /** School-scoped reactive query — switches automatically when activeSchoolId changes. */
-    @Query("SELECT * FROM classes WHERE schoolId = :schoolId ORDER BY displayOrder ASC, name ASC")
+    @Query("""
+        SELECT c.* FROM classes c
+        JOIN school_class_assignments sca ON c.id = sca.classId
+        WHERE sca.schoolId = :schoolId
+        ORDER BY c.displayOrder ASC, c.name ASC
+    """)
     fun observeClassesBySchool(schoolId: String): Flow<List<ClassEntity>>
 
     /** Used for UI chips or specific selections */
-    @Query("SELECT * FROM classes WHERE schoolId = :schoolId AND id IN (:ids) ORDER BY displayOrder ASC, name ASC")
+    @Query("""
+        SELECT c.* FROM classes c
+        JOIN school_class_assignments sca ON c.id = sca.classId
+        WHERE sca.schoolId = :schoolId AND c.id IN (:ids)
+        ORDER BY c.displayOrder ASC, c.name ASC
+    """)
     fun getClassesByIdsFlow(schoolId: String, ids: List<String>): Flow<List<ClassEntity>>
 
     // =====================================================
@@ -30,10 +40,15 @@ interface ClassDao {
     @Query("SELECT * FROM classes WHERE id = :id LIMIT 1")
     suspend fun getClassById(id: String): ClassEntity?
 
-    @Query("SELECT * FROM classes WHERE schoolId = :schoolId AND name = :name COLLATE NOCASE LIMIT 1")
-    suspend fun getClassByName(schoolId: String, name: String): ClassEntity?
+    @Query("SELECT * FROM classes WHERE name = :name COLLATE NOCASE LIMIT 1")
+    suspend fun getClassByName(name: String): ClassEntity?
 
-    @Query("SELECT * FROM classes WHERE schoolId = :schoolId ORDER BY displayOrder ASC, name ASC")
+    @Query("""
+        SELECT c.* FROM classes c
+        JOIN school_class_assignments sca ON c.id = sca.classId
+        WHERE sca.schoolId = :schoolId
+        ORDER BY c.displayOrder ASC, c.name ASC
+    """)
     suspend fun getClassesBySchoolOnce(schoolId: String): List<ClassEntity>
 
     /** Safety guard: count faces assigned to a class before allowing delete. */
@@ -66,8 +81,8 @@ interface ClassDao {
     @Query("DELETE FROM classes WHERE id = :id")
     suspend fun deleteById(id: String)
 
-    /** Removes only classes belonging to a specific school. */
-    @Query("DELETE FROM classes WHERE schoolId = :schoolId")
+    /** Removes only class assignments belonging to a specific school. */
+    @Query("DELETE FROM school_class_assignments WHERE schoolId = :schoolId")
     suspend fun deleteBySchoolId(schoolId: String)
 
     @Query("DELETE FROM classes")
