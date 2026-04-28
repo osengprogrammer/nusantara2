@@ -132,12 +132,19 @@ class DashboardViewModel @Inject constructor(
             return@combine UiState.Loading
         }
 
+        // 🔑 Priority: Global role > School role > Account status
+        val globalRole = user.role  // "SUPER_ADMIN", "ADMIN", "USER", etc.
         val currentWorkspaceId = user.activeSchoolId
         val membershipRole = currentWorkspaceId?.let { user.memberships[it]?.role }
-        val topLevelStatus = user.status
+        
+        val currentRole = when {
+            globalRole == "SUPER_ADMIN" -> "SUPER_ADMIN"
+            membershipRole != null -> membershipRole
+            else -> if (user.status != "PENDING") user.status else "USER"
+        }
+        println("🔍 DEBUG: globalRole=${user.role}, membershipRole=$membershipRole, currentRole=$currentRole")
 
-        val currentRole = membershipRole ?: (if (topLevelStatus != "PENDING") topLevelStatus else "USER")
-        val isApproved = currentRole == "ADMIN" || currentRole == "TEACHER"
+        val isApproved = currentRole == "ADMIN" || currentRole == "TEACHER" || currentRole == "SUPER_ADMIN"
 
         val pendingRequests = user.friends.values.count { it.status == "PENDING_APPROVAL" }
 

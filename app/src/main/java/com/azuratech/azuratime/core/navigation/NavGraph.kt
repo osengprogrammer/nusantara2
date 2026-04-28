@@ -96,6 +96,9 @@ sealed class Screen(val route: String) {
     // --- 🤝 JARINGAN SEDULUR ---
     data object Network : Screen("network")
 
+    // --- 👑 ADMIN & MODERATION ---
+    data object PendingSchools : Screen("pending_schools")
+
     // --- 🛠️ SYSTEM & DEBUG ---
     data object Debug : Screen("debug")
 }

@@ -35,6 +35,15 @@ class SchoolRepository @Inject constructor(
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
+    fun observeAllSchools(): Flow<Result<List<School>>> =
+        dao.observeAllSchools()
+            .map { entities -> 
+                Result.Success(entities.map { it.toDomain() }) as Result<List<School>>
+            }
+            .catch { e -> 
+                emit(Result.Failure(AppError.LocalDB(e.message)))
+            }
+
     suspend fun saveSchool(school: School): Result<Unit> = try {
         dao.upsertSchool(
             SchoolEntity(
