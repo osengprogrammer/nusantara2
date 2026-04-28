@@ -75,10 +75,18 @@ sealed class Screen(val route: String) {
     }
 
     // 🔥 PERBAIKAN BUG: Encode nama siswa
-    data object MyAssignedClass : Screen("my_assigned_classes?targetUserId={targetUserId}") {
-        fun createRoute(targetUserId: String? = null) =
-            if (targetUserId != null) "my_assigned_classes?targetUserId=$targetUserId"
-            else "my_assigned_classes"
+    data object MyAssignedClass : Screen("my_assigned_classes?targetUserId={targetUserId}&schoolId={schoolId}") {
+        fun createRoute(targetUserId: String? = null, schoolId: String? = null) =
+            buildString {
+                append("my_assigned_classes")
+                val params = mutableListOf<String>()
+                if (targetUserId != null) params.add("targetUserId=$targetUserId")
+                if (schoolId != null) params.add("schoolId=$schoolId")
+                if (params.isNotEmpty()) {
+                    append("?")
+                    append(params.joinToString("&"))
+                }
+            }
     }
     data object FindSchool : Screen("find_school")
     data object Onboarding : Screen("onboarding")

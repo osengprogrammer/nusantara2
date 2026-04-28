@@ -7,6 +7,8 @@ import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.AuthRepository
 import com.azuratech.azuratime.data.repo.DataIntegrityRepository
 import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
+import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.domain.checkin.usecase.GetCheckInRecordsUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.CheckInFilters
 import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
@@ -34,6 +36,7 @@ class DashboardViewModel @Inject constructor(
     private val observeUserUseCase: ObserveUserUseCase,
     private val syncUserUseCase: SyncUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
+    private val getClassesUseCase: GetClassesUseCase,
     private val resolveConflictUseCase: ResolveConflictUseCase,
     private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
     private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
@@ -57,6 +60,24 @@ class DashboardViewModel @Inject constructor(
             val filters = CheckInFilters()
             getCheckInRecordsUseCase(filters).map { it.getOrNull()?.take(5) ?: emptyList() }
         }
+
+    private val _assignedClassesFlow = combine(
+        sessionManager.activeSchoolIdFlow.filterNotNull(),
+        _userFlow.filterNotNull()
+    ) { schoolId, user ->
+        schoolId to user
+    }.flatMapLatest { (schoolId, user) ->
+        getClassesUseCase(schoolId).map { result ->
+            val allClasses = if (result is Result.Success) result.data else emptyList()
+            val membership = user.memberships[schoolId]
+            if (membership?.role == "ADMIN") {
+                allClasses
+            } else {
+                val assignedIds = membership?.assignedClassIds ?: emptyList()
+                allClasses.filter { it.id in assignedIds }
+            }
+        }
+    }
 
     private val _sessionStudentsFlow = _userFlow
         .filterNotNull()
@@ -84,6 +105,7 @@ class DashboardViewModel @Inject constructor(
         _userFlow,
         _recentRecordsFlow,
         _sessionStudentsFlow,
+        _assignedClassesFlow,
         syncViewModel.isSyncing,
         dataIntegrityRepository.totalFaces,
         dataIntegrityRepository.missingAssignment,
@@ -96,13 +118,15 @@ class DashboardViewModel @Inject constructor(
         val recentRecords = args[1] as List<com.azuratech.azuratime.data.local.CheckInRecordEntity>
         @Suppress("UNCHECKED_CAST")
         val sessionStudents = args[2] as List<FaceEntity>
-        val isSyncing = args[3] as Boolean
-        val totalFaces = args[4] as Int
-        val unassigned = args[5] as Int
-        val broken = args[6] as Int
-        val unsynced = args[7] as Int
         @Suppress("UNCHECKED_CAST")
-        val conflicts = args[8] as List<com.azuratech.azuratime.data.local.AttendanceConflict>
+        val assignedClasses = args[3] as List<ClassModel>
+        val isSyncing = args[4] as Boolean
+        val totalFaces = args[5] as Int
+        val unassigned = args[6] as Int
+        val broken = args[7] as Int
+        val unsynced = args[8] as Int
+        @Suppress("UNCHECKED_CAST")
+        val conflicts = args[9] as List<com.azuratech.azuratime.data.local.AttendanceConflict>
 
         if (user == null) {
             return@combine UiState.Loading
@@ -111,15 +135,15 @@ class DashboardViewModel @Inject constructor(
         val currentWorkspaceId = user.activeSchoolId
         val membershipRole = currentWorkspaceId?.let { user.memberships[it]?.role }
         val topLevelStatus = user.status
-        
+
         val currentRole = membershipRole ?: (if (topLevelStatus != "PENDING") topLevelStatus else "USER")
         val isApproved = currentRole == "ADMIN" || currentRole == "TEACHER"
-        
+
         val pendingRequests = user.friends.values.count { it.status == "PENDING_APPROVAL" }
 
         val dashboardState = DashboardUiState(
             user = user,
-            assignedClasses = emptyList(),
+            assignedClasses = assignedClasses,
             recentRecords = recentRecords,
             sessionStudents = sessionStudents,
             isSyncing = isSyncing,
@@ -133,7 +157,8 @@ class DashboardViewModel @Inject constructor(
             conflicts = conflicts
         )
         UiState.Success(dashboardState)
-    }.stateIn(
+    }
+.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = UiState.Loading
@@ -160,6 +185,7 @@ class DashboardViewModel @Inject constructor(
             if (currentState is UiState.Success) {
                 val user = currentState.data.user ?: return@launch
                 val updatedUser = user.copy(activeClassId = classId)
+                println("✅ VM: Saved activeClassId=$classId for user ${user.userId}")
                 updateUserUseCase(updatedUser)
             }
         }

@@ -96,11 +96,29 @@ class UserManagementViewModel @Inject constructor(
     // 🛠️ OPERATIONS
     // =====================================================
 
-    fun selectActiveClass(classId: String?) {
-        val user = currentUser.value ?: return
+    fun selectActiveClass(classId: String?, targetUserId: String? = null) {
+        val userId = targetUserId ?: currentUser.value?.userId ?: return
+        println("🖱 DEBUG: selectActiveClass called for userId=$userId, classId=$classId")
+        
         viewModelScope.launch {
-            val updatedUser = user.copy(activeClassId = classId)
-            updateUserUseCase(updatedUser)
+            // If it's for current user, we can get the entity from currentUser.value
+            // If it's for target user, we might need to fetch it first or use a dedicated usecase
+            val userToUpdate = if (targetUserId == null || targetUserId == currentUser.value?.userId) {
+                currentUser.value
+            } else {
+                repository.getUserDao().getUserById(targetUserId)
+            }
+
+            userToUpdate?.let {
+                val updatedUser = it.copy(activeClassId = classId)
+                println("💾 DEBUG: Saving user with activeClassId=${updatedUser.activeClassId}")
+                val result = updateUserUseCase(updatedUser)
+                if (result is com.azuratech.azuraengine.result.Result.Success) {
+                    println("✅ DEBUG: selectActiveClass success for classId=$classId")
+                } else if (result is com.azuratech.azuraengine.result.Result.Failure) {
+                    println("❌ DEBUG: selectActiveClass failed: ${result.error}")
+                }
+            }
         }
     }
 

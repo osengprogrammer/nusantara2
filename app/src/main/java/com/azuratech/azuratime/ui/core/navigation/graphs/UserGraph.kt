@@ -35,9 +35,16 @@ fun NavGraphBuilder.userGraph(
                 }
             )
         }
-        composable(Screen.MyAssignedClass.route) {
+        composable(
+            route = Screen.MyAssignedClass.route,
+            arguments = listOf(
+                navArgument("targetUserId") { type = NavType.StringType; nullable = true },
+                navArgument("schoolId") { type = NavType.StringType; nullable = true }
+            )
+        ) { backStackEntry ->
+            val targetUserId = backStackEntry.arguments?.getString("targetUserId")
             com.azuratech.azuratime.ui.user.MyAssignedClassScreen(
-                targetUserId = null,
+                targetUserId = targetUserId,
                 onNavigateBack = { navController.popBackStack() },
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel()

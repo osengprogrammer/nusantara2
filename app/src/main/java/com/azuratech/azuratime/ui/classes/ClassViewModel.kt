@@ -50,8 +50,18 @@ class ClassViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val schoolId: String = savedStateHandle.get<String>("schoolId") 
-        ?: sessionManager.getActiveSchoolId() ?: ""
+    // 🔥 NEW: Reactive School ID Flow
+    private val activeSchoolIdFlow = sessionManager.activeSchoolIdFlow
+        .onStart { 
+            val initial = savedStateHandle.get<String>("schoolId") ?: sessionManager.getActiveSchoolId()
+            emit(initial) 
+        }
+        .filterNotNull()
+        .distinctUntilChanged()
+        .onEach { println("🔍 ClassViewModel: activeSchoolId='$it'") }
+
+    private val schoolId: String 
+        get() = sessionManager.getActiveSchoolId() ?: ""
         
     private val accountId: String = savedStateHandle.get<String>("accountId")
         ?: sessionManager.getCurrentUserId() ?: ""
@@ -66,8 +76,8 @@ class ClassViewModel @Inject constructor(
     // 📊 CLASS FLOWS (State Management)
     // =====================================================
 
-    private val _uiState = MutableStateFlow<UiState<List<ClassModel>>>(UiState.Loading)
-    val uiState: StateFlow<UiState<List<ClassModel>>> = getClassesUseCase(schoolId)
+    val uiState: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdFlow
+        .flatMapLatest { id -> getClassesUseCase(id) }
         .map { result ->
             when(result) {
                 is Result.Success -> {

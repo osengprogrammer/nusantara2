@@ -27,8 +27,8 @@ object AttendanceService {
     fun createRecord(
         face: FaceEntity,
         teacherEmail: String = "",
-        activeClassId: String = "",
-        activeClassName: String = "",
+        activeClassId: String? = null,
+        activeClassName: String? = null,
         status: String = "H",
         attendanceDate: LocalDate = LocalDate.now(),
         checkInTime: LocalDateTime? = LocalDateTime.now()

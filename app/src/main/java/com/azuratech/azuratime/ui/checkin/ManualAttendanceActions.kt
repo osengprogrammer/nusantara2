@@ -44,7 +44,7 @@ fun <T> ManualAttendanceFilterDropdown(
         onExpandedChange = { if (enabled) expanded = it }
     ) {
         OutlinedTextField(
-            value = selectedOption?.let { getLabel(it) } ?: "Mode Gerbang (General)",
+            value = selectedOption?.let { getLabel(it) } ?: "Pilih...",
             onValueChange = {},
             label = { Text(label) },
             readOnly = true,
@@ -55,11 +55,6 @@ fun <T> ManualAttendanceFilterDropdown(
         )
         
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(
-                text = { Text("Mode Gerbang (General Scan)", color = MaterialTheme.colorScheme.secondary) },
-                onClick = { onOptionSelected(null); expanded = false }
-            )
-            HorizontalDivider()
             options.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(getLabel(option)) },
