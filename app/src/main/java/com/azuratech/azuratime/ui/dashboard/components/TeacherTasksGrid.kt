@@ -23,6 +23,7 @@ fun TeacherTasksGrid(
     navController: NavController,
     isAdmin: Boolean,
     accountId: String? = null,
+    isEnabled: Boolean = true, // 🔥 Added
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -43,6 +44,7 @@ fun TeacherTasksGrid(
                 icon = Icons.Default.QrCodeScanner, 
                 color = MaterialTheme.colorScheme.error, 
                 onClick = { navController.navigate(Screen.BarcodeScan.route) }, 
+                enabled = isEnabled, // 🔥 Added
                 modifier = Modifier.weight(1f)
             )
             DashboardActionCard(
@@ -50,6 +52,7 @@ fun TeacherTasksGrid(
                 icon = Icons.Default.EditCalendar, 
                 color = MaterialTheme.colorScheme.tertiary, 
                 onClick = { navController.navigate(Screen.ManualAttendance.createRoute("", "")) }, 
+                enabled = isEnabled, // 🔥 Added
                 modifier = Modifier.weight(1f)
             )
         }
@@ -62,10 +65,10 @@ fun TeacherTasksGrid(
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
         ) {
             DashboardActionCard("Scanner Wajah", Icons.Default.CameraAlt, MaterialTheme.colorScheme.primary,
-                { navController.navigate(Screen.CheckIn.route) }, Modifier.weight(1f))
+                { navController.navigate(Screen.CheckIn.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
 
             DashboardActionCard("Cetak Barcode", Icons.Default.QrCode, MaterialTheme.colorScheme.secondary, 
-                { navController.navigate(Screen.FaceListBarcode.route) }, Modifier.weight(1f))
+                { navController.navigate(Screen.FaceListBarcode.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
         }
 
         // ======================================================
@@ -81,9 +84,9 @@ fun TeacherTasksGrid(
                         if (accountId != null) {
                             navController.navigate(Screen.ClassManagement.createRoute(accountId))
                         }
-                    }, Modifier.weight(1f))
+                    }, modifier = Modifier.weight(1f), enabled = isEnabled)
                 DashboardActionCard("Manajemen Siswa", Icons.Default.People, MaterialTheme.colorScheme.secondary,
-                    { navController.navigate(Screen.Manage.route) }, Modifier.weight(1f))
+                    { navController.navigate(Screen.Manage.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
             }
         }
 
@@ -96,7 +99,7 @@ fun TeacherTasksGrid(
         ) {
             DashboardActionCard("Laporan Matriks", Icons.Default.GridOn, MaterialTheme.colorScheme.primaryContainer, {
                 navController.navigate(Screen.AttendanceMatrix.route)
-            }, Modifier.weight(1f))
+            }, modifier = Modifier.weight(1f), enabled = isEnabled)
         }
 
         // ======================================================
@@ -108,9 +111,9 @@ fun TeacherTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
             ) {
                 DashboardActionCard("Registrasi Baru", Icons.Default.PersonAdd, MaterialTheme.colorScheme.tertiary,
-                    { navController.navigate(Screen.RegistrationMenu.route) }, Modifier.weight(1f))
+                    { navController.navigate(Screen.RegistrationMenu.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
                 DashboardActionCard("Debug System", Icons.Default.BugReport, MaterialTheme.colorScheme.outline,
-                    { navController.navigate(Screen.Debug.route) }, Modifier.weight(1f))
+                    { navController.navigate(Screen.Debug.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
             }
         }
     }
@@ -118,21 +121,35 @@ fun TeacherTasksGrid(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardActionCard(title: String, icon: ImageVector, color: Color, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun DashboardActionCard(
+    title: String, 
+    icon: ImageVector, 
+    color: Color, 
+    onClick: () -> Unit, 
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true // 🔥 Added
+) {
+    val alpha = if (enabled) 1f else 0.4f
     Surface(
         onClick = onClick,
+        enabled = enabled, // 🔥 Pass to Surface
         modifier = modifier.height(110.dp),
         shape = AzuraShapes.large,
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        tonalElevation = if (enabled) 2.dp else 0.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f * alpha))
     ) {
         Row {
-            Box(Modifier.width(6.dp).fillMaxHeight().background(color))
+            Box(Modifier.width(6.dp).fillMaxHeight().background(color.copy(alpha = alpha)))
             Column(Modifier.padding(AzuraSpacing.md), verticalArrangement = Arrangement.Center) {
-                Icon(icon, null, tint = color, modifier = Modifier.size(28.dp))
+                Icon(icon, null, tint = color.copy(alpha = alpha), modifier = Modifier.size(28.dp))
                 Spacer(Modifier.height(8.dp))
-                Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    title, 
+                    style = MaterialTheme.typography.labelLarge, 
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
+                )
             }
         }
     }

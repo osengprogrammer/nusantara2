@@ -56,6 +56,17 @@ fun DashboardScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        schoolViewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+                else -> {}
+            }
+        }
+    }
+
     when (val state = uiState) {
         is UiState.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
@@ -254,7 +265,8 @@ fun DashboardContent(
                     TeacherTasksGrid(
                         navController = navController,
                         isAdmin = data.currentRole == "ADMIN",
-                        accountId = user.userId
+                        accountId = user.userId,
+                        isEnabled = activeSchool?.status == "ACTIVE" // 🔥 Added
                     )
                 }
 

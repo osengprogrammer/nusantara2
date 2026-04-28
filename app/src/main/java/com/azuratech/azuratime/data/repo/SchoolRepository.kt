@@ -42,11 +42,12 @@ class SchoolRepository @Inject constructor(
                 accountId = school.accountId,
                 name = school.name,
                 timezone = school.timezone,
+                status = school.status,
                 createdAt = school.createdAt,
                 updatedAt = System.currentTimeMillis()
             )
         )
-        println("✅ DEBUG: School saved to Room: ${school.id}")
+        println("✅ DEBUG: School saved to Room: ${school.id} with status ${school.status}")
         
         // Async Sync to Remote
         repositoryScope.launch {
@@ -60,6 +61,8 @@ class SchoolRepository @Inject constructor(
 
     suspend fun getSchoolById(id: String): School? = 
         dao.getSchoolById(id)?.toDomain()
+
+    suspend fun getCountByUser(accountId: String): Int = dao.getSchoolCountByAccount(accountId)
 
     suspend fun getFirstSchoolId(accountId: String): String? = dao.getFirstSchoolId(accountId)
 

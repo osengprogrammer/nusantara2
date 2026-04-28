@@ -8,6 +8,9 @@ interface SchoolClassDao {
     @Query("SELECT * FROM schools WHERE accountId = :accountId ORDER BY name ASC")
     fun getSchools(accountId: String): Flow<List<SchoolEntity>>
 
+    @Query("SELECT * FROM schools")
+    suspend fun getAllSchoolsOnce(): List<SchoolEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertSchool(school: SchoolEntity)
 
@@ -16,6 +19,9 @@ interface SchoolClassDao {
 
     @Query("SELECT id FROM schools WHERE accountId = :accountId LIMIT 1")
     suspend fun getFirstSchoolId(accountId: String): String?
+
+    @Query("SELECT COUNT(*) FROM schools WHERE accountId = :accountId")
+    suspend fun getSchoolCountByAccount(accountId: String): Int
 
     @Query("""
         SELECT * FROM classes 

@@ -17,20 +17,29 @@ class CreateSchoolUseCase @Inject constructor(
             return Result.Failure(AppError.BusinessRule("Nama sekolah tidak boleh kosong"))
         }
         
+        // 1. Check existing school count
+        val schoolCount = repository.getCountByUser(accountId)
+        val status = if (schoolCount == 0) "ACTIVE" else "PENDING"
+        
         val newId = UUID.randomUUID().toString()
         val newSchool = School(
             id = newId,
             accountId = accountId,
             name = name.trim(),
             timezone = timezone,
+            status = status,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
         
         val result = repository.saveSchool(newSchool)
         if (result is Result.Success) {
-            // 🔥 Auto-assign ADMIN role for the creator
-            workspaceRepository.assignSchoolRole(accountId, newId, "ADMIN", name.trim())
+            println("🏫 School '$name' created with status=$status")
+            
+            // 🔥 If ACTIVE, Auto-assign ADMIN role for the creator
+            if (status == "ACTIVE") {
+                workspaceRepository.assignSchoolRole(accountId, newId, "ADMIN", name.trim())
+            }
             return Result.Success(newId)
         }
         
