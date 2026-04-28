@@ -116,14 +116,21 @@ fun SchoolsHorizontalList(
 
 @Composable
 fun SchoolChip(school: School, onClick: () -> Unit) {
+    val isActive = school.status == "ACTIVE"
+    val backgroundColor = if (isActive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    }
+    
     Card(
         shape = AzuraShapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+            containerColor = backgroundColor
         ),
         modifier = Modifier
             .widthIn(min = 120.dp)
-            .clickable { 
+            .clickable(enabled = isActive) { 
                 println("🖱️ DEBUG: Chip clicked for school ${school.name}")
                 onClick() 
             }
@@ -136,16 +143,25 @@ fun SchoolChip(school: School, onClick: () -> Unit) {
                 Icons.Default.School,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                tint = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.outline
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = school.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                maxLines = 1
-            )
+            Column {
+                Text(
+                    text = school.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.outline,
+                    maxLines = 1
+                )
+                if (!isActive) {
+                    Text(
+                        text = school.status,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         }
     }
 }

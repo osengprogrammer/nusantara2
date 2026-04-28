@@ -8,6 +8,7 @@ data class School(
     val accountId: String,
     val name: String,
     val timezone: String,
+    val status: String = "ACTIVE",
     val createdAt: Long,
     val updatedAt: Long
 )

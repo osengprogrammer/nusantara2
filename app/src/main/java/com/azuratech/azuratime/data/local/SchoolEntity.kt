@@ -11,6 +11,7 @@ data class SchoolEntity(
     val accountId: String,
     val name: String,
     val timezone: String,
+    val status: String = "ACTIVE",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -19,6 +20,7 @@ data class SchoolEntity(
         accountId = accountId,
         name = name,
         timezone = timezone,
+        status = status,
         createdAt = createdAt,
         updatedAt = updatedAt
     )

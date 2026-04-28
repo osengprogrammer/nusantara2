@@ -38,6 +38,9 @@ class SchoolViewModel @Inject constructor(
     private val workspaceRepository: com.azuratech.azuratime.data.repo.WorkspaceRepository
 ) : ViewModel() {
 
+    private val _uiEvent = MutableSharedFlow<com.azuratech.azuratime.ui.core.UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
     private val _accountId = MutableStateFlow(savedStateHandle.get<String>("accountId") ?: "")
     val accountId: StateFlow<String> = _accountId.asStateFlow()
 
@@ -137,11 +140,22 @@ class SchoolViewModel @Inject constructor(
                     assignClassToSchoolUseCase(newSchoolId, classId)
                 }
                 
-                // 🔥 Auto-select if it's the first one
-                if (sessionManager.getActiveSchoolId() == null) {
-                    val newSchool = schoolRepository.getSchoolById(newSchoolId)
-                    newSchool?.let { selectSchool(it) }
+                val newSchool = schoolRepository.getSchoolById(newSchoolId)
+                
+                // Show Feedback
+                val status = newSchool?.status ?: "PENDING"
+                if (status == "ACTIVE") {
+                    _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
+                    
+                    // 🔥 Auto-select if it's the first one/active
+                    if (sessionManager.getActiveSchoolId() == null) {
+                        newSchool?.let { selectSchool(it) }
+                    }
+                } else {
+                    _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
                 }
+            } else if (result is Result.Failure) {
+                _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("❌ Gagal: ${result.error.message}"))
             }
         }
     }

@@ -29,6 +29,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             "accountId" to school.accountId,
             "name" to school.name,
             "timezone" to school.timezone,
+            "status" to school.status,
             "createdAt" to school.createdAt,
             "updatedAt" to school.updatedAt
         )
@@ -59,6 +60,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                             accountId = doc.getString("accountId") ?: "",
                             name = doc.getString("name") ?: "",
                             timezone = doc.getString("timezone") ?: "UTC",
+                            status = doc.getString("status") ?: "ACTIVE",
                             createdAt = doc.getLong("createdAt") ?: 0L,
                             updatedAt = doc.getLong("updatedAt") ?: 0L
                         )
@@ -79,6 +81,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                     accountId = doc.getString("accountId") ?: "",
                     name = doc.getString("name") ?: "",
                     timezone = doc.getString("timezone") ?: "UTC",
+                    status = doc.getString("status") ?: "ACTIVE",
                     createdAt = doc.getLong("createdAt") ?: 0L,
                     updatedAt = doc.getLong("updatedAt") ?: 0L
                 )
