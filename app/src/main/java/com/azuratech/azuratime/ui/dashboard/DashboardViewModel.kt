@@ -2,7 +2,6 @@ package com.azuratech.azuratime.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.AuthRepository
@@ -16,6 +15,7 @@ import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
+import com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.core.UiEvent
@@ -33,11 +33,11 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel @Inject constructor(
-    private val database: AppDatabase,
     private val adminRepository: AdminRepository,
     private val observeUserUseCase: ObserveUserUseCase,
     private val syncUserUseCase: SyncUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getClassesUseCase: GetClassesUseCase,
     private val resolveConflictUseCase: ResolveConflictUseCase,
     private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
@@ -101,6 +101,12 @@ class DashboardViewModel @Inject constructor(
                 syncUserUseCase(userId)
             }
         }
+        syncViewModel.forceSyncFromCloud {
+            viewModelScope.launch {
+                syncCheckInRecordsUseCase()
+                _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
+            }
+        }
     }
 
     val state: StateFlow<UiState<DashboardUiState>> = combine(
@@ -130,61 +136,31 @@ class DashboardViewModel @Inject constructor(
         @Suppress("UNCHECKED_CAST")
         val conflicts = args[9] as List<com.azuratech.azuratime.data.local.AttendanceConflict>
 
-        if (user == null) {
-            return@combine UiState.Loading
-        }
-
-        // 🔑 Priority: Global role > School role > Account status
-        val globalRole = user.role  // "SUPER_ADMIN", "ADMIN", "USER", etc.
-        val currentWorkspaceId = user.activeSchoolId
-        val membershipRole = currentWorkspaceId?.let { user.memberships[it]?.role }
-        
-        val currentRole = when {
-            globalRole == "SUPER_ADMIN" -> "SUPER_ADMIN"
-            membershipRole != null -> membershipRole
-            else -> if (user.status != "PENDING") user.status else "USER"
-        }
-        println("🔍 DEBUG: globalRole=${user.role}, membershipRole=$membershipRole, currentRole=$currentRole")
-
-        val isApproved = currentRole == "ADMIN" || currentRole == "TEACHER" || currentRole == "SUPER_ADMIN"
-
-        val pendingRequests = user.friends.values.count { it.status == "PENDING_APPROVAL" }
-
-        val dashboardState = DashboardUiState(
-            user = user,
-            assignedClasses = assignedClasses,
-            recentRecords = recentRecords,
-            sessionStudents = sessionStudents,
-            isSyncing = isSyncing,
-            pendingRequests = pendingRequests,
-            currentRole = currentRole,
-            isApproved = isApproved,
-            totalFaces = totalFaces,
-            unassignedStudents = unassigned,
-            brokenAssignments = broken,
-            unsyncedRecords = unsynced,
-            conflicts = conflicts
+        UiState.Success(
+            DashboardUiState(
+                user = user,
+                recentRecords = recentRecords,
+                sessionStudents = sessionStudents,
+                assignedClasses = assignedClasses,
+                isSyncing = isSyncing,
+                totalFaces = totalFaces,
+                unassignedStudents = unassigned,
+                brokenAssignments = broken,
+                unsyncedRecords = unsynced,
+                conflicts = conflicts,
+                currentRole = user?.role ?: "USER",
+                isApproved = user?.status == "ACTIVE"
+            )
         )
-        UiState.Success(dashboardState)
-    }
-.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = UiState.Loading
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun sync() {
         viewModelScope.launch {
-            val userId = sessionManager.getCurrentUserId()
-            if (userId != null) {
-                syncUserUseCase(userId)
-            }
-        }
-        syncViewModel.forceSyncFromCloud {
-            viewModelScope.launch { 
-                syncCheckInRecordsUseCase()
-                _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!")) 
-            }
+            val userId = sessionManager.getCurrentUserId() ?: return@launch
+            syncUserUseCase(userId)
+            syncCheckInRecordsUseCase()
+            _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
+            println("✅ DashboardViewModel: Manual sync completed for user $userId")
         }
     }
 
@@ -194,8 +170,8 @@ class DashboardViewModel @Inject constructor(
             if (currentState is UiState.Success) {
                 val user = currentState.data.user ?: return@launch
                 
-                // 🔥 CRITICAL: Fetch UserEntity from DB for write operation
-                val userEntity = database.userDao().getUserById(user.userId)
+                // 🔥 CLEAN ARCHITECTURE: Fetch via UseCase instead of direct DAO
+                val userEntity = getUserByIdUseCase(user.userId)
                 
                 userEntity?.let {
                     val updatedUser = it.copy(activeClassId = classId)

@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.AttendanceConflict
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repo.UserRepository
@@ -15,6 +14,7 @@ import com.azuratech.azuratime.domain.user.usecase.UserManagementUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
+import com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,14 +30,14 @@ import javax.inject.Inject
 @HiltViewModel
 class UserManagementViewModel @Inject constructor(
     application: Application,
-    private val database: AppDatabase,
     private val repository: UserRepository,
     private val sessionManager: SessionManager,
     private val updateUserUseCase: UpdateUserUseCase,
     private val resolveConflictUseCase: ResolveConflictUseCase,
     private val userManagementUseCase: UserManagementUseCase,
     private val syncUserUseCase: SyncUserUseCase,
-    private val observeUserUseCase: ObserveUserUseCase
+    private val observeUserUseCase: ObserveUserUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase
 ) : AndroidViewModel(application) {
 
     // =====================================================
@@ -102,8 +102,8 @@ class UserManagementViewModel @Inject constructor(
         println("🖱 DEBUG: selectActiveClass called for userId=$userId, classId=$classId")
         
         viewModelScope.launch {
-            // 🔥 CRITICAL: We need UserEntity for the DAO/UseCase update.
-            val userEntity = database.userDao().getUserById(userId)
+            // 🔥 CLEAN ARCHITECTURE: Use UseCase instead of direct DAO
+            val userEntity = getUserByIdUseCase(userId)
 
             userEntity?.let {
                 val updatedUser = it.copy(activeClassId = classId)
@@ -153,7 +153,8 @@ class UserManagementViewModel @Inject constructor(
         val user = currentUser.value ?: return
         viewModelScope.launch {
             try {
-                val userEntity = database.userDao().getUserById(user.userId)
+                // 🔥 CLEAN ARCHITECTURE: Use UseCase instead of direct DAO
+                val userEntity = getUserByIdUseCase(user.userId)
                 userEntity?.let {
                     val updatedUser = it.copy(name = newName.trim())
                     updateUserUseCase(updatedUser)

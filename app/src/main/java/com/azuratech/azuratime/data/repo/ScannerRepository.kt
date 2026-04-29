@@ -3,8 +3,10 @@ package com.azuratech.azuratime.data.repo
 import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase
 import com.azuratech.azuratime.ui.checkin.AttendanceService
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -31,7 +33,8 @@ class ScannerRepository @Inject constructor(
     private val application: Application,
     private val database: AppDatabase,
     private val db: FirebaseFirestore,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val getActiveSchoolContextUseCase: GetActiveSchoolContextUseCase
 ) {
     private val faceDao = database.faceDao()
     private val userDao = database.userDao()
@@ -44,7 +47,14 @@ class ScannerRepository @Inject constructor(
     suspend fun getSessionData(email: String): Triple<String?, String, String?> = withContext(Dispatchers.IO) {
         val user = userDao.getUserByEmail(email)
         val _classId = user?.activeClassId
-        val _schoolId = user?.activeSchoolId ?: sessionManager.getActiveSchoolId()
+        
+        val contextRes = getActiveSchoolContextUseCase()
+        val _schoolId = if (contextRes is Result.Success) {
+            println("🏫 Context: Resolved schoolId=${contextRes.data.schoolId}")
+            contextRes.data.schoolId
+        } else {
+            user?.activeSchoolId ?: sessionManager.getActiveSchoolId()
+        }
 
         val className = _classId?.let { classDao.getClassById(it)?.name } ?: "General Scan"
         Log.d("AZURA_SCAN", "Session Data: user=$email, school=$_schoolId, class=$_classId")
