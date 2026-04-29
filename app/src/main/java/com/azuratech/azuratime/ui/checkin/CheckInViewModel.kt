@@ -8,37 +8,30 @@ import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.domain.checkin.usecase.*
+import com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase
 import com.azuratech.azuratime.core.session.SessionManager
-import dagger.hilt.android.lifecycle.HiltViewModel // 🔥 Import Hilt
-import javax.inject.Inject // 🔥 Import Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import com.azuratech.azuratime.domain.sync.ExportUtils
 import com.azuratech.azuraengine.result.Result
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@HiltViewModel // 🔥 1. Anotasi Hilt
-class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
+@HiltViewModel
+class CheckInViewModel @Inject constructor(
     application: Application,
     database: AppDatabase,
     private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
     private val processCheckInUseCase: ProcessCheckInUseCase,
     private val updateCheckInRecordUseCase: UpdateCheckInRecordUseCase,
     private val deleteCheckInRecordUseCase: DeleteCheckInRecordUseCase,
-    private val sessionManager: SessionManager, // 🔥 SessionManager disuntikkan langsung
+    private val getActiveSchoolContextUseCase: GetActiveSchoolContextUseCase,
+    private val sessionManager: SessionManager,
     private val exportUtils: ExportUtils
 ) : AndroidViewModel(application) {
 
@@ -46,40 +39,45 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
     private val checkInRecordDao = database.checkInRecordDao()
 
     private val _activeClassId = MutableStateFlow<String?>(null)
-    
-    // 🔥 Mengambil schoolId secara reaktif dari sessionManager
-    private val schoolId: String get() = sessionManager.getActiveSchoolId() ?: ""
 
-    val unassignedCount: StateFlow<Int> = faceAssignmentDao.getUnassignedStudentCount(schoolId)
+    // 🔥 Stream reaktif untuk SchoolContext
+    private val schoolContextFlow = sessionManager.activeSchoolIdFlow
+        .map { getActiveSchoolContextUseCase() }
+        .filterIsInstance<Result.Success<*>>()
+        .map { (it as Result.Success).data as com.azuratech.azuratime.domain.school.usecase.SchoolContext }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val unassignedCount: StateFlow<Int> = schoolContextFlow
+        .flatMapLatest { ctx -> faceAssignmentDao.getUnassignedStudentCount(ctx.schoolId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val activeSessionStudents: StateFlow<List<FaceEntity>> = _activeClassId
-        .flatMapLatest { classId ->
-            if (classId != null) faceAssignmentDao.getFacesByClass(classId, schoolId)
-            else flowOf(emptyList())
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val activeSessionStudents: StateFlow<List<FaceEntity>> = combine(_activeClassId, schoolContextFlow) { classId, ctx ->
+        classId to ctx
+    }.flatMapLatest { (classId, ctx) ->
+        if (classId != null) faceAssignmentDao.getFacesByClass(classId, ctx.schoolId)
+        else flowOf(emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val activeStudentCount: StateFlow<Int> = _activeClassId
-        .flatMapLatest { classId ->
-            if (classId != null) faceAssignmentDao.getStudentCountInClass(classId, schoolId)
-            else flowOf(0)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+    val activeStudentCount: StateFlow<Int> = combine(_activeClassId, schoolContextFlow) { classId, ctx ->
+        classId to ctx
+    }.flatMapLatest { (classId, ctx) ->
+        if (classId != null) faceAssignmentDao.getStudentCountInClass(classId, ctx.schoolId)
+        else flowOf(0)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val sessionSummary: StateFlow<Pair<Int, Int>> = _activeClassId
-        .flatMapLatest { classId ->
-            if (classId != null) {
-                faceAssignmentDao.getStudentCountInClass(classId, schoolId)
-                    .combine(checkInRecordDao.getTodayPresentCount(LocalDate.now(), schoolId)) { total, present ->
-                        present to total
-                    }
-            } else flowOf(0 to 0)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0 to 0)
+    val sessionSummary: StateFlow<Pair<Int, Int>> = combine(_activeClassId, schoolContextFlow) { classId, ctx ->
+        classId to ctx
+    }.flatMapLatest { (classId, ctx) ->
+        if (classId != null) {
+            faceAssignmentDao.getStudentCountInClass(classId, ctx.schoolId)
+                .combine(checkInRecordDao.getTodayPresentCount(LocalDate.now(), ctx.schoolId)) { total, present ->
+                    present to total
+                }
+        } else flowOf(0 to 0)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0 to 0)
 
     fun setActiveClass(classId: String?) {
         _activeClassId.value = classId
@@ -118,10 +116,17 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
     fun processScannedFace(scannedFaceId: String, studentName: String, onResult: (isSuccess: Boolean, message: String) -> Unit) {
         viewModelScope.launch {
             try {
+                val contextRes = getActiveSchoolContextUseCase()
+                if (contextRes is Result.Failure) {
+                    onResult(false, "❌ Error: ${contextRes.error.message ?: "Silakan pilih sekolah"}")
+                    return@launch
+                }
+                val ctx = (contextRes as Result.Success).data
+                
                 val currentSessionId = _activeClassId.value
                 val teacherEmail = _filterParams.value.userId ?: ""
                 val studentClasses = withContext(Dispatchers.IO) {
-                    faceAssignmentDao.getClassIdsForFace(scannedFaceId, schoolId).firstOrNull() ?: emptyList()
+                    faceAssignmentDao.getClassIdsForFace(scannedFaceId, ctx.schoolId).firstOrNull() ?: emptyList()
                 }
 
                 val params = ProcessCheckInParams(
@@ -168,7 +173,6 @@ class CheckInViewModel @Inject constructor( // 🔥 2. Inject semua dependensi
     
     fun addRecord(record: CheckInRecordEntity) { 
         viewModelScope.launch { 
-            // Manual add still uses ProcessCheckInParams but with empty/pre-validated classes
             val params = ProcessCheckInParams(
                 faceId = record.faceId,
                 studentName = record.name,
