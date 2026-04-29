@@ -5,6 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repo.CheckInResult
 import com.azuratech.azuratime.data.repo.ScannerRepository
+import com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase
+import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -16,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ScannerViewModel @Inject constructor(
     application: Application,
-    private val repository: ScannerRepository
+    private val repository: ScannerRepository,
+    private val getActiveSchoolContextUseCase: GetActiveSchoolContextUseCase
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<CheckInUiState>(CheckInUiState.Idle)
@@ -37,7 +40,12 @@ class ScannerViewModel @Inject constructor(
     fun startScannerSession(email: String) {
         currentTeacherEmail = email
         viewModelScope.launch {
-            val (classId, className, schoolId) = repository.getSessionData(email)
+            // 1. Resolve Context via UseCase (P0 Fix)
+            val contextResult = getActiveSchoolContextUseCase()
+            val resolvedSchoolId = if (contextResult is Result.Success) contextResult.data.schoolId else null
+            
+            // 2. Fetch Session Data
+            val (classId, className, schoolId) = repository.getSessionData(email, resolvedSchoolId)
             activeClassId = classId
             activeClassName = className
             activeSchoolId = schoolId

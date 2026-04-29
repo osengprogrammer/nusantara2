@@ -6,6 +6,7 @@ import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.AuthRepository
 import com.azuratech.azuratime.data.repo.DataIntegrityRepository
+import com.azuratech.azuratime.data.repo.SyncRepository
 import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuraengine.model.ClassModel
@@ -26,7 +27,6 @@ import com.azuratech.azuratime.ui.core.UiEvent
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AttendanceConflict
-import com.azuratech.azuratime.ui.sync.SyncViewModel
 import com.azuratech.azuratime.ui.util.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -55,7 +55,7 @@ class DashboardViewModel @Inject constructor(
     private val dataIntegrityRepository: DataIntegrityRepository,
     private val getFacesInClassUseCase: GetFacesInClassUseCase,
     private val sessionManager: SessionManager,
-    private val syncViewModel: SyncViewModel
+    private val syncRepository: SyncRepository
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -110,9 +110,6 @@ class DashboardViewModel @Inject constructor(
                 triggerAutoSyncIfNeeded(userId)
             }
         }
-        syncViewModel.forceSyncFromCloud {
-            sync()
-        }
     }
 
     private suspend fun triggerAutoSyncIfNeeded(userId: String) {
@@ -131,7 +128,7 @@ class DashboardViewModel @Inject constructor(
         _recentRecordsFlow,
         _sessionStudentsFlow,
         _assignedClassesFlow,
-        syncViewModel.isSyncing,
+        syncRepository.isSyncing,
         dataIntegrityRepository.totalFaces,
         dataIntegrityRepository.missingAssignment,
         dataIntegrityRepository.brokenAssignments,
@@ -172,6 +169,9 @@ class DashboardViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun sync() {
+        // Use Repository to trigger work
+        syncRepository.forceSyncFromCloud()
+        
         viewModelScope.launch(Dispatchers.IO) {
             val userId = sessionManager.getCurrentUserId() ?: return@launch
             
