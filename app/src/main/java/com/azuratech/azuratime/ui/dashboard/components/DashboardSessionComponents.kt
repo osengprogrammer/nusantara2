@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.checkin.CheckInViewModel
@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
  */
 @Composable
 fun ActiveSessionCard(
-    user: UserEntity?,
+    user: User?,
     allClasses: List<ClassModel>, // 🔥 Changed from OptionEntity
     checkInViewModel: CheckInViewModel?,
     onSelectClass: (String?) -> Unit

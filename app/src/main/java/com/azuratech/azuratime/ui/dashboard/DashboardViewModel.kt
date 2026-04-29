@@ -2,6 +2,7 @@ package com.azuratech.azuratime.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.AuthRepository
@@ -32,6 +33,7 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel @Inject constructor(
+    private val database: AppDatabase,
     private val adminRepository: AdminRepository,
     private val observeUserUseCase: ObserveUserUseCase,
     private val syncUserUseCase: SyncUserUseCase,
@@ -113,7 +115,7 @@ class DashboardViewModel @Inject constructor(
         dataIntegrityRepository.globalUnsyncedCount,
         dataIntegrityRepository.conflicts
     ) { args ->
-        val user = args[0] as com.azuratech.azuratime.data.local.UserEntity?
+        val user = args[0] as com.azuratech.azuraengine.model.User?
         @Suppress("UNCHECKED_CAST")
         val recentRecords = args[1] as List<com.azuratech.azuratime.data.local.CheckInRecordEntity>
         @Suppress("UNCHECKED_CAST")
@@ -191,9 +193,15 @@ class DashboardViewModel @Inject constructor(
             val currentState = state.value
             if (currentState is UiState.Success) {
                 val user = currentState.data.user ?: return@launch
-                val updatedUser = user.copy(activeClassId = classId)
-                println("✅ VM: Saved activeClassId=$classId for user ${user.userId}")
-                updateUserUseCase(updatedUser)
+                
+                // 🔥 CRITICAL: Fetch UserEntity from DB for write operation
+                val userEntity = database.userDao().getUserById(user.userId)
+                
+                userEntity?.let {
+                    val updatedUser = it.copy(activeClassId = classId)
+                    println("✅ VM: Saved activeClassId=$classId for user ${user.userId}")
+                    updateUserUseCase(updatedUser)
+                }
             }
         }
     }

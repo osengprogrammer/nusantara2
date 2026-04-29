@@ -28,6 +28,7 @@ class ScannerViewModel @Inject constructor(
     private var gallery: List<Pair<String, FloatArray>> = emptyList()
     private var currentTeacherEmail: String = ""
     private var activeClassId: String? = null
+    private var activeSchoolId: String? = null
     var activeClassName: String = ""
 
     // Gatekeeper: Prevents multiple concurrent processing
@@ -36,10 +37,16 @@ class ScannerViewModel @Inject constructor(
     fun startScannerSession(email: String) {
         currentTeacherEmail = email
         viewModelScope.launch {
-            val (classId, className) = repository.getSessionData(email)
+            val (classId, className, schoolId) = repository.getSessionData(email)
             activeClassId = classId
             activeClassName = className
-            gallery = repository.loadGallery()
+            activeSchoolId = schoolId
+            
+            if (schoolId != null) {
+                gallery = repository.loadGallery(schoolId)
+            } else {
+                _uiState.value = CheckInUiState.Error("Workspace Belum Dipilih")
+            }
         }
     }
 
@@ -50,6 +57,12 @@ class ScannerViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            if (activeSchoolId == null) {
+                _uiState.value = CheckInUiState.Error("Error: Context Hilang")
+                enterCooldown()
+                return@launch
+            }
+
             _uiState.value = CheckInUiState.Processing
             val matchedFaceId = repository.performMatch(embedding, gallery)
 
@@ -66,6 +79,11 @@ class ScannerViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
+            if (activeSchoolId == null) {
+                _uiState.value = CheckInUiState.Error("Error: Context Hilang")
+                enterCooldown()
+                return@launch
+            }
             _uiState.value = CheckInUiState.Processing
             processAttendanceRecord(barcode)
         }
@@ -76,7 +94,8 @@ class ScannerViewModel @Inject constructor(
             faceId = scannedId,
             teacherEmail = currentTeacherEmail,
             classId = activeClassId,
-            className = activeClassName
+            className = activeClassName,
+            schoolId = activeSchoolId ?: ""
         )
 
         when (result) {

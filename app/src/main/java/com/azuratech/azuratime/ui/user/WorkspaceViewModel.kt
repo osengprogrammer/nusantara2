@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.data.repo.WorkspaceRepository
 import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
@@ -91,7 +92,7 @@ class WorkspaceViewModel @Inject constructor(
         }
     }
 
-    fun sendJoinRequest(user: UserEntity, schoolId: String, schoolName: String) {
+    fun sendJoinRequest(user: User, schoolId: String, schoolName: String) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
             try {

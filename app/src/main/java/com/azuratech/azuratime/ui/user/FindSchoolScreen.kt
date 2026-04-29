@@ -25,9 +25,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 // 🔥 DB & ViewModels
-import com.azuratech.azuratime.data.local.UserEntity
-
-// 🔥 Azura Design System
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
@@ -36,7 +34,7 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 fun FindSchoolScreen(
     navController: NavController,
     workspaceViewModel: WorkspaceViewModel,
-    currentUser: UserEntity?
+    currentUser: User?
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val searchResults by workspaceViewModel.schoolSearchResults.collectAsStateWithLifecycle()

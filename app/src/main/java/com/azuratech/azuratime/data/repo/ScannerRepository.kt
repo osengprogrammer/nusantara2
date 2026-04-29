@@ -39,40 +39,68 @@ class ScannerRepository @Inject constructor(
     private val classDao = database.classDao()
     private val faceAssignmentDao = database.faceAssignmentDao()
 
-    private val schoolId: String get() = sessionManager.getActiveSchoolId() ?: ""
     private val checkInTimestamps = mutableMapOf<String, Long>()
 
-    suspend fun getSessionData(email: String): Pair<String?, String> = withContext(Dispatchers.IO) {
+    suspend fun getSessionData(email: String): Triple<String?, String, String?> = withContext(Dispatchers.IO) {
         val user = userDao.getUserByEmail(email)
         val _classId = user?.activeClassId
+        val _schoolId = user?.activeSchoolId ?: sessionManager.getActiveSchoolId()
 
         val className = _classId?.let { classDao.getClassById(it)?.name } ?: "General Scan"
-        Pair(_classId, className)
+        Log.d("AZURA_SCAN", "Session Data: user=$email, school=$_schoolId, class=$_classId")
+        Triple(_classId, className, _schoolId)
     }
 
-    suspend fun loadGallery(): List<Pair<String, FloatArray>> = withContext(Dispatchers.IO) {
-        return@withContext FaceCache.load(application, schoolId)
+    suspend fun loadGallery(schoolId: String): List<Pair<String, FloatArray>> = withContext(Dispatchers.IO) {
+        Log.d("AZURA_SCAN", "📥 Loading gallery for schoolId: '$schoolId'")
+        if (schoolId.isBlank()) {
+            Log.e("AZURA_SCAN", "❌ Cannot load gallery: schoolId is empty!")
+            return@withContext emptyList()
+        }
+        val result = FaceCache.load(application, schoolId)
+        Log.d("AZURA_SCAN", "✅ Loaded ${result.size} faces from Cache/DB")
+        return@withContext result
     }
 
     suspend fun performMatch(embedding: FloatArray, gallery: List<Pair<String, FloatArray>>): String? = withContext(Dispatchers.Default) {
+        if (gallery.isEmpty()) {
+            Log.w("AZURA_SCAN", "⚠️ performMatch called with empty gallery")
+            return@withContext null
+        }
         val matchResult = com.azuratech.azuratime.ml.matcher.FaceEngine.findBestMatch(embedding, gallery)
         return@withContext when (matchResult) {
-            is com.azuratech.azuratime.ml.matcher.FaceEngine.MatchResult.Success -> matchResult.name
+            is com.azuratech.azuratime.ml.matcher.FaceEngine.MatchResult.Success -> {
+                Log.d("AZURA_SCAN", "🎯 Match Found: ${matchResult.name} (dist: ${matchResult.distance})")
+                matchResult.name
+            }
             is com.azuratech.azuratime.ml.matcher.FaceEngine.MatchResult.DuplicateFound -> matchResult.existingName
-            is com.azuratech.azuratime.ml.matcher.FaceEngine.MatchResult.NoMatch -> null
+            is com.azuratech.azuratime.ml.matcher.FaceEngine.MatchResult.NoMatch -> {
+                Log.d("AZURA_SCAN", "Match Failed: No similarity found")
+                null
+            }
         }
     }
 
-    suspend fun processCheckIn(faceId: String, teacherEmail: String, classId: String?, className: String): CheckInResult = withContext(Dispatchers.IO) {
+    suspend fun processCheckIn(faceId: String, teacherEmail: String, classId: String?, className: String, schoolId: String): CheckInResult = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
         val lastCheckIn = checkInTimestamps[faceId] ?: 0L
 
+        if (schoolId.isBlank()) {
+            Log.e("AZURA_SCAN", "❌ processCheckIn failed: schoolId is empty")
+            return@withContext CheckInResult.Unregistered
+        }
+
         if (now - lastCheckIn > 60_000) {
-            val face = faceDao.getFaceById(faceId, schoolId) ?: return@withContext CheckInResult.Unregistered
+            val face = faceDao.getFaceById(faceId, schoolId) 
+            if (face == null) {
+                Log.e("AZURA_SCAN", "❌ Face not found in DB: id=$faceId, school=$schoolId")
+                return@withContext CheckInResult.Unregistered
+            }
 
             if (classId != null) {
                 val studentClasses = faceAssignmentDao.getClassIdsForFace(faceId, schoolId).firstOrNull() ?: emptyList()
                 if (!studentClasses.contains(classId)) {
+                    Log.w("AZURA_SCAN", "❌ Rejected: ${face.name} not in class $classId")
                     return@withContext CheckInResult.Rejected(face.name, "Bukan kelas ini.")
                 }
             }
@@ -84,6 +112,7 @@ class ScannerRepository @Inject constructor(
             checkInRecordDao.insert(record)
             try {
                 syncRecordToCloud(record)
+                Log.d("AZURA_SCAN", "✅ Check-in Success: ${face.name}")
             } catch (e: Exception) {
                 Log.e("ScannerRepo", "Mode Offline - Akan disinkronkan nanti")
             }
@@ -93,6 +122,7 @@ class ScannerRepository @Inject constructor(
             return@withContext CheckInResult.Success(face.name, greet)
         } else {
             val face = faceDao.getFaceById(faceId, schoolId)
+            Log.i("AZURA_SCAN", "Check-in Ignored: ${face?.name} already scanned recently")
             return@withContext CheckInResult.AlreadyCheckedIn(face?.name ?: "User")
         }
     }
