@@ -13,6 +13,7 @@ import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import com.azuratech.azuratime.domain.user.usecase.UserManagementUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +45,7 @@ class UserManagementViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val currentUser: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
+    val currentUser: StateFlow<User?> = sessionManager.currentUserIdFlow
         .filterNotNull()
         .flatMapLatest { uid -> observeUserUseCase(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -101,15 +102,10 @@ class UserManagementViewModel @Inject constructor(
         println("🖱 DEBUG: selectActiveClass called for userId=$userId, classId=$classId")
         
         viewModelScope.launch {
-            // If it's for current user, we can get the entity from currentUser.value
-            // If it's for target user, we might need to fetch it first or use a dedicated usecase
-            val userToUpdate = if (targetUserId == null || targetUserId == currentUser.value?.userId) {
-                currentUser.value
-            } else {
-                repository.getUserDao().getUserById(targetUserId)
-            }
+            // 🔥 CRITICAL: We need UserEntity for the DAO/UseCase update.
+            val userEntity = database.userDao().getUserById(userId)
 
-            userToUpdate?.let {
+            userEntity?.let {
                 val updatedUser = it.copy(activeClassId = classId)
                 println("💾 DEBUG: Saving user with activeClassId=${updatedUser.activeClassId}")
                 val result = updateUserUseCase(updatedUser)
@@ -157,9 +153,12 @@ class UserManagementViewModel @Inject constructor(
         val user = currentUser.value ?: return
         viewModelScope.launch {
             try {
-                val updatedUser = user.copy(name = newName.trim())
-                updateUserUseCase(updatedUser)
-                onSuccess()
+                val userEntity = database.userDao().getUserById(user.userId)
+                userEntity?.let {
+                    val updatedUser = it.copy(name = newName.trim())
+                    updateUserUseCase(updatedUser)
+                    onSuccess()
+                } ?: onError("User not found in local database")
             } catch (e: Exception) {
                 onError(e.message ?: "Gagal memperbarui nama")
             }

@@ -69,7 +69,7 @@ object PreviewMocks {
     )
 
     val mockDashboardStateSuccess = DashboardUiState(
-        user = mockUser,
+        user = mockUser.toDomain(),
         assignedClasses = mockClasses,
         recentRecords = mockRecentRecords,
         sessionStudents = mockStudents,

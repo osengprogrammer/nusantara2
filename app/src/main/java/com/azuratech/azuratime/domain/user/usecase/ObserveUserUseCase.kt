@@ -6,6 +6,7 @@ import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
