@@ -16,6 +16,10 @@ import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase
+import com.azuratech.azuratime.domain.school.usecase.SyncSchoolsUseCase
+import com.azuratech.azuratime.domain.face.usecase.SyncFacesUseCase
+import com.azuratech.azuratime.domain.assignment.usecase.SyncAssignmentsUseCase
+import com.azuratech.azuratime.domain.sync.usecase.GetLocalDataCountUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.core.UiEvent
@@ -28,6 +32,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,6 +47,10 @@ class DashboardViewModel @Inject constructor(
     private val resolveConflictUseCase: ResolveConflictUseCase,
     private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
     private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
+    private val syncSchoolsUseCase: SyncSchoolsUseCase,
+    private val syncFacesUseCase: SyncFacesUseCase,
+    private val syncAssignmentsUseCase: SyncAssignmentsUseCase,
+    private val getLocalDataCountUseCase: GetLocalDataCountUseCase,
     private val authRepository: AuthRepository,
     private val dataIntegrityRepository: DataIntegrityRepository,
     private val getFacesInClassUseCase: GetFacesInClassUseCase,
@@ -98,14 +107,22 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = sessionManager.getCurrentUserId()
             if (userId != null) {
-                syncUserUseCase(userId)
+                triggerAutoSyncIfNeeded(userId)
             }
         }
         syncViewModel.forceSyncFromCloud {
-            viewModelScope.launch {
-                syncCheckInRecordsUseCase()
-                _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
-            }
+            sync()
+        }
+    }
+
+    private suspend fun triggerAutoSyncIfNeeded(userId: String) {
+        val localCount = getLocalDataCountUseCase(userId)
+        val lastSync = sessionManager.getLastSyncTime()
+        val isStale = System.currentTimeMillis() - lastSync > 24 * 60 * 60 * 1000 // 24h stale logic
+        
+        if (localCount == 0 || isStale) {
+            println("🔄 Persistence: Auto-sync triggered (localCount=$localCount, isStale=$isStale).")
+            sync()
         }
     }
 
@@ -155,12 +172,26 @@ class DashboardViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun sync() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val userId = sessionManager.getCurrentUserId() ?: return@launch
+            
+            // 1. Restoring profile & memberships
             syncUserUseCase(userId)
-            syncCheckInRecordsUseCase()
+            
+            // 2. Restoring schools & classes
+            syncSchoolsUseCase(userId)
+            
+            // 3. Restoring faces & assignments (tenant-scoped)
+            val schoolId = sessionManager.getActiveSchoolId()
+            if (schoolId != null) {
+                syncFacesUseCase()
+                syncAssignmentsUseCase()
+                syncCheckInRecordsUseCase()
+            }
+            
+            sessionManager.saveLastSyncTime(System.currentTimeMillis())
             _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
-            println("✅ DashboardViewModel: Manual sync completed for user $userId")
+            println("✅ DashboardViewModel: Comprehensive sync completed for user $userId")
         }
     }
 
