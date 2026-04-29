@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.checkin
+package com.azuratech.azuratime.core.util
 
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.FaceEntity

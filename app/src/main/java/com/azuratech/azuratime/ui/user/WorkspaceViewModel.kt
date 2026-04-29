@@ -29,8 +29,7 @@ class WorkspaceViewModel @Inject constructor(
     private val repository: WorkspaceRepository,
     private val userRepository: UserRepository,
     private val syncUserUseCase: SyncUserUseCase,
-    private val sessionManager: SessionManager,
-    private val db: FirebaseFirestore
+    private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 
     sealed class WorkspaceState {
@@ -84,11 +83,11 @@ class WorkspaceViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-                val snapshot = db.collection("schools")
-                    .whereGreaterThanOrEqualTo("schoolName", query)
-                    .whereLessThanOrEqualTo("schoolName", query + "\uf8ff")
-                    .get()
-                _schoolSearchResults.value = snapshot.await().documents.mapNotNull { it.data }
+            try {
+                _schoolSearchResults.value = repository.searchSchools(query)
+            } catch (e: Exception) {
+                _schoolSearchResults.value = emptyList()
+            }
         }
     }
 
@@ -96,13 +95,7 @@ class WorkspaceViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
             try {
-                db.collection("whitelisted_users").document(user.userId)
-                    .update(
-                        mapOf(
-                            "memberships.$schoolId.schoolName" to schoolName,
-                            "memberships.$schoolId.role" to "PENDING"
-                        )
-                    ).await()
+                repository.requestToJoinWorkspace(user.userId, schoolId, schoolName)
                 _uiState.value = WorkspaceState.Success(schoolName)
             } catch (e: Exception) {
                 _uiState.value = WorkspaceState.Error(e.message ?: "Gagal mengirim permintaan")
@@ -118,17 +111,8 @@ class WorkspaceViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
             try {
-                // 1. Buat workspace di Firestore
-                val newSchoolRef = db.collection("schools").document()
-                val schoolId = newSchoolRef.id
-
-                newSchoolRef.set(mapOf(
-                    "schoolId" to schoolId,
-                    "schoolName" to schoolName,
-                    "ownerId" to userId,
-                    "ownerEmail" to userEmail,
-                    "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
-                )).await()
+                // 1. Buat workspace di Firestore via Repository
+                val schoolId = repository.createNewSchool(userId, userEmail, schoolName)
 
                 // 2. Kunci sesi ke tenant baru ini
                 sessionManager.saveActiveSchoolId(schoolId)
@@ -146,7 +130,7 @@ class WorkspaceViewModel @Inject constructor(
     fun finalizeSetup(schoolId: String) {
         viewModelScope.launch {
             try {
-                db.collection("schools").document(schoolId).update("status", "ACTIVE").await()
+                repository.finalizeSetup(schoolId)
             } catch (e: Exception) {
                 // Non-critical
             }
@@ -157,7 +141,7 @@ class WorkspaceViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
             try {
-                db.collection("schools").document(schoolId).update("schoolName", newName.trim()).await()
+                repository.updateSchoolName(schoolId, newName)
                 syncUserUseCase(userId)
                 _uiState.value = WorkspaceState.Idle
                 onSuccess()

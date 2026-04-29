@@ -3,10 +3,8 @@ package com.azuratech.azuratime.data.repo
 import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.data.local.*
-import com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase
-import com.azuratech.azuratime.ui.checkin.AttendanceService
+import com.azuratech.azuratime.core.util.AttendanceService
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -26,15 +24,14 @@ sealed class CheckInResult {
 /**
  * 🏰 SCANNER REPOSITORY
  * Handles real-time face matching and attendance stamping.
- * 🔥 Sudah menggunakan Hilt Dependency Injection.
+ * 🔥 Strictly UseCase-agnostic for IMS Migration.
  */
 @Singleton
 class ScannerRepository @Inject constructor(
     private val application: Application,
     private val database: AppDatabase,
     private val db: FirebaseFirestore,
-    private val sessionManager: SessionManager,
-    private val getActiveSchoolContextUseCase: GetActiveSchoolContextUseCase
+    private val sessionManager: SessionManager
 ) {
     private val faceDao = database.faceDao()
     private val userDao = database.userDao()
@@ -44,17 +41,14 @@ class ScannerRepository @Inject constructor(
 
     private val checkInTimestamps = mutableMapOf<String, Long>()
 
-    suspend fun getSessionData(email: String): Triple<String?, String, String?> = withContext(Dispatchers.IO) {
+    /**
+     * Fetches user context for scanning.
+     * @param schoolId Context-validated schoolId passed from ViewModel/UseCase.
+     */
+    suspend fun getSessionData(email: String, schoolId: String?): Triple<String?, String, String?> = withContext(Dispatchers.IO) {
         val user = userDao.getUserByEmail(email)
         val _classId = user?.activeClassId
-        
-        val contextRes = getActiveSchoolContextUseCase()
-        val _schoolId = if (contextRes is Result.Success) {
-            println("🏫 Context: Resolved schoolId=${contextRes.data.schoolId}")
-            contextRes.data.schoolId
-        } else {
-            user?.activeSchoolId ?: sessionManager.getActiveSchoolId()
-        }
+        val _schoolId = schoolId ?: user?.activeSchoolId ?: sessionManager.getActiveSchoolId()
 
         val className = _classId?.let { classDao.getClassById(it)?.name } ?: "General Scan"
         Log.d("AZURA_SCAN", "Session Data: user=$email, school=$_schoolId, class=$_classId")

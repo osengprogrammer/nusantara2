@@ -31,6 +31,37 @@ class WorkspaceRepository @Inject constructor(
 
     private fun getTenantRef(schoolId: String) = db.collection("schools").document(schoolId)
 
+    suspend fun searchSchools(query: String): List<Map<String, Any>> = withContext(Dispatchers.IO) {
+        val snapshot = db.collection("schools")
+            .whereGreaterThanOrEqualTo("schoolName", query)
+            .whereLessThanOrEqualTo("schoolName", query + "\uf8ff")
+            .get()
+            .await()
+        snapshot.documents.mapNotNull { it.data }
+    }
+
+    suspend fun createNewSchool(userId: String, userEmail: String, schoolName: String): String = withContext(Dispatchers.IO) {
+        val newSchoolRef = db.collection("schools").document()
+        val schoolId = newSchoolRef.id
+
+        newSchoolRef.set(mapOf(
+            "schoolId" to schoolId,
+            "schoolName" to schoolName,
+            "ownerId" to userId,
+            "ownerEmail" to userEmail,
+            "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+        )).await()
+        schoolId
+    }
+
+    suspend fun finalizeSetup(schoolId: String) = withContext(Dispatchers.IO) {
+        db.collection("schools").document(schoolId).update("status", "ACTIVE").await()
+    }
+
+    suspend fun updateSchoolName(schoolId: String, newName: String) = withContext(Dispatchers.IO) {
+        db.collection("schools").document(schoolId).update("schoolName", newName.trim()).await()
+    }
+
     /**
      * 🔥 THE WORKSPACE SWITCH ENGINE
      * Mengganti "dunia" aktif user dan membersihkan data tenant lama.

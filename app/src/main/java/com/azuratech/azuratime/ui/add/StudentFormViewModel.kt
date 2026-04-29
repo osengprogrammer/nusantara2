@@ -22,8 +22,8 @@ class StudentFormViewModel @Inject constructor(
     private val getFaceWithDetailsUseCase: GetFaceWithDetailsUseCase,
     private val getClassesUseCase: GetClassesUseCase,
     private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
-    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
-    private val database: com.azuratech.azuratime.data.local.AppDatabase
+    private val getUserByIdUseCase: com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
@@ -120,7 +120,9 @@ class StudentFormViewModel @Inject constructor(
             val photoBytes = currentState.capturedBitmap?.let { bitmapToByteArray(it) }
             val activeSchoolId = sessionManager.getActiveSchoolId()
             val currentUserId = sessionManager.getCurrentUserId()
-            val user = currentUserId?.let { database.userDao().getUserById(it) }
+            val user = currentUserId?.let { getUserByIdUseCase(it) }
+
+            user?.let { println("🔍 StudentForm: Fetched user ${it.userId} for edit") }
 
             if (activeSchoolId == null && user?.role == "SUPER_ADMIN") {
                 updateState { it.copy(isSubmitting = false) }

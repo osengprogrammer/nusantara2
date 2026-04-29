@@ -12,9 +12,11 @@ import javax.inject.Inject
 class GetLocalDataCountUseCase @Inject constructor(
     private val database: AppDatabase
 ) {
+    private val dao = database.schoolClassDao()
+
     suspend operator fun invoke(accountId: String): Int = withContext(Dispatchers.IO) {
-        val schoolCount = database.schoolClassDao().getSchoolCountByAccount(accountId)
-        val classCount = database.schoolClassDao().getClassCountByAccount(accountId)
+        val schoolCount = dao.getSchoolCountByAccount(accountId)
+        val classCount = dao.getClassCountByAccount(accountId)
         schoolCount + classCount
     }
 }
