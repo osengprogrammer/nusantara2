@@ -63,38 +63,45 @@ class DashboardViewModel @Inject constructor(
     val uiEvent = _uiEvent.asSharedFlow()
 
     private val _userFlow = sessionManager.currentUserIdFlow
-        .filterNotNull()
-        .flatMapLatest { userId -> observeUserUseCase(userId) }
+        .flatMapLatest { userId -> 
+            if (userId != null) observeUserUseCase(userId) else flowOf(null)
+        }
 
     private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
-        .filterNotNull()
         .flatMapLatest { schoolId ->
-            val filters = CheckInFilters()
-            getCheckInRecordsUseCase(filters).map { it.getOrNull()?.take(5) ?: emptyList() }
+            if (schoolId != null) {
+                val filters = CheckInFilters()
+                getCheckInRecordsUseCase(filters).map { it.getOrNull()?.take(5) ?: emptyList() }
+            } else {
+                flowOf(emptyList())
+            }
         }
 
     private val _assignedClassesFlow = combine(
-        sessionManager.activeSchoolIdFlow.filterNotNull(),
-        _userFlow.filterNotNull()
+        sessionManager.activeSchoolIdFlow,
+        _userFlow
     ) { schoolId, user ->
         schoolId to user
     }.flatMapLatest { (schoolId, user) ->
-        getClassesUseCase(schoolId).map { result ->
-            val allClasses = if (result is Result.Success) result.data else emptyList()
-            val membership = user.memberships[schoolId]
-            if (membership?.role == "ADMIN") {
-                allClasses
-            } else {
-                val assignedIds = membership?.assignedClassIds ?: emptyList()
-                allClasses.filter { it.id in assignedIds }
+        if (schoolId != null && user != null) {
+            getClassesUseCase(schoolId).map { result ->
+                val allClasses = if (result is Result.Success) result.data else emptyList()
+                val membership = user.memberships[schoolId]
+                if (membership?.role == "ADMIN") {
+                    allClasses
+                } else {
+                    val assignedIds = membership?.assignedClassIds ?: emptyList()
+                    allClasses.filter { it.id in assignedIds }
+                }
             }
+        } else {
+            flowOf(emptyList())
         }
     }
 
     private val _sessionStudentsFlow = _userFlow
-        .filterNotNull()
         .flatMapLatest { user ->
-            val activeClassId = user.activeClassId
+            val activeClassId = user?.activeClassId
             if (activeClassId != null) {
                 getFacesInClassUseCase(activeClassId)
                     .map { it.getOrNull() ?: emptyList() }
@@ -150,6 +157,8 @@ class DashboardViewModel @Inject constructor(
         val unsynced = args[8] as Int
         @Suppress("UNCHECKED_CAST")
         val conflicts = args[9] as List<AttendanceConflict>
+
+        println("🔄 Dashboard: combine triggered. user=${user?.userId != null}, records=${recentRecords.size}, syncing=$isSyncing, faces=$totalFaces")
 
         UiState.Success(
             DashboardUiState(
