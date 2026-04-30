@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui
+package com.azuratech.azuratime.ui.checkin
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -11,30 +11,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import java.time.format.DateTimeFormatter
 
 /**
  * 🎫 ATTENDANCE RECEIPT CARD
- * Refactored for Pure-Class 2.0 to handle specific status coloring and class info.
+ * Refactored to use Domain Model CheckInRecord.
  */
 @Composable
-fun CheckInRecordEntityCard(
-    record: CheckInRecordEntity,
-    onEditRequested: (CheckInRecordEntity) -> Unit = {}
+fun CheckInRecordCard(
+    record: CheckInRecord,
+    onEditRequested: (CheckInRecord) -> Unit = {}
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
 
+    val dateTime = java.time.LocalDateTime.ofInstant(
+        java.time.Instant.ofEpochMilli(record.timestamp),
+        java.time.ZoneId.systemDefault()
+    )
+
     // 🔥 DYNAMIC COLOR LOGIC
     val statusColor = when (record.status) {
-        "H", "In", "Hadir" -> MaterialTheme.colorScheme.primary // Success Green -> primary
-        "S" -> MaterialTheme.colorScheme.tertiary               // Sakit Yellow -> tertiary
-        "I" -> MaterialTheme.colorScheme.secondary               // Izin Blue -> secondary
-        "A", "Alpa" -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.primary
+        CheckInStatus.PRESENT -> MaterialTheme.colorScheme.primary
+        CheckInStatus.LATE -> MaterialTheme.colorScheme.tertiary
+        CheckInStatus.EXCUSED -> MaterialTheme.colorScheme.secondary
+        CheckInStatus.ABSENT -> MaterialTheme.colorScheme.error
     }
 
     Card(
@@ -53,7 +58,7 @@ fun CheckInRecordEntityCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = record.name,
+                    text = record.studentName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -64,7 +69,7 @@ fun CheckInRecordEntityCard(
                     shape = AzuraShapes.small
                 ) {
                     Text(
-                        text = record.status,
+                        text = record.status.name,
                         modifier = Modifier.padding(horizontal = AzuraSpacing.sm, vertical = AzuraSpacing.xs),
                         style = MaterialTheme.typography.labelMedium,
                         color = statusColor,
@@ -79,9 +84,8 @@ fun CheckInRecordEntityCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.History, null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.width(AzuraSpacing.xs))
-                val timeToDisplay = record.checkInTime ?: record.createdAtDateTime
                 Text(
-                    text = "${timeToDisplay.format(timeFormatter)} • ${record.attendanceDate.format(dateFormatter)}",
+                    text = "${dateTime.format(timeFormatter)} • ${dateTime.format(dateFormatter)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -100,7 +104,7 @@ fun CheckInRecordEntityCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.School, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(AzuraSpacing.sm))
-                    val displayClass = if (record.className.isNullOrBlank()) "Mode Gerbang" else record.className
+                    val displayClass = if (record.className.isBlank()) "Mode Gerbang" else record.className
                     Text(
                         text = displayClass,
                         style = MaterialTheme.typography.labelMedium,

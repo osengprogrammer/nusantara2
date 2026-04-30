@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import java.time.format.DateTimeFormatter
@@ -28,18 +28,22 @@ fun RecentScansHeader(navController: NavController) {
 }
 
 @Composable
-fun DashboardCheckInItem(record: CheckInRecordEntity) {
+fun DashboardCheckInItem(record: CheckInRecord) {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val dateTime = java.time.LocalDateTime.ofInstant(
+        java.time.Instant.ofEpochMilli(record.timestamp),
+        java.time.ZoneId.systemDefault()
+    )
     AzuraCard(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         content = {
             Row(Modifier.padding(0.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(record.name, fontWeight = FontWeight.Bold)
-                    Text("ID: ${record.faceId}", style = MaterialTheme.typography.bodySmall)
+                    Text(record.studentName, fontWeight = FontWeight.Bold)
+                    Text("ID: ${record.studentId}", style = MaterialTheme.typography.bodySmall)
                 }
                 Text(
-                    (record.checkInTime ?: record.createdAtDateTime).format(formatter),
+                    dateTime.format(formatter),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )

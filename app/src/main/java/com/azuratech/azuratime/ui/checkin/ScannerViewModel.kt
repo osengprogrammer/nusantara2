@@ -3,9 +3,12 @@ package com.azuratech.azuratime.ui.checkin
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repo.CheckInResult
 import com.azuratech.azuratime.data.repo.ScannerRepository
+import com.azuratech.azuratime.domain.checkin.model.CheckInResult
+import com.azuratech.azuratime.domain.checkin.usecase.ProcessCheckInUseCase
+import com.azuratech.azuratime.domain.checkin.usecase.ProcessCheckInParams
 import com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -19,6 +22,8 @@ import javax.inject.Inject
 class ScannerViewModel @Inject constructor(
     application: Application,
     private val repository: ScannerRepository,
+    private val checkInRepository: CheckInRepository,
+    private val processCheckInUseCase: ProcessCheckInUseCase,
     private val getActiveSchoolContextUseCase: GetActiveSchoolContextUseCase
 ) : AndroidViewModel(application) {
 
@@ -40,7 +45,7 @@ class ScannerViewModel @Inject constructor(
     fun startScannerSession(email: String) {
         currentTeacherEmail = email
         viewModelScope.launch {
-            // 1. Resolve Context via UseCase (P0 Fix)
+            // 1. Resolve Context via UseCase
             val contextResult = getActiveSchoolContextUseCase()
             val resolvedSchoolId = if (contextResult is Result.Success) contextResult.data.schoolId else null
             
@@ -59,7 +64,6 @@ class ScannerViewModel @Inject constructor(
     }
 
     fun processScannedFace(embedding: FloatArray) {
-        // 1. Gatekeeper Logic: Ignore if already processing
         if (isProcessing.getAndSet(true)) {
             return
         }
@@ -98,32 +102,49 @@ class ScannerViewModel @Inject constructor(
     }
 
     private suspend fun processAttendanceRecord(scannedId: String) {
-        val result = repository.processCheckIn(
+        val schoolId = activeSchoolId ?: return enterCooldown()
+        val face = checkInRepository.getFaceById(scannedId, schoolId)
+        
+        if (face == null) {
+            handleUnregistered()
+            return
+        }
+
+        val studentClassIds = checkInRepository.getClassIdsForFace(scannedId, schoolId).firstOrNull() ?: emptyList()
+
+        val params = ProcessCheckInParams(
             faceId = scannedId,
+            studentName = face.name,
             teacherEmail = currentTeacherEmail,
-            classId = activeClassId,
-            className = activeClassName,
-            schoolId = activeSchoolId ?: ""
+            activeClassId = activeClassId,
+            studentClassIds = studentClassIds
         )
 
+        val result = processCheckInUseCase(params)
+
         when (result) {
-            is CheckInResult.Success -> {
-                _uiState.value = CheckInUiState.Success(result.name, alreadyCheckedIn = false)
-                _sideEffect.send(CheckInSideEffect.Speak("Selamat datang, ${result.name}"))
+            is Result.Success -> {
+                when (val checkInRes = result.data) {
+                    is CheckInResult.Success -> {
+                        _uiState.value = CheckInUiState.Success(checkInRes.name, alreadyCheckedIn = false)
+                        _sideEffect.send(CheckInSideEffect.Speak(checkInRes.message))
+                    }
+                    is CheckInResult.AlreadyCheckedIn -> {
+                        _uiState.value = CheckInUiState.Success(checkInRes.name, alreadyCheckedIn = true)
+                        _sideEffect.send(CheckInSideEffect.Speak("${checkInRes.name}, sudah absen."))
+                    }
+                    is CheckInResult.Rejected -> {
+                        _uiState.value = CheckInUiState.Error("${checkInRes.name}: Bukan Kelas Ini!")
+                        _sideEffect.send(CheckInSideEffect.Speak("${checkInRes.name}: Bukan Kelas Ini!"))
+                    }
+                    is CheckInResult.Unregistered -> handleUnregistered()
+                }
             }
-            is CheckInResult.AlreadyCheckedIn -> {
-                _uiState.value = CheckInUiState.Success(result.name, alreadyCheckedIn = true)
-                _sideEffect.send(CheckInSideEffect.Speak("${result.name}, sudah absen."))
+            is Result.Failure -> {
+                _uiState.value = CheckInUiState.Error(result.error.message ?: "Gagal Absen")
             }
-            is CheckInResult.Rejected -> {
-                _uiState.value = CheckInUiState.Error("${result.name}: Bukan Kelas Ini!")
-                _sideEffect.send(CheckInSideEffect.Speak("${result.name}: Bukan Kelas Ini!"))
-            }
-            is CheckInResult.Unregistered -> {
-                handleUnregistered()
-            }
+            else -> {}
         }
-        // 2. Cooldown Logic
         enterCooldown()
     }
 
@@ -136,6 +157,6 @@ class ScannerViewModel @Inject constructor(
     private suspend fun enterCooldown(duration: Long = 2500) {
         delay(duration)
         _uiState.value = CheckInUiState.Idle
-        isProcessing.set(false) // Open the gate
+        isProcessing.set(false)
     }
 }

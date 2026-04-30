@@ -1,24 +1,16 @@
 package com.azuratech.azuratime.domain.checkin.usecase
 
-import com.azuratech.azuratime.data.local.CheckInLocalDataSource
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInResult
+import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.util.UUID
 import javax.inject.Inject
-
-/**
- * Result of a check-in operation.
- */
-sealed class CheckInResult {
-    data class Success(val message: String) : CheckInResult()
-    data class Rejected(val message: String) : CheckInResult()
-}
 
 /**
  * Parameters for processing a check-in.
@@ -33,10 +25,10 @@ data class ProcessCheckInParams(
 
 /**
  * UseCase to process a face scan and record a check-in.
+ * 🔥 Clean Architecture compliant: No data layer or Android dependencies.
  */
 class ProcessCheckInUseCase @Inject constructor(
-    private val localDataSource: CheckInLocalDataSource,
-    private val remoteDataSource: CheckInRemoteDataSource,
+    private val repository: CheckInRepository,
     private val sessionManager: SessionManager
 ) {
     suspend operator fun invoke(params: ProcessCheckInParams): Result<CheckInResult> = withContext(Dispatchers.IO) {
@@ -46,15 +38,15 @@ class ProcessCheckInUseCase @Inject constructor(
 
             val targetClassId: String
             val message: String
-            val isRejected: Boolean
 
             if (params.activeClassId != null) {
                 if (params.studentClassIds.contains(params.activeClassId)) {
                     targetClassId = params.activeClassId
                     message = "✅ Berhasil: ${params.studentName}"
-                    isRejected = false
                 } else {
-                    return@withContext Result.Success(CheckInResult.Rejected("❌ Ditolak: ${params.studentName} beda kelas!"))
+                    return@withContext Result.Success(
+                        CheckInResult.Rejected(params.studentName, "❌ Ditolak: beda kelas!")
+                    )
                 }
             } else {
                 targetClassId = params.studentClassIds.firstOrNull() ?: "UNASSIGNED"
@@ -63,56 +55,38 @@ class ProcessCheckInUseCase @Inject constructor(
                 } else {
                     "✅ Gerbang: ${params.studentName} hadir."
                 }
-                isRejected = false
             }
 
-            val record = CheckInRecordEntity(
-                faceId = params.faceId,
-                name = params.studentName,
-                userId = params.teacherEmail,
+            val record = CheckInRecord(
+                recordId = UUID.randomUUID().toString(),
+                studentId = params.faceId,
+                studentName = params.studentName,
+                teacherEmail = params.teacherEmail,
                 classId = targetClassId,
                 className = "Terekam",
                 schoolId = schoolId,
-                status = "H",
-                attendanceDate = LocalDate.now(),
-                checkInTime = LocalDateTime.now(),
+                status = CheckInStatus.PRESENT,
+                timestamp = System.currentTimeMillis(),
                 isSynced = false
             )
 
-            localDataSource.insert(record)
+            val saveResult = repository.saveRecord(record)
+            if (saveResult is Result.Failure) return@withContext Result.Failure(saveResult.error)
 
-            // Optional: Immediate sync if requested or required by legacy behavior
-            try {
-                val syncRes = remoteDataSource.syncRecord(record)
-                if (syncRes is Result.Success) {
-                    localDataSource.update(record.copy(isSynced = true))
-                }
-            } catch (e: Exception) {
-                // Ignore sync errors here, they will be caught by background sync
-            }
+            // Optional: Immediate sync attempt
+            repository.syncRecord(record)
 
-            Result.Success(CheckInResult.Success(message))
+            Result.Success(CheckInResult.Success(params.studentName, message))
 
         } catch (e: Exception) {
-            Result.Failure(AppError.LocalDB(e.message))
+            Result.Failure(AppError.BusinessRule(e.message))
         }
     }
 
     /**
-     * Legacy adapter to save a pre-constructed record entity.
+     * Legacy adapter to save a domain record directly.
      */
-    suspend operator fun invoke(record: CheckInRecordEntity): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            localDataSource.insert(record)
-            if (record.schoolId.isNotBlank()) {
-                val syncRes = remoteDataSource.syncRecord(record)
-                if (syncRes is Result.Success) {
-                    localDataSource.update(record.copy(isSynced = true))
-                }
-            }
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Failure(AppError.LocalDB(e.message))
-        }
+    suspend operator fun invoke(record: CheckInRecord): Result<Unit> = withContext(Dispatchers.IO) {
+        repository.saveRecord(record)
     }
 }

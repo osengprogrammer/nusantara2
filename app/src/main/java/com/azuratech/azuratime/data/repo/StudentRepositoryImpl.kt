@@ -25,7 +25,7 @@ class StudentRepositoryImpl @Inject constructor(
             studentDao.upsert(student)
             Result.Success(Unit)
         } catch (e: Exception) {
-            Result.Failure(AppError.DatabaseError(e.message ?: "Failed to save student locally"))
+            Result.Failure(AppError.LocalDB(e.message ?: "Failed to save student locally"))
         }
     }
 
@@ -40,11 +40,11 @@ class StudentRepositoryImpl @Inject constructor(
                 .set(data, SetOptions.merge()).await()
             Result.Success(Unit)
         } catch (e: Exception) {
-            Result.Failure(AppError.RemoteError(e.message ?: "Failed to save student to cloud"))
+            Result.Failure(AppError.Network(e.message ?: "Failed to save student to cloud"))
         }
     }
 
-    override suspend fun getStudentById(studentId: String): StudentEntity? = withContext(Dispatchers.IO) {
-        studentDao.getStudentById(studentId)
+    override suspend fun getStudentById(studentId: String, schoolId: String): StudentEntity? = withContext(Dispatchers.IO) {
+        studentDao.getById(studentId, schoolId)
     }
 }

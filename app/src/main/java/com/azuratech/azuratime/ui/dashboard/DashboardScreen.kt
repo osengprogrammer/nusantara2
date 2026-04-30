@@ -17,7 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.azuratech.azuratime.MainActivity
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.ui.components.ConflictResolverDialog
+import com.azuratech.azuratime.ui.core.designsystem.ConflictResolverDialog
 import com.azuratech.azuratime.ui.core.UiEvent
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard

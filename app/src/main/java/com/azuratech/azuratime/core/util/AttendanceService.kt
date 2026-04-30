@@ -1,11 +1,13 @@
 package com.azuratech.azuratime.core.util
 
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
 import com.azuratech.azuratime.data.local.FaceEntity
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 
 /**
  * AZURA ATTENDANCE SERVICE - THE LOGIC ENGINE
@@ -15,14 +17,7 @@ import java.time.LocalTime
 object AttendanceService {
 
     /**
-     * Membuat CheckInRecordEntity yang valid dan siap lapor.
-     * * @param face Data personil (siswa/karyawan) yang terdeteksi.
-     * @param teacherEmail Email admin/guru yang bertanggung jawab saat scan.
-     * @param activeClassId UUID Kelas atau Sesi yang sedang aktif.
-     * @param activeClassName Nama tampilan kelas (misal: "Garmen Shift A").
-     * @param status Status kehadiran (H=Hadir, S=Sakit, I=Izin, A=Alpa).
-     * @param attendanceDate Tanggal absensi (LocalDate).
-     * @param checkInTime Waktu scan (LocalDateTime).
+     * Membuat CheckInRecord yang valid dan siap lapor.
      */
     fun createRecord(
         face: FaceEntity,
@@ -32,21 +27,21 @@ object AttendanceService {
         status: String = "H",
         attendanceDate: LocalDate = LocalDate.now(),
         checkInTime: LocalDateTime? = LocalDateTime.now()
-    ): CheckInRecordEntity {
-        return CheckInRecordEntity(
-            faceId = face.faceId, // UUID String dari FaceEntity
-            name = face.name,
+    ): CheckInRecord {
+        val dateTime = checkInTime ?: LocalDateTime.now()
+        val timestamp = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-            // 🔥 Hubungkan ke konteks pengelola (Strategy 3)
-            userId = teacherEmail,
-            classId = activeClassId,
-            className = activeClassName,
-
-            // 🔥 Timing & Status dengan Null Safety
-            attendanceDate = attendanceDate,
-            checkInTime = checkInTime ?: LocalDateTime.now(),
-            // 🔥 FIX: createdAt dihapus dari parameter instansiasi
-            status = status
+        return CheckInRecord(
+            recordId = java.util.UUID.randomUUID().toString(),
+            studentId = face.faceId, 
+            studentName = face.name,
+            teacherEmail = teacherEmail,
+            classId = activeClassId ?: "",
+            className = activeClassName ?: "",
+            schoolId = face.schoolId,
+            status = CheckInStatus.fromCode(status),
+            timestamp = timestamp,
+            isSynced = false
         )
     }
 

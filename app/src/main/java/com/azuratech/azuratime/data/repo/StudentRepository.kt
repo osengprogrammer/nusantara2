@@ -10,5 +10,5 @@ import com.azuratech.azuraengine.result.Result
 interface StudentRepository {
     suspend fun saveStudent(student: StudentEntity): Result<Unit>
     suspend fun saveStudentToCloud(studentId: String, schoolId: String, data: Map<String, Any>): Result<Unit>
-    suspend fun getStudentById(studentId: String): StudentEntity?
+    suspend fun getStudentById(studentId: String, schoolId: String): StudentEntity?
 }

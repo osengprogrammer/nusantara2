@@ -1,12 +1,12 @@
 package com.azuratech.azuratime.domain.checkin.usecase
 
-import com.azuratech.azuratime.data.local.CheckInLocalDataSource
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -14,21 +14,16 @@ import javax.inject.Inject
  * UseCase to update an existing check-in record.
  */
 class UpdateCheckInRecordUseCase @Inject constructor(
-    private val localDataSource: CheckInLocalDataSource,
-    private val remoteDataSource: CheckInRemoteDataSource,
+    private val repository: CheckInRepository,
     private val sessionManager: SessionManager
 ) {
-    suspend operator fun invoke(record: CheckInRecordEntity): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(record: CheckInRecord): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val schoolId = sessionManager.getActiveSchoolId() ?: ""
             val recordToUpdate = record.copy(isSynced = false)
-            localDataSource.update(recordToUpdate)
+            repository.updateRecord(recordToUpdate)
 
             if (recordToUpdate.schoolId.isNotBlank()) {
-                val syncRes = remoteDataSource.syncRecord(recordToUpdate)
-                if (syncRes is Result.Success) {
-                    localDataSource.update(recordToUpdate.copy(isSynced = true))
-                }
+                repository.syncRecord(recordToUpdate)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -39,7 +34,8 @@ class UpdateCheckInRecordUseCase @Inject constructor(
     suspend fun updateClass(recordId: String, classId: String, className: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            val record = localDataSource.getRecordById(recordId, schoolId)
+            val records = repository.getCheckInRecords("", null, null, null, null, listOf(recordId), schoolId).firstOrNull()
+            val record = records?.find { it.recordId == recordId }
                 ?: return@withContext Result.Failure(AppError.BusinessRule("Record not found"))
 
             val updatedRecord = record.copy(
@@ -47,13 +43,10 @@ class UpdateCheckInRecordUseCase @Inject constructor(
                 className = className,
                 isSynced = false
             )
-            localDataSource.update(updatedRecord)
+            repository.updateRecord(updatedRecord)
 
             if (updatedRecord.schoolId.isNotBlank()) {
-                val syncRes = remoteDataSource.syncRecord(updatedRecord)
-                if (syncRes is Result.Success) {
-                    localDataSource.update(updatedRecord.copy(isSynced = true))
-                }
+                repository.syncRecord(updatedRecord)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
