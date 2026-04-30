@@ -4,10 +4,8 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,57 +20,70 @@ class DataIntegrityRepository @Inject constructor(
     private val database: AppDatabase,
     private val sessionManager: SessionManager
 ) {
-    private val schoolId: String get() = sessionManager.getActiveSchoolId() ?: ""
-
     private val faceDao = database.faceDao()
     private val recordDao = database.checkInRecordDao()
     private val assignmentDao = database.faceAssignmentDao()
     private val conflictDao = database.attendanceConflictDao()
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val schoolIdFlow = sessionManager.activeSchoolIdFlow.map { it ?: "" }
+
     // =====================================================
     // 📊 VOLUME — How big is the system?
     // =====================================================
 
-    val totalFaces: Flow<Int>
-        get() = faceDao.getTotalFacesFlow(schoolId)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val totalFaces: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+        faceDao.getTotalFacesFlow(id)
+    }
 
-    val totalRecords: Flow<Int>
-        get() = recordDao.getTotalCountFlow(schoolId)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val totalRecords: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+        recordDao.getTotalCountFlow(id)
+    }
 
     // =====================================================
     // 🛡️ STRUCTURAL INTEGRITY — Missing data checks
     // =====================================================
 
-    val missingAssignment: Flow<Int>
-        get() = assignmentDao.getUnassignedStudentCount(schoolId)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val missingAssignment: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+        assignmentDao.getUnassignedStudentCount(id)
+    }
 
-    val brokenAssignments: Flow<Int>
-        get() = assignmentDao.getBrokenAssignmentsCount(schoolId)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val brokenAssignments: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+        assignmentDao.getBrokenAssignmentsCount(id)
+    }
 
     // =====================================================
     // ☁️ GLOBAL SYNC HEALTH — Total cloud debt across tables
     // =====================================================
 
-    val globalUnsyncedCount: Flow<Int>
-        get() = combine(
-            faceDao.getUnsyncedFacesCountFlow(schoolId),
-            recordDao.getUnsyncedRecordsCountFlow(schoolId),
-            assignmentDao.getUnsyncedAssignmentsCountFlow(schoolId)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val globalUnsyncedCount: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+        combine(
+            faceDao.getUnsyncedFacesCountFlow(id),
+            recordDao.getUnsyncedRecordsCountFlow(id),
+            assignmentDao.getUnsyncedAssignmentsCountFlow(id)
         ) { face, record, assignment ->
             face + record + assignment
         }
+    }
 
-    val conflicts: Flow<List<AttendanceConflict>>
-        get() = conflictDao.getAllConflicts().map { entities ->
-            entities.map { it.toDomain() }
-        }
+    val conflicts: Flow<List<AttendanceConflict>> = conflictDao.getAllConflicts().map { entities ->
+        entities.map { it.toDomain() }
+    }
 
     // =====================================================
     // 🔧 CORRECTION MODE — Return the specific people who need fixing
     // =====================================================
 
-    fun getIncompleteProfiles(type: String): Flow<List<FaceEntity>> = when (type) {
-        "CLASS"  -> faceDao.getFacesMissingAssignment(schoolId)
-        else     -> flowOf(emptyList())
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    fun getIncompleteProfiles(type: String): Flow<List<FaceEntity>> = schoolIdFlow.flatMapLatest { id ->
+        when (type) {
+            "CLASS"  -> faceDao.getFacesMissingAssignment(id)
+            else     -> flowOf(emptyList())
+        }
     }
 }
