@@ -1,15 +1,15 @@
 package com.azuratech.azuratime.ui.dashboard
 
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuraengine.model.User
-import com.azuratech.azuratime.data.local.AttendanceConflict
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 
 data class DashboardUiState(
     val user: User? = null,
     val assignedClasses: List<ClassModel> = emptyList(),
-    val recentRecords: List<CheckInRecordEntity> = emptyList(),
+    val recentRecords: List<CheckInRecord> = emptyList(),
     val sessionStudents: List<FaceEntity> = emptyList(), // Changed to FaceEntity
     val isSyncing: Boolean = false,
     val pendingRequests: Int = 0,

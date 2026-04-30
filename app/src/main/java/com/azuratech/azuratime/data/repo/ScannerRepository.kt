@@ -14,13 +14,6 @@ import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
-sealed class CheckInResult {
-    data class Success(val name: String, val greeting: String) : CheckInResult()
-    data class AlreadyCheckedIn(val name: String) : CheckInResult()
-    object Unregistered : CheckInResult()
-    data class Rejected(val name: String, val reason: String) : CheckInResult()
-}
-
 /**
  * 🏰 SCANNER REPOSITORY
  * Handles real-time face matching and attendance stamping.
@@ -35,11 +28,7 @@ class ScannerRepository @Inject constructor(
 ) {
     private val faceDao = database.faceDao()
     private val userDao = database.userDao()
-    private val checkInRecordDao = database.checkInRecordDao()
     private val classDao = database.classDao()
-    private val faceAssignmentDao = database.faceAssignmentDao()
-
-    private val checkInTimestamps = mutableMapOf<String, Long>()
 
     /**
      * Fetches user context for scanning.
@@ -83,61 +72,5 @@ class ScannerRepository @Inject constructor(
                 null
             }
         }
-    }
-
-    suspend fun processCheckIn(faceId: String, teacherEmail: String, classId: String?, className: String, schoolId: String): CheckInResult = withContext(Dispatchers.IO) {
-        val now = System.currentTimeMillis()
-        val lastCheckIn = checkInTimestamps[faceId] ?: 0L
-
-        if (schoolId.isBlank()) {
-            Log.e("AZURA_SCAN", "❌ processCheckIn failed: schoolId is empty")
-            return@withContext CheckInResult.Unregistered
-        }
-
-        if (now - lastCheckIn > 60_000) {
-            val face = faceDao.getFaceById(faceId, schoolId) 
-            if (face == null) {
-                Log.e("AZURA_SCAN", "❌ Face not found in DB: id=$faceId, school=$schoolId")
-                return@withContext CheckInResult.Unregistered
-            }
-
-            if (classId != null) {
-                val studentClasses = faceAssignmentDao.getClassIdsForFace(faceId, schoolId).firstOrNull() ?: emptyList()
-                if (!studentClasses.contains(classId)) {
-                    Log.w("AZURA_SCAN", "❌ Rejected: ${face.name} not in class $classId")
-                    return@withContext CheckInResult.Rejected(face.name, "Bukan kelas ini.")
-                }
-            }
-
-            checkInTimestamps[faceId] = now
-
-            val record = AttendanceService.createRecord(face, teacherEmail, classId ?: "", className).copy(schoolId = schoolId)
-
-            checkInRecordDao.insert(record)
-            try {
-                syncRecordToCloud(record)
-                Log.d("AZURA_SCAN", "✅ Check-in Success: ${face.name}")
-            } catch (e: Exception) {
-                Log.e("ScannerRepo", "Mode Offline - Akan disinkronkan nanti")
-            }
-
-            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-            val greet = when (hour) { in 5..11 -> "Selamat pagi"; in 12..17 -> "Selamat siang"; else -> "Selamat malam" }
-            return@withContext CheckInResult.Success(face.name, greet)
-        } else {
-            val face = faceDao.getFaceById(faceId, schoolId)
-            Log.i("AZURA_SCAN", "Check-in Ignored: ${face?.name} already scanned recently")
-            return@withContext CheckInResult.AlreadyCheckedIn(face?.name ?: "User")
-        }
-    }
-
-    private suspend fun syncRecordToCloud(record: CheckInRecordEntity) {
-        val batch = db.batch()
-        val data = record.toFirestoreMap()
-
-        batch.set(db.collection("schools").document(record.schoolId).collection("checkin_records").document(record.id), data, com.google.firebase.firestore.SetOptions.merge())
-        batch.set(db.collection("attendance_logs").document(record.id), data, com.google.firebase.firestore.SetOptions.merge())
-
-        batch.commit().await()
     }
 }

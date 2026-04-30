@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.components
+package com.azuratech.azuratime.ui.core.designsystem
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.AttendanceConflict
+import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import java.time.format.DateTimeFormatter
@@ -42,13 +42,19 @@ fun ConflictResolverDialog(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = conflict.local.name,
+                    text = conflict.local.studentName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
                 )
+                
+                val dateTime = java.time.LocalDateTime.ofInstant(
+                    java.time.Instant.ofEpochMilli(conflict.local.timestamp),
+                    java.time.ZoneId.systemDefault()
+                )
+
                 Text(
-                    text = "Tanggal: ${conflict.local.attendanceDate}",
+                    text = "Tanggal: ${dateTime.toLocalDate()}",
                     style = MaterialTheme.typography.bodySmall
                 )
 
@@ -63,8 +69,8 @@ fun ConflictResolverDialog(
                     ConflictSide(
                         title = "DI HP INI",
                         icon = Icons.Default.PhoneAndroid,
-                        status = conflict.local.status,
-                        time = conflict.local.checkInTime?.format(timeFormatter) ?: "--:--",
+                        status = conflict.local.status.name,
+                        time = dateTime.format(timeFormatter),
                         color = Color.Gray,
                         modifier = Modifier.weight(1f)
                     )
@@ -72,11 +78,16 @@ fun ConflictResolverDialog(
                     Text("VS", fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 8.dp))
 
                     // --- SISI CLOUD (FIRESTORE) ---
+                    val cloudDateTime = java.time.LocalDateTime.ofInstant(
+                        java.time.Instant.ofEpochMilli(conflict.cloud.timestamp),
+                        java.time.ZoneId.systemDefault()
+                    )
+                    
                     ConflictSide(
                         title = "DI CLOUD",
                         icon = Icons.Default.Cloud,
-                        status = conflict.cloud.status,
-                        time = conflict.cloud.checkInTime?.format(timeFormatter) ?: "--:--",
+                        status = conflict.cloud.status.name,
+                        time = cloudDateTime.format(timeFormatter),
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )

@@ -1,11 +1,13 @@
 package com.azuratech.azuratime.ui.core.preview
 
 import androidx.compose.ui.graphics.Color
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
 import com.azuratech.azuratime.ui.dashboard.DashboardUiState
+import com.azuratech.azuraengine.model.User as DomainUser
 import com.azuratech.azuratime.ui.report.AttendanceMatrixUiState
 import com.azuratech.azuratime.ui.report.MatrixCellModel
 import com.azuratech.azuratime.ui.report.MatrixRowModel
@@ -40,29 +42,27 @@ object PreviewMocks {
     )
 
     val mockRecentRecords = listOf(
-        CheckInRecordEntity(
-            id = "1",
-            faceId = "face_1",
-            name = "Budi Santoso",
+        CheckInRecord(
+            recordId = "1",
+            studentId = "face_1",
+            studentName = "Budi Santoso",
             classId = "cls_1",
             className = "Kelas 10A",
-            status = "H",
-            attendanceDate = LocalDate.now(),
-            checkInTime = LocalDateTime.now().minusMinutes(5),
-            userId = "admin@azuratech.com",
+            status = CheckInStatus.PRESENT,
+            timestamp = System.currentTimeMillis() - 300_000,
+            teacherEmail = "admin@azuratech.com",
             schoolId = "sch_1",
             isSynced = true
         ),
-        CheckInRecordEntity(
-            id = "2",
-            faceId = "face_2",
-            name = "Siti Aminah",
+        CheckInRecord(
+            recordId = "2",
+            studentId = "face_2",
+            studentName = "Siti Aminah",
             classId = "cls_1",
             className = "Kelas 10A",
-            status = "H",
-            attendanceDate = LocalDate.now(),
-            checkInTime = LocalDateTime.now().minusMinutes(12),
-            userId = "admin@azuratech.com",
+            status = CheckInStatus.PRESENT,
+            timestamp = System.currentTimeMillis() - 720_000,
+            teacherEmail = "admin@azuratech.com",
             schoolId = "sch_1",
             isSynced = true
         )

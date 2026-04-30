@@ -5,6 +5,8 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -41,6 +43,21 @@ data class CheckInRecordEntity(
             return createdAtDateTime.format(formatter)
         }
 
+    fun toDomain(): CheckInRecord {
+        return CheckInRecord(
+            recordId = id,
+            studentId = faceId,
+            studentName = name,
+            classId = classId ?: "",
+            className = className ?: "",
+            schoolId = schoolId,
+            timestamp = timestamp,
+            status = CheckInStatus.fromCode(status),
+            isSynced = isSynced,
+            teacherEmail = userId
+        )
+    }
+
     fun toFirestoreMap(): Map<String, Any?> {
         return mapOf(
             "id" to id,
@@ -57,6 +74,29 @@ data class CheckInRecordEntity(
             "createdAt" to timestamp,
             "isSynced" to true
         )
+    }
+
+    companion object {
+        fun fromDomain(domain: CheckInRecord): CheckInRecordEntity {
+            val dateTime = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(domain.timestamp),
+                ZoneId.systemDefault()
+            )
+            return CheckInRecordEntity(
+                id = domain.recordId,
+                schoolId = domain.schoolId,
+                faceId = domain.studentId,
+                name = domain.studentName,
+                userId = domain.teacherEmail,
+                status = domain.status.toCode(),
+                attendanceDate = dateTime.toLocalDate(),
+                checkInTime = dateTime,
+                classId = domain.classId,
+                className = domain.className,
+                isSynced = domain.isSynced,
+                timestamp = domain.timestamp
+            )
+        }
     }
 }
 

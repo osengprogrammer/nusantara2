@@ -3,10 +3,11 @@ package com.azuratech.azuratime.data.repo
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.data.local.AttendanceConflict
+import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,6 +27,7 @@ class DataIntegrityRepository @Inject constructor(
     private val faceDao = database.faceDao()
     private val recordDao = database.checkInRecordDao()
     private val assignmentDao = database.faceAssignmentDao()
+    private val conflictDao = database.attendanceConflictDao()
 
     // =====================================================
     // 📊 VOLUME — How big is the system?
@@ -60,7 +62,10 @@ class DataIntegrityRepository @Inject constructor(
             face + record + assignment
         }
 
-    val conflicts: Flow<List<AttendanceConflict>> = flowOf(emptyList())
+    val conflicts: Flow<List<AttendanceConflict>>
+        get() = conflictDao.getAllConflicts().map { entities ->
+            entities.map { it.toDomain() }
+        }
 
     // =====================================================
     // 🔧 CORRECTION MODE — Return the specific people who need fixing

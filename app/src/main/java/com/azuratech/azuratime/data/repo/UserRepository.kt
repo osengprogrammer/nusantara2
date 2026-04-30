@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

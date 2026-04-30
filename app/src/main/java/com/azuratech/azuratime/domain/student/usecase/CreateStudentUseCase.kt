@@ -58,12 +58,12 @@ class CreateStudentUseCase @Inject constructor(
             )
 
             // 1. Save Student to Cloud
-            val studentData = mapOf(
+            val studentData: Map<String, Any> = mapOf(
                 "studentId" to studentId,
                 "schoolId" to resolvedSchoolId,
                 "name" to name,
-                "studentCode" to studentCode,
-                "classId" to classId,
+                "studentCode" to (studentCode ?: ""),
+                "classId" to (classId ?: ""),
                 "createdAt" to createdAtTimestamp
             )
             

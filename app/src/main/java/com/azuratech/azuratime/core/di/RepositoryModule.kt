@@ -25,4 +25,10 @@ abstract class RepositoryModule {
     abstract fun bindFileStorage(
         impl: PhotoStorageUtils
     ): FileStorage
+
+    @Binds
+    @Singleton
+    abstract fun bindCheckInRepository(
+        impl: com.azuratech.azuratime.data.repo.CheckInRepositoryImpl
+    ): com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 }

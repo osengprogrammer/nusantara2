@@ -3,13 +3,14 @@ package com.azuratech.azuratime.ui.checkin
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInResult
 import com.azuratech.azuratime.domain.checkin.usecase.*
 import com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -20,12 +21,11 @@ import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @HiltViewModel
 class CheckInViewModel @Inject constructor(
     application: Application,
-    database: AppDatabase,
+    private val repository: CheckInRepository,
     private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
     private val processCheckInUseCase: ProcessCheckInUseCase,
     private val updateCheckInRecordUseCase: UpdateCheckInRecordUseCase,
@@ -34,9 +34,6 @@ class CheckInViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val exportUtils: ExportUtils
 ) : AndroidViewModel(application) {
-
-    private val faceAssignmentDao = database.faceAssignmentDao()
-    private val checkInRecordDao = database.checkInRecordDao()
 
     private val _activeClassId = MutableStateFlow<String?>(null)
 
@@ -48,14 +45,14 @@ class CheckInViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val unassignedCount: StateFlow<Int> = schoolContextFlow
-        .flatMapLatest { ctx -> faceAssignmentDao.getUnassignedStudentCount(ctx.schoolId) }
+        .flatMapLatest { ctx -> repository.getUnassignedStudentCount(ctx.schoolId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val activeSessionStudents: StateFlow<List<FaceEntity>> = combine(_activeClassId, schoolContextFlow) { classId, ctx ->
         classId to ctx
     }.flatMapLatest { (classId, ctx) ->
-        if (classId != null) faceAssignmentDao.getFacesByClass(classId, ctx.schoolId)
+        if (classId != null) repository.getFacesByClass(classId, ctx.schoolId)
         else flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -63,7 +60,7 @@ class CheckInViewModel @Inject constructor(
     val activeStudentCount: StateFlow<Int> = combine(_activeClassId, schoolContextFlow) { classId, ctx ->
         classId to ctx
     }.flatMapLatest { (classId, ctx) ->
-        if (classId != null) faceAssignmentDao.getStudentCountInClass(classId, ctx.schoolId)
+        if (classId != null) repository.getStudentCountInClass(classId, ctx.schoolId)
         else flowOf(0)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
@@ -72,8 +69,8 @@ class CheckInViewModel @Inject constructor(
         classId to ctx
     }.flatMapLatest { (classId, ctx) ->
         if (classId != null) {
-            faceAssignmentDao.getStudentCountInClass(classId, ctx.schoolId)
-                .combine(checkInRecordDao.getTodayPresentCount(LocalDate.now(), ctx.schoolId)) { total, present ->
+            repository.getStudentCountInClass(classId, ctx.schoolId)
+                .combine(repository.getTodayPresentCount(LocalDate.now(), ctx.schoolId)) { total, present ->
                     present to total
                 }
         } else flowOf(0 to 0)
@@ -96,7 +93,7 @@ class CheckInViewModel @Inject constructor(
     val filterParams: StateFlow<FilterParams> = _filterParams.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val checkInRecords: StateFlow<List<CheckInRecordEntity>> =
+    val checkInRecords: StateFlow<List<CheckInRecord>> =
         _filterParams
             .flatMapLatest { params ->
                 val targetClassId = if (params.classId == "ALL" || params.classId.isNullOrBlank()) null else params.classId
@@ -126,7 +123,7 @@ class CheckInViewModel @Inject constructor(
                 val currentSessionId = _activeClassId.value
                 val teacherEmail = _filterParams.value.userId ?: ""
                 val studentClasses = withContext(Dispatchers.IO) {
-                    faceAssignmentDao.getClassIdsForFace(scannedFaceId, ctx.schoolId).firstOrNull() ?: emptyList()
+                    repository.getClassIdsForFace(scannedFaceId, ctx.schoolId).firstOrNull() ?: emptyList()
                 }
 
                 val params = ProcessCheckInParams(
@@ -144,7 +141,9 @@ class CheckInViewModel @Inject constructor(
                         is Result.Success -> {
                             when (val checkInRes = result.data) {
                                 is CheckInResult.Success -> onResult(true, checkInRes.message)
-                                is CheckInResult.Rejected -> onResult(false, checkInRes.message)
+                                is CheckInResult.Rejected -> onResult(false, checkInRes.reason)
+                                is CheckInResult.AlreadyCheckedIn -> onResult(true, "${checkInRes.name} sudah absen.")
+                                is CheckInResult.Unregistered -> onResult(false, "Wajah tidak dikenal")
                             }
                         }
                         is Result.Failure -> onResult(false, "❌ Error: ${result.error.message}")
@@ -167,34 +166,34 @@ class CheckInViewModel @Inject constructor(
 
     fun updateNameFilter(name: String) { _filterParams.value = _filterParams.value.copy(name = name) }
     
-    fun updateRecord(record: CheckInRecordEntity) { 
+    fun updateRecord(record: CheckInRecord) { 
         viewModelScope.launch { updateCheckInRecordUseCase(record) } 
     }
     
-    fun addRecord(record: CheckInRecordEntity) { 
+    fun addRecord(record: CheckInRecord) { 
         viewModelScope.launch { 
             val params = ProcessCheckInParams(
-                faceId = record.faceId,
-                studentName = record.name,
-                teacherEmail = record.userId,
+                faceId = record.studentId,
+                studentName = record.studentName,
+                teacherEmail = record.teacherEmail,
                 activeClassId = record.classId,
-                studentClassIds = record.classId?.let { listOf(it) } ?: emptyList()
+                studentClassIds = record.classId.let { listOf(it) }
             )
             processCheckInUseCase(params)
         } 
     }
     
-    fun updateRecordClass(record: CheckInRecordEntity, selectedClass: ClassModel) {
+    fun updateRecordClass(record: CheckInRecord, selectedClass: ClassModel) {
         viewModelScope.launch { 
-            updateCheckInRecordUseCase.updateClass(record.id, selectedClass.id, selectedClass.name) 
+            updateCheckInRecordUseCase.updateClass(record.recordId, selectedClass.id, selectedClass.name) 
         }
     }
     
-    fun deleteRecord(record: CheckInRecordEntity) { 
-        viewModelScope.launch { deleteCheckInRecordUseCase(record.id) } 
+    fun deleteRecord(record: CheckInRecord) { 
+        viewModelScope.launch { deleteCheckInRecordUseCase(record.recordId) } 
     }
 
-    fun exportRecords(records: List<CheckInRecordEntity>) {
+    fun exportRecords(records: List<CheckInRecord>) {
         viewModelScope.launch { exportUtils.exportRawLogsToCsv(records) }
     }
 }

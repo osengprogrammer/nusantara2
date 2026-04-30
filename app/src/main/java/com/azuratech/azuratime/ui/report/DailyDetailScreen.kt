@@ -16,9 +16,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-// 🔥 Database Entities & ViewModels
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+// 🔥 Domain Models & ViewModels
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
 import com.azuratech.azuratime.ui.checkin.CheckInViewModel
 import com.azuratech.azuratime.ui.classes.ClassViewModel
 import com.azuratech.azuratime.ui.user.UserManagementViewModel
@@ -45,9 +46,9 @@ fun DailyDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // UI Local State
-    var selectedRecordForAction by remember { mutableStateOf<CheckInRecordEntity?>(null) }
+    var selectedRecordForAction by remember { mutableStateOf<CheckInRecord?>(null) }
     var showSheet by remember { mutableStateOf(false) }
-    var showClassCorrectionDialog by remember { mutableStateOf<CheckInRecordEntity?>(null) }
+    var showClassCorrectionDialog by remember { mutableStateOf<CheckInRecord?>(null) }
 
     when (val state = uiState) {
         is DailyDetailUiState.Loading -> {
@@ -95,7 +96,7 @@ fun DailyDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
-                        items(items = data.filteredLogs, key = { it.id.toString() + it.timestamp.toString() }) { record ->
+                        items(items = data.filteredLogs, key = { it.recordId + it.timestamp.toString() }) { record ->
                             LogItemRow(
                                 record = record,
                                 onClick = {
@@ -172,16 +173,19 @@ fun DailyDetailScreen(
 
 // 🔥 ADDED: The missing LogItemRow composable
 @Composable
-fun LogItemRow(record: CheckInRecordEntity, onClick: () -> Unit) {
+fun LogItemRow(record: CheckInRecord, onClick: () -> Unit) {
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
-    val timeString = record.checkInTime?.format(timeFormatter) ?: "--:--"
+    val dateTime = java.time.LocalDateTime.ofInstant(
+        java.time.Instant.ofEpochMilli(record.timestamp),
+        java.time.ZoneId.systemDefault()
+    )
+    val timeString = dateTime.format(timeFormatter)
     
     val (statusLabel, statusColor) = when (record.status) {
-        "H" -> "Hadir" to MaterialTheme.colorScheme.primary
-        "S" -> "Sakit" to MaterialTheme.colorScheme.tertiary
-        "I" -> "Izin" to MaterialTheme.colorScheme.secondary
-        "A" -> "Alpa" to MaterialTheme.colorScheme.error
-        else -> "Unknown" to MaterialTheme.colorScheme.outline
+        CheckInStatus.PRESENT -> "Hadir" to MaterialTheme.colorScheme.primary
+        CheckInStatus.LATE -> "Terlambat" to MaterialTheme.colorScheme.tertiary
+        CheckInStatus.EXCUSED -> "Izin" to MaterialTheme.colorScheme.secondary
+        CheckInStatus.ABSENT -> "Alpa" to MaterialTheme.colorScheme.error
     }
 
     Card(
@@ -214,12 +218,12 @@ fun LogItemRow(record: CheckInRecordEntity, onClick: () -> Unit) {
             // Details
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = record.className ?: "General Scan", 
+                    text = record.className.ifBlank { "General Scan" }, 
                     style = MaterialTheme.typography.bodyLarge, 
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Oleh: ${record.userId}", 
+                    text = "Oleh: ${record.teacherEmail}", 
                     style = MaterialTheme.typography.labelSmall, 
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

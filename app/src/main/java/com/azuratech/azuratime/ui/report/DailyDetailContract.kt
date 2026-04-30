@@ -1,10 +1,10 @@
 package com.azuratech.azuratime.ui.report
 
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuraengine.model.ClassModel
 
 data class DailyDetailData(
-    val filteredLogs: List<CheckInRecordEntity> = emptyList(),
+    val filteredLogs: List<CheckInRecord> = emptyList(),
     val globalClasses: List<ClassModel> = emptyList(),
     val assignedIds: List<String> = emptyList(),
     val isAdmin: Boolean = false

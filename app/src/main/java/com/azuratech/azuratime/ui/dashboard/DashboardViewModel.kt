@@ -22,11 +22,12 @@ import com.azuratech.azuratime.domain.face.usecase.SyncFacesUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.SyncAssignmentsUseCase
 import com.azuratech.azuratime.domain.sync.usecase.GetLocalDataCountUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.core.UiEvent
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.data.local.AttendanceConflict
 import com.azuratech.azuratime.ui.util.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -137,7 +138,7 @@ class DashboardViewModel @Inject constructor(
     ) { args ->
         val user = args[0] as com.azuratech.azuraengine.model.User?
         @Suppress("UNCHECKED_CAST")
-        val recentRecords = args[1] as List<com.azuratech.azuratime.data.local.CheckInRecordEntity>
+        val recentRecords = args[1] as List<CheckInRecord>
         @Suppress("UNCHECKED_CAST")
         val sessionStudents = args[2] as List<FaceEntity>
         @Suppress("UNCHECKED_CAST")
@@ -148,7 +149,7 @@ class DashboardViewModel @Inject constructor(
         val broken = args[7] as Int
         val unsynced = args[8] as Int
         @Suppress("UNCHECKED_CAST")
-        val conflicts = args[9] as List<com.azuratech.azuratime.data.local.AttendanceConflict>
+        val conflicts = args[9] as List<AttendanceConflict>
 
         UiState.Success(
             DashboardUiState(
