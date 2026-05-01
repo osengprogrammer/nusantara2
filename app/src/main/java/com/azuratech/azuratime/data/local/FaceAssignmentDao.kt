@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FaceAssignmentDao {
+    @Upsert
+    suspend fun upsert(assignment: FaceAssignmentEntity)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAssignment(assignment: FaceAssignmentEntity)
 
@@ -13,6 +16,12 @@ interface FaceAssignmentDao {
 
     @Query("DELETE FROM face_assignments WHERE faceId = :faceId AND schoolId = :schoolId")
     suspend fun deleteAllByFace(faceId: String, schoolId: String)
+
+    @Query("DELETE FROM face_assignments WHERE faceId = :faceId AND schoolId = :schoolId")
+    suspend fun deleteAssignmentsForFace(faceId: String, schoolId: String)
+
+    @Query("UPDATE face_assignments SET classId = :newClassId, isSynced = 0 WHERE faceId = :faceId AND schoolId = :schoolId")
+    suspend fun updateClassForFace(faceId: String, newClassId: String, schoolId: String)
 
     @Query("DELETE FROM face_assignments WHERE schoolId = :schoolId")
     suspend fun deleteAllBySchool(schoolId: String)
