@@ -55,23 +55,48 @@ class DashboardViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val dataIntegrityRepository: DataIntegrityRepository,
     private val getFacesInClassUseCase: GetFacesInClassUseCase,
+    private val getActiveSchoolContextUseCase: com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase,
     private val sessionManager: SessionManager,
     private val syncRepository: SyncRepository
 ) : ViewModel() {
+
+    sealed class NavigationEvent {
+        data class NavigateToRegistration(val schoolId: String) : NavigationEvent()
+    }
+
+    private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
     private val _userFlow = sessionManager.currentUserIdFlow
         .flatMapLatest { userId -> 
-            if (userId != null) observeUserUseCase(userId) else flowOf(null)
-        }
+            if (userId != null) {
+                println("🔍 Dashboard: observeUserUseCase triggered for $userId")
+                observeUserUseCase(userId)
+            } else {
+                println("🔍 Dashboard: currentUserId is null, emitting flowOf(null)")
+                flowOf(null)
+            }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
                 val filters = CheckInFilters()
                 getCheckInRecordsUseCase(filters).map { it.getOrNull()?.take(5) ?: emptyList() }
+            } else {
+                flowOf(emptyList())
+            }
+        }
+
+    private val _allClassesFlow = sessionManager.activeSchoolIdFlow
+        .flatMapLatest { schoolId ->
+            if (schoolId != null) {
+                getClassesUseCase(schoolId).map { result ->
+                    if (result is Result.Success) result.data else emptyList()
+                }
             } else {
                 flowOf(emptyList())
             }
@@ -112,12 +137,14 @@ class DashboardViewModel @Inject constructor(
 
 
     init {
-        viewModelScope.launch {
-            val userId = sessionManager.getCurrentUserId()
-            if (userId != null) {
-                triggerAutoSyncIfNeeded(userId)
+        // 🔥 FIX: React to ID changes instead of one-shot check
+        sessionManager.currentUserIdFlow
+            .filterNotNull()
+            .onEach { userId -> 
+                println("🔍 Dashboard: ID detected ($userId), triggering sync...")
+                triggerAutoSyncIfNeeded(userId) 
             }
-        }
+            .launchIn(viewModelScope)
     }
 
     private suspend fun triggerAutoSyncIfNeeded(userId: String) {
@@ -136,6 +163,7 @@ class DashboardViewModel @Inject constructor(
         _recentRecordsFlow,
         _sessionStudentsFlow,
         _assignedClassesFlow,
+        _allClassesFlow, // 🔥 Added
         syncRepository.isSyncing,
         dataIntegrityRepository.totalFaces,
         dataIntegrityRepository.missingAssignment,
@@ -150,15 +178,19 @@ class DashboardViewModel @Inject constructor(
         val sessionStudents = args[2] as List<FaceEntity>
         @Suppress("UNCHECKED_CAST")
         val assignedClasses = args[3] as List<ClassModel>
-        val isSyncing = args[4] as Boolean
-        val totalFaces = args[5] as Int
-        val unassigned = args[6] as Int
-        val broken = args[7] as Int
-        val unsynced = args[8] as Int
         @Suppress("UNCHECKED_CAST")
-        val conflicts = args[9] as List<AttendanceConflict>
+        val allClasses = args[4] as List<ClassModel> // 🔥 Added
+        val isSyncing = args[5] as Boolean
+        val totalFaces = args[6] as Int
+        val unassigned = args[7] as Int
+        val broken = args[8] as Int
+        val unsynced = args[9] as Int
+        @Suppress("UNCHECKED_CAST")
+        val conflicts = args[10] as List<AttendanceConflict>
 
-        println("🔄 Dashboard: combine triggered. user=${user?.userId != null}, records=${recentRecords.size}, syncing=$isSyncing, faces=$totalFaces")
+        val isReady = (user != null) && (isSyncing == false)
+
+        println("🔄 Dashboard combine: user=${user?.userId ?: "NULL"}, isReady=$isReady")
 
         UiState.Success(
             DashboardUiState(
@@ -166,7 +198,9 @@ class DashboardViewModel @Inject constructor(
                 recentRecords = recentRecords,
                 sessionStudents = sessionStudents,
                 assignedClasses = assignedClasses,
+                allClasses = allClasses, // 🔥 Added
                 isSyncing = isSyncing,
+                isReady = isReady,
                 totalFaces = totalFaces,
                 unassignedStudents = unassigned,
                 brokenAssignments = broken,
@@ -233,6 +267,18 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.clearAllDataAndSignOut()
             onComplete()
+        }
+    }
+
+    fun onRegisterStudentClick() {
+        viewModelScope.launch {
+            val contextRes = getActiveSchoolContextUseCase()
+            if (contextRes is Result.Failure) {
+                _uiEvent.emit(UiEvent.ShowSnackbar("Silakan pilih sekolah terlebih dahulu"))
+                return@launch
+            }
+            val ctx = (contextRes as Result.Success).data
+            _navigationEvent.emit(NavigationEvent.NavigateToRegistration(ctx.schoolId))
         }
     }
 }

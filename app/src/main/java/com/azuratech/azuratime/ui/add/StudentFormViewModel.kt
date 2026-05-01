@@ -32,21 +32,58 @@ class StudentFormViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    init {
-        // Reactive collection of active school classes
-        sessionManager.activeSchoolIdFlow
-            .filterNotNull()
-            .flatMapLatest { schoolId ->
-                println("📚 DEBUG: Loading classes for active school $schoolId")
-                getClassesUseCase(schoolId)
-            }
-            .onEach { result ->
-                if (result is Result.Success) {
-                    println("📦 DEBUG: Fetched ${result.data.size} classes for reactive collection")
-                    updateState { it.copy(availableClasses = result.data) }
+    // 🎓 REACTIVE CLASSES FLOW
+    private val _classesFlow = sessionManager.activeSchoolIdFlow
+        .onStart { 
+            val id = sessionManager.getActiveSchoolId()
+            println("📚 DEBUG: StudentFormVM _classesFlow onStart -> $id")
+            emit(id) 
+        }
+        .onEach { println("📚 DEBUG: StudentFormVM SchoolId flow emitted: $it") }
+        .filter { id -> 
+            val isValid = !id.isNullOrBlank()
+            if (!isValid) println("⚠️ DEBUG: StudentFormVM - Filtering out null/blank schoolId")
+            isValid
+        }
+        .filterNotNull()
+        .flatMapLatest { schoolId ->
+            println("📚 DEBUG: StudentFormVM - flatMapLatest loading for $schoolId")
+            getClassesUseCase(schoolId)
+        }
+        .onEach { println("📚 DEBUG: StudentFormVM - UseCase result received: $it") }
+        .map { result ->
+            when (result) {
+                is Result.Success -> {
+                    println("✅ DEBUG: StudentFormVM - Successfully loaded ${result.data.size} classes")
+                    result.data
+                }
+                is Result.Failure -> {
+                    println("❌ DEBUG: StudentFormVM - Failed to load classes: ${result.error.message}")
+                    emptyList()
+                }
+                is Result.Loading -> {
+                    println("⏳ DEBUG: StudentFormVM - Classes are loading...")
+                    emptyList()
                 }
             }
-            .launchIn(viewModelScope)
+        }
+        .catch { e ->
+            println("❌ Classes load exception: ${e.message}")
+            e.printStackTrace()
+            emit(emptyList())
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    
+    val classes: StateFlow<List<com.azuratech.azuraengine.model.ClassModel>> = _classesFlow
+
+    private var selectedClassId: String? = null
+    private var selectedClassName: String? = null
+
+    init {
+        // Keep UI state synced with classes flow for AddUserContent compatibility
+        _classesFlow.onEach { classes ->
+            updateState { it.copy(availableClasses = classes) }
+        }.launchIn(viewModelScope)
     }
 
     fun loadStudentForEdit(faceId: String) {
@@ -54,6 +91,7 @@ class StudentFormViewModel @Inject constructor(
             when (val result = getFaceWithDetailsUseCase(faceId)) {
                 is Result.Success -> {
                     result.data?.let { faceWithDetails ->
+                        selectedClassId = faceWithDetails.classId
                         updateState {
                             it.copy(
                                 name = faceWithDetails.face.name,
@@ -90,7 +128,10 @@ class StudentFormViewModel @Inject constructor(
         updateState { it.copy(studentCode = studentCode) }
     }
 
-    fun onClassSelected(classId: String) {
+    fun onClassSelected(classId: String, className: String) {
+        selectedClassId = classId
+        selectedClassName = className
+        println("🎓 Class selected: $className ($classId)")
         updateState { it.copy(selectedClassId = classId) }
     }
 
@@ -114,6 +155,7 @@ class StudentFormViewModel @Inject constructor(
         val currentState = _uiState.value
         if (!currentState.isFormValid) return
 
+        println("🎓 ViewModel: Saving with classId=$selectedClassId")
         updateState { it.copy(isSubmitting = true) }
 
         viewModelScope.launch {
@@ -144,7 +186,9 @@ class StudentFormViewModel @Inject constructor(
                         _uiEvent.emit(UiEvent.NavigateUp)
                     }
                     is Result.Failure -> {
-                        updateState { it.copy(isSubmitting = false, formError = result.error.message ?: "Update gagal") }
+                        val errorMsg = result.error.message ?: "Update gagal"
+                        updateState { it.copy(isSubmitting = false, formError = errorMsg) }
+                        _uiEvent.emit(UiEvent.ShowSnackbar("Gagal menyimpan: $errorMsg"))
                     }
                     else -> {}
                 }
@@ -154,7 +198,7 @@ class StudentFormViewModel @Inject constructor(
                     schoolId = activeSchoolId,
                     name = currentState.name,
                     studentCode = currentState.studentCode,
-                    classId = currentState.selectedClassId,
+                    classId = selectedClassId, // Use the variable
                     faceEmbedding = currentState.embedding,
                     photoBytes = photoBytes
                 )
@@ -165,7 +209,9 @@ class StudentFormViewModel @Inject constructor(
                         _uiEvent.emit(UiEvent.NavigateUp)
                     }
                     is Result.Failure -> {
-                        updateState { it.copy(isSubmitting = false, formError = result.error.message ?: "Pendaftaran gagal") }
+                        val errorMsg = result.error.message ?: "Pendaftaran gagal"
+                        updateState { it.copy(isSubmitting = false, formError = errorMsg) }
+                        _uiEvent.emit(UiEvent.ShowSnackbar("Gagal menyimpan: $errorMsg"))
                     }
                     is Result.Loading -> {}
                 }

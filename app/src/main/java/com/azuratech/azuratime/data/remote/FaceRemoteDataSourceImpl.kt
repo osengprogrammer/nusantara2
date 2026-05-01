@@ -43,30 +43,7 @@ class FaceRemoteDataSourceImpl @Inject constructor(
                 } catch (e: Exception) { null }
             }.toMutableList()
 
-            val legacyPaths = listOf("master_faces", "faces")
-            for (path in legacyPaths) {
-                try {
-                    val rootSnapshot = db.collection(path)
-                        .whereGreaterThan("lastUpdated", lastTimestamp).get().await()
-                    
-                    rootSnapshot.documents.forEach { doc ->
-                        if (updatedData.none { it.first.faceId == doc.id }) {
-                            val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
-                            val entity = FaceEntity(
-                                faceId = doc.id,
-                                schoolId = schoolId,
-                                name = doc.getString("name") ?: "",
-                                embedding = embedding,
-                                photoUrl = doc.getString("photoUrl"),
-                                isSynced = true
-                            )
-                            updatedData.add(Pair(entity, doc.getBoolean("isActive") ?: true))
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.w("FaceRemoteDataSource", "Skip legacy path '$path': ${e.message}")
-                }
-            }
+            // 🔥 Path Standardized: Legacy root-level fallbacks removed
             Result.Success(updatedData)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
@@ -117,6 +94,7 @@ class FaceRemoteDataSourceImpl @Inject constructor(
                 "classId" to assignment.classId,
                 "lastUpdated" to FieldValue.serverTimestamp()
             )
+            println("🔥 Path Standardized: assignments → schools/${assignment.schoolId}/face_assignments/$docId")
             getTenantRef(assignment.schoolId).collection("face_assignments").document(docId).set(data, SetOptions.merge()).await()
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -142,14 +120,7 @@ class FaceRemoteDataSourceImpl @Inject constructor(
                 }
             }
 
-            val rootCollections = listOf("master_faces", "faces")
-            for (coll in rootCollections) {
-                try {
-                    db.collection(coll).document(faceId).delete().await()
-                } catch (e: Exception) {
-                    Log.e("FaceRemoteDataSource", "Gagal hapus di Cloud (Root $coll): ${e.message}")
-                }
-            }
+            // 🔥 Removed legacy root-level deletions (master_faces, faces)
 
             try {
                 classIds.forEach { classId ->

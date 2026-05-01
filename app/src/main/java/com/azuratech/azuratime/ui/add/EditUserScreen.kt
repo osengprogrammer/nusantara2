@@ -31,6 +31,7 @@ fun EditUserScreen(
     viewModel: StudentFormViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val classes by viewModel.classes.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showFaceCapture by remember { mutableStateOf(false) }
     var isClassExpanded by remember { mutableStateOf(false) }
@@ -39,8 +40,8 @@ fun EditUserScreen(
         viewModel.loadStudentForEdit(faceId)
     }
 
-    val selectedClassName = remember(uiState.selectedClassId, uiState.availableClasses) {
-        uiState.availableClasses.find { it.id == uiState.selectedClassId }?.name ?: "Pilih Kelas..."
+    val selectedClassName = remember(uiState.selectedClassId, classes) {
+        classes.find { it.id == uiState.selectedClassId }?.name ?: "Pilih Kelas..."
     }
 
     LaunchedEffect(uiState.formError) {
@@ -51,9 +52,10 @@ fun EditUserScreen(
 
     EditUserContent(
         uiState = uiState,
+        classes = classes,
         selectedClassName = selectedClassName,
         onNameChange = { viewModel.onNameChange(it) },
-        onClassSelected = { viewModel.onClassSelected(it) },
+        onClassSelected = { id, name -> viewModel.onClassSelected(id, name) },
         onCaptureEmbedding = { showFaceCapture = true },
         onCapturePhoto = { showFaceCapture = true },
         onUploadPhoto = { /* TODO */ },
@@ -84,9 +86,10 @@ fun EditUserScreen(
 @Composable
 fun EditUserContent(
     uiState: StudentFormUiState,
+    classes: List<com.azuratech.azuraengine.model.ClassModel>,
     selectedClassName: String,
     onNameChange: (String) -> Unit,
-    onClassSelected: (String) -> Unit,
+    onClassSelected: (String, String) -> Unit,
     onCaptureEmbedding: () -> Unit,
     onCapturePhoto: () -> Unit,
     onUploadPhoto: () -> Unit,
@@ -94,6 +97,14 @@ fun EditUserContent(
     isClassExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit
 ) {
+    // 🎓 Mapping ClassModel to String list for reliable rendering
+    val classNames = remember(classes) { classes.map { it.name } }
+    val classLookup = remember(classes) { classes.associateBy { it.name } }
+
+    LaunchedEffect(classNames) {
+        println("📱 DEBUG: Edit Dropdown rendering ${classNames.size} classes: ${classNames.joinToString(", ")}")
+    }
+
     AzuraScreen(title = uiState.pageTitle, onBack = { /* Handled by Nav */ }) {
         Column(
             modifier = Modifier
@@ -106,15 +117,17 @@ fun EditUserContent(
             AzuraDropdownField(
                 label = "Tentukan Kelas",
                 selectedValue = selectedClassName,
-                options = uiState.availableClasses,
+                options = classNames,
                 isExpanded = isClassExpanded,
                 onExpandedChange = onExpandedChange,
-                onOptionSelected = {
-                    onClassSelected(it.id)
+                onOptionSelected = { selectedName ->
+                    classLookup[selectedName]?.let { model -> 
+                        onClassSelected(model.id, model.name) 
+                    }
                     onExpandedChange(false)
                 },
                 onEditClicked = {},
-                getOptionLabel = { it.name }
+                getOptionLabel = { it }
             )
 
             AzuraCard(title = "Informasi Siswa") {

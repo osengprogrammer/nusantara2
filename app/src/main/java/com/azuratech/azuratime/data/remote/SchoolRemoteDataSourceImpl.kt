@@ -18,12 +18,12 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
     private val db: FirebaseFirestore
 ) : SchoolRemoteDataSource {
 
-    private fun getAccountRef(accountId: String) = db.collection("accounts").document(accountId)
-    private fun getSchoolsRef(accountId: String) = getAccountRef(accountId).collection("schools")
-    private fun getClassesRef(accountId: String, schoolId: String) = 
-        getSchoolsRef(accountId).document(schoolId).collection("classes")
+    private fun getSchoolsRef() = db.collection("schools")
+    private fun getClassesRef(schoolId: String) = 
+        getSchoolsRef().document(schoolId).collection("classes")
 
     override suspend fun saveSchool(accountId: String, school: School): Result<Unit> = try {
+        println("🔥 Path Standardized: accounts/$accountId/schools/${school.id} → schools/${school.id}")
         val data = hashMapOf(
             "id" to school.id,
             "accountId" to school.accountId,
@@ -33,21 +33,22 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             "createdAt" to school.createdAt,
             "updatedAt" to school.updatedAt
         )
-        getSchoolsRef(accountId).document(school.id).set(data, SetOptions.merge()).await()
+        getSchoolsRef().document(school.id).set(data, SetOptions.merge()).await()
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(AppError.Network(e.message))
     }
 
     override suspend fun deleteSchool(accountId: String, schoolId: String): Result<Unit> = try {
-        getSchoolsRef(accountId).document(schoolId).delete().await()
+        getSchoolsRef().document(schoolId).delete().await()
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(AppError.Network(e.message))
     }
 
     override fun observeRemoteSchools(accountId: String): Flow<Result<List<School>>> = callbackFlow {
-        val subscription = getSchoolsRef(accountId).addSnapshotListener { snapshot, error ->
+        // 🔥 Now querying from root collection instead of nested subcollection
+        val subscription = getSchoolsRef().whereEqualTo("accountId", accountId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(Result.Failure(AppError.Network(error.message)))
                 return@addSnapshotListener
@@ -73,7 +74,8 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getSchools(accountId: String): Result<List<School>> = try {
-        val snapshot = getSchoolsRef(accountId).get().await()
+        // 🔥 Now querying from root collection instead of nested subcollection
+        val snapshot = getSchoolsRef().whereEqualTo("accountId", accountId).get().await()
         val schools = snapshot.documents.mapNotNull { doc ->
             try {
                 School(
@@ -93,6 +95,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
     }
 
     override suspend fun saveClass(accountId: String, schoolId: String, classModel: ClassModel): Result<Unit> = try {
+        println("🔥 Path Standardized: accounts/$accountId/schools/$schoolId/classes/${classModel.id} → schools/$schoolId/classes/${classModel.id}")
         val data = hashMapOf(
             "id" to classModel.id,
             "schoolId" to classModel.schoolId,
@@ -102,21 +105,21 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             "studentCount" to classModel.studentCount,
             "createdAt" to classModel.createdAt
         )
-        getClassesRef(accountId, schoolId).document(classModel.id).set(data, SetOptions.merge()).await()
+        getClassesRef(schoolId).document(classModel.id).set(data, SetOptions.merge()).await()
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(AppError.Network(e.message))
     }
 
     override suspend fun deleteClass(accountId: String, schoolId: String, classId: String): Result<Unit> = try {
-        getClassesRef(accountId, schoolId).document(classId).delete().await()
+        getClassesRef(schoolId).document(classId).delete().await()
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(AppError.Network(e.message))
     }
 
     override suspend fun getClasses(accountId: String, schoolId: String): Result<List<ClassModel>> = try {
-        val snapshot = getClassesRef(accountId, schoolId).get().await()
+        val snapshot = getClassesRef(schoolId).get().await()
         val classes = snapshot.documents.mapNotNull { doc ->
             try {
                 ClassModel(

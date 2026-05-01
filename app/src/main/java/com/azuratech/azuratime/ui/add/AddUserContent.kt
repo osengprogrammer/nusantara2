@@ -23,9 +23,10 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 @Composable
 fun AddUserContent(
     uiState: StudentFormUiState,
+    classes: List<com.azuratech.azuraengine.model.ClassModel>,
     onNameChange: (String) -> Unit,
     onStudentIdChange: (String) -> Unit,
-    onClassSelected: (String) -> Unit,
+    onClassSelected: (String, String) -> Unit,
     onCaptureEmbedding: () -> Unit,
     onCapturePhoto: () -> Unit,
     onUploadPhoto: () -> Unit,
@@ -36,8 +37,16 @@ fun AddUserContent(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     modifier: Modifier = Modifier
 ) {
-    val selectedClassName = remember(uiState.selectedClassId, uiState.availableClasses) {
-        uiState.availableClasses.find { it.id == uiState.selectedClassId }?.name ?: "Pilih Kelas..."
+    val selectedClassName = remember(uiState.selectedClassId, classes) {
+        classes.find { it.id == uiState.selectedClassId }?.name ?: "Pilih Kelas..."
+    }
+
+    // 🎓 Mapping ClassModel to String list for reliable rendering
+    val classNames = remember(classes) { classes.map { it.name } }
+    val classLookup = remember(classes) { classes.associateBy { it.name } }
+    
+    LaunchedEffect(classNames) {
+        println("📱 DEBUG: Dropdown rendering ${classNames.size} classes: ${classNames.joinToString(", ")}")
     }
 
     AzuraScreen(
@@ -55,15 +64,17 @@ fun AddUserContent(
                 AzuraDropdownField(
                     label = "Tentukan Kelas",
                     selectedValue = selectedClassName,
-                    options = uiState.availableClasses,
+                    options = classNames,
                     isExpanded = isClassExpanded,
                     onExpandedChange = onExpandedChange,
-                    onOptionSelected = {
-                        onClassSelected(it.id)
+                    onOptionSelected = { selectedName ->
+                        classLookup[selectedName]?.let { model -> 
+                            onClassSelected(model.id, model.name) 
+                        }
                         onExpandedChange(false)
                     },
                     onEditClicked = {},
-                    getOptionLabel = { it.name }
+                    getOptionLabel = { it }
                 )
 
                 AzuraCard(title = "Informasi Siswa") {

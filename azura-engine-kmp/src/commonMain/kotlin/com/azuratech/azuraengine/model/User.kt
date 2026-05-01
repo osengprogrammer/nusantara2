@@ -48,4 +48,7 @@ data class User(
 
     /** Cek status pertemanan dengan guru lain */
     fun getFriendStatus(targetUserId: String): String? = friends[targetUserId]?.status
+
+    /** Permission check for managing students (ADMIN or SUPER_ADMIN) */
+    fun canManageStudents(): Boolean = role == "SUPER_ADMIN" || memberships[activeSchoolId]?.role == "ADMIN"
 }

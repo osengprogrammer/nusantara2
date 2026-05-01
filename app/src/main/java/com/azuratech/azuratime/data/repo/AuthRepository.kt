@@ -42,8 +42,20 @@ class AuthRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
 
             val userDoc: DocumentSnapshot? = runCatching {
                 val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
-                if (whiteList.exists()) whiteList 
-                else firestore.collection("memberships").document(uid).get().await()
+                if (whiteList.exists()) {
+                    Log.d("AuthRepository", "🔍 User resolved via: whitelisted_users")
+                    whiteList
+                } else {
+                    val acc = firestore.collection("accounts").document(uid).get().await()
+                    if (acc.exists()) {
+                        Log.d("AuthRepository", "🔍 User resolved via: accounts")
+                        acc
+                    } else {
+                        val member = firestore.collection("memberships").document(uid).get().await()
+                        if (member.exists()) Log.d("AuthRepository", "🔍 User resolved via: memberships (PENDING)")
+                        member
+                    }
+                }
             }.getOrNull()
 
             if (userDoc == null || !userDoc.exists()) {
@@ -58,14 +70,28 @@ class AuthRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
                 return@withContext Pair(newUser, true) 
             }
 
-            @Suppress("UNCHECKED_CAST")
-            val membershipsRaw = userDoc.get("memberships") as? Map<String, Any> ?: emptyMap()
-            val memberships = membershipsRaw.entries.mapNotNull { (schoolId, value) ->
-                val m = value as? Map<*, *> ?: return@mapNotNull null
-                val schoolName = m["schoolName"] as? String ?: ""
-                val role = m["role"] as? String ?: "TEACHER"
-                schoolId to Membership(schoolName = schoolName, role = role)
-            }.toMap()
+            // Standardize memberships mapping
+            val memberships = mutableMapOf<String, Membership>()
+            val isWhitelisted = userDoc.reference.path.contains("whitelisted_users")
+            
+            if (isWhitelisted) {
+                @Suppress("UNCHECKED_CAST")
+                val membershipsRaw = userDoc.get("memberships") as? Map<String, Any> ?: emptyMap()
+                membershipsRaw.entries.forEach { (schoolId, value) ->
+                    val m = value as? Map<*, *> ?: return@forEach
+                    val schoolName = m["schoolName"] as? String ?: ""
+                    val role = m["role"] as? String ?: "TEACHER"
+                    memberships[schoolId] = Membership(schoolName = schoolName, role = role)
+                }
+            } else if (userDoc.reference.path.contains("accounts")) {
+                val schoolsSnapshot = firestore.collection("accounts").document(uid).collection("schools").get().await()
+                schoolsSnapshot.documents.forEach { doc ->
+                    memberships[doc.id] = Membership(
+                        schoolName = doc.getString("schoolName") ?: "",
+                        role = doc.getString("role") ?: "TEACHER"
+                    )
+                }
+            }
 
             val savedActiveSchoolId = userDoc.getString("activeSchoolId")
                 ?: memberships.keys.firstOrNull()

@@ -12,6 +12,8 @@ import javax.inject.Inject
 class GetClassesUseCase @Inject constructor(
     private val repository: SchoolRepository
 ) {
-    operator fun invoke(schoolId: String): Flow<Result<List<ClassModel>>> =
-        repository.observeClasses(schoolId)
+    operator fun invoke(schoolId: String): Flow<Result<List<ClassModel>>> {
+        println("🔍 GetClassesUseCase: Querying school=$schoolId")
+        return repository.observeClasses(schoolId)
+    }
 }

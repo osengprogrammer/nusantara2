@@ -9,9 +9,11 @@ import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 data class DashboardUiState(
     val user: User? = null,
     val assignedClasses: List<ClassModel> = emptyList(),
+    val allClasses: List<ClassModel> = emptyList(), // 🔥 Added for Picker
     val recentRecords: List<CheckInRecord> = emptyList(),
     val sessionStudents: List<FaceEntity> = emptyList(), // Changed to FaceEntity
     val isSyncing: Boolean = false,
+    val isReady: Boolean = false,
     val pendingRequests: Int = 0,
     val currentRole: String = "USER",
     val isApproved: Boolean = false,
