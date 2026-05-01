@@ -23,6 +23,7 @@ class StudentRepositoryImpl @Inject constructor(
     override suspend fun saveStudent(student: StudentEntity): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             studentDao.upsert(student)
+            println("✅ Repository: Saved student locally to Room -> ${student.studentId}")
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message ?: "Failed to save student locally"))
@@ -38,6 +39,7 @@ class StudentRepositoryImpl @Inject constructor(
             db.collection("schools").document(schoolId)
                 .collection("students").document(studentId)
                 .set(data, SetOptions.merge()).await()
+            println("✅ Repository: Saved to Firestore -> schools/$schoolId/students/$studentId")
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message ?: "Failed to save student to cloud"))

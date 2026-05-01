@@ -20,7 +20,8 @@ class CreateStudentUseCase @Inject constructor(
     private val getUserByIdUseCase: com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase,
     private val sessionManager: SessionManager,
     private val faceRemoteDataSource: FaceRemoteDataSource,
-    private val photoStorageUtils: PhotoStorageUtils
+    private val photoStorageUtils: PhotoStorageUtils,
+    private val database: AppDatabase
 ) {
 
     suspend operator fun invoke(
@@ -46,6 +47,10 @@ class CreateStudentUseCase @Inject constructor(
 
             println("🔍 CreateStudent: resolvedSchoolId=$resolvedSchoolId for user ${user?.userId}")
 
+            if (resolvedSchoolId.isBlank()) {
+                return@withContext Result.Failure(AppError.BusinessRule("School context is invalid (empty ID)"))
+            }
+
             val studentId = "STU-${UUID.randomUUID().toString().take(8)}"
             
             val studentEntity = StudentEntity(
@@ -67,10 +72,17 @@ class CreateStudentUseCase @Inject constructor(
                 "createdAt" to createdAtTimestamp
             )
             
-            studentRepository.saveStudentToCloud(studentId, resolvedSchoolId, studentData)
+            println("🔄 UseCase: Calling Repository.saveStudentToCloud for $resolvedSchoolId")
+            val cloudResult = studentRepository.saveStudentToCloud(studentId, resolvedSchoolId, studentData)
 
-            // 2. Local Save Student
-            studentRepository.saveStudent(studentEntity.copy(isSynced = true))
+            // 2. Local Save Student (Offline-first: always save locally)
+            val isSynced = cloudResult is Result.Success
+            val localSaveResult = studentRepository.saveStudent(studentEntity.copy(isSynced = isSynced))
+            
+            if (localSaveResult is Result.Failure) {
+                println("❌ UseCase: Local save failed -> ${localSaveResult.error}")
+                return@withContext Result.Failure(localSaveResult.error)
+            }
 
             // 3. Handle Face if provided
             if (faceEmbedding != null) {
@@ -97,14 +109,30 @@ class CreateStudentUseCase @Inject constructor(
                     isSynced = false
                 )
                 
+                // 🔥 LOCAL SAVE (Crucial for scanner/offline)
+                database.faceDao().upsertFace(faceEntity)
+
+                // 🔥 POPULATE ASSIGNMENTS (For Check-in)
+                if (classId != null) {
+                    database.faceAssignmentDao().insertAssignment(
+                        FaceAssignmentEntity(
+                            faceId = faceId,
+                            classId = classId,
+                            schoolId = resolvedSchoolId,
+                            isSynced = false
+                        )
+                    )
+                    println("✅ UseCase: Added to face_assignments for class $classId")
+                }
+
                 // Sync Face to Cloud
                 faceRemoteDataSource.bulkSyncFaces(resolvedSchoolId, listOf(faceEntity))
-                // Note: ideally these should also be in a repository
-                // but we are focusing on StudentRepository as per instructions.
-                // We'll keep face logic here for now or assume studentRepository handles it?
-                // The prompt says "Move all Firestore/Room calls to StudentRepository (see Fix #2)".
-                // Wait, "saveStudent" and "saveStudentToCloud" are in the interface.
             }
+
+            if (cloudResult is Result.Failure) {
+                println("⚠️ UseCase: Cloud save failed but local succeeded -> ${cloudResult.error}")
+            }
+
             Result.Success(studentEntity.toDomain())
         } catch (e: Exception) {
             Result.Failure(AppError.BusinessRule(e.message))

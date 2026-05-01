@@ -23,18 +23,46 @@ class SyncUserUseCase @Inject constructor(
 
     suspend operator fun invoke(userId: String): Result<UserEntity> = withContext(Dispatchers.IO) {
         try {
-            // 1. Fetch User Profile
-            val snapshot = db.collection("whitelisted_users").document(userId).get().await()
-            if (!snapshot.exists()) return@withContext Result.Failure(AppError.BusinessRule("User not found in cloud"))
+            // 1. Fetch User Profile (Standardized Resolution Order)
+            var snapshot = db.collection("whitelisted_users").document(userId).get().await()
+            var pathResolved = "whitelisted_users"
+
+            if (!snapshot.exists()) {
+                snapshot = db.collection("accounts").document(userId).get().await()
+                pathResolved = "accounts"
+            }
+
+            if (!snapshot.exists()) {
+                return@withContext Result.Failure(AppError.BusinessRule("User not found in cloud"))
+            }
+
+            println("🔍 User resolved via: $pathResolved")
             val data = snapshot.data ?: return@withContext Result.Failure(AppError.BusinessRule("Empty user data"))
 
-            @Suppress("UNCHECKED_CAST")
-            val rawMemberships = data["memberships"] as? Map<String, Map<String, Any>> ?: emptyMap()
-            val parsedMemberships = rawMemberships.mapValues { entry ->
-                Membership(
-                    schoolName = entry.value["schoolName"] as? String ?: "Unknown",
-                    role = entry.value["role"] as? String ?: "USER"
-                )
+            // Standardize memberships mapping
+            val membershipsMap = mutableMapOf<String, Membership>()
+            if (pathResolved == "whitelisted_users") {
+                @Suppress("UNCHECKED_CAST")
+                val rawMemberships = data["memberships"] as? Map<String, Map<String, Any>> ?: emptyMap()
+                rawMemberships.forEach { (sid, m) ->
+                    membershipsMap[sid] = Membership(
+                        schoolName = m["schoolName"] as? String ?: "Unknown",
+                        role = m["role"] as? String ?: "USER"
+                    )
+                }
+            } else {
+                // Fetch from accounts/{userId}/schools subcollection
+                try {
+                    val schoolsSnapshot = db.collection("accounts").document(userId).collection("schools").get().await()
+                    schoolsSnapshot.documents.forEach { doc ->
+                        membershipsMap[doc.id] = Membership(
+                            schoolName = doc.getString("schoolName") ?: "Unknown",
+                            role = doc.getString("role") ?: "USER"
+                        )
+                    }
+                } catch (e: Exception) {
+                    println("⚠️ SyncUser: Failed to fetch subcollection memberships: ${e.message}")
+                }
             }
 
             @Suppress("UNCHECKED_CAST")
@@ -51,7 +79,7 @@ class SyncUserUseCase @Inject constructor(
                 userId = userId,
                 email = data["email"] as? String ?: "",
                 name = data["name"] as? String ?: "User",
-                memberships = parsedMemberships,
+                memberships = membershipsMap,
                 friends = parsedFriends,
                 activeSchoolId = data["activeSchoolId"] as? String,
                 status = data["status"] as? String ?: "PENDING",
@@ -64,6 +92,7 @@ class SyncUserUseCase @Inject constructor(
 
             // Save to Local
             userDao.insertUser(user)
+            println("✅ SyncUser: Saved to Room -> ${user.userId}, role=${user.role}")
 
             // 2. Fetch & Sync Class Access
             val schoolId = user.activeSchoolId ?: sessionManager.getActiveSchoolId() ?: ""
@@ -86,20 +115,44 @@ class SyncUserUseCase @Inject constructor(
 
     suspend fun searchByEmail(email: String): UserEntity? = withContext(Dispatchers.IO) {
         try {
-            val snapshot = db.collection("whitelisted_users")
+            var snapshot = db.collection("whitelisted_users")
                 .whereEqualTo("email", email.trim().lowercase())
                 .limit(1).get().await()
 
-            val doc = snapshot.documents.firstOrNull() ?: return@withContext null
+            var doc = snapshot.documents.firstOrNull()
+            var pathResolved = "whitelisted_users"
+
+            if (doc == null) {
+                snapshot = db.collection("accounts")
+                    .whereEqualTo("email", email.trim().lowercase())
+                    .limit(1).get().await()
+                doc = snapshot.documents.firstOrNull()
+                pathResolved = "accounts"
+            }
+
+            if (doc == null) return@withContext null
+            println("🔍 User found via: $pathResolved")
             val data = doc.data ?: return@withContext null
 
-            @Suppress("UNCHECKED_CAST")
-            val rawMemberships = data["memberships"] as? Map<String, Map<String, Any>> ?: emptyMap()
-            val parsedMemberships = rawMemberships.mapValues { entry ->
-                Membership(
-                    schoolName = entry.value["schoolName"] as? String ?: "Unknown",
-                    role = entry.value["role"] as? String ?: "USER"
-                )
+            // Standardize memberships mapping
+            val membershipsMap = mutableMapOf<String, Membership>()
+            if (pathResolved == "whitelisted_users") {
+                @Suppress("UNCHECKED_CAST")
+                val rawMemberships = data["memberships"] as? Map<String, Map<String, Any>> ?: emptyMap()
+                rawMemberships.forEach { (sid, m) ->
+                    membershipsMap[sid] = Membership(
+                        schoolName = m["schoolName"] as? String ?: "Unknown",
+                        role = m["role"] as? String ?: "USER"
+                    )
+                }
+            } else {
+                val schoolsSnapshot = db.collection("accounts").document(doc.id).collection("schools").get().await()
+                schoolsSnapshot.documents.forEach { sDoc ->
+                    membershipsMap[sDoc.id] = Membership(
+                        schoolName = sDoc.getString("schoolName") ?: "Unknown",
+                        role = sDoc.getString("role") ?: "USER"
+                    )
+                }
             }
 
             @Suppress("UNCHECKED_CAST")
@@ -116,7 +169,7 @@ class SyncUserUseCase @Inject constructor(
                 userId = doc.id,
                 email = data["email"] as? String ?: "",
                 name = data["name"] as? String ?: "User",
-                memberships = parsedMemberships,
+                memberships = membershipsMap,
                 friends = parsedFriends,
                 activeSchoolId = data["activeSchoolId"] as? String,
                 status = data["status"] as? String ?: "PENDING",
@@ -124,7 +177,7 @@ class SyncUserUseCase @Inject constructor(
                 activeClassId = data["activeClassId"] as? String,
                 role = data["role"] as? String ?: "USER",
                 deviceId = data["deviceId"] as? String,
-                createdAt = data["createdAt"] as? Long ?: System.currentTimeMillis()
+                createdAt = (data["createdAt"] as? Long) ?: System.currentTimeMillis()
             )
         } catch (e: Exception) {
             null

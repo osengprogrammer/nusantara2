@@ -60,6 +60,16 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is DashboardViewModel.NavigationEvent.NavigateToRegistration -> {
+                    navController.navigate(Screen.RegistrationMenu.route)
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
         schoolViewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowSnackbar -> {
@@ -79,43 +89,50 @@ fun DashboardScreen(
         is UiState.Success -> {
             val data = state.data
             
-            // Sync schoolViewModel accountId
-            data.user?.userId?.let { userId ->
-                LaunchedEffect(userId) {
-                    schoolViewModel.setAccountId(userId)
+            if (!data.isReady) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-            }
-
-            if (data.conflicts.isNotEmpty()) {
-                ConflictResolverDialog(
-                    conflict = data.conflicts.first(),
-                    onResolve = { useCloud -> viewModel.resolveConflict(data.conflicts.first(), useCloud) }
-                )
-            }
-
-            DashboardContent(
-                navController = navController,
-                data = data,
-                schoolViewModel = schoolViewModel,
-                availableClasses = availableClasses,
-                snackbarHostState = snackbarHostState,
-                showAddSchoolDialog = showAddSchoolDialog,
-                onAddSchoolClick = { showAddSchoolDialog = true },
-                onDismissAddSchool = { showAddSchoolDialog = false },
-                onSyncClick = { viewModel.sync() },
-                onSelectClass = { classId -> 
-                    println("🖱 DASHBOARD: Ganti Kelas clicked for $classId")
-                    println("💾 DASHBOARD: Updating activeClassId in ViewModel")
-                    viewModel.selectActiveClass(classId) 
-                },
-                onLogout = {
-                    viewModel.logout {
-                        val intent = Intent(context, MainActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        context.startActivity(intent)
+            } else {
+                // Sync schoolViewModel accountId
+                data.user?.userId?.let { userId ->
+                    LaunchedEffect(userId) {
+                        schoolViewModel.setAccountId(userId)
                     }
                 }
-            )
+
+                if (data.conflicts.isNotEmpty()) {
+                    ConflictResolverDialog(
+                        conflict = data.conflicts.first(),
+                        onResolve = { useCloud -> viewModel.resolveConflict(data.conflicts.first(), useCloud) }
+                    )
+                }
+
+                DashboardContent(
+                    navController = navController,
+                    data = data,
+                    schoolViewModel = schoolViewModel,
+                    availableClasses = availableClasses,
+                    snackbarHostState = snackbarHostState,
+                    showAddSchoolDialog = showAddSchoolDialog,
+                    onAddSchoolClick = { showAddSchoolDialog = true },
+                    onDismissAddSchool = { showAddSchoolDialog = false },
+                    onSyncClick = { viewModel.sync() },
+                    onRegisterStudentClick = { viewModel.onRegisterStudentClick() },
+                    onSelectClass = { classId -> 
+                        println("🖱 DASHBOARD: Ganti Kelas clicked for $classId")
+                        println("💾 DASHBOARD: Updating activeClassId in ViewModel")
+                        viewModel.selectActiveClass(classId) 
+                    },
+                    onLogout = {
+                        viewModel.logout {
+                            val intent = Intent(context, MainActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            context.startActivity(intent)
+                        }
+                    }
+                )
+            }
         }
         is UiState.Error -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
@@ -141,6 +158,7 @@ fun DashboardContent(
     onAddSchoolClick: () -> Unit,
     onDismissAddSchool: () -> Unit,
     onSyncClick: () -> Unit,
+    onRegisterStudentClick: () -> Unit, // 👈 Added
     onSelectClass: (String?) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -273,7 +291,7 @@ fun DashboardContent(
                 if (data.isApproved) {
                     item {
                         ActiveSessionCard(
-                            allClasses = data.assignedClasses,
+                            allClasses = data.allClasses, // 🔥 Use all available classes
                             activeClassId = user.activeClassId,
                             onSelectClass = onSelectClass
                         )
@@ -295,6 +313,8 @@ fun DashboardContent(
                     TeacherTasksGrid(
                         navController = navController,
                         isAdmin = data.currentRole == "ADMIN" || data.currentRole == "SUPER_ADMIN",
+                        currentRole = data.currentRole,
+                        onRegisterStudentClick = onRegisterStudentClick,
                         accountId = user.userId,
                         isEnabled = activeSchool?.status == "ACTIVE" // 🔥 Added
                     )
@@ -339,6 +359,7 @@ fun DashboardContentSuccessPreview() {
                 onAddSchoolClick = {},
                 onDismissAddSchool = {},
                 onSyncClick = {},
+                onRegisterStudentClick = {}, // 👈 Added
                 onSelectClass = {},
                 onLogout = {}
             )
@@ -361,6 +382,7 @@ fun DashboardContentLoadingPreview() {
                 onAddSchoolClick = {},
                 onDismissAddSchool = {},
                 onSyncClick = {},
+                onRegisterStudentClick = {}, // 👈 Added
                 onSelectClass = {},
                 onLogout = {}
             )

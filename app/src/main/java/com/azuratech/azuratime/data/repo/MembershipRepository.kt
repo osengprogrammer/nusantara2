@@ -36,12 +36,19 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     // =====================================================
 
     suspend fun checkWhitelisted(uid: String): Map<String, Any>? = withContext(Dispatchers.IO) {
-        val doc = firestore.collection("whitelisted_users").document(uid).get().await()
-        return@withContext if (doc.exists()) doc.data else null
+        val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
+        if (whiteList.exists()) return@withContext whiteList.data
+        
+        val acc = firestore.collection("accounts").document(uid).get().await()
+        return@withContext if (acc.exists()) acc.data else null
     }
 
     suspend fun checkMembershipExists(uid: String): Boolean = withContext(Dispatchers.IO) {
-        firestore.collection("memberships").document(uid).get().await().exists()
+        val membership = firestore.collection("memberships").document(uid).get().await().exists()
+        if (membership) return@withContext true
+        
+        val acc = firestore.collection("accounts").document(uid).get().await().exists()
+        return@withContext acc
     }
 
     // =====================================================
@@ -105,10 +112,12 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     suspend fun pollWhitelistedFinal(uid: String): Map<String, Any>? = withContext(Dispatchers.IO) {
         var retryCount = 0
         while (retryCount < 3) {
-            val finalDoc = firestore.collection("whitelisted_users").document(uid).get().await()
-            if (finalDoc.exists()) {
-                return@withContext finalDoc.data
-            }
+            val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
+            if (whiteList.exists()) return@withContext whiteList.data
+            
+            val acc = firestore.collection("accounts").document(uid).get().await()
+            if (acc.exists()) return@withContext acc.data
+            
             delay(1500) // Tunggu 1.5 detik
             retryCount++
         }
