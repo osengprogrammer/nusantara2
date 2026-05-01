@@ -84,11 +84,16 @@ class CreateStudentUseCase @Inject constructor(
                 return@withContext Result.Failure(localSaveResult.error)
             }
 
-            // 3. Handle Face if provided
+            // 3. Always ensure a Face and Assignment record exists (Crucial for UI JOIN queries)
+            val faceId = if (faceEmbedding != null) {
+                "FACE-${studentId}-${System.currentTimeMillis()}"
+            } else {
+                "STUDENT_$studentId"
+            }
+
+            var finalPhotoUrl: String? = null
             if (faceEmbedding != null) {
-                val faceId = "FACE-${studentId}-${System.currentTimeMillis()}"
-                
-                var finalPhotoUrl: String? = photoBytes?.let {
+                finalPhotoUrl = photoBytes?.let {
                     photoStorageUtils.saveFacePhoto(it, faceId)
                 }
 
@@ -98,34 +103,34 @@ class CreateStudentUseCase @Inject constructor(
                         finalPhotoUrl = uploadResult.data
                     }
                 }
+            }
 
-                val faceEntity = FaceEntity(
+            val faceEntity = FaceEntity(
+                faceId = faceId,
+                studentId = studentId,
+                schoolId = resolvedSchoolId,
+                name = name,
+                photoUrl = finalPhotoUrl,
+                embedding = faceEmbedding,
+                isSynced = false
+            )
+            
+            // 🔥 LOCAL SAVE (Crucial for scanner/offline/UI visibility)
+            database.faceDao().upsertFace(faceEntity)
+
+            // 🔥 ALWAYS POPULATE ASSIGNMENTS (For Class labels in UI)
+            database.faceAssignmentDao().upsert(
+                FaceAssignmentEntity(
                     faceId = faceId,
-                    studentId = studentId,
+                    classId = classId ?: "",
                     schoolId = resolvedSchoolId,
-                    name = name,
-                    photoUrl = finalPhotoUrl,
-                    embedding = faceEmbedding,
                     isSynced = false
                 )
-                
-                // 🔥 LOCAL SAVE (Crucial for scanner/offline)
-                database.faceDao().upsertFace(faceEntity)
+            )
+            println("✅ Created face_assignment for student $studentId via faceId=$faceId")
 
-                // 🔥 POPULATE ASSIGNMENTS (For Check-in)
-                if (classId != null) {
-                    database.faceAssignmentDao().insertAssignment(
-                        FaceAssignmentEntity(
-                            faceId = faceId,
-                            classId = classId,
-                            schoolId = resolvedSchoolId,
-                            isSynced = false
-                        )
-                    )
-                    println("✅ UseCase: Added to face_assignments for class $classId")
-                }
-
-                // Sync Face to Cloud
+            // Sync Face to Cloud if biometric exists
+            if (faceEmbedding != null) {
                 faceRemoteDataSource.bulkSyncFaces(resolvedSchoolId, listOf(faceEntity))
             }
 
