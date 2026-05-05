@@ -16,6 +16,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@Deprecated(
+    message = "Use SaveStudentProfileUseCase. Migration: Replace with StudentProfile + SaveStudentProfileUseCase",
+    replaceWith = ReplaceWith("SaveStudentProfileUseCase")
+)
 class RegisterFaceUseCase @Inject constructor(
     private val application: Application,
     private val localDataSource: FaceLocalDataSource,

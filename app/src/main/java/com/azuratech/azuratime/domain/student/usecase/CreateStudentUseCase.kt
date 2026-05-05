@@ -15,6 +15,10 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
+@Deprecated(
+    message = "Use SaveStudentProfileUseCase. Migration: Replace with StudentProfile + SaveStudentProfileUseCase",
+    replaceWith = ReplaceWith("SaveStudentProfileUseCase")
+)
 class CreateStudentUseCase @Inject constructor(
     private val database: AppDatabase,
     private val db: FirebaseFirestore,
