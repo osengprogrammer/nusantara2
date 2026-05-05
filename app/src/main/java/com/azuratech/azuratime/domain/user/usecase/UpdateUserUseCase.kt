@@ -2,6 +2,8 @@ package com.azuratech.azuratime.domain.user.usecase
 
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.toEntity
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FieldValue
@@ -21,10 +23,11 @@ class UpdateUserUseCase @Inject constructor(
 ) {
     private val userDao = database.userDao()
 
-    suspend operator fun invoke(user: UserEntity): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(user: User): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            userDao.updateUser(user)
-            syncToCloud(user)
+            val entity = user.toEntity()
+            userDao.updateUser(entity)
+            syncToCloud(entity)
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))

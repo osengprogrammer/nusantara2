@@ -113,7 +113,7 @@ class DashboardViewModel @Inject constructor(
         dataIntegrityRepository.globalUnsyncedCount,
         dataIntegrityRepository.conflicts
     ) { args ->
-        val user = args[0] as com.azuratech.azuratime.data.local.UserEntity?
+        val user = args[0] as com.azuratech.azuraengine.model.User?
         @Suppress("UNCHECKED_CAST")
         val recentRecords = args[1] as List<com.azuratech.azuratime.data.local.CheckInRecordEntity>
         @Suppress("UNCHECKED_CAST")

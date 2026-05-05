@@ -100,3 +100,35 @@ data class UserEntity(
         )
     }
 }
+
+/**
+ * 🔄 MAPPER: Domain -> Entity
+ */
+fun com.azuratech.azuraengine.model.User.toEntity(): UserEntity {
+    return UserEntity(
+        userId = userId,
+        email = email,
+        name = name,
+        memberships = memberships.mapValues {
+            Membership(
+                schoolName = it.value.schoolName,
+                role = it.value.role,
+                assignedClassIds = it.value.assignedClassIds
+            )
+        },
+        friends = friends.mapValues {
+            FriendConnection(
+                friendName = it.value.friendName,
+                friendEmail = it.value.friendEmail,
+                status = it.value.status
+            )
+        },
+        activeSchoolId = activeSchoolId,
+        status = status,
+        isActive = isActive,
+        activeClassId = activeClassId,
+        role = role,
+        deviceId = deviceId,
+        createdAt = createdAt
+    )
+}

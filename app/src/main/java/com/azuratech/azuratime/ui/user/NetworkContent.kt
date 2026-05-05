@@ -22,10 +22,11 @@ import com.azuratech.azuratime.ui.core.designsystem.AzuraUserRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuraengine.model.User
 
 @Composable
 fun NetworkContent(
-    currentUser: UserEntity?,
+    currentUser: User?,
     uiState: NetworkState,
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit,
@@ -69,7 +70,7 @@ fun NetworkContent(
 
 @Composable
 fun FriendListSection(
-    currentUser: UserEntity?,
+    currentUser: User?,
     onAcceptFriend: (String) -> Unit,
     onRejectFriend: (String) -> Unit,
     onViewTargetUserClasses: (String, String, String) -> Unit
@@ -132,7 +133,7 @@ fun FriendListSection(
 
 @Composable
 fun SearchFriendSection(
-    currentUser: UserEntity?,
+    currentUser: User?,
     uiState: NetworkState,
     onQueryChange: (String) -> Unit,
     onSearchUser: (String) -> Unit,
@@ -174,7 +175,7 @@ fun SearchFriendSection(
                                 if (targetUser.userId == myId) {
                                     Text("Ini akun Anda", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
                                 } else if (existingStatus != null) {
-                                    Text(existingStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
+                                    Text(text = existingStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
                                 } else {
                                     AzuraButton(
                                         text = "Add Friend",

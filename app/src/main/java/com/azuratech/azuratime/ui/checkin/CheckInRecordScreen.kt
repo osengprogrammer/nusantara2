@@ -23,6 +23,7 @@ import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.theme.*
 import com.azuratech.azuratime.ui.classes.ClassViewModel
 import com.azuratech.azuratime.ui.user.UserManagementViewModel
+import com.azuratech.azuraengine.model.User
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
