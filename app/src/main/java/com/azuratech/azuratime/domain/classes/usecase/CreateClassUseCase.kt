@@ -18,7 +18,10 @@ class CreateClassUseCase @Inject constructor(
     suspend operator fun invoke(accountId: String, name: String, schoolId: String? = null): Result<Unit> {
         val resolvedSchoolId = schoolId ?: sessionManager.getActiveSchoolId() ?: ""
         println("🔗 DEBUG: Creating class '$name' for schoolId=$resolvedSchoolId")
-        println("🔗 DEBUG: Setting direct schoolId=$resolvedSchoolId on ClassEntity")
+
+        if (resolvedSchoolId.isBlank()) {
+            return Result.Failure(AppError.BusinessRule("School ID cannot be empty"))
+        }
 
         val classModel = ClassModel(
             id = UUID.randomUUID().toString(),
@@ -30,7 +33,7 @@ class CreateClassUseCase @Inject constructor(
             createdAt = System.currentTimeMillis()
         )
         
-        val targetSchoolId = if (resolvedSchoolId.isBlank()) null else resolvedSchoolId
-        return repository.saveClass(accountId, targetSchoolId, classModel)
+        println("🔄 UseCase: Calling Repository.saveClass for $resolvedSchoolId")
+        return repository.saveClass(accountId, resolvedSchoolId, classModel)
     }
 }

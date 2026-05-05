@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.domain.checkin.usecase
 
-import com.azuratech.azuratime.data.local.CheckInLocalDataSource
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
@@ -23,25 +23,26 @@ data class CheckInFilters(
 
 /**
  * UseCase to get filtered check-in records for the active school.
+ * 🔥 Clean Architecture compliant: Uses Repository and Domain Model.
  */
 class GetCheckInRecordsUseCase @Inject constructor(
-    private val localDataSource: CheckInLocalDataSource,
+    private val repository: CheckInRepository,
     private val sessionManager: SessionManager
 ) {
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    operator fun invoke(filters: CheckInFilters): Flow<Result<List<CheckInRecordEntity>>> =
+    operator fun invoke(filters: CheckInFilters): Flow<Result<List<CheckInRecord>>> =
         sessionManager.activeSchoolIdFlow
             .filterNotNull()
             .flatMapLatest { schoolId ->
-                localDataSource.getFilteredRecords(
-                    nameFilter = filters.name,
+                repository.getCheckInRecords(
+                    name = filters.name,
                     startDate = filters.startDate,
                     endDate = filters.endDate,
                     userId = filters.userId,
                     classId = filters.classId,
                     assignedIds = filters.assignedIds,
                     schoolId = schoolId
-                ).map { Result.Success(it) as Result<List<CheckInRecordEntity>> }
+                ).map { Result.Success(it) as Result<List<CheckInRecord>> }
             }
             .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
 }

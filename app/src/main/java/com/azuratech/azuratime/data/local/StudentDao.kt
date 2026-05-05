@@ -20,6 +20,9 @@ interface StudentDao {
     @Query("DELETE FROM students WHERE studentId = :id AND schoolId = :schoolId")
     suspend fun deleteById(id: String, schoolId: String)
 
+    @Query("UPDATE students SET classId = :classId, isSynced = 0 WHERE studentId = :studentId AND schoolId = :schoolId")
+    suspend fun updateClassId(studentId: String, schoolId: String, classId: String?)
+
     @Query("DELETE FROM students WHERE schoolId = :schoolId")
     suspend fun deleteAllBySchool(schoolId: String)
 

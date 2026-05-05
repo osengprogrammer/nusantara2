@@ -26,6 +26,9 @@ interface SchoolClassDao {
     @Query("SELECT COUNT(*) FROM schools WHERE accountId = :accountId")
     suspend fun getSchoolCountByAccount(accountId: String): Int
 
+    @Query("SELECT COUNT(*) FROM classes WHERE accountId = :accountId")
+    suspend fun getClassCountByAccount(accountId: String): Int
+
     @Query("""
         SELECT * FROM classes 
         WHERE schoolId = :schoolId 

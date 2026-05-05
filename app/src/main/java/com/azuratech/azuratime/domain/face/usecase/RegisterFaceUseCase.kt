@@ -21,12 +21,11 @@ import javax.inject.Inject
     replaceWith = ReplaceWith("SaveStudentProfileUseCase")
 )
 class RegisterFaceUseCase @Inject constructor(
-    private val application: Application,
     private val localDataSource: FaceLocalDataSource,
     private val remoteDataSource: FaceRemoteDataSource,
     private val sessionManager: SessionManager,
     private val syncFaces: SyncFacesUseCase,
-    private val photoStorageUtils: PhotoStorageUtils
+    private val fileStorage: com.azuratech.azuratime.domain.media.FileStorage
 ) {
     suspend operator fun invoke(
         inputId: String,
@@ -60,7 +59,7 @@ class RegisterFaceUseCase @Inject constructor(
             if (existingFace != null) return@withContext Result.Success(RegisterResult.Duplicate(existingFace.name))
 
             var finalPhotoUrl: String? = photoBytes?.let {
-                photoStorageUtils.saveFacePhoto(it, finalFaceId)
+                fileStorage.saveFacePhoto(it, finalFaceId)
             }
 
             photoBytes?.let { bytes ->
@@ -100,7 +99,6 @@ class RegisterFaceUseCase @Inject constructor(
                 println("ERROR: [RegisterFaceUseCase] Gagal sync cloud: ${e.message}")
             }
 
-            FaceCache.refresh(application, schoolId)
             Result.Success(RegisterResult.Success)
 
         } catch (e: Exception) {

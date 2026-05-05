@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.domain.checkin.usecase
 
-import com.azuratech.azuratime.data.local.CheckInLocalDataSource
-import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
@@ -12,10 +11,10 @@ import javax.inject.Inject
 /**
  * UseCase to synchronize check-in records with the cloud.
  * Performs both Push (local changes to cloud) and Pull (remote changes to local).
+ * 🔥 Clean Architecture compliant.
  */
 class SyncCheckInRecordsUseCase @Inject constructor(
-    private val localDataSource: CheckInLocalDataSource,
-    private val remoteDataSource: CheckInRemoteDataSource,
+    private val repository: CheckInRepository,
     private val sessionManager: SessionManager
 ) {
     suspend operator fun invoke(): Result<Unit> = withContext(Dispatchers.IO) {
@@ -24,13 +23,10 @@ class SyncCheckInRecordsUseCase @Inject constructor(
 
         // 1. PUSH PHASE: Upload local changes to cloud
         try {
-            val unsyncedRecords = localDataSource.getUnsyncedRecords(schoolId)
+            val unsyncedRecords = repository.getUnsyncedRecords(schoolId)
             for (record in unsyncedRecords) {
-                val syncRes = remoteDataSource.syncRecord(record)
-                if (syncRes is Result.Success) {
-                    localDataSource.update(record.copy(isSynced = true))
-                } else if (syncRes is Result.Failure) {
-                    // If it's a network error, we might want to stop early and retry later
+                val syncRes = repository.syncRecord(record)
+                if (syncRes is Result.Failure) {
                     if (syncRes.error is AppError.Network) {
                         return@withContext Result.Failure(syncRes.error)
                     }
@@ -38,18 +34,17 @@ class SyncCheckInRecordsUseCase @Inject constructor(
             }
         } catch (e: Exception) {
             println("ERROR: [SyncCheckInRecordsUseCase] Error during push phase: ${e.message}")
-            // Continue to pull phase even if push fails, unless it's a critical error
         }
 
-        // 2. PULL PHASE: Delta sync from cloud to local Room
+        // 2. PULL PHASE: Delta sync from cloud to local
         val lastSync = sessionManager.getLastRecordsSyncTime()
         try {
-            val syncResult = remoteDataSource.getRecordUpdates(schoolId, lastSync)
+            val syncResult = repository.getRecordUpdates(schoolId, lastSync)
             if (syncResult is Result.Success) {
                 val records = syncResult.data
                 if (records.isNotEmpty()) {
                     records.forEach { record ->
-                        localDataSource.insert(record)
+                        repository.saveRecord(record)
                     }
                     sessionManager.saveLastRecordsSyncTime()
                     println("[SyncCheckInRecordsUseCase] ✅ Delta Sync: Pulled ${records.size} records")
