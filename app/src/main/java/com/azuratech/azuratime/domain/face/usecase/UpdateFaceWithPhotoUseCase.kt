@@ -17,6 +17,10 @@ import javax.inject.Inject
  * UseCase to update a face with a new photo and embedding.
  * Enforces Local-First flow by updating local storage and flagging for background sync.
  */
+@Deprecated(
+    message = "Use SaveStudentProfileUseCase. Migration: Replace with StudentProfile + SaveStudentProfileUseCase",
+    replaceWith = ReplaceWith("SaveStudentProfileUseCase")
+)
 class UpdateFaceWithPhotoUseCase @Inject constructor(
     private val application: Application,
     private val localDataSource: FaceLocalDataSource,
