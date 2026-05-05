@@ -46,4 +46,52 @@ class SyncManager @Inject constructor(
         
         android.util.Log.d("SyncManager", "Enqueued profile sync for user $userId")
     }
+
+    /**
+     * Enqueue a sync for access requests (Join/Leave school).
+     */
+    fun enqueueAccessSync(userId: String) {
+        val data = workDataOf("userId" to userId)
+        
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<AccessSyncWorker>()
+            .setInputData(data)
+            .setConstraints(constraints)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "sync_access_$userId",
+            ExistingWorkPolicy.REPLACE,
+            request
+        )
+        
+        android.util.Log.d("SyncManager", "Enqueued access sync for user $userId")
+    }
+
+    /**
+     * Enqueue a sync for school metadata (Create/Update school).
+     */
+    fun enqueueSchoolSync(schoolId: String) {
+        val data = workDataOf("schoolId" to schoolId)
+        
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<SchoolSyncWorker>()
+            .setInputData(data)
+            .setConstraints(constraints)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "sync_school_$schoolId",
+            ExistingWorkPolicy.REPLACE,
+            request
+        )
+        
+        android.util.Log.d("SyncManager", "Enqueued school sync for school $schoolId")
+    }
 }

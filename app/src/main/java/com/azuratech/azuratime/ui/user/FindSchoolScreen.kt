@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material3.*
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 
 // 🔥 DB & ViewModels
 import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.domain.model.SyncStatus
 
 // 🔥 Azura Design System
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
@@ -40,6 +42,7 @@ fun FindSchoolScreen(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val searchResults by workspaceViewModel.schoolSearchResults.collectAsStateWithLifecycle()
+    val accessRequests by workspaceViewModel.accessRequests.collectAsStateWithLifecycle(emptyList())
     val uiState by workspaceViewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
 
@@ -50,7 +53,15 @@ fun FindSchoolScreen(
     LaunchedEffect(uiState) {
         when (val currentState = uiState) {
             is WorkspaceViewModel.WorkspaceState.Success -> {
-                scope.launch { snackbarHostState.showSnackbar("Permintaan bergabung telah dikirim!") }
+                scope.launch { snackbarHostState.showSnackbar("Berhasil!") }
+                workspaceViewModel.resetState()
+            }
+            is WorkspaceViewModel.WorkspaceState.RequestSent -> {
+                scope.launch { snackbarHostState.showSnackbar("Permintaan bergabung ke ${currentState.schoolName} telah dikirim!") }
+                workspaceViewModel.resetState()
+            }
+            is WorkspaceViewModel.WorkspaceState.RequestFailed -> {
+                scope.launch { snackbarHostState.showSnackbar(currentState.message ?: "Gagal mengirim permintaan") }
                 workspaceViewModel.resetState()
             }
             is WorkspaceViewModel.WorkspaceState.Error -> {
@@ -115,13 +126,18 @@ fun FindSchoolScreen(
                                 
                                 // Cek status membership di semua level (Active/Pending)
                                 val membership = currentUser?.memberships?.get(schoolId)
-                                val isFollowing = membership != null
+                                val localRequest = accessRequests.find { it.schoolId == schoolId }
+                                
+                                val isFollowing = membership != null || localRequest != null
+                                val status = membership?.role ?: localRequest?.status?.name ?: ""
+                                val isSynced = localRequest?.syncStatus == SyncStatus.SYNCED
 
                                 SchoolFollowCard(
                                     name = schoolName,
                                     id = schoolId,
-                                    status = membership?.role ?: "",
+                                    status = status,
                                     isFollowing = isFollowing,
+                                    isSynced = isSynced,
                                     isLoading = uiState is WorkspaceViewModel.WorkspaceState.Switching,
                                     onFollowClick = {
                                         if (currentUser != null) {
@@ -161,6 +177,7 @@ fun SchoolFollowCard(
     id: String,
     status: String,
     isFollowing: Boolean,
+    isSynced: Boolean,
     isLoading: Boolean,
     onFollowClick: () -> Unit
 ) {
@@ -196,12 +213,18 @@ fun SchoolFollowCard(
                 AssistChip(
                     onClick = {},
                     label = { Text(if (status == "PENDING") "Menunggu" else "Terdaftar") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                    leadingIcon = { 
+                        if (!isSynced) {
+                            Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(14.dp))
+                        } else {
+                            Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(14.dp))
+                        }
+                    }
                 )
             } else if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             } else {
-                Button(onClick = onFollowClick, shape = AzuraShapes.small) {
+                Button(onClick = onFollowClick, shape = AzuraShapes.small, enabled = !isLoading) {
                     Text("Ikuti")
                 }
             }

@@ -32,6 +32,22 @@ class WorkspaceRepository @Inject constructor(
     private fun getTenantRef(schoolId: String) = db.collection("schools").document(schoolId)
 
     /**
+     * Search schools by name from Firestore.
+     */
+    suspend fun searchSchools(query: String): List<Map<String, Any>> = withContext(Dispatchers.IO) {
+        try {
+            val snapshot = db.collection("schools")
+                .whereGreaterThanOrEqualTo("schoolName", query)
+                .whereLessThanOrEqualTo("schoolName", query + "\uf8ff")
+                .get()
+                .await()
+            snapshot.documents.mapNotNull { it.data }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
      * 🔥 THE WORKSPACE SWITCH ENGINE
      * Mengganti "dunia" aktif user dan membersihkan data tenant lama.
      */
