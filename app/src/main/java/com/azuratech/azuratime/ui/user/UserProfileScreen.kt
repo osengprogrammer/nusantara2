@@ -105,7 +105,7 @@ fun UserProfileScreen(
 
 @Composable
 fun UserProfileContent(
-    user: com.azuratech.azuratime.data.local.UserEntity?,
+    user: com.azuratech.azuraengine.model.User?,
     role: String,
     schoolName: String,
     isAdmin: Boolean,

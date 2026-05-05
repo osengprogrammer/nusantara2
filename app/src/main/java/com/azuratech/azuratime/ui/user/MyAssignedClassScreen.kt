@@ -80,7 +80,7 @@ fun MyAssignedClassContent(
     onRemoveClass: (String) -> Unit,
     onSelectActiveClass: (String) -> Unit,
     onAssignClass: (String) -> Unit,
-    user: com.azuratech.azuratime.data.local.UserEntity?
+    user: com.azuratech.azuraengine.model.User?
 ) {
     AzuraScreen(
         title = title,
