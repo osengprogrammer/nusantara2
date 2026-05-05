@@ -66,20 +66,55 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     }
 
     fun activateSession(data: Map<String, Any>?): Boolean {
-        val isoKey = data?.get("secureIsoKey")?.toString()
+        val isoKey = data?.get("secureIsoKey")?.toString() ?: ""
+        val schoolId = data?.get("schoolId")?.toString() ?: ""
+        val role = data?.get("role")?.toString() ?: "N/A"
+        
         val expireDate = (data?.get("expireDate") as? Number)?.toLong() 
             ?: (System.currentTimeMillis() + 31536000000L) // +1 Year fallback
 
-        if (isoKey.isNullOrEmpty()) return false
+        // 🔥 Save active school ID if present
+        if (schoolId.isNotEmpty()) {
+            sessionManager.saveActiveSchoolId(schoolId)
+        }
 
-        sessionManager.injectSecurityEnvelope(isoKey, expireDate)
+        // 🔥 Always save status to unblock UI
         sessionManager.saveUserStatus(SessionManager.STATUS_ACTIVE)
+
+        if (!isoKey.isNullOrEmpty()) {
+            sessionManager.injectSecurityEnvelope(isoKey, expireDate)
+        } else {
+            android.util.Log.w("MembershipRepo", "⚠️ Activation succeeded without secureIsoKey. Security features may be limited.")
+        }
+        
         return true
     }
 
     // =====================================================
     // 👁️ REAL-TIME OBSERVATION & POLLING
     // =====================================================
+
+    fun observeMemberships(uid: String): Flow<List<com.azuratech.azuratime.data.local.Membership>> = callbackFlow {
+        val listener = firestore.collection("memberships").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                
+                val membershipsMap = snapshot?.get("memberships") as? Map<String, Map<String, Any>>
+                val list = membershipsMap?.map { (id, data) ->
+                    com.azuratech.azuratime.data.local.Membership(
+                        schoolName = data["schoolName"] as? String ?: "Unknown",
+                        role = data["role"] as? String ?: "MEMBER",
+                        assignedClassIds = data["assignedClassIds"] as? List<String> ?: emptyList()
+                    )
+                } ?: emptyList()
+                
+                trySend(list)
+            }
+        awaitClose { listener.remove() }
+    }
 
     fun observeMembershipFlow(uid: String): Flow<MembershipDocUpdate> = callbackFlow {
         val listener = firestore.collection("memberships").document(uid)

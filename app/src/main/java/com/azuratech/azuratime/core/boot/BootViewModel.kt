@@ -39,10 +39,14 @@ class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
                     val currentUser = repository.getCurrentUser()
                     
                     withContext(Dispatchers.Main) {
-                        if (currentUser == null) {
+                        val isLoggedIn = currentUser != null
+                        val activeSchoolId = repository.getActiveSchoolId() ?: "none"
+                        
+                        if (!isLoggedIn) {
                             _state.value = BootState.NeedLogin
                         } else {
                             val isActive = repository.isSessionActive() 
+                            val shouldNavigate = if (isActive) "DASHBOARD" else "MEMBERSHIP"
                             _state.value = if (isActive) BootState.Ready else BootState.NeedActivation
                         }
                     }
