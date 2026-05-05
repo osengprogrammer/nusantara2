@@ -20,7 +20,8 @@ data class StudentEntity(
     val studentCode: String? = null,
     val classId: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val isDeleted: Boolean = false
 ) {
     fun toDomain() = StudentModel(
         studentId = studentId,
