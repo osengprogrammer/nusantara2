@@ -16,7 +16,8 @@ import javax.inject.Inject
 class SyncUserUseCase @Inject constructor(
     private val database: AppDatabase,
     private val db: FirebaseFirestore,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val syncSchoolsUseCase: com.azuratech.azuratime.domain.school.usecase.SyncSchoolsUseCase
 ) {
     private val userDao = database.userDao()
     private val userClassAccessDao = database.userClassAccessDao()
@@ -65,7 +66,24 @@ class SyncUserUseCase @Inject constructor(
             // Save to Local
             userDao.insertUser(user)
 
-            // 2. Fetch & Sync Class Access
+            // 2. 🔥 AUTO-SYNC SCHOOLS
+            val schoolIds = user.memberships.keys.toList()
+            if (schoolIds.isNotEmpty()) {
+                println("🔄 Auto-syncing ${schoolIds.size} schools for user $userId")
+                val schoolSyncResult = syncSchoolsUseCase(schoolIds)
+                
+                if (schoolSyncResult is Result.Success) {
+                    println("✅ School sync completed!")
+                    // Auto-select first school if none active in session
+                    if (sessionManager.getActiveSchoolId() == null) {
+                        val firstId = user.activeSchoolId ?: schoolIds.first()
+                        sessionManager.saveActiveSchoolId(firstId)
+                        println("🚀 AUTO-INIT: Selecting active school: $firstId")
+                    }
+                }
+            }
+
+            // 3. Fetch & Sync Class Access
             val schoolId = user.activeSchoolId ?: sessionManager.getActiveSchoolId() ?: ""
             if (schoolId.isNotEmpty()) {
                 val cloudClassIds = (data["assignedClassIds"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList()

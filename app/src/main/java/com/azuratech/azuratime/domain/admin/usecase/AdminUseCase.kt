@@ -2,6 +2,7 @@ package com.azuratech.azuratime.domain.admin.usecase
 
 import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.data.repo.AdminRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -15,6 +16,7 @@ import javax.inject.Inject
  */
 class AdminUseCase @Inject constructor(
     private val database: AppDatabase,
+    private val userRepository: UserRepository,
     private val db: FirebaseFirestore
 ) {
     private val userDao = database.userDao()
@@ -26,21 +28,34 @@ class AdminUseCase @Inject constructor(
         teacherEmail: String,
         role: String
     ): Boolean = withContext(Dispatchers.IO) {
-        val query = db.collection("whitelisted_users").whereEqualTo("email", teacherEmail.trim().lowercase()).get().await()
-        val target = query.documents.firstOrNull() ?: return@withContext false
-        target.reference.update("memberships.$adminSchoolId", mapOf("schoolName" to adminSchoolName, "role" to role)).await()
-        true
+        try {
+            val query = db.collection("whitelisted_users").whereEqualTo("email", teacherEmail.trim().lowercase()).get().await()
+            val target = query.documents.firstOrNull() ?: return@withContext false
+            val targetUserId = target.id
+            
+            // 1. Update Locally (Source of Truth)
+            userRepository.approveMembership(targetUserId, adminSchoolId, adminSchoolName, role)
+            
+            // 2. Update Cloud (Side Effect)
+            target.reference.update("memberships.$adminSchoolId", mapOf("schoolName" to adminSchoolName, "role" to role)).await()
+            
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     suspend fun revokeTeacherAccessFromWorkspace(targetUserId: String, schoolId: String) = withContext(Dispatchers.IO) {
-        db.collection("whitelisted_users").document(targetUserId)
-            .update(mapOf("memberships.$schoolId" to FieldValue.delete()))
-            .await()
+        // 1. Update Locally (Source of Truth)
+        userRepository.revokeMembership(targetUserId, schoolId)
 
-        val localUser = userDao.getUserById(targetUserId)
-        localUser?.let {
-            val updatedMemberships = it.memberships.toMutableMap().also { m -> m.remove(schoolId) }
-            userDao.updateUser(it.copy(memberships = updatedMemberships))
+        // 2. Update Cloud (Side Effect)
+        try {
+            db.collection("whitelisted_users").document(targetUserId)
+                .update(mapOf("memberships.$schoolId" to FieldValue.delete()))
+                .await()
+        } catch (e: Exception) {
+            // Log error
         }
     }
 
@@ -51,26 +66,22 @@ class AdminUseCase @Inject constructor(
         role: String,
         assignedClassIds: List<String> = emptyList()
     ) = withContext(Dispatchers.IO) {
-        val userEmail = userDao.getUserById(targetUserId)?.email ?: ""
-        val query = db.collection("whitelisted_users").whereEqualTo("email", userEmail.trim().lowercase()).get().await()
-        val targetDoc = query.documents.firstOrNull()
-        targetDoc?.reference?.update("memberships.$schoolId", mapOf("schoolName" to schoolName, "role" to role))?.await()
+        // 1. Update Locally (Source of Truth)
+        userRepository.approveMembership(targetUserId, schoolId, schoolName, role, assignedClassIds)
 
-        if (assignedClassIds.isNotEmpty()) {
-            val updateData = hashMapOf("assignedClassIds" to assignedClassIds, "lastClassUpdate" to FieldValue.serverTimestamp())
-            db.collection("whitelisted_users").document(targetUserId).set(updateData, SetOptions.merge()).await()
-        }
+        // 2. Update Cloud (Side Effect)
+        try {
+            val userEmail = userDao.getUserById(targetUserId)?.email ?: ""
+            val query = db.collection("whitelisted_users").whereEqualTo("email", userEmail.trim().lowercase()).get().await()
+            val targetDoc = query.documents.firstOrNull()
+            targetDoc?.reference?.update("memberships.$schoolId", mapOf("schoolName" to schoolName, "role" to role))?.await()
 
-        val localUser = userDao.getUserById(targetUserId)
-        localUser?.let {
-            val updatedMemberships = it.memberships.toMutableMap()
-            updatedMemberships[schoolId] = Membership(schoolName = schoolName, role = role)
-            userDao.updateUser(it.copy(memberships = updatedMemberships))
-        }
-
-        userClassAccessDao.clearAllAccessForUserInSchool(targetUserId, schoolId)
-        assignedClassIds.forEach { cid ->
-            userClassAccessDao.insertAccess(UserClassAccessEntity(userId = targetUserId, classId = cid, schoolId = schoolId))
+            if (assignedClassIds.isNotEmpty()) {
+                val updateData = hashMapOf("assignedClassIds" to assignedClassIds, "lastClassUpdate" to FieldValue.serverTimestamp())
+                db.collection("whitelisted_users").document(targetUserId).set(updateData, SetOptions.merge()).await()
+            }
+        } catch (e: Exception) {
+            // Log error
         }
     }
 }
