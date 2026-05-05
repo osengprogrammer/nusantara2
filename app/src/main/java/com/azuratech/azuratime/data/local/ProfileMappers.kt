@@ -9,6 +9,31 @@ import com.azuratech.azuratime.domain.model.SyncStatus
  */
 
 /**
+ * Extension to convert RawStudentProfile (JOIN result) to Domain Profile.
+ */
+fun RawStudentProfile.toDomain(): StudentProfile {
+    val status = when {
+        student.isSynced && (faceIsSynced ?: true) -> SyncStatus.SYNCED
+        student.isDeleted || (faceIsDeleted ?: false) -> SyncStatus.PENDING_DELETE
+        else -> SyncStatus.PENDING_UPDATE
+    }
+
+    return StudentProfile(
+        studentId = student.studentId,
+        studentCode = student.studentCode,
+        name = student.name,
+        schoolId = student.schoolId,
+        classId = student.classId,
+        faceId = faceId,
+        embedding = embedding,
+        photoUrl = photoUrl,
+        syncStatus = status,
+        createdAt = student.createdAt,
+        updatedAt = faceLastUpdated ?: student.createdAt
+    )
+}
+
+/**
  * Extension to convert StudentEntity to Domain Profile.
  * Joins with optional FaceEntity and class list.
  */
@@ -18,6 +43,7 @@ fun StudentEntity.toDomain(
 ): StudentProfile {
     val status = when {
         isSynced && (face?.isSynced ?: true) -> SyncStatus.SYNCED
+        isDeleted || (face?.isDeleted ?: false) -> SyncStatus.PENDING_DELETE
         else -> SyncStatus.PENDING_UPDATE
     }
 
@@ -46,7 +72,7 @@ fun FaceEntity.toDomain(
 ): StudentProfile {
     val status = when {
         isSynced && (student?.isSynced ?: true) -> SyncStatus.SYNCED
-        isDeleted -> SyncStatus.PENDING_DELETE
+        isDeleted || (student?.isDeleted ?: false) -> SyncStatus.PENDING_DELETE
         else -> SyncStatus.PENDING_UPDATE
     }
 
@@ -82,6 +108,7 @@ fun FaceAssignmentEntity.toDomain(
  */
 fun StudentProfile.toEntities(): Triple<StudentEntity, FaceEntity, List<FaceAssignmentEntity>> {
     val isSynced = syncStatus == SyncStatus.SYNCED
+    val isDeleted = syncStatus == SyncStatus.PENDING_DELETE
     
     val studentEntity = StudentEntity(
         studentId = studentId,
@@ -90,7 +117,8 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, FaceEntity, List<FaceAssi
         studentCode = studentCode,
         classId = classId,
         createdAt = createdAt,
-        isSynced = isSynced
+        isSynced = isSynced,
+        isDeleted = isDeleted
     )
 
     val faceEntity = FaceEntity(
@@ -103,7 +131,7 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, FaceEntity, List<FaceAssi
         createdAt = createdAt,
         lastUpdated = updatedAt,
         isSynced = isSynced,
-        isDeleted = syncStatus == SyncStatus.PENDING_DELETE
+        isDeleted = isDeleted
     )
 
     val assignments = classId?.let {
