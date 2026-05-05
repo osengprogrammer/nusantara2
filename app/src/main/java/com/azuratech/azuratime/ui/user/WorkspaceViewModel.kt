@@ -9,6 +9,8 @@ import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import com.azuratech.azuratime.domain.user.usecase.RequestJoinSchoolUseCase
+import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +30,7 @@ class WorkspaceViewModel @Inject constructor(
     private val repository: WorkspaceRepository,
     private val userRepository: UserRepository,
     private val syncUserUseCase: SyncUserUseCase,
+    private val requestJoinSchoolUseCase: RequestJoinSchoolUseCase,
     private val sessionManager: SessionManager,
     private val db: FirebaseFirestore
 ) : AndroidViewModel(application) {
@@ -95,14 +98,19 @@ class WorkspaceViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
             try {
-                db.collection("whitelisted_users").document(user.userId)
-                    .update(
-                        mapOf(
-                            "memberships.$schoolId.schoolName" to schoolName,
-                            "memberships.$schoolId.role" to "PENDING"
-                        )
-                    ).await()
-                _uiState.value = WorkspaceState.Success(schoolName)
+                val result = requestJoinSchoolUseCase(
+                    userId = user.userId,
+                    schoolId = schoolId,
+                    schoolName = schoolName,
+                    requestedRole = "PENDING"
+                )
+                
+                if (result is Result.Success) {
+                    _uiState.value = WorkspaceState.Success(schoolName)
+                } else {
+                    val error = (result as Result.Failure).error
+                    _uiState.value = WorkspaceState.Error(error.message ?: "Gagal mengirim permintaan")
+                }
             } catch (e: Exception) {
                 _uiState.value = WorkspaceState.Error(e.message ?: "Gagal mengirim permintaan")
             }

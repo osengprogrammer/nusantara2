@@ -51,7 +51,10 @@ data class UserEntity(
     val role: String = "USER", // 🔥 GLOBAL ROLE: SUPER_ADMIN, ADMIN, USER
 
     val deviceId: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+
+    // 🔥 Added for SSOT sync tracking
+    val syncStatus: String = "SYNCED" // com.azuratech.azuratime.domain.model.SyncStatus.name
 ) {
     // =====================================================
     // 🔑 COMPUTED HELPERS

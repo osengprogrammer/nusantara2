@@ -14,26 +14,26 @@ class SyncSchoolsUseCase @Inject constructor(
     private val repository: SchoolRepository,
     private val remoteDataSource: SchoolRemoteDataSource
 ) {
-    suspend operator fun invoke(accountId: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(schoolIds: List<String>): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            // 1. Sync Schools
-            val remoteSchoolsResult = remoteDataSource.getSchools(accountId)
+            // 1. Sync Schools from Global Collection
+            val remoteSchoolsResult = remoteDataSource.getSchoolsByIds(schoolIds)
             if (remoteSchoolsResult is Result.Success) {
                 remoteSchoolsResult.data.forEach { school ->
-                    repository.saveSchool(school) // This will also trigger an async push back, but it's merge-based so fine
+                    repository.saveSchoolLocally(school)
                 }
             }
 
             // 2. Sync Classes for each school
             val localSchools = remoteSchoolsResult.getOrNull() ?: emptyList()
             localSchools.forEach { school ->
-                val remoteClassesResult = remoteDataSource.getClasses(accountId, school.id)
+                val remoteClassesResult = remoteDataSource.getClasses(school.accountId, school.id)
                 if (remoteClassesResult is Result.Success) {
                     remoteClassesResult.data.forEach { classModel ->
                         repository.saveClassLocally(
                             ClassEntity(
                                 id = classModel.id,
-                                accountId = accountId,
+                                accountId = school.accountId,
                                 schoolId = classModel.schoolId,
                                 name = classModel.name,
                                 grade = classModel.grade,
@@ -49,6 +49,16 @@ class SyncSchoolsUseCase @Inject constructor(
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    /** Legacy support if needed */
+    suspend fun syncAllForAccount(accountId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        val result = remoteDataSource.getSchools(accountId)
+        if (result is Result.Success) {
+            invoke(result.data.map { it.id })
+        } else {
+            Result.Failure((result as Result.Failure).error)
         }
     }
 }

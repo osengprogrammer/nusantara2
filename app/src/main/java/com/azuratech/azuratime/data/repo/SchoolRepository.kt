@@ -45,6 +45,19 @@ class SchoolRepository @Inject constructor(
             }
 
     suspend fun saveSchool(school: School): Result<Unit> = try {
+        saveSchoolLocally(school)
+        
+        // Async Sync to Remote
+        repositoryScope.launch {
+            remoteDataSource.saveSchool(school.accountId, school)
+        }
+        
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(AppError.LocalDB(e.message))
+    }
+
+    suspend fun saveSchoolLocally(school: School) {
         dao.upsertSchool(
             SchoolEntity(
                 id = school.id,
@@ -57,15 +70,6 @@ class SchoolRepository @Inject constructor(
             )
         )
         println("✅ DEBUG: School saved to Room: ${school.id} with status ${school.status}")
-        
-        // Async Sync to Remote
-        repositoryScope.launch {
-            remoteDataSource.saveSchool(school.accountId, school)
-        }
-        
-        Result.Success(Unit)
-    } catch (e: Exception) {
-        Result.Failure(AppError.LocalDB(e.message))
     }
 
     suspend fun getSchoolById(id: String): School? = 
