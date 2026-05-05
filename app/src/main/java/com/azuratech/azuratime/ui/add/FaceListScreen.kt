@@ -157,7 +157,18 @@ fun FaceListItemCard(
                 Spacer(modifier = Modifier.width(AzuraSpacing.md))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(student.faceWithDetails.face.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(student.faceWithDetails.face.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        if (!student.faceWithDetails.face.isSynced) {
+                            Spacer(Modifier.width(4.dp))
+                            Icon(
+                                Icons.Default.CloudOff, 
+                                contentDescription = "Belum tersinkronisasi",
+                                modifier = Modifier.size(14.dp),
+                                tint = Color.Gray
+                            )
+                        }
+                    }
 
                     Text(
                         text = student.assignedClassNames,

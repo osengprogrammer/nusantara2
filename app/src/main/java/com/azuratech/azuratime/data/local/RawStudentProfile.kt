@@ -2,6 +2,7 @@ package com.azuratech.azuratime.data.local
 
 import androidx.room.Embedded
 import androidx.room.ColumnInfo
+import androidx.room.Relation
 
 /**
  * 🛠️ RAW STUDENT PROFILE
@@ -27,5 +28,21 @@ data class RawStudentProfile(
     val faceIsSynced: Boolean? = null,
     
     @ColumnInfo(name = "faceIsDeleted")
-    val faceIsDeleted: Boolean? = null
-)
+    val faceIsDeleted: Boolean? = null,
+
+    /**
+     * 🔗 Multi-class assignments fetched via relation.
+     * Note: This requires @Transaction on the DAO query.
+     */
+    @Relation(
+        parentColumn = "faceId",
+        entityColumn = "faceId"
+    )
+    val assignments: List<FaceAssignmentEntity> = emptyList()
+) {
+    /**
+     * Extracts all unique class IDs from the assignments and the primary student entity.
+     */
+    val allClassIds: List<String> 
+        get() = (assignments.map { it.classId } + listOfNotNull(student.classId)).distinct()
+}

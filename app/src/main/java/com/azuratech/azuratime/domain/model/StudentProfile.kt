@@ -15,7 +15,7 @@ data class StudentProfile(
     val studentCode: String? = null,
     val name: String,
     val schoolId: String,
-    val classId: String? = null, // Primary class ID
+    val classIds: List<String> = emptyList(), // Multi-class support
     val faceId: String? = null,
     val embedding: FloatArray? = null, // Handled by Converters.kt in Room
     val photoUrl: String? = null,
@@ -24,9 +24,19 @@ data class StudentProfile(
     val updatedAt: Long = System.currentTimeMillis()
 ) {
     /**
+     * Backward compatibility helper for primary class.
+     */
+    val classId: String? get() = classIds.firstOrNull()
+
+    /**
      * Computed property to check if biometric data is associated with this student.
      */
     val faceExists: Boolean get() = faceId != null && (embedding != null || photoUrl != null)
+
+    /**
+     * Helper to check if student is assigned to a specific class.
+     */
+    fun hasClass(classId: String): Boolean = classIds.contains(classId)
 
     /**
      * Helper to create a copy of the profile with an updated sync status and timestamp.
@@ -36,7 +46,7 @@ data class StudentProfile(
         updatedAt = System.currentTimeMillis()
     )
 
-    // Equals and HashCode overridden for FloatArray content comparison
+    // Equals and HashCode overridden for FloatArray content comparison and List comparison
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -47,7 +57,7 @@ data class StudentProfile(
         if (studentCode != other.studentCode) return false
         if (name != other.name) return false
         if (schoolId != other.schoolId) return false
-        if (classId != other.classId) return false
+        if (classIds != other.classIds) return false
         if (faceId != other.faceId) return false
         if (embedding != null) {
             if (other.embedding == null) return false
@@ -66,7 +76,7 @@ data class StudentProfile(
         result = 31 * result + (studentCode?.hashCode() ?: 0)
         result = 31 * result + name.hashCode()
         result = 31 * result + schoolId.hashCode()
-        result = 31 * result + (classId?.hashCode() ?: 0)
+        result = 31 * result + classIds.hashCode()
         result = 31 * result + (faceId?.hashCode() ?: 0)
         result = 31 * result + (embedding?.contentHashCode() ?: 0)
         result = 31 * result + (photoUrl?.hashCode() ?: 0)
