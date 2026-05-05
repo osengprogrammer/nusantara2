@@ -31,11 +31,13 @@ class GetFacesWithDetailsUseCase @Inject constructor(
                     val detailedFaces = faces.map { face ->
                         val userAssignments = assignmentMap[face.faceId] ?: emptyList()
                         val classNames = userAssignments.mapNotNull { classMap[it.classId]?.name }.joinToString(", ")
+                        val classIds = userAssignments.map { it.classId }
 
                         FaceWithDetails(
                             face = face,
                             className = classNames.ifEmpty { null },
-                            classId = userAssignments.firstOrNull()?.classId
+                            classId = userAssignments.firstOrNull()?.classId,
+                            classIds = classIds
                         )
                     }.sortedBy { it.face.name }
 

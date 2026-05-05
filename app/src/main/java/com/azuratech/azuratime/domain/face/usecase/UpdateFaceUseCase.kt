@@ -15,6 +15,10 @@ import javax.inject.Inject
 /**
  * UseCase to update basic face information (name, metadata) and trigger sync.
  */
+@Deprecated(
+    message = "Use SaveStudentProfileUseCase. Migration: Replace with StudentProfile + SaveStudentProfileUseCase",
+    replaceWith = ReplaceWith("SaveStudentProfileUseCase")
+)
 class UpdateFaceUseCase @Inject constructor(
     private val application: Application,
     private val localDataSource: FaceLocalDataSource,

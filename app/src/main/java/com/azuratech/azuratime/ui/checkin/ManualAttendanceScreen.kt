@@ -6,6 +6,7 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.add.FaceViewModel
 import com.azuratech.azuratime.ui.classes.ClassViewModel
 import com.azuratech.azuratime.ui.user.UserManagementViewModel
+import com.azuratech.azuratime.core.util.AttendanceService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

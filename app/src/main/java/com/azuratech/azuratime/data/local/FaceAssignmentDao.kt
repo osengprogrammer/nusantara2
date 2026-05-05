@@ -14,6 +14,9 @@ interface FaceAssignmentDao {
     @Query("DELETE FROM face_assignments WHERE faceId = :faceId AND schoolId = :schoolId")
     suspend fun deleteAllByFace(faceId: String, schoolId: String)
 
+    @Query("DELETE FROM face_assignments WHERE faceId = :faceId")
+    suspend fun deleteAllByFaceId(faceId: String)
+
     @Query("DELETE FROM face_assignments WHERE schoolId = :schoolId")
     suspend fun deleteAllBySchool(schoolId: String)
 

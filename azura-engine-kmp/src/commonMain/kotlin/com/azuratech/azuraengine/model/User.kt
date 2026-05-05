@@ -39,4 +39,13 @@ data class User(
     val role: String = "USER",
     val deviceId: String? = null,
     val createdAt: Long = 0L
-)
+) {
+    /** The role in the currently active school workspace, or null if no active school. */
+    val membershipRole: String? get() = memberships[activeSchoolId]?.role
+
+    /** The name of the currently active school workspace, or null if no active school. */
+    val schoolName: String? get() = memberships[activeSchoolId]?.schoolName
+
+    /** Cek status pertemanan dengan guru lain */
+    fun getFriendStatus(targetUserId: String): String? = friends[targetUserId]?.status
+}

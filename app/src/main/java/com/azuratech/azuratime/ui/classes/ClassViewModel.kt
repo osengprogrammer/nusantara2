@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.domain.school.usecase.GetSchoolsUseCase
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.classes.usecase.DeleteClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetAllClassesUseCase
@@ -14,6 +15,7 @@ import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ReassignClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetAvailableClassesUseCase
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
@@ -67,7 +69,7 @@ class ClassViewModel @Inject constructor(
         ?: sessionManager.getCurrentUserId() ?: ""
 
     // 🔥 User Flow for UI
-    val user: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
+    val user: StateFlow<User?> = sessionManager.currentUserIdFlow
         .filterNotNull()
         .flatMapLatest { observeUserUseCase(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

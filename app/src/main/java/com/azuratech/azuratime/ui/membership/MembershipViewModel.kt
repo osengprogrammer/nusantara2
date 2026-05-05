@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repo.MembershipDocUpdate
 import com.azuratech.azuratime.data.repo.MembershipRepository
+import com.azuratech.azuratime.data.local.Membership
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,11 @@ class MembershipViewModel @Inject constructor(
 
     private val _state = MutableStateFlow<MembershipState>(MembershipState.Idle)
     val state: StateFlow<MembershipState> = _state.asStateFlow()
+
+    private val _memberships = MutableStateFlow<List<Membership>?>(null)
+    val memberships: StateFlow<List<Membership>?> = _memberships.asStateFlow()
+
+    val hasNoSchools by lazy { memberships.value.isNullOrEmpty() }
 
     private var observeJob: Job? = null
 
@@ -65,30 +71,38 @@ class MembershipViewModel @Inject constructor(
         observeJob?.cancel()
         
         observeJob = viewModelScope.launch {
-            repository.observeMembershipFlow(uid).collect { update ->
-                when (update) {
-                    is MembershipDocUpdate.StatusChanged -> {
-                        when (update.status) {
-                            "PENDING" -> {
-                                repository.savePendingStatus()
-                                _state.value = MembershipState.Pending
-                            }
-                            "ACTIVE", "APPROVED" -> {
-                                if (update.data?.containsKey("secureIsoKey") == true) {
+            // Observe Status
+            launch {
+                repository.observeMembershipFlow(uid).collect { update ->
+                    when (update) {
+                        is MembershipDocUpdate.StatusChanged -> {
+                            when (update.status) {
+                                "PENDING" -> {
+                                    repository.savePendingStatus()
+                                    _state.value = MembershipState.Pending
+                                }
+                                "ACTIVE", "APPROVED" -> {
                                     activateMembership(update.data)
                                 }
-                            }
-                            "REJECTED" -> {
-                                _state.value = MembershipState.Rejected(update.reason)
+                                "REJECTED" -> {
+                                    _state.value = MembershipState.Rejected(update.reason)
+                                }
                             }
                         }
+                        is MembershipDocUpdate.DocumentMissing -> {
+                            checkWhitelistedFinal(uid)
+                        }
+                        is MembershipDocUpdate.Error -> {
+                            _state.value = MembershipState.Error(update.message)
+                        }
                     }
-                    is MembershipDocUpdate.DocumentMissing -> {
-                        checkWhitelistedFinal(uid)
-                    }
-                    is MembershipDocUpdate.Error -> {
-                        _state.value = MembershipState.Error(update.message)
-                    }
+                }
+            }
+
+            // Observe Memberships List
+            launch {
+                repository.observeMemberships(uid).collect { list ->
+                    _memberships.value = list
                 }
             }
         }

@@ -13,16 +13,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.ui.CheckInRecordEntityCard
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.ui.core.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
+import com.azuratech.azuraengine.model.User as DomainUser
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.theme.*
 import com.azuratech.azuratime.ui.classes.ClassViewModel
 import com.azuratech.azuratime.ui.user.UserManagementViewModel
+import com.azuratech.azuraengine.model.User
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -45,12 +47,12 @@ fun CheckInRecordScreen(
     val filterParams by checkInViewModel.filterParams.collectAsStateWithLifecycle()
     val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle(emptyList())
 
-    var editingRecord by remember { mutableStateOf<CheckInRecordEntity?>(null) }
+    var editingRecord by remember { mutableStateOf<CheckInRecord?>(null) }
     var showFilters by remember { mutableStateOf(false) }
     var startDate by remember { mutableStateOf<LocalDate?>(null) }
     var endDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedClassId by remember { mutableStateOf<String?>(null) }
-    var showClassCorrectionDialog by remember { mutableStateOf<CheckInRecordEntity?>(null) }
+    var showClassCorrectionDialog by remember { mutableStateOf<CheckInRecord?>(null) }
 
     // 2. Filter Sync
     LaunchedEffect(user, startDate, endDate, selectedClassId) {
@@ -134,10 +136,10 @@ fun CheckInRecordScreen(
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
-                    items(records, key = { it.id }) { record ->
-                        CheckInRecordEntityCard(
+                    items(records, key = { it.recordId }) { record ->
+                        CheckInRecordCard(
                             record = record,
-                            onEditRequested = { editingRecord = it }
+                            onEditRequested = { editingRecord = record }
                         )
                     }
                 }
@@ -166,7 +168,7 @@ fun CheckInRecordScreen(
 
         showClassCorrectionDialog?.let { recordToCorrect ->
             LocalClassCorrectionDialog(
-                currentClassName = recordToCorrect.className ?: "General Scan",
+                currentClassName = recordToCorrect.className.ifBlank { "General Scan" },
                 userClasses = availableClasses,
                 onDismiss = { showClassCorrectionDialog = null },
                 onClassSelected = { classItem ->

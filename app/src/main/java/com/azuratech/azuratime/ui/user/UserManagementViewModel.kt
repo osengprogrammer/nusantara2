@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.AttendanceConflict
 import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.toEntity
 import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import com.azuratech.azuratime.domain.user.usecase.UserManagementUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +46,7 @@ class UserManagementViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val currentUser: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
+    val currentUser: StateFlow<User?> = sessionManager.currentUserIdFlow
         .filterNotNull()
         .flatMapLatest { uid -> observeUserUseCase(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -101,10 +103,8 @@ class UserManagementViewModel @Inject constructor(
         println("🖱 DEBUG: selectActiveClass called for userId=$userId, classId=$classId")
         
         viewModelScope.launch {
-            // If it's for current user, we can get the entity from currentUser.value
-            // If it's for target user, we might need to fetch it first or use a dedicated usecase
-            val userToUpdate = if (targetUserId == null || targetUserId == currentUser.value?.userId) {
-                currentUser.value
+            val userToUpdate: UserEntity? = if (targetUserId == null || targetUserId == currentUser.value?.userId) {
+                currentUser.value?.toEntity()
             } else {
                 repository.getUserDao().getUserById(targetUserId)
             }
@@ -112,7 +112,7 @@ class UserManagementViewModel @Inject constructor(
             userToUpdate?.let {
                 val updatedUser = it.copy(activeClassId = classId)
                 println("💾 DEBUG: Saving user with activeClassId=${updatedUser.activeClassId}")
-                val result = updateUserUseCase(updatedUser)
+                val result = updateUserUseCase(updatedUser.toDomain())
                 if (result is com.azuratech.azuraengine.result.Result.Success) {
                     println("✅ DEBUG: selectActiveClass success for classId=$classId")
                 } else if (result is com.azuratech.azuraengine.result.Result.Failure) {

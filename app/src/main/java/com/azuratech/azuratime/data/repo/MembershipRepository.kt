@@ -36,12 +36,19 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     // =====================================================
 
     suspend fun checkWhitelisted(uid: String): Map<String, Any>? = withContext(Dispatchers.IO) {
-        val doc = firestore.collection("whitelisted_users").document(uid).get().await()
-        return@withContext if (doc.exists()) doc.data else null
+        val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
+        if (whiteList.exists()) return@withContext whiteList.data
+        
+        val acc = firestore.collection("accounts").document(uid).get().await()
+        return@withContext if (acc.exists()) acc.data else null
     }
 
     suspend fun checkMembershipExists(uid: String): Boolean = withContext(Dispatchers.IO) {
-        firestore.collection("memberships").document(uid).get().await().exists()
+        val membership = firestore.collection("memberships").document(uid).get().await().exists()
+        if (membership) return@withContext true
+        
+        val acc = firestore.collection("accounts").document(uid).get().await().exists()
+        return@withContext acc
     }
 
     // =====================================================
@@ -66,20 +73,55 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     }
 
     fun activateSession(data: Map<String, Any>?): Boolean {
-        val isoKey = data?.get("secureIsoKey")?.toString()
+        val isoKey = data?.get("secureIsoKey")?.toString() ?: ""
+        val schoolId = data?.get("schoolId")?.toString() ?: ""
+        val role = data?.get("role")?.toString() ?: "N/A"
+        
         val expireDate = (data?.get("expireDate") as? Number)?.toLong() 
             ?: (System.currentTimeMillis() + 31536000000L) // +1 Year fallback
 
-        if (isoKey.isNullOrEmpty()) return false
+        // 🔥 Save active school ID if present
+        if (schoolId.isNotEmpty()) {
+            sessionManager.saveActiveSchoolId(schoolId)
+        }
 
-        sessionManager.injectSecurityEnvelope(isoKey, expireDate)
+        // 🔥 Always save status to unblock UI
         sessionManager.saveUserStatus(SessionManager.STATUS_ACTIVE)
+
+        if (!isoKey.isNullOrEmpty()) {
+            sessionManager.injectSecurityEnvelope(isoKey, expireDate)
+        } else {
+            android.util.Log.w("MembershipRepo", "⚠️ Activation succeeded without secureIsoKey. Security features may be limited.")
+        }
+        
         return true
     }
 
     // =====================================================
     // 👁️ REAL-TIME OBSERVATION & POLLING
     // =====================================================
+
+    fun observeMemberships(uid: String): Flow<List<com.azuratech.azuratime.data.local.Membership>> = callbackFlow {
+        val listener = firestore.collection("memberships").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                
+                val membershipsMap = snapshot?.get("memberships") as? Map<String, Map<String, Any>>
+                val list = membershipsMap?.map { (id, data) ->
+                    com.azuratech.azuratime.data.local.Membership(
+                        schoolName = data["schoolName"] as? String ?: "Unknown",
+                        role = data["role"] as? String ?: "MEMBER",
+                        assignedClassIds = data["assignedClassIds"] as? List<String> ?: emptyList()
+                    )
+                } ?: emptyList()
+                
+                trySend(list)
+            }
+        awaitClose { listener.remove() }
+    }
 
     fun observeMembershipFlow(uid: String): Flow<MembershipDocUpdate> = callbackFlow {
         val listener = firestore.collection("memberships").document(uid)
@@ -105,10 +147,12 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     suspend fun pollWhitelistedFinal(uid: String): Map<String, Any>? = withContext(Dispatchers.IO) {
         var retryCount = 0
         while (retryCount < 3) {
-            val finalDoc = firestore.collection("whitelisted_users").document(uid).get().await()
-            if (finalDoc.exists()) {
-                return@withContext finalDoc.data
-            }
+            val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
+            if (whiteList.exists()) return@withContext whiteList.data
+            
+            val acc = firestore.collection("accounts").document(uid).get().await()
+            if (acc.exists()) return@withContext acc.data
+            
             delay(1500) // Tunggu 1.5 detik
             retryCount++
         }

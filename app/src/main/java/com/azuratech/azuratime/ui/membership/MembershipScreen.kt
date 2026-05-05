@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ fun MembershipScreen(
     val bootViewModel: BootViewModel = hiltViewModel()
 
     val state by membershipViewModel.state.collectAsState()
+    val memberships by membershipViewModel.memberships.collectAsState()
 
     LaunchedEffect(email) {
         membershipViewModel.checkMembership(email)
@@ -51,24 +53,32 @@ fun MembershipScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            when (val currentState = state) {
-                is MembershipState.Loading -> {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            val currentState = state
+            
+            if (currentState is MembershipState.Loading) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            } else if (memberships != null && memberships!!.isEmpty()) {
+                EmptyMembershipView(
+                    onJoinByCode = { /* Open Dialog/Bottom Sheet */ },
+                    onSearch = { /* Navigate to SchoolSearchScreen Stub */ }
+                )
+            } else {
+                when (currentState) {
+                    is MembershipState.Pending -> {
+                        PendingView(email = email, onLogout = onLogout)
+                    }
+                    is MembershipState.Rejected -> {
+                        RejectedView(reason = currentState.reason, onLogout = onLogout)
+                    }
+                    is MembershipState.Error -> {
+                        ErrorView(
+                            message = currentState.message,
+                            onRetry = { membershipViewModel.checkMembership(email) },
+                            onLogout = onLogout
+                        )
+                    }
+                    else -> {}
                 }
-                is MembershipState.Pending -> {
-                    PendingView(email = email, onLogout = onLogout)
-                }
-                is MembershipState.Rejected -> {
-                    RejectedView(reason = currentState.reason, onLogout = onLogout)
-                }
-                is MembershipState.Error -> {
-                    ErrorView(
-                        message = currentState.message,
-                        onRetry = { membershipViewModel.checkMembership(email) },
-                        onLogout = onLogout
-                    )
-                }
-                else -> {}
             }
         }
     }
@@ -77,6 +87,53 @@ fun MembershipScreen(
 // ==========================================
 // 🎨 AZURA-STYLED COMPONENTS
 // ==========================================
+
+@Composable
+fun EmptyMembershipView(onJoinByCode: () -> Unit, onSearch: () -> Unit) {
+    Column(
+        modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            Icons.Default.School, 
+            null, 
+            modifier = Modifier.size(100.dp), 
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        )
+        Spacer(modifier = Modifier.height(AzuraSpacing.lg))
+        Text(
+            "Anda belum bergabung ke sekolah manapun", 
+            style = MaterialTheme.typography.headlineSmall, 
+            fontWeight = FontWeight.Bold, 
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(AzuraSpacing.md))
+        Text(
+            "Minta kode undangan dari admin sekolah, atau cari sekolah yang tersedia.", 
+            style = MaterialTheme.typography.bodyMedium, 
+            textAlign = TextAlign.Center, 
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(AzuraSpacing.xl))
+
+        Button(
+            onClick = onJoinByCode, 
+            modifier = Modifier.fillMaxWidth(),
+            shape = AzuraShapes.medium
+        ) {
+            Text("Masukkan Kode Sekolah")
+        }
+        Spacer(modifier = Modifier.height(AzuraSpacing.md))
+        OutlinedButton(
+            onClick = onSearch, 
+            modifier = Modifier.fillMaxWidth(),
+            shape = AzuraShapes.medium
+        ) {
+            Text("Cari Sekolah")
+        }
+    }
+}
 
 @Composable
 fun PendingView(email: String, onLogout: () -> Unit) {

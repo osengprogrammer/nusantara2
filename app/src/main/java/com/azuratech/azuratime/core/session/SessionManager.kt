@@ -67,7 +67,16 @@ class SessionManager private constructor(private val context: Context) {
         .distinctUntilChanged()
 
     val currentUserIdFlow: Flow<String?> = _currentUserIdFlow.asSharedFlow()
-        .onStart { emit(getCurrentUserId()) }
+        .onStart { 
+            val id = try { 
+                getCurrentUserId() 
+            } catch(e: Exception) { 
+                println("⚠ SessionManager: Keystore error -> ${e.message}")
+                null 
+            }
+            println("🔍 SessionManager: onStart emitting ID -> $id")
+            emit(id) 
+        }
         .distinctUntilChanged()
 
     // =====================================================
