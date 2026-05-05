@@ -35,6 +35,18 @@ object AppModule {
     }
 
     // =====================================================
+    // 🗡️ DAO PROVIDERS
+    // =====================================================
+    @Provides
+    fun provideStudentDao(db: AppDatabase) = db.studentDao()
+
+    @Provides
+    fun provideFaceDao(db: AppDatabase) = db.faceDao()
+
+    @Provides
+    fun provideFaceAssignmentDao(db: AppDatabase) = db.faceAssignmentDao()
+
+    // =====================================================
     // ☁️ FIREBASE CLOUD PROVIDERS
     // =====================================================
 

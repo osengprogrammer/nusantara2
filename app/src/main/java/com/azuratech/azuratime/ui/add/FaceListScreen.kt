@@ -35,6 +35,10 @@ fun FaceListScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val allClasses by viewModel.allClasses.collectAsStateWithLifecycle()
+
+    var showClassPicker by remember { mutableStateOf(false) }
+    var targetStudentId by remember { mutableStateOf<String?>(null) }
 
     when (val state = uiState) {
         is FaceListUiState.Loading -> {
@@ -68,13 +72,65 @@ fun FaceListScreen(
                 )
             }
 
+            data.studentForDeletion?.let { studentId ->
+                val studentName = data.students.find { it.faceWithDetails.face.studentId == studentId }?.faceWithDetails?.face?.name ?: "Siswa"
+                AlertDialog(
+                    onDismissRequest = { viewModel.cancelDeleteStudent() },
+                    title = { Text("Konfirmasi Hapus") },
+                    text = { Text("Apakah Anda yakin ingin menghapus $studentName? Data absensi dan biometric akan hilang.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { viewModel.confirmDeleteStudent() },
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Hapus")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.cancelDeleteStudent() }) {
+                            Text("Batal")
+                        }
+                    }
+                )
+            }
+
+            if (showClassPicker && targetStudentId != null) {
+                AlertDialog(
+                    onDismissRequest = { showClassPicker = false },
+                    title = { Text("Pilih Kelas Baru") },
+                    text = {
+                        LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+                            items(allClasses) { classModel ->
+                                TextButton(
+                                    onClick = {
+                                        viewModel.onAssignStudentToClass(targetStudentId!!, classModel.id)
+                                        showClassPicker = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(classModel.name, textAlign = androidx.compose.ui.text.style.TextAlign.Start, modifier = Modifier.fillMaxWidth())
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showClassPicker = false }) { Text("Tutup") }
+                    }
+                )
+            }
+
             FaceListContent(
                 data = data,
                 onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
                 onQuickEdit = { faceWithDetails -> viewModel.onEditStudentClicked(faceWithDetails) },
                 onFullEdit = onEditUser,
-                onManageClasses = { face -> viewModel.onAssignClassesClicked(face) },
-                onDelete = { face -> viewModel.onDeleteStudent(face) }
+                onManageClasses = { face -> 
+                    targetStudentId = face.studentId
+                    showClassPicker = true
+                },
+                onDelete = { face -> 
+                    face.studentId?.let { viewModel.requestDeleteStudent(it) }
+                }
             )
         }
         is FaceListUiState.Error -> {
@@ -145,6 +201,7 @@ fun FaceListItemCard(
     onManageClasses: () -> Unit
 ) {
     val isUnassigned = student.assignedClassNames == "Belum ada kelas"
+    var showMenu by remember { mutableStateOf(false) }
 
     AzuraCard(
         modifier = Modifier.fillMaxWidth(),
@@ -184,25 +241,49 @@ fun FaceListItemCard(
                     )
                 }
 
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error)
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Opsi")
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Ubah Kelas") },
+                            onClick = { 
+                                showMenu = false
+                                onManageClasses() 
+                            },
+                            leadingIcon = { Icon(Icons.Default.School, null) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Ubah Nama") },
+                            onClick = { 
+                                showMenu = false
+                                onQuickEdit() 
+                            },
+                            leadingIcon = { Icon(Icons.Default.Edit, null) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Lihat Profil") },
+                            onClick = { 
+                                showMenu = false
+                                onFullEdit() 
+                            },
+                            leadingIcon = { Icon(Icons.Default.Person, null) }
+                        )
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("Hapus", color = MaterialTheme.colorScheme.error) },
+                            onClick = { 
+                                showMenu = false
+                                onDelete() 
+                            },
+                            leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) }
+                        )
+                    }
                 }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-
-            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = onQuickEdit) { Text("Nama") }
-                TextButton(onClick = onFullEdit) { Text("Profil") }
-                Spacer(Modifier.width(8.dp))
-                AzuraButton(
-                    text = "Set Kelas",
-                    onClick = onManageClasses,
-                    modifier = Modifier.height(36.dp),
-                    icon = Icons.Default.School
-                )
             }
         }
     )

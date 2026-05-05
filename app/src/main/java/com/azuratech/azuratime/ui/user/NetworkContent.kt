@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
@@ -88,7 +89,9 @@ fun FriendListSection(
             item {
                 Text("Permintaan Masuk", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
-            items(pendingRequests.entries.toList()) { (friendId, connection) ->
+            items(pendingRequests.entries.toList()) { entry ->
+                val friendId = entry.key
+                val connection = entry.value
                 AzuraUserRow(
                     name = connection.friendName,
                     subtitle = connection.friendEmail,
@@ -96,12 +99,12 @@ fun FriendListSection(
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(
                                 onClick = { onAcceptFriend(friendId) },
-                                modifier = Modifier.background(Color(0xFF4CAF50), androidx.compose.foundation.shape.CircleShape).size(36.dp)
+                                modifier = Modifier.background(Color(0xFF4CAF50), CircleShape).size(36.dp)
                             ) { Icon(Icons.Default.Check, contentDescription = "Terima", tint = Color.White) }
 
                             IconButton(
                                 onClick = { onRejectFriend(friendId) },
-                                modifier = Modifier.background(Color(0xFFF44336), androidx.compose.foundation.shape.CircleShape).size(36.dp)
+                                modifier = Modifier.background(Color(0xFFF44336), CircleShape).size(36.dp)
                             ) { Icon(Icons.Default.Close, contentDescription = "Tolak", tint = Color.White) }
                         }
                     }
@@ -116,7 +119,9 @@ fun FriendListSection(
         if (activeFriends.isEmpty()) {
             item { Text("Belum ada teman. Yuk cari sedulur baru!", color = Color.Gray, modifier = Modifier.padding(vertical = AzuraSpacing.md)) }
         } else {
-            items(activeFriends.entries.toList()) { (friendId, connection) ->
+            items(activeFriends.entries.toList()) { entry ->
+                val friendId = entry.key
+                val connection = entry.value
                 AzuraUserRow(
                     name = connection.friendName,
                     subtitle = connection.friendEmail,

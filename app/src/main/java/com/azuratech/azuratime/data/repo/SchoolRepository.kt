@@ -193,6 +193,7 @@ class SchoolRepository @Inject constructor(
                 createdAt = classModel.createdAt
             )
             dao.upsertClass(entity)
+            println("✅ Repository: Saved class locally to Room -> ${classModel.id}")
 
             // If schoolId is provided, also create an assignment
             if (schoolId != null) {
@@ -202,7 +203,13 @@ class SchoolRepository @Inject constructor(
             // Async Sync to Remote
             repositoryScope.launch {
                 // We still pass schoolId to remote if it exists, or handle as global class
-                remoteDataSource.saveClass(accountId, schoolId ?: "global", classModel)
+                val remoteSchoolId = schoolId ?: "global"
+                try {
+                    remoteDataSource.saveClass(accountId, remoteSchoolId, classModel)
+                    println("✅ Repository: Saved to Firestore -> schools/$remoteSchoolId/classes/${classModel.id}")
+                } catch (e: Exception) {
+                    println("❌ Repository: Failed to save to Firestore -> ${e.message}")
+                }
             }
 
             Result.Success(Unit)

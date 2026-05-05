@@ -20,15 +20,13 @@ import javax.inject.Inject
     replaceWith = ReplaceWith("SaveStudentProfileUseCase")
 )
 class CreateStudentUseCase @Inject constructor(
-    private val database: AppDatabase,
-    private val db: FirebaseFirestore,
+    private val studentRepository: com.azuratech.azuratime.data.repo.StudentRepository,
+    private val getUserByIdUseCase: com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase,
     private val sessionManager: SessionManager,
     private val faceRemoteDataSource: FaceRemoteDataSource,
-    private val photoStorageUtils: PhotoStorageUtils
+    private val photoStorageUtils: PhotoStorageUtils,
+    private val database: AppDatabase
 ) {
-    private val studentDao = database.studentDao()
-    private val faceDao = database.faceDao()
-    private val faceAssignmentDao = database.faceAssignmentDao()
 
     suspend operator fun invoke(
         schoolId: String?,
@@ -36,11 +34,12 @@ class CreateStudentUseCase @Inject constructor(
         studentCode: String?,
         classId: String?,
         faceEmbedding: FloatArray?,
-        photoBytes: ByteArray?
+        photoBytes: ByteArray?,
+        createdAtTimestamp: Long = System.currentTimeMillis()
     ): Result<StudentModel> = withContext(Dispatchers.IO) {
         try {
             val currentUserId = sessionManager.getCurrentUserId()
-            val user = currentUserId?.let { database.userDao().getUserById(it) }
+            val user = currentUserId?.let { getUserByIdUseCase(it) }
 
             val resolvedSchoolId = schoolId 
                 ?: sessionManager.getActiveSchoolId()
@@ -51,6 +50,10 @@ class CreateStudentUseCase @Inject constructor(
                 }
 
             println("🔍 CreateStudent: resolvedSchoolId=$resolvedSchoolId for user ${user?.userId}")
+
+            if (resolvedSchoolId.isBlank()) {
+                return@withContext Result.Failure(AppError.BusinessRule("School context is invalid (empty ID)"))
+            }
 
             val studentId = "STU-${UUID.randomUUID().toString().take(8)}"
             
@@ -64,27 +67,37 @@ class CreateStudentUseCase @Inject constructor(
             )
 
             // 1. Save Student to Cloud
-            val studentData = hashMapOf(
+            val studentData: Map<String, Any> = mapOf(
                 "studentId" to studentId,
                 "schoolId" to resolvedSchoolId,
                 "name" to name,
-                "studentCode" to studentCode,
-                "classId" to classId,
-                "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                "studentCode" to (studentCode ?: ""),
+                "classId" to (classId ?: ""),
+                "createdAt" to createdAtTimestamp
             )
             
-            db.collection("schools").document(resolvedSchoolId)
-                .collection("students").document(studentId)
-                .set(studentData, SetOptions.merge()).await()
+            println("🔄 UseCase: Calling Repository.saveStudentToCloud for $resolvedSchoolId")
+            val cloudResult = studentRepository.saveStudentToCloud(studentId, resolvedSchoolId, studentData)
 
-            // 2. Local Save Student
-            studentDao.upsert(studentEntity.copy(isSynced = true))
+            // 2. Local Save Student (Offline-first: always save locally)
+            val isSynced = cloudResult is Result.Success
+            val localSaveResult = studentRepository.saveStudent(studentEntity.copy(isSynced = isSynced))
+            
+            if (localSaveResult is Result.Failure) {
+                println("❌ UseCase: Local save failed -> ${localSaveResult.error}")
+                return@withContext Result.Failure(localSaveResult.error)
+            }
 
-            // 3. Handle Face if provided
+            // 3. Always ensure a Face and Assignment record exists (Crucial for UI JOIN queries)
+            val faceId = if (faceEmbedding != null) {
+                "FACE-${studentId}-${System.currentTimeMillis()}"
+            } else {
+                "STUDENT_$studentId"
+            }
+
+            var finalPhotoUrl: String? = null
             if (faceEmbedding != null) {
-                val faceId = "FACE-${studentId}-${System.currentTimeMillis()}"
-                
-                var finalPhotoUrl: String? = photoBytes?.let {
+                finalPhotoUrl = photoBytes?.let {
                     photoStorageUtils.saveFacePhoto(it, faceId)
                 }
 
@@ -94,39 +107,42 @@ class CreateStudentUseCase @Inject constructor(
                         finalPhotoUrl = uploadResult.data
                     }
                 }
+            }
 
-                val faceEntity = FaceEntity(
+            val faceEntity = FaceEntity(
+                faceId = faceId,
+                studentId = studentId,
+                schoolId = resolvedSchoolId,
+                name = name,
+                photoUrl = finalPhotoUrl,
+                embedding = faceEmbedding,
+                isSynced = false
+            )
+            
+            // 🔥 LOCAL SAVE (Crucial for scanner/offline/UI visibility)
+            database.faceDao().upsertFace(faceEntity)
+
+            // 🔥 ALWAYS POPULATE ASSIGNMENTS (For Class labels in UI)
+            database.faceAssignmentDao().upsert(
+                FaceAssignmentEntity(
                     faceId = faceId,
-                    studentId = studentId,
+                    classId = classId ?: "",
                     schoolId = resolvedSchoolId,
-                    name = name,
-                    photoUrl = finalPhotoUrl,
-                    embedding = faceEmbedding,
                     isSynced = false
                 )
-                
-                // Sync Face to Cloud
-                faceRemoteDataSource.bulkSyncFaces(resolvedSchoolId, listOf(faceEntity))
-                faceDao.upsertFace(faceEntity.copy(isSynced = true))
+            )
+            println("✅ Created face_assignment for student $studentId via faceId=$faceId")
 
-                // Handle Assignment
-                if (classId != null) {
-                    val assignment = FaceAssignmentEntity(
-                        faceId = faceId,
-                        classId = classId,
-                        schoolId = resolvedSchoolId,
-                        isSynced = false
-                    )
-                    faceRemoteDataSource.syncFaceAssignment(assignment)
-                    faceAssignmentDao.insertAssignment(assignment.copy(isSynced = true))
-                }
-                println("🔗 DEBUG: Created Student $studentId, linked face: true")
-            } else {
-                println("🔗 DEBUG: Created Student $studentId, linked face: false")
+            // Sync Face to Cloud if biometric exists
+            if (faceEmbedding != null) {
+                faceRemoteDataSource.bulkSyncFaces(resolvedSchoolId, listOf(faceEntity))
+            }
+
+            if (cloudResult is Result.Failure) {
+                println("⚠️ UseCase: Cloud save failed but local succeeded -> ${cloudResult.error}")
             }
 
             Result.Success(studentEntity.toDomain())
-
         } catch (e: Exception) {
             Result.Failure(AppError.BusinessRule(e.message))
         }

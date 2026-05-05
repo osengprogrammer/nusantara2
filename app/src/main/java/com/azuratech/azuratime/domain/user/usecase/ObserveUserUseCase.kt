@@ -21,5 +21,9 @@ class ObserveUserUseCase @Inject constructor(
     private val userDao = database.userDao()
 
     operator fun invoke(userId: String): Flow<User?> = 
-        userDao.observeUserById(userId).map { it?.toDomain() }
+        userDao.observeUserById(userId).map { entity ->
+            val user = entity?.toDomain()
+            println("🔄 ObserveUser: Emitting user for $userId -> ${user?.userId ?: "NULL"}")
+            user
+        }
 }

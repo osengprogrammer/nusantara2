@@ -15,6 +15,7 @@ import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ReassignClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetAvailableClassesUseCase
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result

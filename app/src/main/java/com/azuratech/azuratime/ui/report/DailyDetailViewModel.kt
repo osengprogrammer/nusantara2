@@ -4,9 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.data.local.ClassEntity
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuratime.domain.checkin.usecase.GetCheckInRecordsUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.UpdateCheckInRecordUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.DeleteCheckInRecordUseCase
@@ -66,8 +65,8 @@ class DailyDetailViewModel @Inject constructor(
         assignedClassIds,
         currentUser
     ) { dailyLogs, globalClasses, assignedIds, user ->
-        val filteredLogs = dailyLogs.filter { it.faceId == faceId }
-            .sortedBy { it.checkInTime ?: it.createdAtDateTime }
+        val filteredLogs = dailyLogs.filter { it.studentId == faceId }
+            .sortedBy { it.timestamp }
 
         val activeSchoolId = user?.activeSchoolId
         val isAdmin = activeSchoolId != null && user?.memberships?.get(activeSchoolId)?.role == "ADMIN"
@@ -86,17 +85,17 @@ class DailyDetailViewModel @Inject constructor(
         initialValue = DailyDetailUiState.Loading
     )
 
-    fun deleteRecord(record: CheckInRecordEntity) {
-        viewModelScope.launch { deleteCheckInRecordUseCase(record.id) }
+    fun deleteRecord(record: CheckInRecord) {
+        viewModelScope.launch { deleteCheckInRecordUseCase(record.recordId) }
     }
 
-    fun updateRecord(record: CheckInRecordEntity) {
+    fun updateRecord(record: CheckInRecord) {
         viewModelScope.launch { updateCheckInRecordUseCase(record) }
     }
 
-    fun updateRecordClass(record: CheckInRecordEntity, selectedClass: com.azuratech.azuraengine.model.ClassModel) {
+    fun updateRecordClass(record: CheckInRecord, selectedClass: com.azuratech.azuraengine.model.ClassModel) {
         viewModelScope.launch {
-            updateCheckInRecordUseCase.updateClass(record.id, selectedClass.id, selectedClass.name)
+            updateCheckInRecordUseCase.updateClass(record.recordId, selectedClass.id, selectedClass.name)
         }
     }
 }
