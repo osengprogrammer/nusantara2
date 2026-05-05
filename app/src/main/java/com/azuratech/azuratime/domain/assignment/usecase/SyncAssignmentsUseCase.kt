@@ -28,7 +28,8 @@ class SyncAssignmentsUseCase @Inject constructor(
         val assignments = mutableListOf<FaceAssignmentEntity>()
 
         try {
-            // 1. Fetch from Tenant
+            // 1. Fetch from Tenant (Standardized Path)
+            println("🔥 Path Standardized: face_assignments → schools/$schoolId/face_assignments")
             val tenantSnapshot = db.collection("schools").document(schoolId)
                 .collection("face_assignments").get().await()
             
@@ -42,25 +43,9 @@ class SyncAssignmentsUseCase @Inject constructor(
                 } else null
             })
 
-            // 2. Fallback to Root
-            try {
-                val rootSnapshot = db.collection("face_assignments").get().await()
-                rootSnapshot.documents.forEach { doc ->
-                    val faceId = doc.getString("faceId") ?: doc.id.split("_").firstOrNull()
-                    val classId = doc.getString("classId") ?: doc.id.split("_").getOrNull(1)
-                    
-                    if (faceId != null && classId != null) {
-                        val correctedFaceId = if (faceId.contains("--")) faceId else "${classId}--${faceId}"
-                        if (assignments.none { it.faceId == correctedFaceId && it.classId == classId }) {
-                            assignments.add(FaceAssignmentEntity(correctedFaceId, classId, schoolId, true))
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                println("[SyncAssignments] Root fetch failed: ${e.message}")
-            }
+            // 🔥 Removed legacy Root Fallback (db.collection("face_assignments"))
 
-            // 3. Auto-Healing
+            // 2. Auto-Healing
             if (assignments.isEmpty()) {
                 val allFaces = database.faceDao().getAllFacesForScanningList(schoolId)
                 for (face in allFaces) {

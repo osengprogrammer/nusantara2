@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.ui.dashboard.DashboardUiState
 import com.azuratech.azuratime.ui.report.AttendanceMatrixUiState
 import com.azuratech.azuratime.ui.report.MatrixCellModel
@@ -19,7 +19,7 @@ import java.time.LocalDateTime
  */
 object PreviewMocks {
     
-    val mockUser = UserEntity(
+    val mockUser = User(
         userId = "usr_123",
         email = "admin@azuratech.com",
         name = "Azura Admin",

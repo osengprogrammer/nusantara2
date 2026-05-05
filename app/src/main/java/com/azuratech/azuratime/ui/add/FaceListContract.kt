@@ -24,7 +24,8 @@ data class FaceListData(
     val searchQuery: String = "",
     val selectedClassName: String? = null,
     val studentForClassAssignment: FaceEntity? = null,
-    val studentForQuickEdit: FaceWithDetails? = null
+    val studentForQuickEdit: FaceWithDetails? = null,
+    val studentForDeletion: String? = null
 )
 
 /**

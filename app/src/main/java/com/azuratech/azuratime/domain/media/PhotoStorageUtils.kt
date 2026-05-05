@@ -7,8 +7,8 @@ import javax.inject.Inject
 class PhotoStorageUtils @Inject constructor(
     private val imageProcessor: ImageProcessor,
     private val storageProvider: StorageProvider
-) {
-    fun saveFacePhoto(imageBytes: ByteArray, faceId: String): String? {
+) : FileStorage {
+    override fun saveFacePhoto(imageBytes: ByteArray, faceId: String): String? {
         val fileName = "${faceId}_${System.currentTimeMillis()}.jpg"
         return try {
             storageProvider.save(imageBytes, fileName)
@@ -18,7 +18,7 @@ class PhotoStorageUtils @Inject constructor(
         }
     }
     
-    fun loadFacePhoto(filePath: String): ByteArray? {
+    override fun loadFacePhoto(filePath: String): ByteArray? {
         return try {
             storageProvider.read(filePath)
         } catch (e: Exception) {
@@ -26,7 +26,7 @@ class PhotoStorageUtils @Inject constructor(
             null
         }
     }
-    
+
     /**
      * Load an image from URI/Path safely and resize it.
      */
@@ -34,7 +34,7 @@ class PhotoStorageUtils @Inject constructor(
         return try {
             val rawBytes = storageProvider.read(uriString)
             if (rawBytes.isEmpty()) return null
-            
+
             imageProcessor.resize(rawBytes, maxDimension, maxDimension)
         } catch (e: Exception) {
             println("ERROR: [$TAG] Failed to load photo from URI: $uriString: ${e.message}")
@@ -42,7 +42,7 @@ class PhotoStorageUtils @Inject constructor(
         }
     }
 
-    fun deleteFacePhoto(filePath: String?): Boolean {
+    override fun deleteFacePhoto(filePath: String?): Boolean {
         return if (filePath != null) {
             storageProvider.delete(filePath)
         } else true

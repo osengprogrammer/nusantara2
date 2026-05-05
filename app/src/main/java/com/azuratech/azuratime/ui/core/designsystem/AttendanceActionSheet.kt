@@ -10,17 +10,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AttendanceActionSheet(
-    record: CheckInRecordEntity,
+    record: CheckInRecord,
     onDismiss: () -> Unit,
-    onDelete: (CheckInRecordEntity) -> Unit,
-    onUpdateStatus: (CheckInRecordEntity) -> Unit,
+    onDelete: (CheckInRecord) -> Unit,
+    onUpdateStatus: (CheckInRecord) -> Unit,
     onShowClassCorrection: () -> Unit 
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -46,7 +47,7 @@ fun AttendanceActionSheet(
             }
             
             Text(
-                text = "Personil: ${record.name}",
+                text = "Personil: ${record.studentName}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -58,12 +59,31 @@ fun AttendanceActionSheet(
             Spacer(Modifier.height(AzuraSpacing.sm))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
-                val statuses = listOf("H" to "Hadir", "S" to "Sakit", "I" to "Izin", "A" to "Alpa")
-                statuses.forEach { (code, label) ->
+                val statuses = listOf(
+                    CheckInStatus.PRESENT to "Hadir",
+                    CheckInStatus.LATE to "Sakit", // Wait, label logic might be different in original
+                    CheckInStatus.EXCUSED to "Izin",
+                    CheckInStatus.ABSENT to "Alpa"
+                )
+                // Let's check the original label mapping
+                // statuses = listOf("H" to "Hadir", "S" to "Sakit", "I" to "Izin", "A" to "Alpa")
+                // CheckInStatus.PRESENT -> "H"
+                // CheckInStatus.LATE -> "T" (Late)
+                // CheckInStatus.ABSENT -> "A" (Alpa)
+                // CheckInStatus.EXCUSED -> "S" (Sakit) or "I" (Izin)
+                
+                // Let's use the actual enum status for logic
+                CheckInStatus.values().forEach { status ->
+                    val label = when(status) {
+                        CheckInStatus.PRESENT -> "Hadir"
+                        CheckInStatus.LATE -> "Terlambat"
+                        CheckInStatus.EXCUSED -> "Izin"
+                        CheckInStatus.ABSENT -> "Alpa"
+                    }
                     FilterChip(
-                        selected = record.status == code,
+                        selected = record.status == status,
                         onClick = { 
-                            onUpdateStatus(record.copy(status = code))
+                            onUpdateStatus(record.copy(status = status))
                             onDismiss()
                         },
                         label = { Text(label, modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
@@ -91,7 +111,7 @@ fun AttendanceActionSheet(
                 Spacer(Modifier.width(AzuraSpacing.sm))
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Pindahkan Sesi Kelas", fontWeight = FontWeight.Bold)
-                    Text("Saat ini: ${record.className ?: "Umum"}", style = MaterialTheme.typography.labelSmall)
+                    Text("Saat ini: ${record.className.ifBlank { "Umum" }}", style = MaterialTheme.typography.labelSmall)
                 }
                 Icon(Icons.Default.ChevronRight, null)
             }

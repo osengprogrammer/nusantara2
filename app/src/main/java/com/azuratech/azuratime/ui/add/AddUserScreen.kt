@@ -24,6 +24,7 @@ fun AddUserScreen(
     viewModel: StudentFormViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val classes by viewModel.classes.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     var showFaceCapture by remember { mutableStateOf(false) }
@@ -51,9 +52,10 @@ fun AddUserScreen(
 
     AddUserContent(
         uiState = uiState,
+        classes = classes,
         onNameChange = { viewModel.onNameChange(it) },
         onStudentIdChange = { viewModel.onStudentIdChange(it) },
-        onClassSelected = { viewModel.onClassSelected(it) },
+        onClassSelected = { id, name -> viewModel.onClassSelected(id, name) },
         onCaptureEmbedding = { 
             captureMode = CaptureMode.EMBEDDING
             showFaceCapture = true 

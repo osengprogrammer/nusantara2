@@ -20,6 +20,9 @@ interface FaceDao {
     @Query("SELECT * FROM faces WHERE faceId = :id AND schoolId = :schoolId LIMIT 1")
     suspend fun getFaceById(id: String, schoolId: String): FaceEntity?
 
+    @Query("SELECT * FROM faces WHERE studentId = :studentId AND schoolId = :schoolId LIMIT 1")
+    suspend fun getFaceByStudentId(studentId: String, schoolId: String): FaceEntity?
+
     @Query("SELECT EXISTS(SELECT 1 FROM faces WHERE faceId = :id AND schoolId = :schoolId)")
     suspend fun isFaceExists(id: String, schoolId: String): Boolean
 
@@ -77,4 +80,7 @@ interface FaceDao {
 
     @Query("SELECT * FROM faces WHERE schoolId = :schoolId")
     fun getAllFacesFlow(schoolId: String): Flow<List<FaceEntity>>
+
+    @Query("SELECT * FROM faces WHERE studentId = :studentId AND schoolId = :schoolId LIMIT 1")
+    suspend fun getFaceByStudentId(studentId: String, schoolId: String): FaceEntity?
 }

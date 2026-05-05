@@ -22,6 +22,8 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 fun TeacherTasksGrid(
     navController: NavController,
     isAdmin: Boolean,
+    currentRole: String = "USER", // 👈 Added
+    onRegisterStudentClick: () -> Unit, // 👈 Added
     accountId: String? = null,
     isEnabled: Boolean = true, // 🔥 Added
     modifier: Modifier = Modifier
@@ -105,13 +107,13 @@ fun TeacherTasksGrid(
         // ======================================================
         // 🔥 Row 5: Admin Tools
         // ======================================================
-        if (isAdmin) {
+        if (isAdmin || currentRole == "SUPER_ADMIN") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
             ) {
                 DashboardActionCard("Registrasi Baru", Icons.Default.PersonAdd, MaterialTheme.colorScheme.tertiary,
-                    { navController.navigate(Screen.RegistrationMenu.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
+                    onClick = onRegisterStudentClick, modifier = Modifier.weight(1f), enabled = isEnabled)
                 DashboardActionCard("Debug System", Icons.Default.BugReport, MaterialTheme.colorScheme.outline,
                     { navController.navigate(Screen.Debug.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
             }

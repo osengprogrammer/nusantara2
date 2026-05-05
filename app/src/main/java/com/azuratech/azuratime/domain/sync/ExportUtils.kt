@@ -1,10 +1,11 @@
 package com.azuratech.azuratime.domain.sync
 
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuraengine.core.StorageProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class ExportUtils @Inject constructor(
@@ -87,21 +88,28 @@ class ExportUtils @Inject constructor(
     /**
      * Export Log Mentah - Audit Trail untuk pengecekan per-tap
      */
-    suspend fun exportRawLogsToCsv(records: List<CheckInRecordEntity>): String? = withContext(Dispatchers.IO) {
+    suspend fun exportRawLogsToCsv(records: List<CheckInRecord>): String? = withContext(Dispatchers.IO) {
         val fileName = "Azura_RawLogs_${System.currentTimeMillis()}.csv"
         
         try {
             val stringBuilder = StringBuilder()
             stringBuilder.appendLine("Face ID,Name,Date,Time,Status,Admin Email")
 
+            val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+
             records.forEach { record ->
+                val dateTime = java.time.LocalDateTime.ofInstant(
+                    java.time.Instant.ofEpochMilli(record.timestamp),
+                    java.time.ZoneId.systemDefault()
+                )
                 val row = listOf(
-                    record.faceId,
-                    record.name,
-                    record.attendanceDate.toString(),
-                    record.checkInTime?.toLocalTime()?.toString() ?: "-",
-                    record.status,
-                    record.userId
+                    record.studentId,
+                    record.studentName,
+                    dateTime.format(dateFormatter),
+                    dateTime.format(timeFormatter),
+                    record.status.toCode(),
+                    record.teacherEmail
                 ).joinToString(",") { escapeCsv(it) }
 
                 stringBuilder.appendLine(row)

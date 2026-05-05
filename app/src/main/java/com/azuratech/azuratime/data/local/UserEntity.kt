@@ -51,7 +51,10 @@ data class UserEntity(
     val role: String = "USER", // 🔥 GLOBAL ROLE: SUPER_ADMIN, ADMIN, USER
 
     val deviceId: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+
+    // 🔥 Added for SSOT sync tracking
+    val syncStatus: String = "SYNCED" // com.azuratech.azuratime.domain.model.SyncStatus.name
 ) {
     // =====================================================
     // 🔑 COMPUTED HELPERS
@@ -99,4 +102,36 @@ data class UserEntity(
             createdAt = createdAt
         )
     }
+}
+
+/**
+ * 🔄 MAPPER: Domain -> Entity
+ */
+fun com.azuratech.azuraengine.model.User.toEntity(): UserEntity {
+    return UserEntity(
+        userId = userId,
+        email = email,
+        name = name,
+        memberships = memberships.mapValues {
+            Membership(
+                schoolName = it.value.schoolName,
+                role = it.value.role,
+                assignedClassIds = it.value.assignedClassIds
+            )
+        },
+        friends = friends.mapValues {
+            FriendConnection(
+                friendName = it.value.friendName,
+                friendEmail = it.value.friendEmail,
+                status = it.value.status
+            )
+        },
+        activeSchoolId = activeSchoolId,
+        status = status,
+        isActive = isActive,
+        activeClassId = activeClassId,
+        role = role,
+        deviceId = deviceId,
+        createdAt = createdAt
+    )
 }

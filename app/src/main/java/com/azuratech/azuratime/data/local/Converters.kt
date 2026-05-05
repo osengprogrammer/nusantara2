@@ -141,4 +141,22 @@ class Converters {
             emptyMap()
         }
     }
+
+    // =====================================================
+    // 🎫 ENUMS (Status & Sync)
+    // =====================================================
+
+    @TypeConverter
+    fun fromAccessRequestStatus(status: com.azuratech.azuratime.domain.model.AccessRequestStatus): String = status.name
+
+    @TypeConverter
+    fun toAccessRequestStatus(value: String): com.azuratech.azuratime.domain.model.AccessRequestStatus = 
+        com.azuratech.azuratime.domain.model.AccessRequestStatus.valueOf(value)
+
+    @TypeConverter
+    fun fromSyncStatus(status: com.azuratech.azuratime.domain.model.SyncStatus): String = status.name
+
+    @TypeConverter
+    fun toSyncStatus(value: String): com.azuratech.azuratime.domain.model.SyncStatus = 
+        com.azuratech.azuratime.domain.model.SyncStatus.valueOf(value)
 }
