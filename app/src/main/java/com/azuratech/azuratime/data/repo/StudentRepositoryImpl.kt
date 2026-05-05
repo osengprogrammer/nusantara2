@@ -37,8 +37,15 @@ class StudentRepositoryImpl @Inject constructor(
         return try {
             val (student, face, assignments) = profile.toEntities()
             database.withTransaction {
+                // 1. Save Core Entities
                 studentDao.upsert(student)
                 faceDao.upsertFace(face)
+                
+                // 2. Clear existing assignments for this face (prevent orphans)
+                // We use the faceId from the generated entity for consistency
+                faceAssignmentDao.deleteAllByFaceId(face.faceId)
+                
+                // 3. Insert new assignments
                 assignments.forEach { faceAssignmentDao.insertAssignment(it) }
             }
             // TODO: Phase 3 - SyncManager.enqueueSync(profile.studentId)

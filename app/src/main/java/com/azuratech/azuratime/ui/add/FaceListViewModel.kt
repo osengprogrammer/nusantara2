@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.FaceWithDetails
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.RemoveStudentFromClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.face.usecase.DeleteFaceUseCase
@@ -25,6 +26,7 @@ class FaceListViewModel @Inject constructor(
     private val updateFaceUseCase: UpdateFaceUseCase,
     private val deleteFaceUseCase: DeleteFaceUseCase,
     private val getClassesUseCase: GetClassesUseCase,
+    private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
     private val removeStudentFromClassUseCase: RemoveStudentFromClassUseCase,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : ViewModel() {
@@ -52,7 +54,7 @@ class FaceListViewModel @Inject constructor(
         val faces = facesResult.getOrNull() ?: emptyList()
         faces.filter { face ->
             val matchesQuery = if (query.isBlank()) true else face.face.name.contains(query, ignoreCase = true)
-            val matchesClass = if (className == null) true else face.className == className
+            val matchesClass = if (className == null) true else face.className?.contains(className, ignoreCase = true) == true
             matchesQuery && matchesClass
         }
     }
@@ -64,7 +66,7 @@ class FaceListViewModel @Inject constructor(
                 faceWithDetails = student,
                 assignedClassNames = student.className ?: "Belum ada kelas",
                 isBiometricReady = student.face.photoUrl?.let { it.startsWith("http") || File(it).exists() } == true,
-                assignedClassIds = student.classId?.let { listOf(it) } ?: emptyList()
+                assignedClassIds = student.classIds
             )
         }
     }

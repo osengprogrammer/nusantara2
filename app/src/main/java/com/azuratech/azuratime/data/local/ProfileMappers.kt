@@ -23,7 +23,7 @@ fun RawStudentProfile.toDomain(): StudentProfile {
         studentCode = student.studentCode,
         name = student.name,
         schoolId = student.schoolId,
-        classId = student.classId,
+        classIds = allClassIds,
         faceId = faceId,
         embedding = embedding,
         photoUrl = photoUrl,
@@ -47,12 +47,15 @@ fun StudentEntity.toDomain(
         else -> SyncStatus.PENDING_UPDATE
     }
 
+    // Merge primary classId with the provided list
+    val finalClassIds = (classIds + listOfNotNull(classId)).distinct()
+
     return StudentProfile(
         studentId = studentId,
         studentCode = studentCode,
         name = name,
         schoolId = schoolId,
-        classId = classId ?: classIds.firstOrNull(),
+        classIds = finalClassIds,
         faceId = face?.faceId,
         embedding = face?.embedding, // Handled by Converters.kt in Room
         photoUrl = face?.photoUrl,
@@ -68,7 +71,7 @@ fun StudentEntity.toDomain(
  */
 fun FaceEntity.toDomain(
     student: StudentEntity? = null, 
-    classId: String? = null
+    classIds: List<String> = emptyList()
 ): StudentProfile {
     val status = when {
         isSynced && (student?.isSynced ?: true) -> SyncStatus.SYNCED
@@ -76,12 +79,15 @@ fun FaceEntity.toDomain(
         else -> SyncStatus.PENDING_UPDATE
     }
 
+    // Merge student's primary classId if available
+    val finalClassIds = (classIds + listOfNotNull(student?.classId)).distinct()
+
     return StudentProfile(
         studentId = studentId ?: faceId,
         studentCode = student?.studentCode,
         name = name,
         schoolId = schoolId,
-        classId = classId ?: student?.classId,
+        classIds = finalClassIds,
         faceId = faceId,
         embedding = embedding,
         photoUrl = photoUrl,
@@ -99,7 +105,7 @@ fun FaceAssignmentEntity.toDomain(
     face: FaceEntity, 
     student: StudentEntity? = null
 ): StudentProfile {
-    return face.toDomain(student, classId)
+    return face.toDomain(student, listOf(classId))
 }
 
 /**
@@ -115,7 +121,7 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, FaceEntity, List<FaceAssi
         schoolId = schoolId,
         name = name,
         studentCode = studentCode,
-        classId = classId,
+        classId = classIds.firstOrNull(), // Store first as primary for legacy compat
         createdAt = createdAt,
         isSynced = isSynced,
         isDeleted = isDeleted
@@ -134,16 +140,14 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, FaceEntity, List<FaceAssi
         isDeleted = isDeleted
     )
 
-    val assignments = classId?.let {
-        listOf(
-            FaceAssignmentEntity(
-                faceId = faceEntity.faceId,
-                classId = it,
-                schoolId = schoolId,
-                isSynced = isSynced
-            )
+    val assignments = classIds.map { classId ->
+        FaceAssignmentEntity(
+            faceId = faceEntity.faceId,
+            classId = classId,
+            schoolId = schoolId,
+            isSynced = isSynced
         )
-    } ?: emptyList()
+    }
 
     return Triple(studentEntity, faceEntity, assignments)
 }
