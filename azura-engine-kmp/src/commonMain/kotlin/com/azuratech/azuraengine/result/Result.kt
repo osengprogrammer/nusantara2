@@ -34,3 +34,13 @@ sealed class Result<out T> {
         is Loading -> Loading
     }
 }
+
+inline fun <T> Result<T>.onSuccess(action: (T) -> Unit): Result<T> {
+    if (this is Result.Success) action(data)
+    return this
+}
+
+inline fun <T> Result<T>.onFailure(action: (AppError) -> Unit): Result<T> {
+    if (this is Result.Failure) action(error)
+    return this
+}

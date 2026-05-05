@@ -17,4 +17,10 @@ abstract class RepositoryModule {
     abstract fun bindStudentRepository(
         impl: StudentRepositoryImpl
     ): StudentRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAccessRequestRepository(
+        impl: com.azuratech.azuratime.data.repo.AccessRequestRepositoryImpl
+    ): com.azuratech.azuratime.data.repo.AccessRequestRepository
 }

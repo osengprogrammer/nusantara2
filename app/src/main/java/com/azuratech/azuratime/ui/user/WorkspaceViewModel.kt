@@ -9,14 +9,19 @@ import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
-import com.azuratech.azuratime.domain.user.usecase.RequestJoinSchoolUseCase
+import com.azuratech.azuratime.domain.user.usecase.SubmitSchoolAccessUseCase
+import com.azuratech.azuratime.domain.user.usecase.CancelSchoolAccessUseCase
+import com.azuratech.azuratime.domain.school.usecase.CreateSchoolUseCase
+import com.azuratech.azuratime.domain.school.usecase.UpdateSchoolDetailsUseCase
+import com.azuratech.azuratime.data.repo.AccessRequestRepository
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuraengine.result.onFailure
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 /**
@@ -30,7 +35,11 @@ class WorkspaceViewModel @Inject constructor(
     private val repository: WorkspaceRepository,
     private val userRepository: UserRepository,
     private val syncUserUseCase: SyncUserUseCase,
-    private val requestJoinSchoolUseCase: RequestJoinSchoolUseCase,
+    private val submitRequestUseCase: SubmitSchoolAccessUseCase,
+    private val cancelRequestUseCase: CancelSchoolAccessUseCase,
+    private val createSchoolUseCase: CreateSchoolUseCase,
+    private val updateSchoolDetailsUseCase: UpdateSchoolDetailsUseCase,
+    private val accessRequestRepository: AccessRequestRepository,
     private val sessionManager: SessionManager,
     private val db: FirebaseFirestore
 ) : AndroidViewModel(application) {
@@ -39,11 +48,15 @@ class WorkspaceViewModel @Inject constructor(
         object Idle : WorkspaceState()
         object Switching : WorkspaceState()
         data class Success(val schoolName: String) : WorkspaceState()
+        data class RequestSent(val schoolName: String) : WorkspaceState()
+        data class RequestFailed(val message: String?) : WorkspaceState()
         data class Error(val message: String) : WorkspaceState()
     }
 
     private val _uiState = MutableStateFlow<WorkspaceState>(WorkspaceState.Idle)
     val uiState: StateFlow<WorkspaceState> = _uiState.asStateFlow()
+
+    private val currentUserId: String get() = sessionManager.getCurrentUserId() ?: ""
 
     /**
      * Berpindah workspace sekolah aktif.
@@ -56,8 +69,7 @@ class WorkspaceViewModel @Inject constructor(
                 // 1. Update SessionManager agar DAO lain langsung tahu sekolah mana yang aktif
                 sessionManager.saveActiveSchoolId(newSchoolId)
 
-                // 2. Update Cloud agar user kembali ke sekolah ini saat login nanti
-                // Logic moved to WorkspaceRepository.switchWorkspace
+                // 2. Update Context
                 repository.switchWorkspace(userId, newSchoolId)
 
                 // 3. Sync User agar Role/Membership terbaru masuk ke Room
@@ -86,34 +98,22 @@ class WorkspaceViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-                val snapshot = db.collection("schools")
-                    .whereGreaterThanOrEqualTo("schoolName", query)
-                    .whereLessThanOrEqualTo("schoolName", query + "\uf8ff")
-                    .get()
-                _schoolSearchResults.value = snapshot.await().documents.mapNotNull { it.data }
+            _schoolSearchResults.value = repository.searchSchools(query)
         }
     }
 
     fun sendJoinRequest(user: UserEntity, schoolId: String, schoolName: String) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
-            try {
-                val result = requestJoinSchoolUseCase(
-                    userId = user.userId,
-                    schoolId = schoolId,
-                    schoolName = schoolName,
-                    requestedRole = "PENDING"
-                )
-                
-                if (result is Result.Success) {
-                    _uiState.value = WorkspaceState.Success(schoolName)
-                } else {
-                    val error = (result as Result.Failure).error
-                    _uiState.value = WorkspaceState.Error(error.message ?: "Gagal mengirim permintaan")
-                }
-            } catch (e: Exception) {
-                _uiState.value = WorkspaceState.Error(e.message ?: "Gagal mengirim permintaan")
-            }
+            submitRequestUseCase(user.userId, schoolId, schoolName, "TEACHER")
+                .onSuccess { _uiState.value = WorkspaceState.RequestSent(schoolName) }
+                .onFailure { _uiState.value = WorkspaceState.RequestFailed(it.message) }
+        }
+    }
+
+    fun leaveSchool(schoolId: String) {
+        viewModelScope.launch {
+            cancelRequestUseCase(currentUserId, schoolId)
         }
     }
 
@@ -124,55 +124,36 @@ class WorkspaceViewModel @Inject constructor(
     fun createNewSchool(userId: String, userEmail: String, schoolName: String) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
-            try {
-                // 1. Buat workspace di Firestore
-                val newSchoolRef = db.collection("schools").document()
-                val schoolId = newSchoolRef.id
-
-                newSchoolRef.set(mapOf(
-                    "schoolId" to schoolId,
-                    "schoolName" to schoolName,
-                    "ownerId" to userId,
-                    "ownerEmail" to userEmail,
-                    "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
-                )).await()
-
-                // 2. Kunci sesi ke tenant baru ini
-                sessionManager.saveActiveSchoolId(schoolId)
-
-                // 3. Tarik membership terbaru (sebagai ADMIN sekolah baru)
-                syncUserUseCase(userId)
-
-                _uiState.value = WorkspaceState.Success(schoolName)
-            } catch (e: Exception) {
-                _uiState.value = WorkspaceState.Error("Gagal membuat sekolah: ${e.message}")
-            }
+            createSchoolUseCase(userId, schoolName)
+                .onSuccess { _uiState.value = WorkspaceState.Success(schoolName) }
+                .onFailure { _uiState.value = WorkspaceState.Error(it.message ?: "Gagal membuat sekolah") }
         }
     }
 
     fun finalizeSetup(schoolId: String) {
         viewModelScope.launch {
-            try {
-                db.collection("schools").document(schoolId).update("status", "ACTIVE").await()
-            } catch (e: Exception) {
-                // Non-critical
-            }
+            updateSchoolDetailsUseCase(schoolId) // Default status in Entity is ACTIVE
         }
     }
 
     fun updateSchoolName(schoolId: String, userId: String, newName: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
-            try {
-                db.collection("schools").document(schoolId).update("schoolName", newName.trim()).await()
-                syncUserUseCase(userId)
-                _uiState.value = WorkspaceState.Idle
-                onSuccess()
-            } catch (e: Exception) {
-                _uiState.value = WorkspaceState.Error("Gagal mengubah nama sekolah: ${e.message}")
-                onError(e.message ?: "Gagal mengubah nama sekolah")
-            }
+            updateSchoolDetailsUseCase(schoolId, name = newName.trim())
+                .onSuccess {
+                    _uiState.value = WorkspaceState.Idle
+                    onSuccess()
+                }
+                .onFailure {
+                    _uiState.value = WorkspaceState.Error(it.message ?: "Gagal mengubah nama sekolah")
+                    onError(it.message ?: "Gagal mengubah nama sekolah")
+                }
         }
     }
+
+    /**
+     * Observe Access Requests for the current user
+     */
+    val accessRequests = accessRequestRepository.observeRequestsByUser(currentUserId)
 }
 // 🔥 FACTORY DIHAPUS SEPENUHNYA
