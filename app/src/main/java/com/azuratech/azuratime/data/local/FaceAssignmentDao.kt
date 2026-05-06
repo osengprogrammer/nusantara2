@@ -50,6 +50,9 @@ interface FaceAssignmentDao {
     @Query("SELECT COUNT(*) FROM face_assignments WHERE schoolId = :schoolId AND classId NOT IN (SELECT id FROM classes WHERE schoolId = :schoolId)")
     fun getBrokenAssignmentsCount(schoolId: String): Flow<Int>
 
+    @Query("UPDATE face_assignments SET classId = :newClassId, isSynced = 0 WHERE faceId = :faceId AND schoolId = :schoolId")
+    suspend fun updateClassForFace(faceId: String, newClassId: String, schoolId: String)
+
     // 🔥 Added for ReportRepository
     @Query("SELECT faces.* FROM faces INNER JOIN face_assignments ON faces.faceId = face_assignments.faceId WHERE face_assignments.classId IN (:classIds) AND faces.schoolId = :schoolId")
     fun getFacesByMultipleClasses(classIds: List<String>, schoolId: String): Flow<List<FaceEntity>>

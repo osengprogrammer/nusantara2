@@ -12,22 +12,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
+import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.ui.core.designsystem.AzuraUserRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
-import com.azuratech.azuraengine.model.User
 
 @Composable
 fun NetworkContent(
-    currentUser: User?,
+    currentUser: UserEntity?,
     uiState: NetworkState,
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit,
@@ -71,7 +70,7 @@ fun NetworkContent(
 
 @Composable
 fun FriendListSection(
-    currentUser: User?,
+    currentUser: UserEntity?,
     onAcceptFriend: (String) -> Unit,
     onRejectFriend: (String) -> Unit,
     onViewTargetUserClasses: (String, String, String) -> Unit
@@ -138,7 +137,7 @@ fun FriendListSection(
 
 @Composable
 fun SearchFriendSection(
-    currentUser: User?,
+    currentUser: UserEntity?,
     uiState: NetworkState,
     onQueryChange: (String) -> Unit,
     onSearchUser: (String) -> Unit,

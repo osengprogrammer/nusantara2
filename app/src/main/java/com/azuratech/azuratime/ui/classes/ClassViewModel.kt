@@ -6,7 +6,6 @@ import androidx.lifecycle.SavedStateHandle
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.domain.school.usecase.GetSchoolsUseCase
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.classes.usecase.DeleteClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetAllClassesUseCase
@@ -15,13 +14,13 @@ import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ReassignClassUseCase
 import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
 import com.azuratech.azuratime.domain.classes.usecase.GetAvailableClassesUseCase
-import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
 import com.azuratech.azuratime.ui.core.UiEvent
 import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.repo.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +45,7 @@ class ClassViewModel @Inject constructor(
     private val getAvailableClassesUseCase: GetAvailableClassesUseCase,
     private val getSchoolsUseCase: GetSchoolsUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
+    private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -68,10 +68,10 @@ class ClassViewModel @Inject constructor(
     private val accountId: String = savedStateHandle.get<String>("accountId")
         ?: sessionManager.getCurrentUserId() ?: ""
 
-    // 🔥 User Flow for UI
-    val user: StateFlow<User?> = sessionManager.currentUserIdFlow
+    // 🔥 User Flow for UI - Using UserEntity for SSOT
+    val user: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
         .filterNotNull()
-        .flatMapLatest { observeUserUseCase(it) }
+        .flatMapLatest { userRepository.observeUserEntity(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // =====================================================
@@ -80,7 +80,7 @@ class ClassViewModel @Inject constructor(
 
     val uiState: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdFlow
         .flatMapLatest { id -> getClassesUseCase(id) }
-        .map { result ->
+        .map { result: Result<List<ClassModel>> ->
             when(result) {
                 is Result.Success -> {
                     if (result.data.isEmpty()) UiState.Empty

@@ -5,17 +5,17 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.AttendanceConflict
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.local.toEntity
+import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import com.azuratech.azuratime.domain.user.usecase.UserManagementUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
-import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
+import com.azuratech.azuraengine.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,7 +26,7 @@ import javax.inject.Inject
 /**
  * 🛠️ USER MANAGEMENT VIEW MODEL
  * Pengelola profil user, hak akses kelas, dan relasi antar pengajar.
- * 🔥 Refactored: Fully UseCase-driven!
+ * 🔥 Refactored: Fully SSOT! Observing UserEntity directly.
  */
 @HiltViewModel
 class UserManagementViewModel @Inject constructor(
@@ -46,9 +46,9 @@ class UserManagementViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val currentUser: StateFlow<User?> = sessionManager.currentUserIdFlow
+    val currentUser: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
         .filterNotNull()
-        .flatMapLatest { uid -> observeUserUseCase(uid) }
+        .flatMapLatest { uid -> repository.getUserDao().observeUserById(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -104,7 +104,7 @@ class UserManagementViewModel @Inject constructor(
         
         viewModelScope.launch {
             val userToUpdate: UserEntity? = if (targetUserId == null || targetUserId == currentUser.value?.userId) {
-                currentUser.value?.toEntity()
+                currentUser.value
             } else {
                 repository.getUserDao().getUserById(targetUserId)
             }
@@ -158,7 +158,7 @@ class UserManagementViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val updatedUser = user.copy(name = newName.trim())
-                updateUserUseCase(updatedUser)
+                updateUserUseCase(updatedUser.toDomain())
                 onSuccess()
             } catch (e: Exception) {
                 onError(e.message ?: "Gagal memperbarui nama")

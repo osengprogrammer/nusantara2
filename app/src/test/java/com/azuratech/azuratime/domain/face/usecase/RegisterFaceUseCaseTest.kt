@@ -6,7 +6,7 @@ import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.data.local.FaceLocalDataSource
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
 import com.azuratech.azuraengine.face.RegisterResult
-import com.azuratech.azuratime.domain.media.PhotoStorageUtils
+import com.azuratech.azuratime.domain.media.FileStorage
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ml.matcher.FaceEngine
@@ -23,23 +23,11 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class RegisterFaceUseCaseTest {
 
-    @MockK
-    lateinit var application: Application
-
-    @MockK
-    lateinit var localDataSource: FaceLocalDataSource
-
-    @MockK
-    lateinit var remoteDataSource: FaceRemoteDataSource
-
-    @MockK
-    lateinit var sessionManager: SessionManager
-
-    @MockK
-    lateinit var syncFaces: SyncFacesUseCase
-
-    @MockK
-    lateinit var photoStorageUtils: PhotoStorageUtils
+    @MockK lateinit var localDataSource: FaceLocalDataSource
+    @MockK lateinit var remoteDataSource: FaceRemoteDataSource
+    @MockK lateinit var sessionManager: SessionManager
+    @MockK lateinit var syncFaces: SyncFacesUseCase
+    @MockK lateinit var fileStorage: FileStorage
 
     private lateinit var useCase: RegisterFaceUseCase
 
@@ -55,28 +43,25 @@ class RegisterFaceUseCaseTest {
     fun setUp() {
         MockKAnnotations.init(this)
         useCase = RegisterFaceUseCase(
-            application,
             localDataSource,
             remoteDataSource,
             sessionManager,
             syncFaces,
-            photoStorageUtils
+            fileStorage
         )
         
         mockkObject(FaceEngine)
-        mockkObject(FaceCache)
         
         every { sessionManager.getActiveSchoolId() } returns schoolId
         coEvery { syncFaces() } returns Result.Success(Unit)
         coEvery { localDataSource.getAllFacesForScanningList(any()) } returns emptyList()
         coEvery { localDataSource.getFaceById(any(), any()) } returns null
-        coEvery { photoStorageUtils.saveFacePhoto(any(), any()) } returns "local_url"
+        coEvery { fileStorage.saveFacePhoto(any(), any()) } returns "local_url"
         coEvery { remoteDataSource.uploadFacePhoto(any(), any(), any()) } returns Result.Success("remote_url")
         coEvery { localDataSource.upsertFace(any()) } returns Unit
         coEvery { localDataSource.insertAssignment(any()) } returns Unit
         coEvery { remoteDataSource.bulkSyncFaces(any(), any()) } returns Result.Success(Unit)
         coEvery { remoteDataSource.syncFaceAssignment(any()) } returns Result.Success(Unit)
-        coEvery { FaceCache.refresh(any(), any()) } returns emptyList()
     }
 
     @Test
@@ -95,7 +80,6 @@ class RegisterFaceUseCaseTest {
         coVerify { localDataSource.insertAssignment(any()) }
         coVerify { remoteDataSource.bulkSyncFaces(schoolId, any()) }
         coVerify { remoteDataSource.syncFaceAssignment(any()) }
-        coVerify { FaceCache.refresh(application, schoolId) }
     }
 
     @Test

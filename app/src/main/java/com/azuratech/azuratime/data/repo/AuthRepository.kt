@@ -41,16 +41,19 @@ class AuthRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
             val uid = firebaseUser.uid
 
             val userDoc: DocumentSnapshot? = runCatching {
+                // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
                 val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
                 if (whiteList.exists()) {
                     Log.d("AuthRepository", "🔍 User resolved via: whitelisted_users")
                     whiteList
                 } else {
+                    // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
                     val acc = firestore.collection("accounts").document(uid).get().await()
                     if (acc.exists()) {
                         Log.d("AuthRepository", "🔍 User resolved via: accounts")
                         acc
                     } else {
+                        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
                         val member = firestore.collection("memberships").document(uid).get().await()
                         if (member.exists()) Log.d("AuthRepository", "🔍 User resolved via: memberships (PENDING)")
                         member
@@ -84,6 +87,7 @@ class AuthRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
                     memberships[schoolId] = Membership(schoolName = schoolName, role = role)
                 }
             } else if (userDoc.reference.path.contains("accounts")) {
+                // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
                 val schoolsSnapshot = firestore.collection("accounts").document(uid).collection("schools").get().await()
                 schoolsSnapshot.documents.forEach { doc ->
                     memberships[doc.id] = Membership(
@@ -124,6 +128,7 @@ class AuthRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
     }
 
     suspend fun registerMembership(uid: String, data: Map<String, Any>) = withContext(Dispatchers.IO) {
+        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
         firestore.collection("memberships").document(uid).set(data).await()
     }
 
