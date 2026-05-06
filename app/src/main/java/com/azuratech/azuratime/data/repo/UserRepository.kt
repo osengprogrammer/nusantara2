@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import com.azuratech.azuratime.domain.model.MembershipStatus
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.core.sync.SyncManager
@@ -117,6 +118,11 @@ class UserRepository @Inject constructor(
         userDao.updateUser(user.copy(syncStatus = SyncStatus.SYNCED.name))
         println("✅ Room: User profile $userId marked as SYNCED")
     }
+
+    /**
+     * Observe a specific user as a Flow of UserEntity.
+     */
+    fun observeUserEntity(userId: String) = userDao.observeUserById(userId)
 
     // Delegation
     fun getUserDao() = userDao

@@ -36,17 +36,21 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     // =====================================================
 
     suspend fun checkWhitelisted(uid: String): Map<String, Any>? = withContext(Dispatchers.IO) {
+        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
         val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
         if (whiteList.exists()) return@withContext whiteList.data
         
+        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
         val acc = firestore.collection("accounts").document(uid).get().await()
         return@withContext if (acc.exists()) acc.data else null
     }
 
     suspend fun checkMembershipExists(uid: String): Boolean = withContext(Dispatchers.IO) {
+        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
         val membership = firestore.collection("memberships").document(uid).get().await().exists()
         if (membership) return@withContext true
         
+        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
         val acc = firestore.collection("accounts").document(uid).get().await().exists()
         return@withContext acc
     }
@@ -64,6 +68,7 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
             "hardwareId" to sessionManager.getHardwareId(),
             "createdAt" to System.currentTimeMillis()
         )
+        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
         firestore.collection("memberships").document(uid).set(pendingData).await()
         sessionManager.saveUserStatus(SessionManager.STATUS_PENDING)
     }
@@ -147,9 +152,11 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     suspend fun pollWhitelistedFinal(uid: String): Map<String, Any>? = withContext(Dispatchers.IO) {
         var retryCount = 0
         while (retryCount < 3) {
+            // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
             val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
             if (whiteList.exists()) return@withContext whiteList.data
             
+            // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
             val acc = firestore.collection("accounts").document(uid).get().await()
             if (acc.exists()) return@withContext acc.data
             

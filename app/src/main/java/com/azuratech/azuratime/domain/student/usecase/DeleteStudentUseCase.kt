@@ -21,7 +21,7 @@ class DeleteStudentUseCase @Inject constructor(
             val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Failure(AppError.BusinessRule("No active school"))
 
             // 1. Local cascading delete
-            database.faceAssignmentDao().deleteAssignmentsForFace(faceId, schoolId)
+            database.faceAssignmentDao().deleteAllByFace(faceId, schoolId)
             database.faceDao().deleteFaceById(faceId, schoolId)
             database.studentDao().deleteById(studentId, schoolId)
 

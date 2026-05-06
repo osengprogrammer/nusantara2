@@ -71,7 +71,7 @@ class DataIntegrityRepository @Inject constructor(
         }
     }
 
-    val conflicts: Flow<List<AttendanceConflict>> = conflictDao.getAllConflicts().map { entities ->
+    val conflicts: Flow<List<AttendanceConflict>> = conflictDao.getAllConflicts().map { entities: List<com.azuratech.azuratime.data.local.AttendanceConflictEntity> ->
         entities.map { it.toDomain() }
     }
 

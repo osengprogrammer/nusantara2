@@ -2,6 +2,7 @@ package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.data.local.CheckInLocalDataSource
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
@@ -126,7 +127,7 @@ class CheckInRepositoryImpl @Inject constructor(
 
     override suspend fun resolveConflict(conflictId: String, useCloud: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val conflict = conflictDao.getConflictById(conflictId)
+            val conflict: AttendanceConflictEntity = conflictDao.getConflictById(conflictId)
                 ?: return@withContext Result.Failure(AppError.BusinessRule("Conflict not found"))
 
             if (useCloud) {

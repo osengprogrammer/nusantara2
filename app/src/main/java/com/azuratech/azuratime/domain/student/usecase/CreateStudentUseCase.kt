@@ -123,7 +123,7 @@ class CreateStudentUseCase @Inject constructor(
             database.faceDao().upsertFace(faceEntity)
 
             // 🔥 ALWAYS POPULATE ASSIGNMENTS (For Class labels in UI)
-            database.faceAssignmentDao().upsert(
+            database.faceAssignmentDao().insertAssignment(
                 FaceAssignmentEntity(
                     faceId = faceId,
                     classId = classId ?: "",

@@ -3,6 +3,8 @@ package com.azuratech.azuratime.ui.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.AuthRepository
 import com.azuratech.azuratime.data.repo.DataIntegrityRepository
@@ -57,7 +59,8 @@ class DashboardViewModel @Inject constructor(
     private val getFacesInClassUseCase: GetFacesInClassUseCase,
     private val getActiveSchoolContextUseCase: com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase,
     private val sessionManager: SessionManager,
-    private val syncRepository: SyncRepository
+    private val syncRepository: SyncRepository,
+    private val database: com.azuratech.azuratime.data.local.AppDatabase
 ) : ViewModel() {
 
     sealed class NavigationEvent {
@@ -73,10 +76,8 @@ class DashboardViewModel @Inject constructor(
     private val _userFlow = sessionManager.currentUserIdFlow
         .flatMapLatest { userId -> 
             if (userId != null) {
-                println("🔍 Dashboard: observeUserUseCase triggered for $userId")
-                observeUserUseCase(userId)
+                database.userDao().observeUserById(userId)
             } else {
-                println("🔍 Dashboard: currentUserId is null, emitting flowOf(null)")
                 flowOf(null)
             }
         }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -84,8 +85,7 @@ class DashboardViewModel @Inject constructor(
     private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
-                val filters = CheckInFilters()
-                getCheckInRecordsUseCase(filters).map { it.getOrNull()?.take(5) ?: emptyList() }
+                database.checkInRecordDao().getAllRecords(schoolId).map { it.take(5) }
             } else {
                 flowOf(emptyList())
             }
@@ -163,7 +163,7 @@ class DashboardViewModel @Inject constructor(
         _recentRecordsFlow,
         _sessionStudentsFlow,
         _assignedClassesFlow,
-        _allClassesFlow, // 🔥 Added
+        _allClassesFlow,
         syncRepository.isSyncing,
         dataIntegrityRepository.totalFaces,
         dataIntegrityRepository.missingAssignment,
@@ -171,15 +171,15 @@ class DashboardViewModel @Inject constructor(
         dataIntegrityRepository.globalUnsyncedCount,
         dataIntegrityRepository.conflicts
     ) { args ->
-        val user = args[0] as com.azuratech.azuraengine.model.User?
+        val user = args[0] as UserEntity?
         @Suppress("UNCHECKED_CAST")
-        val recentRecords = args[1] as List<CheckInRecord>
+        val recentRecords = args[1] as List<CheckInRecordEntity>
         @Suppress("UNCHECKED_CAST")
         val sessionStudents = args[2] as List<FaceEntity>
         @Suppress("UNCHECKED_CAST")
         val assignedClasses = args[3] as List<ClassModel>
         @Suppress("UNCHECKED_CAST")
-        val allClasses = args[4] as List<ClassModel> // 🔥 Added
+        val allClasses = args[4] as List<ClassModel>
         val isSyncing = args[5] as Boolean
         val totalFaces = args[6] as Int
         val unassigned = args[7] as Int
@@ -198,7 +198,7 @@ class DashboardViewModel @Inject constructor(
                 recentRecords = recentRecords,
                 sessionStudents = sessionStudents,
                 assignedClasses = assignedClasses,
-                allClasses = allClasses, // 🔥 Added
+                allClasses = allClasses,
                 isSyncing = isSyncing,
                 isReady = isReady,
                 totalFaces = totalFaces,
@@ -223,7 +223,7 @@ class DashboardViewModel @Inject constructor(
             syncUserUseCase(userId)
             
             // 2. Restoring schools & classes
-            syncSchoolsUseCase(userId)
+            syncSchoolsUseCase.syncAllForAccount(userId)
             
             // 3. Restoring faces & assignments (tenant-scoped)
             val schoolId = sessionManager.getActiveSchoolId()
@@ -251,7 +251,7 @@ class DashboardViewModel @Inject constructor(
                 userEntity?.let {
                     val updatedUser = it.copy(activeClassId = classId)
                     println("✅ VM: Saved activeClassId=$classId for user ${user.userId}")
-                    updateUserUseCase(updatedUser)
+                    updateUserUseCase(updatedUser.toDomain())
                 }
             }
         }

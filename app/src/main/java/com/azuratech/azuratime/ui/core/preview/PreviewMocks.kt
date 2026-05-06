@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuraengine.model.User
+import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.ui.dashboard.DashboardUiState
 import com.azuratech.azuratime.ui.report.AttendanceMatrixUiState
 import com.azuratech.azuratime.ui.report.MatrixCellModel
@@ -19,7 +19,7 @@ import java.time.LocalDateTime
  */
 object PreviewMocks {
     
-    val mockUser = User(
+    val mockUser = UserEntity(
         userId = "usr_123",
         email = "admin@azuratech.com",
         name = "Azura Admin",
@@ -48,10 +48,11 @@ object PreviewMocks {
             className = "Kelas 10A",
             status = "H",
             attendanceDate = LocalDate.now(),
-            checkInTime = LocalDateTime.now().minusMinutes(5),
+            checkInTime = LocalDateTime.now(),
             userId = "admin@azuratech.com",
             schoolId = "sch_1",
-            isSynced = true
+            isSynced = true,
+            timestamp = System.currentTimeMillis() - 300000
         ),
         CheckInRecordEntity(
             id = "2",
@@ -61,19 +62,22 @@ object PreviewMocks {
             className = "Kelas 10A",
             status = "H",
             attendanceDate = LocalDate.now(),
-            checkInTime = LocalDateTime.now().minusMinutes(12),
+            checkInTime = LocalDateTime.now(),
             userId = "admin@azuratech.com",
             schoolId = "sch_1",
-            isSynced = true
+            isSynced = true,
+            timestamp = System.currentTimeMillis() - 720000
         )
     )
 
     val mockDashboardStateSuccess = DashboardUiState(
         user = mockUser,
         assignedClasses = mockClasses,
+        allClasses = mockClasses,
         recentRecords = mockRecentRecords,
         sessionStudents = mockStudents,
         isSyncing = false,
+        isReady = true,
         currentRole = "ADMIN",
         isApproved = true,
         totalFaces = 145,
@@ -82,7 +86,7 @@ object PreviewMocks {
         unsyncedRecords = 12
     )
     
-    val mockDashboardStateLoading = DashboardUiState(user = null)
+    val mockDashboardStateLoading = DashboardUiState(user = null, isReady = false)
 
     val mockMatrixRows = listOf(
         MatrixRowModel(

@@ -38,6 +38,14 @@ This document serves as the architectural source of truth for the project.
 | Legacy code may use `student.classId` (single) | Use backward-compat getter; mark legacy paths ` @Deprecated` |
 | Bulk class changes require multiple UseCase calls | Future: create `UpdateStudentClassesUseCase(list<String>)` for batch ops |
 
+### Phase 7.1: Complete SSOT Migration (Remaining .await() Calls)
+
+| File | Lines | Priority | Migration Pattern |
+|------|-------|----------|------------------|
+| MembershipRepository.kt | 39,42,47,50,67,150,153 | Medium | Read user status from Room → trigger ProfileSyncWorker if stale |
+| AuthRepository.kt | 38,44,49,54,87,127,138 | Low | Auth boundary: Firebase Auth .await() acceptable; Firestore reads can be deferred to Worker |
+| StudentRepositoryLegacyImpl.kt | 39 | Delete | Remove legacy stub in v4.0 |
+
 ## 🤖 Rules for AI Assistants
 1. NEVER suggest direct `FaceAssignmentDao` calls in ViewModels — always go through Repository/UseCase
 2. ALWAYS use `StudentProfile.classIds` (list) in domain logic, not legacy `classId`
