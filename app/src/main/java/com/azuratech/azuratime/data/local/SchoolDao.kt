@@ -24,6 +24,9 @@ interface SchoolDao {
     @Query("SELECT * FROM schools ORDER BY name ASC")
     fun observeAllSchools(): Flow<List<SchoolEntity>>
 
+    @Query("SELECT * FROM schools WHERE name LIKE '%' || :query || '%' ORDER BY name ASC")
+    suspend fun searchSchools(query: String): List<SchoolEntity>
+
     @Query("DELETE FROM schools WHERE id = :schoolId")
     suspend fun deleteSchool(schoolId: String)
 }

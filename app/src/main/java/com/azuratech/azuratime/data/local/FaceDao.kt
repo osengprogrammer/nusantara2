@@ -80,7 +80,4 @@ interface FaceDao {
 
     @Query("SELECT * FROM faces WHERE schoolId = :schoolId")
     fun getAllFacesFlow(schoolId: String): Flow<List<FaceEntity>>
-
-    @Query("SELECT * FROM faces WHERE studentId = :studentId AND schoolId = :schoolId LIMIT 1")
-    suspend fun getFaceByStudentId(studentId: String, schoolId: String): FaceEntity?
 }

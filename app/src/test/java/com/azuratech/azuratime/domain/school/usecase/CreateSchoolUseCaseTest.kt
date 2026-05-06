@@ -3,40 +3,28 @@ package com.azuratech.azuratime.domain.school.usecase
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.repo.SchoolRepository
-import io.mockk.MockKAnnotations
 import io.mockk.coEvery
-import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Assert.*
 import org.junit.Test
 
 class CreateSchoolUseCaseTest {
+    private val repo = mockk<SchoolRepository>()
+    private val useCase = CreateSchoolUseCase(repo)
 
-    @MockK
-    lateinit var schoolRepository: SchoolRepository
-
-    private lateinit var createSchoolUseCase: CreateSchoolUseCase
-
-    @Before
-    fun setUp() {
-        MockKAnnotations.init(this)
-        createSchoolUseCase = CreateSchoolUseCase(schoolRepository)
+    @Test
+    fun `returns schoolId when name is valid`() = runTest {
+        coEvery { repo.createSchool(any(), "Azura Academy", any()) } returns Result.Success("SCH-001")
+        val result = useCase("user-123", "Azura Academy")
+        assertEquals("SCH-001", (result as Result.Success).data)
     }
 
     @Test
-    fun `validation rejects blank name`() = runTest {
-        val result = createSchoolUseCase("account1", "", "Asia/Jakarta")
+    fun `fails when name is blank`() = runTest {
+        coEvery { repo.createSchool(any(), "", any()) } returns Result.Failure(AppError.BusinessRule("Name blank"))
+        val result = useCase("user-123", "")
         assertTrue(result is Result.Failure)
-        assertTrue((result as Result.Failure).error is AppError.BusinessRule)
-    }
-
-    @Test
-    fun `successful creation calls repository and returns id`() = runTest {
-        coEvery { schoolRepository.saveSchool(any()) } returns Result.Success(Unit)
-        
-        val result = createSchoolUseCase("account1", "New School", "Asia/Jakarta")
-        assertTrue(result is Result.Success)
-        assertTrue((result as Result.Success).data.isNotEmpty())
+        assertEquals("Name blank", (result as Result.Failure).error.message)
     }
 }

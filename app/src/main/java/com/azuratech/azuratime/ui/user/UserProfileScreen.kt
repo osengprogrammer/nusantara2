@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
@@ -105,7 +106,7 @@ fun UserProfileScreen(
 
 @Composable
 fun UserProfileContent(
-    user: com.azuratech.azuraengine.model.User?,
+    user: UserEntity?,
     role: String,
     schoolName: String,
     isAdmin: Boolean,
