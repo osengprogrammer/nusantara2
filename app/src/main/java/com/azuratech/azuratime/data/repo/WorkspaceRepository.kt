@@ -2,11 +2,14 @@ package com.azuratech.azuratime.data.repo
 
 import android.app.Application
 import android.util.Log
+import androidx.room.withTransaction
 import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.sync.SyncManager
+import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.domain.user.usecase.SubmitSchoolAccessUseCase
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,90 +17,119 @@ import javax.inject.Singleton
 /**
  * 🏰 WORKSPACE REPOSITORY
  * Menangani perpindahan konteks antar sekolah (Switching Schools).
- * 🔥 Sudah menggunakan Hilt Dependency Injection.
+ * 🔥 v3.0: Full SSOT. Saves to Room first, sync happens in background.
  */
 @Singleton
 class WorkspaceRepository @Inject constructor(
     private val application: Application,
     private val database: AppDatabase,
     private val db: FirebaseFirestore,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val syncManager: SyncManager,
+    private val submitSchoolAccessUseCase: SubmitSchoolAccessUseCase
 ) {
     private val userDao        = database.userDao()
     private val faceDao        = database.faceDao()
     private val recordDao      = database.checkInRecordDao()
     private val classDao       = database.classDao()
     private val assignmentDao  = database.faceAssignmentDao()
-
-    private fun getTenantRef(schoolId: String) = db.collection("schools").document(schoolId)
-
-    suspend fun searchSchools(query: String): List<Map<String, Any>> = withContext(Dispatchers.IO) {
-        val snapshot = db.collection("schools")
-            .whereGreaterThanOrEqualTo("schoolName", query)
-            .whereLessThanOrEqualTo("schoolName", query + "\uf8ff")
-            .get()
-            .await()
-        snapshot.documents.mapNotNull { it.data }
-    }
-
-    suspend fun createNewSchool(userId: String, userEmail: String, schoolName: String): String = withContext(Dispatchers.IO) {
-        val newSchoolRef = db.collection("schools").document()
-        val schoolId = newSchoolRef.id
-
-        newSchoolRef.set(mapOf(
-            "schoolId" to schoolId,
-            "schoolName" to schoolName,
-            "ownerId" to userId,
-            "ownerEmail" to userEmail,
-            "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
-        )).await()
-        schoolId
-    }
-
-    suspend fun finalizeSetup(schoolId: String) = withContext(Dispatchers.IO) {
-        db.collection("schools").document(schoolId).update("status", "ACTIVE").await()
-    }
-
-    suspend fun updateSchoolName(schoolId: String, newName: String) = withContext(Dispatchers.IO) {
-        db.collection("schools").document(schoolId).update("schoolName", newName.trim()).await()
-    }
+    private val schoolDao      = database.schoolDao()
 
     /**
-     * Search schools by name from Firestore.
+     * Search schools by name from Local Room DB (SSOT).
      */
     suspend fun searchSchools(query: String): List<Map<String, Any>> = withContext(Dispatchers.IO) {
         try {
-            val snapshot = db.collection("schools")
-                .whereGreaterThanOrEqualTo("schoolName", query)
-                .whereLessThanOrEqualTo("schoolName", query + "\uf8ff")
-                .get()
-                .await()
-            snapshot.documents.mapNotNull { it.data }
+            val schools = schoolDao.searchSchools(query)
+            schools.map { school ->
+                mapOf(
+                    "schoolId" to school.id,
+                    "schoolName" to school.name,
+                    "status" to school.status
+                )
+            }
         } catch (e: Exception) {
+            Log.e("AZURA_WORKSPACE", "❌ Error searching schools locally: ${e.message}")
             emptyList()
         }
     }
 
     /**
-     * 🔥 THE WORKSPACE SWITCH ENGINE
+     * 🔥 Create School: SSOT way.
+     * Return ID immediately after saving to Room.
+     */
+    suspend fun createNewSchool(userId: String, userEmail: String, schoolName: String): String = withContext(Dispatchers.IO) {
+        val schoolId = "sch_${System.currentTimeMillis()}"
+        database.withTransaction {
+            val school = SchoolEntity(
+                id = schoolId,
+                accountId = userId,
+                name = schoolName,
+                timezone = "Asia/Jakarta",
+                status = "PENDING",
+                syncStatus = SyncStatus.PENDING_INSERT.name
+            )
+            schoolDao.insertSchool(school)
+            syncManager.enqueueSchoolSync(schoolId)
+        }
+        schoolId
+    }
+
+    /**
+     * Finalize setup by activating school status.
+     */
+    suspend fun finalizeSetup(schoolId: String) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            val school = schoolDao.getSchoolById(schoolId)
+            if (school != null) {
+                schoolDao.insertSchool(school.copy(
+                    status = "ACTIVE",
+                    syncStatus = SyncStatus.PENDING_UPDATE.name
+                ))
+                syncManager.enqueueSchoolSync(schoolId)
+            }
+        }
+    }
+
+    /**
+     * Update school name locally and enqueue sync.
+     */
+    suspend fun updateSchoolName(schoolId: String, newName: String) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            val school = schoolDao.getSchoolById(schoolId)
+            if (school != null) {
+                schoolDao.insertSchool(school.copy(
+                    name = newName.trim(),
+                    syncStatus = SyncStatus.PENDING_UPDATE.name
+                ))
+                syncManager.enqueueSchoolSync(schoolId)
+            }
+        }
+    }
+
+    /**
+     * 🔥 THE WORKSPACE SWITCH ENGINE (v3.0 SSOT)
      * Mengganti "dunia" aktif user dan membersihkan data tenant lama.
+     * Pull data remote dilakukan oleh ProfileSyncWorker di background.
      */
     suspend fun switchWorkspace(userId: String, newSchoolId: String) =
         withContext(Dispatchers.IO) {
             Log.w("AZURA_WORKSPACE", "🔄 Memulai perpindahan Workspace ke: $newSchoolId")
 
-            // 1. Update Cloud (Firestore)
-            db.collection("whitelisted_users").document(userId).update("activeSchoolId", newSchoolId).await()
-
-            // 2. Update Local User Context
-            val currentUser = userDao.getUserById(userId)
-            val oldSchoolId = currentUser?.activeSchoolId ?: ""
-
-            if (currentUser != null) {
-                userDao.updateUser(currentUser.copy(activeSchoolId = newSchoolId))
+            val oldSchoolId = database.withTransaction {
+                val user = userDao.getUserById(userId)
+                val oldId = user?.activeSchoolId ?: ""
+                
+                if (user != null) {
+                    userDao.updateUser(user.copy(
+                        activeSchoolId = newSchoolId,
+                        syncStatus = SyncStatus.PENDING_UPDATE.name
+                    ))
+                }
+                oldId
             }
 
-            // 3. 🧹 NUKE DATA TENANT LAMA (Pembersihan Lahan)
+            // 🧹 NUKE DATA TENANT LAMA (Optional, keep for v3.0 if desired)
             if (oldSchoolId.isNotEmpty() && oldSchoolId != newSchoolId) {
                 Log.w("AZURA_WORKSPACE", "🧹 Menghapus data tenant lama ($oldSchoolId) dari SQLite...")
                 faceDao.deleteAllBySchool(oldSchoolId)
@@ -106,126 +138,45 @@ class WorkspaceRepository @Inject constructor(
                 assignmentDao.deleteAllBySchool(oldSchoolId)
             }
 
-            // 4. 📥 DOWNLOAD DATA BARU (Sinkronisasi Langit ke Bumi)
-            Log.w("AZURA_WORKSPACE", "📥 Mengunduh Master Data untuk Workspace: $newSchoolId...")
-
-            // Download Classes
-            val classSnapshot = getTenantRef(newSchoolId).collection("classes").get().await()
-            val newClasses = classSnapshot.documents.map { doc ->
-                ClassEntity(
-                    id = doc.id,
-                    accountId = userId,
-                    schoolId = newSchoolId,
-                    name = doc.getString("name") ?: "",
-                    displayOrder = doc.getLong("displayOrder")?.toInt() ?: 0,
-                    isSynced = true
-                )
-            }
-            newClasses.forEach { 
-                classDao.insert(it) 
-                // 🔥 Also create assignment in the new join table
-                database.schoolClassDao().assignClass(
-                    com.azuratech.azuratime.data.local.SchoolClassAssignment(newSchoolId, it.id)
-                )
-            }
-
-            // Download Faces & Biometric Embedding (Full Sync)
-            val faceSnapshot = getTenantRef(newSchoolId).collection("master_faces").get().await()
-            val newFaces = faceSnapshot.documents.mapNotNull { doc ->
-                val isActive = doc.getBoolean("isActive") ?: true
-                if (!isActive) return@mapNotNull null
-                
-                val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
-                FaceEntity(
-                    faceId = doc.id,
-                    schoolId = newSchoolId,
-                    name = doc.getString("name") ?: "",
-                    photoUrl = doc.getString("photoUrl"),
-                    embedding = embedding,
-                    isSynced = true
-                )
-            }
-            faceDao.upsertAll(newFaces)
-
-            // Download Assignments (Relasi Siswa-Kelas)
-            val assignmentSnapshot = getTenantRef(newSchoolId).collection("face_assignments").get().await()
-            val newAssignments = assignmentSnapshot.documents.mapNotNull { doc ->
-                val faceId = doc.getString("faceId") ?: return@mapNotNull null
-                val classId = doc.getString("classId") ?: return@mapNotNull null
-                FaceAssignmentEntity(faceId = faceId, classId = classId, schoolId = newSchoolId, isSynced = true)
-            }
-            newAssignments.forEach { assignmentDao.insertAssignment(it) }
-
-            // 🔥 REFRESH FACE CACHE (Memory Scanner)
-            FaceCache.refresh(application, newSchoolId)
-
-            Log.w("AZURA_WORKSPACE", "✅ Workspace berhasil dipindah!")
+            // 📥 TRIGGER BACKGROUND PULL/SYNC
+            syncManager.enqueueProfileSync(userId)
+            
+            Log.w("AZURA_WORKSPACE", "✅ Workspace switched locally. Syncing in background...")
         }
 
     /**
      * 🔑 ASSIGN SCHOOL ROLE
-     * Menetapkan role user di sebuah sekolah baik lokal maupun cloud (Firestore & SQLite).
+     * Menetapkan role user di sebuah sekolah. Updates Room and triggers sync.
      */
     suspend fun assignSchoolRole(userId: String, schoolId: String, role: String, schoolName: String) =
         withContext(Dispatchers.IO) {
-            val newMembership = Membership(
-                schoolName = schoolName,
-                role = role
-            )
-
-            // 1. Update Cloud (Firestore)
-            try {
-                db.collection("whitelisted_users").document(userId)
-                    .update(
-                        mapOf(
-                            "memberships.$schoolId.schoolName" to schoolName,
-                            "memberships.$schoolId.role" to role
-                        )
-                    ).await()
-            } catch (e: Exception) {
-                Log.e("AZURA_WORKSPACE", "⚠️ Gagal update role di Firestore: ${e.message}")
-            }
-
-            // 2. Update Local (Room)
-            val user = userDao.getUserById(userId)
-            user?.let {
-                val updatedMemberships = it.memberships.toMutableMap().apply {
-                    put(schoolId, newMembership)
+            database.withTransaction {
+                val user = userDao.getUserById(userId)
+                user?.let {
+                    val updatedMemberships = it.memberships.toMutableMap().apply {
+                        put(schoolId, Membership(schoolName = schoolName, role = role))
+                    }
+                    userDao.updateUser(it.copy(
+                        memberships = updatedMemberships,
+                        syncStatus = SyncStatus.PENDING_UPDATE.name
+                    ))
+                    
+                    // Trigger both profile (for memberships) and access sync as requested
+                    syncManager.enqueueProfileSync(userId)
+                    syncManager.enqueueAccessSync(userId)
+                    
+                    Log.i("AZURA_WORKSPACE", "🔑 Assigned $role role locally for school $schoolId")
                 }
-                userDao.updateUser(it.copy(memberships = updatedMemberships))
-                println("🔑 DEBUG: Assigned $role role for school $schoolId to user $userId")
             }
         }
 
     /**
      * 🚪 REQUEST TO JOIN
-     * Mengajukan diri untuk bergabung ke sebuah sekolah/instansi.
+     * Mengajukan diri untuk bergabung ke sebuah sekolah/instansi via UseCase.
      */
     suspend fun requestToJoinWorkspace(userId: String, schoolId: String, schoolName: String) =
         withContext(Dispatchers.IO) {
-            val newMembership = com.azuratech.azuratime.data.local.Membership(
-                schoolName = schoolName,
-                role = "PENDING"
-            )
-
-            // 1. Kirim ke Firestore
-            db.collection("whitelisted_users").document(userId)
-                .update(
-                    mapOf(
-                        "memberships.$schoolId.schoolName" to schoolName,
-                        "memberships.$schoolId.role" to "PENDING"
-                    )
-                ).await()
-
-            // 2. Update UI lokal agar status berubah jadi "Waiting Approval"
-            val user = userDao.getUserById(userId)
-            user?.let {
-                val updatedMemberships = it.memberships.toMutableMap().apply {
-                    put(schoolId, newMembership)
-                }
-                userDao.insertUser(it.copy(memberships = updatedMemberships))
-            }
-
-            Log.i("AZURA_WORKSPACE", "✅ Request join dikirim: $schoolName")
+            submitSchoolAccessUseCase(userId, schoolId, schoolName, "TEACHER")
+            Log.i("AZURA_WORKSPACE", "✅ Request join submitted via UseCase for: $schoolName")
         }
 }
