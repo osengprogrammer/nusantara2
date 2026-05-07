@@ -1,6 +1,10 @@
 package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.sync.SyncManager
+import com.azuratech.azuratime.data.local.UserDao
+import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import com.azuratech.azuratime.domain.model.SyncStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -8,6 +12,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -24,10 +29,13 @@ sealed class MembershipDocUpdate {
  * Sudah menggunakan Hilt Inject Constructor.
  */
 @Singleton
-class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inject
+class MembershipRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val userDao: UserDao,
+    private val syncManager: SyncManager,
+    private val syncUserUseCase: SyncUserUseCase
 ) {
     fun getCurrentUid(): String? = firebaseAuth.currentUser?.uid
 
@@ -36,23 +44,30 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     // =====================================================
 
     suspend fun checkWhitelisted(uid: String): Map<String, Any>? = withContext(Dispatchers.IO) {
-        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-        val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
-        if (whiteList.exists()) return@withContext whiteList.data
+        // SSOT Migration v7.1: Read from Room first
+        val user = userDao.getUserById(uid)
+        if (user != null && user.status == SessionManager.STATUS_ACTIVE) {
+            return@withContext userToMap(user)
+        }
+
+        // Trigger sync as a refresh
+        syncUserUseCase(uid)
         
-        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-        val acc = firestore.collection("accounts").document(uid).get().await()
-        return@withContext if (acc.exists()) acc.data else null
+        // Re-read after sync attempt
+        val refreshedUser = userDao.getUserById(uid)
+        return@withContext if (refreshedUser != null && refreshedUser.status == SessionManager.STATUS_ACTIVE) {
+            userToMap(refreshedUser)
+        } else null
     }
 
     suspend fun checkMembershipExists(uid: String): Boolean = withContext(Dispatchers.IO) {
-        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-        val membership = firestore.collection("memberships").document(uid).get().await().exists()
-        if (membership) return@withContext true
+        // SSOT Migration v7.1: Read from Room first
+        val user = userDao.getUserById(uid)
+        if (user != null) return@withContext true
         
-        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-        val acc = firestore.collection("accounts").document(uid).get().await().exists()
-        return@withContext acc
+        // Refresh from cloud
+        syncUserUseCase(uid)
+        return@withContext userDao.getUserById(uid) != null
     }
 
     // =====================================================
@@ -60,16 +75,16 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     // =====================================================
 
     suspend fun createPendingUser(uid: String, email: String, displayName: String?) = withContext(Dispatchers.IO) {
-        val pendingData = hashMapOf(
-            "userId" to uid,
-            "email" to email,
-            "name" to (displayName ?: "User"),
-            "status" to "PENDING",
-            "hardwareId" to sessionManager.getHardwareId(),
-            "createdAt" to System.currentTimeMillis()
+        // SSOT Migration v7.1: Save to Room first, then sync
+        val user = com.azuratech.azuratime.data.local.UserEntity(
+            userId = uid,
+            email = email,
+            name = displayName ?: "User",
+            status = SessionManager.STATUS_PENDING,
+            syncStatus = SyncStatus.PENDING_UPDATE.name
         )
-        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-        firestore.collection("memberships").document(uid).set(pendingData).await()
+        userDao.insertUser(user)
+        syncManager.enqueueProfileSync(uid)
         sessionManager.saveUserStatus(SessionManager.STATUS_PENDING)
     }
 
@@ -80,7 +95,6 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     fun activateSession(data: Map<String, Any>?): Boolean {
         val isoKey = data?.get("secureIsoKey")?.toString() ?: ""
         val schoolId = data?.get("schoolId")?.toString() ?: ""
-        val role = data?.get("role")?.toString() ?: "N/A"
         
         val expireDate = (data?.get("expireDate") as? Number)?.toLong() 
             ?: (System.currentTimeMillis() + 31536000000L) // +1 Year fallback
@@ -96,7 +110,9 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
         if (!isoKey.isNullOrEmpty()) {
             sessionManager.injectSecurityEnvelope(isoKey, expireDate)
         } else {
-            android.util.Log.w("MembershipRepo", "⚠️ Activation succeeded without secureIsoKey. Security features may be limited.")
+            // SSOT v7.1: If isoKey is missing in map, attempt to refresh from server
+            // Note: This is a side-effect, usually we'd prefer this to be in a Worker
+            android.util.Log.w("MembershipRepo", "⚠️ Activation record missing secureIsoKey. Security features may be limited.")
         }
         
         return true
@@ -106,63 +122,47 @@ class MembershipRepository @Inject constructor( // 🔥 FIX: Tambahkan Hilt Inje
     // 👁️ REAL-TIME OBSERVATION & POLLING
     // =====================================================
 
-    fun observeMemberships(uid: String): Flow<List<com.azuratech.azuratime.data.local.Membership>> = callbackFlow {
-        val listener = firestore.collection("memberships").document(uid)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-                
-                val membershipsMap = snapshot?.get("memberships") as? Map<String, Map<String, Any>>
-                val list = membershipsMap?.map { (id, data) ->
-                    com.azuratech.azuratime.data.local.Membership(
-                        schoolName = data["schoolName"] as? String ?: "Unknown",
-                        role = data["role"] as? String ?: "MEMBER",
-                        assignedClassIds = data["assignedClassIds"] as? List<String> ?: emptyList()
-                    )
-                } ?: emptyList()
-                
-                trySend(list)
-            }
-        awaitClose { listener.remove() }
+    fun observeMemberships(uid: String): Flow<List<com.azuratech.azuratime.data.local.Membership>> {
+        // SSOT Migration v7.1: Observe Room instead of Firestore
+        return userDao.observeUserById(uid).map { user ->
+            user?.memberships?.values?.toList() ?: emptyList()
+        }
     }
 
-    fun observeMembershipFlow(uid: String): Flow<MembershipDocUpdate> = callbackFlow {
-        val listener = firestore.collection("memberships").document(uid)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(MembershipDocUpdate.Error("Connection issue."))
-                    return@addSnapshotListener
-                }
-                
-                if (snapshot == null || !snapshot.exists()) {
-                    trySend(MembershipDocUpdate.DocumentMissing)
-                    return@addSnapshotListener
-                }
-                
-                val status = snapshot.getString("status") ?: "PENDING"
-                val reason = snapshot.getString("reason")
-                trySend(MembershipDocUpdate.StatusChanged(status, snapshot.data, reason))
+    fun observeMembershipFlow(uid: String): Flow<MembershipDocUpdate> {
+        // SSOT Migration v7.1: Observe Room instead of Firestore
+        return userDao.observeUserById(uid).map { user ->
+            if (user == null) MembershipDocUpdate.DocumentMissing
+            else {
+                MembershipDocUpdate.StatusChanged(user.status, userToMap(user), null)
             }
-
-        awaitClose { listener.remove() }
+        }
     }
 
     suspend fun pollWhitelistedFinal(uid: String): Map<String, Any>? = withContext(Dispatchers.IO) {
+        // SSOT Migration v7.1: Polling now checks Room while background sync runs
         var retryCount = 0
-        while (retryCount < 3) {
-            // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-            val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
-            if (whiteList.exists()) return@withContext whiteList.data
-            
-            // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-            val acc = firestore.collection("accounts").document(uid).get().await()
-            if (acc.exists()) return@withContext acc.data
-            
-            delay(1500) // Tunggu 1.5 detik
+        while (retryCount < 5) {
+            syncUserUseCase(uid)
+            val user = userDao.getUserById(uid)
+            if (user != null && user.status == SessionManager.STATUS_ACTIVE) {
+                return@withContext userToMap(user)
+            }
+            delay(2000)
             retryCount++
         }
-        return@withContext null
+        null
+    }
+
+    private fun userToMap(user: com.azuratech.azuratime.data.local.UserEntity): Map<String, Any> {
+        return mapOf(
+            "userId" to user.userId,
+            "email" to user.email,
+            "name" to user.name,
+            "status" to user.status,
+            "activeSchoolId" to (user.activeSchoolId ?: ""),
+            "role" to user.role,
+            "memberships" to user.memberships
+        )
     }
 }

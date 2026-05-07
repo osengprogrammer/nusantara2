@@ -4,14 +4,16 @@ import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.Membership
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.sync.SyncManager
+import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuraengine.result.Result as DomainResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
@@ -23,12 +25,14 @@ import javax.inject.Singleton
  * 🏰 AUTH REPOSITORY (Optimized for Azura Time)
  */
 @Singleton
-class AuthRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructor
+class AuthRepository @Inject constructor(
     private val application: Application,
     private val database: AppDatabase,
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val syncManager: SyncManager,
+    private val syncUserUseCase: SyncUserUseCase
 ) {
     private val userDao = database.userDao()
 
@@ -40,80 +44,45 @@ class AuthRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
             val email = firebaseUser.email?.lowercase()?.trim() ?: throw Exception("Email not available.")
             val uid = firebaseUser.uid
 
-            val userDoc: DocumentSnapshot? = runCatching {
-                // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-                val whiteList = firestore.collection("whitelisted_users").document(uid).get().await()
-                if (whiteList.exists()) {
-                    Log.d("AuthRepository", "🔍 User resolved via: whitelisted_users")
-                    whiteList
-                } else {
-                    // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-                    val acc = firestore.collection("accounts").document(uid).get().await()
-                    if (acc.exists()) {
-                        Log.d("AuthRepository", "🔍 User resolved via: accounts")
-                        acc
-                    } else {
-                        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-                        val member = firestore.collection("memberships").document(uid).get().await()
-                        if (member.exists()) Log.d("AuthRepository", "🔍 User resolved via: memberships (PENDING)")
-                        member
-                    }
+            // SSOT Migration v7.1: Check Room first
+            var userEntity = userDao.getUserById(uid)
+            
+            if (userEntity == null) {
+                // Not in Room, attempt to pull from Cloud
+                println("🔍 AuthRepository: User not in Room, pulling from Cloud...")
+                val syncResult = syncUserUseCase(uid)
+                if (syncResult is DomainResult.Success) {
+                    userEntity = syncResult.data
                 }
-            }.getOrNull()
+            }
 
-            if (userDoc == null || !userDoc.exists()) {
+            if (userEntity == null) {
+                // Truly a new user
+                println("🔍 AuthRepository: New user detected.")
                 val newUser = UserEntity(
                     userId = uid,
                     email = email,
                     name = firebaseUser.displayName ?: "User Baru",
                     memberships = emptyMap(),
                     activeSchoolId = null,
-                    status = SessionManager.STATUS_PENDING
+                    status = SessionManager.STATUS_PENDING,
+                    syncStatus = SyncStatus.PENDING_UPDATE.name
                 )
+                userDao.insertUser(newUser)
+                syncManager.enqueueProfileSync(uid)
+                
+                sessionManager.saveCurrentUserId(uid)
+                sessionManager.saveUserEmail(email)
+                sessionManager.saveUserStatus(newUser.status)
+                
                 return@withContext Pair(newUser, true) 
             }
 
-            // Standardize memberships mapping
-            val memberships = mutableMapOf<String, Membership>()
-            val isWhitelisted = userDoc.reference.path.contains("whitelisted_users")
-            
-            if (isWhitelisted) {
-                @Suppress("UNCHECKED_CAST")
-                val membershipsRaw = userDoc.get("memberships") as? Map<String, Any> ?: emptyMap()
-                membershipsRaw.entries.forEach { (schoolId, value) ->
-                    val m = value as? Map<*, *> ?: return@forEach
-                    val schoolName = m["schoolName"] as? String ?: ""
-                    val role = m["role"] as? String ?: "TEACHER"
-                    memberships[schoolId] = Membership(schoolName = schoolName, role = role)
-                }
-            } else if (userDoc.reference.path.contains("accounts")) {
-                // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-                val schoolsSnapshot = firestore.collection("accounts").document(uid).collection("schools").get().await()
-                schoolsSnapshot.documents.forEach { doc ->
-                    memberships[doc.id] = Membership(
-                        schoolName = doc.getString("schoolName") ?: "",
-                        role = doc.getString("role") ?: "TEACHER"
-                    )
-                }
-            }
-
-            val savedActiveSchoolId = userDoc.getString("activeSchoolId")
-                ?: memberships.keys.firstOrNull()
-
-            val userEntity = UserEntity(
-                userId = uid,
-                email = email,
-                name = userDoc.getString("name") ?: firebaseUser.displayName ?: "User Azura",
-                memberships = memberships,
-                activeSchoolId = savedActiveSchoolId,
-                status = userDoc.getString("status") ?: SessionManager.STATUS_PENDING
-            )
-
-            userDao.insertUser(userEntity)
+            // Existing user: Save to session and Room (already saved if pulled via UseCase)
             sessionManager.saveCurrentUserId(uid)
             sessionManager.saveUserEmail(email)
             sessionManager.saveUserStatus(userEntity.status)
-            savedActiveSchoolId?.let { sessionManager.saveActiveSchoolId(it) }
+            userEntity.activeSchoolId?.let { sessionManager.saveActiveSchoolId(it) }
 
             if (userEntity.status == SessionManager.STATUS_ACTIVE) {
                 sessionManager.refreshIsoKeyFromServer()
@@ -128,14 +97,25 @@ class AuthRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
     }
 
     suspend fun registerMembership(uid: String, data: Map<String, Any>) = withContext(Dispatchers.IO) {
-        // TODO: SSOT Migration v7.1 - Replace with Room-first + WorkManager sync
-        firestore.collection("memberships").document(uid).set(data).await()
+        // SSOT Migration v7.1: Update Room first, then trigger push worker
+        val user = userDao.getUserById(uid)
+        if (user != null) {
+            val updatedUser = user.copy(
+                status = data["status"]?.toString() ?: user.status,
+                name = data["name"]?.toString() ?: user.name,
+                syncStatus = SyncStatus.PENDING_UPDATE.name
+            )
+            userDao.updateUser(updatedUser)
+            syncManager.enqueueProfileSync(uid)
+            println("💾 Room: Updated user for membership registration. Sync enqueued.")
+        } else {
+            // If user doesn't exist, we can't update. This shouldn't happen in the normal flow.
+            Log.e("AuthRepository", "Cannot register membership: User $uid not found in Room.")
+        }
     }
 
     suspend fun clearAllDataAndSignOut() = withContext(Dispatchers.IO) {
         database.clearAllTables()
-        // Kita tidak menghancurkan instance secara manual lagi, Hilt akan mengelola lifecycle-nya
-        // AppDatabase.destroyInstance() 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(application.getString(R.string.my_web_client_id))
             .requestEmail()

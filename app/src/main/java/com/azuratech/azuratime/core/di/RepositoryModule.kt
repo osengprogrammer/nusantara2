@@ -23,12 +23,6 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindLegacyStudentRepository(
-        impl: StudentRepositoryLegacyImpl
-    ): com.azuratech.azuratime.data.repo.StudentRepository
-
-    @Binds
-    @Singleton
     abstract fun bindCheckInRepository(
         impl: CheckInRepositoryImpl
     ): CheckInRepository

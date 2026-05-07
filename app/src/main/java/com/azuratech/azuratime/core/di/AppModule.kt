@@ -46,6 +46,24 @@ object AppModule {
     @Provides
     fun provideFaceAssignmentDao(db: AppDatabase) = db.faceAssignmentDao()
 
+    @Provides
+    fun provideUserDao(db: AppDatabase) = db.userDao()
+
+    @Provides
+    fun provideClassDao(db: AppDatabase) = db.classDao()
+
+    @Provides
+    fun provideSchoolDao(db: AppDatabase) = db.schoolDao()
+
+    @Provides
+    fun provideUserClassAccessDao(db: AppDatabase) = db.userClassAccessDao()
+
+    @Provides
+    fun provideAccessRequestDao(db: AppDatabase) = db.accessRequestDao()
+
+    @Provides
+    fun provideAttendanceConflictDao(db: AppDatabase) = db.attendanceConflictDao()
+
     // =====================================================
     // ☁️ FIREBASE CLOUD PROVIDERS
     // =====================================================
