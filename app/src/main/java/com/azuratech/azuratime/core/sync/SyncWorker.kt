@@ -5,11 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.azuratech.azuratime.domain.face.usecase.SyncFacesUseCase
-import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
-import com.azuratech.azuratime.domain.classes.usecase.SyncClassesUseCase
-import com.azuratech.azuratime.domain.assignment.usecase.SyncAssignmentsUseCase
-import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import androidx.work.ListenableWorker.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result as DomainResult
@@ -17,6 +13,12 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.domain.student.repository.StudentRepository
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 
 /**
  * 🛡️ THE INVISIBLE GUARDRAIL: Persistent Background Sync
@@ -28,11 +30,11 @@ import kotlinx.coroutines.withContext
 class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val syncFacesUseCase: SyncFacesUseCase,
-    private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
-    private val syncClassesUseCase: SyncClassesUseCase,
-    private val syncAssignmentsUseCase: SyncAssignmentsUseCase,
-    private val syncUserUseCase: SyncUserUseCase,
+    private val schoolRepository: SchoolRepository,
+    private val faceRepository: FaceRepository,
+    private val studentRepository: StudentRepository,
+    private val checkInRepository: CheckInRepository,
+    private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
 
@@ -45,35 +47,42 @@ class SyncWorker @AssistedInject constructor(
         Log.d("AZURA_SYNC", "SyncWorker: Starting persistent background sync for school: $schoolId")
 
         // 1. Push & Sync Check-In Records (Local-First)
-        when (val res = syncCheckInRecordsUseCase.invoke()) {
-            is DomainResult.Failure -> {
-                if (handleSyncError(res.error, "CheckInSync") == Result.retry()) {
-                    return@withContext Result.retry()
-                }
+        val checkInResult = checkInRepository.syncRecords()
+        if (checkInResult is DomainResult.Failure) {
+            if (handleSyncError(checkInResult.error, "CheckInSync") == Result.retry()) {
+                return@withContext Result.retry()
             }
-            else -> Unit
         }
 
-        // 2. Sync Faces (Pull Delta + Process Soft-Deletes)
-        when (val res = syncFacesUseCase.invoke()) {
-            is DomainResult.Failure -> {
-                if (handleSyncError(res.error, "FaceSync") == Result.retry()) {
-                    return@withContext Result.retry()
-                }
+        // 2. Push Student Profiles (Faces + Assignments)
+        val pushResult = studentRepository.pushPendingProfiles()
+        if (pushResult is DomainResult.Failure) {
+            if (handleSyncError(pushResult.error, "PushStudents") == Result.retry()) {
+                return@withContext Result.retry()
             }
-            else -> Unit
         }
 
-        // 3. Modernized Sync (Classes, Users, Assignments)
+        // 3. Sync Faces (Pull Delta + Process Soft-Deletes)
+        val faceResult = faceRepository.syncFaces()
+        if (faceResult is DomainResult.Failure) {
+            if (handleSyncError(faceResult.error, "FaceSync") == Result.retry()) {
+                return@withContext Result.retry()
+            }
+        } else {
+            // 🔥 SSOT Auto-Healing: Ensure Student identities exist for all synced faces
+            studentRepository.autoHealStudentIdentities(schoolId)
+        }
+
+        // 4. Modernized Sync (Classes, Users, Assignments)
         try {
             val currentUserId = sessionManager.getCurrentUserId() ?: ""
             if (currentUserId.isNotEmpty()) {
-                syncUserUseCase(currentUserId)
+                userRepository.syncUser(currentUserId)
             }
-            syncClassesUseCase(currentUserId, schoolId)
-            syncAssignmentsUseCase()
+            schoolRepository.syncClasses(currentUserId, schoolId)
+            faceRepository.syncAssignments()
         } catch (e: Exception) {
-            Log.w("AZURA_SYNC", "UseCase sync failed: ${e.message}")
+            Log.w("AZURA_SYNC", "Repository sync failed: ${e.message}")
         }
 
         Log.d("AZURA_SYNC", "SyncWorker: Sync completed successfully.")
