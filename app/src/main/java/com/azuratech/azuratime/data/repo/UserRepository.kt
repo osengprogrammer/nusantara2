@@ -5,6 +5,8 @@ import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import com.azuratech.azuratime.domain.model.MembershipStatus
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.core.sync.SyncManager
+import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.AppError
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,10 +21,104 @@ import javax.inject.Singleton
 @Singleton
 class UserRepository @Inject constructor(
     private val database: AppDatabase,
-    private val syncManager: SyncManager
+    private val syncManager: com.azuratech.azuratime.core.sync.SyncManager,
+    private val firestore: com.google.firebase.firestore.FirebaseFirestore,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
+    private val schoolRepository: SchoolRepository,
+    private val schoolRemoteDataSource: com.azuratech.azuratime.data.remote.SchoolRemoteDataSource
 ) {
     private val userDao = database.userDao()
     private val userClassAccessDao = database.userClassAccessDao()
+
+    /**
+     * 🔥 SSOT: Sync user profile from Cloud to Local.
+     */
+    suspend fun syncUser(userId: String): Result<UserEntity> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            // Logic from SyncUserUseCase
+            var snapshot = com.google.android.gms.tasks.Tasks.await(firestore.collection("whitelisted_users").document(userId).get())
+            var pathResolved = "whitelisted_users"
+
+            if (!snapshot.exists()) {
+                snapshot = com.google.android.gms.tasks.Tasks.await(firestore.collection("accounts").document(userId).get())
+                pathResolved = "accounts"
+            }
+
+            if (!snapshot.exists()) {
+                return@withContext Result.Failure(AppError.BusinessRule("User not found in cloud"))
+            }
+
+            val data = snapshot.data ?: return@withContext Result.Failure(AppError.BusinessRule("Empty user data"))
+
+            // Standardize memberships mapping
+            val membershipsMap = mutableMapOf<String, Membership>()
+            if (pathResolved == "whitelisted_users") {
+                @Suppress("UNCHECKED_CAST")
+                val rawMemberships = data["memberships"] as? Map<String, Map<String, Any>> ?: emptyMap()
+                rawMemberships.forEach { (sid, m) ->
+                    membershipsMap[sid] = Membership(
+                        schoolName = m["schoolName"] as? String ?: "Unknown",
+                        role = m["role"] as? String ?: "USER"
+                    )
+                }
+            } else {
+                try {
+                    val schoolsSnapshot = com.google.android.gms.tasks.Tasks.await(firestore.collection("accounts").document(userId).collection("schools").get())
+                    schoolsSnapshot.documents.forEach { doc ->
+                        membershipsMap[doc.id] = Membership(
+                            schoolName = doc.getString("schoolName") ?: "Unknown",
+                            role = doc.getString("role") ?: "USER"
+                        )
+                    }
+                } catch (e: Exception) {
+                    println("⚠️ SyncUser: Failed to fetch subcollection memberships: ${e.message}")
+                }
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            val rawFriends = data["friends"] as? Map<String, Map<String, Any>> ?: emptyMap()
+            val parsedFriends = rawFriends.mapValues { entry ->
+                FriendConnection(
+                    friendName = entry.value["friendName"] as? String ?: "Guru",
+                    friendEmail = entry.value["friendEmail"] as? String ?: "",
+                    status = entry.value["status"] as? String ?: "UNKNOWN"
+                )
+            }
+
+            val user = UserEntity(
+                userId = userId,
+                email = data["email"] as? String ?: "",
+                name = data["name"] as? String ?: "User",
+                memberships = membershipsMap,
+                friends = parsedFriends,
+                activeSchoolId = data["activeSchoolId"] as? String,
+                status = data["status"] as? String ?: "PENDING",
+                isActive = data["isActive"] as? Boolean ?: true,
+                activeClassId = data["activeClassId"] as? String,
+                role = data["role"] as? String ?: "USER",
+                deviceId = data["deviceId"] as? String,
+                createdAt = data["createdAt"] as? Long ?: System.currentTimeMillis()
+            )
+
+            // Save to Local
+            userDao.insertUser(user)
+
+            // 2. AUTO-SYNC SCHOOLS
+            val schoolIds = user.memberships.keys.toList()
+            if (schoolIds.isNotEmpty()) {
+                val remoteSchoolsResult = schoolRemoteDataSource.getSchoolsByIds(schoolIds)
+                if (remoteSchoolsResult is Result.Success) {
+                    remoteSchoolsResult.data.forEach { school ->
+                        schoolRepository.saveSchoolLocally(school)
+                    }
+                }
+            }
+
+            Result.Success(user)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
 
     /**
      * 🔥 Update membership status locally in Room.
