@@ -59,7 +59,7 @@ class ClassViewModel @Inject constructor(
     // 📊 CLASS FLOWS (State Management)
     // =====================================================
 
-    val uiState: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdFlow
+    val uiStateStateFlow: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdFlow
         .flatMapLatest { id -> schoolRepository.observeClasses(id) }
         .map { result ->
             when(result) {
@@ -70,12 +70,12 @@ class ClassViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
-    val classes: StateFlow<List<ClassModel>> = uiState.map {
+    val classesStateFlow: StateFlow<List<ClassModel>> = uiStateStateFlow.map {
         if (it is UiState.Success) it.data else emptyList()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // 🔥 Added Available Classes Flow - Simplified to static for now
-    val availableClasses: StateFlow<List<String>> = flowOf(listOf(
+    val availableClassesStateFlow: StateFlow<List<String>> = flowOf(listOf(
         "10-IPA-1", "10-IPA-2", "10-IPA-3",
         "10-IPS-1", "10-IPS-2", "10-IPS-3",
         "11-IPA-1", "11-IPA-2", "11-IPA-3",
@@ -85,7 +85,7 @@ class ClassViewModel @Inject constructor(
     )).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // 🔥 Added All Classes for Account Flow
-    val allAccountClasses: StateFlow<UiState<List<ClassModel>>> = schoolRepository.observeAllClassesForAccount(accountId)
+    val allAccountClassesStateFlow: StateFlow<UiState<List<ClassModel>>> = schoolRepository.observeAllClassesForAccount(accountId)
         .map { result ->
             when(result) {
                 is Result.Success -> if (result.data.isEmpty()) UiState.Empty else UiState.Success(result.data)
@@ -95,7 +95,7 @@ class ClassViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
-    val schools: StateFlow<List<School>> = schoolRepository.observeSchools(accountId)
+    val schoolsStateFlow: StateFlow<List<School>> = schoolRepository.observeSchools(accountId)
         .map { result ->
             if (result is Result.Success) result.data else emptyList()
         }
@@ -133,7 +133,7 @@ class ClassViewModel @Inject constructor(
     fun updateClass(classId: String, newName: String) {
         viewModelScope.launch {
             // Fetch existing to preserve other fields
-            val allClasses = classes.value
+            val allClasses = classesStateFlow.value
             val existing = allClasses.find { it.id == classId } ?: return@launch
             val updated = existing.copy(name = newName)
             schoolRepository.saveClass(accountId, null, updated)
