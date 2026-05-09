@@ -5,19 +5,28 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.domain.model.SyncStatus
-import com.google.firebase.firestore.FirebaseFirestore
+import com.azuratech.azuraengine.result.Result as DomainResult
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.domain.student.repository.StudentRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.tasks.await
 
+/**
+ * 🔄 ACCESS SYNC WORKER
+ * Synchronizes school access requests and ensures assignment integrity.
+ * Follows SSOT pattern by delegating to Repositories.
+ */
 @HiltWorker
 class AccessSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val database: AppDatabase,
-    private val firestore: FirebaseFirestore
+    private val faceRepository: FaceRepository,
+    private val schoolRepository: SchoolRepository,
+    private val studentRepository: StudentRepository,
+    private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
     
     companion object {
@@ -26,42 +35,41 @@ class AccessSyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val userId = inputData.getString("userId") ?: return Result.failure()
-        val dao = database.accessRequestDao()
+
+        Log.d(TAG, "Starting access sync for user $userId")
 
         return try {
-            val unsynced = dao.getUnsyncedRequestsByUser(userId)
-            if (unsynced.isEmpty()) return Result.success()
-
-            Log.d(TAG, "Syncing ${unsynced.size} access requests for user $userId")
-
-            for (request in unsynced) {
-                val requestData = mapOf(
-                    "requestId" to request.requestId,
-                    "requesterId" to request.requesterId,
-                    "schoolId" to request.schoolId,
-                    "schoolName" to request.schoolName,
-                    "status" to request.status.name,
-                    "createdAt" to request.createdAt,
-                    "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
-                )
-
-                firestore.collection("access_requests")
-                    .document(request.requestId)
-                    .set(requestData)
-                    .await()
-
-                // Mark as synced locally
-                dao.insertRequest(request.copy(
-                    syncStatus = SyncStatus.SYNCED,
-                    updatedAt = System.currentTimeMillis()
-                ))
+            // 1. Push Access Requests (Join/Leave school)
+            val accessResult = schoolRepository.pushAccessRequests(userId)
+            if (accessResult is DomainResult.Failure) {
+                Log.e(TAG, "Access requests sync failed: ${accessResult.error.message}")
+                return handleSyncError(accessResult.error)
             }
-            
-            Log.i(TAG, "Successfully synced access requests for user $userId")
+
+            // 2. SSOT Integrity: Sync Assignments for the active school
+            val assignmentResult = faceRepository.syncAssignments()
+            if (assignmentResult is DomainResult.Failure) {
+                Log.w(TAG, "Assignments sync failed: ${assignmentResult.error.message}")
+            }
+
+            // 3. Ensure Student identities exist for synced faces (Auto-Heal)
+            val schoolId = sessionManager.getActiveSchoolId() ?: ""
+            if (schoolId.isNotEmpty()) {
+                studentRepository.autoHealStudentIdentities(schoolId)
+            }
+
+            Log.i(TAG, "Successfully completed access sync for user $userId")
             Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "Access sync failed for user $userId: ${e.message}")
+            Log.e(TAG, "Unexpected error during access sync: ${e.message}")
             if (runAttemptCount < 3) Result.retry() else Result.failure()
+        }
+    }
+
+    private fun handleSyncError(error: AppError): Result {
+        return when (error) {
+            is AppError.Network -> if (runAttemptCount < 3) Result.retry() else Result.failure()
+            else -> Result.failure()
         }
     }
 }

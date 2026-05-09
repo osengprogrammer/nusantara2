@@ -24,7 +24,8 @@ import javax.inject.Singleton
 class SchoolRepository @Inject constructor(
     private val database: AppDatabase,
     private val remoteDataSource: SchoolRemoteDataSource,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val firestore: com.google.firebase.firestore.FirebaseFirestore
 ) {
     private val dao = database.schoolClassDao()
     private val schoolDao = database.schoolDao()
@@ -311,5 +312,82 @@ class SchoolRepository @Inject constructor(
     suspend fun updateClassSchool(classId: String, schoolId: String) {
         dao.updateClassSchool(classId, schoolId)
         dao.assignClass(com.azuratech.azuratime.data.local.SchoolClassAssignment(schoolId, classId))
+    }
+
+    /**
+     * 🔥 SSOT: Push school updates to Firestore.
+     */
+    suspend fun pushSchool(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            val school = dao.getSchoolById(schoolId) ?: return@withContext Result.Failure(AppError.LocalDB("School not found: $schoolId"))
+
+            if (school.syncStatus == SyncStatus.SYNCED.name) {
+                return@withContext Result.Success(Unit)
+            }
+
+            val schoolData = mutableMapOf(
+                "schoolId" to school.id,
+                "ownerId" to school.accountId,
+                "schoolName" to school.name,
+                "timezone" to school.timezone,
+                "status" to school.status,
+                "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+            )
+
+            val docRef = firestore.collection("schools").document(schoolId)
+
+            when (school.syncStatus) {
+                SyncStatus.PENDING_INSERT.name -> {
+                    schoolData["createdAt"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
+                    com.google.android.gms.tasks.Tasks.await(docRef.set(schoolData))
+                }
+                SyncStatus.PENDING_UPDATE.name, SyncStatus.PENDING_DELETE.name -> {
+                    com.google.android.gms.tasks.Tasks.await(docRef.update(schoolData))
+                }
+            }
+
+            // Success: Mark as synced
+            dao.upsertSchool(school.copy(syncStatus = SyncStatus.SYNCED.name))
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    /**
+     * 🔥 SSOT: Push access requests to Firestore.
+     */
+    suspend fun pushAccessRequests(userId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            val unsynced = accessRequestDao.getUnsyncedRequestsByUser(userId)
+            if (unsynced.isEmpty()) return@withContext Result.Success(Unit)
+
+            for (request in unsynced) {
+                val requestData = mapOf(
+                    "requestId" to request.requestId,
+                    "requesterId" to request.requesterId,
+                    "schoolId" to request.schoolId,
+                    "schoolName" to request.schoolName,
+                    "status" to request.status.name,
+                    "createdAt" to request.createdAt,
+                    "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                )
+
+                com.google.android.gms.tasks.Tasks.await(
+                    firestore.collection("access_requests")
+                        .document(request.requestId)
+                        .set(requestData)
+                )
+
+                // Mark as synced locally
+                accessRequestDao.insertRequest(request.copy(
+                    syncStatus = SyncStatus.SYNCED,
+                    updatedAt = System.currentTimeMillis()
+                ))
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
     }
 }
