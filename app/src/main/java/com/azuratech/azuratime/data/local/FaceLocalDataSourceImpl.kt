@@ -15,6 +15,9 @@ class FaceLocalDataSourceImpl @Inject constructor(
     override fun getAllFacesFlow(schoolId: String): Flow<List<FaceEntity>> =
         faceDao.getAllFacesFlow(schoolId)
 
+    override fun getAllFacesWithDetailsFlow(schoolId: String): Flow<List<FaceWithDetails>> =
+        faceDao.getAllFacesWithDetailsFlow(schoolId)
+
     override fun getAllFacesForScanningFlow(schoolId: String): Flow<List<FaceEntity>> =
         faceDao.getAllFacesForScanning(schoolId)
 

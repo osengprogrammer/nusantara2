@@ -5,7 +5,9 @@ import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+import com.azuratech.azuratime.domain.checkin.repository.ProcessCheckInParams
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
 import kotlinx.coroutines.Dispatchers
@@ -198,6 +200,42 @@ class CheckInRepositoryImpl @Inject constructor(
 
             conflictDao.deleteById(conflictId)
             Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun processCheckIn(params: ProcessCheckInParams): Result<com.azuratech.azuratime.domain.checkin.model.CheckInResult> = withContext(Dispatchers.IO) {
+        try {
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Failure(AppError.BusinessRule("School not selected"))
+            
+            // 1. Check duplicate check-in today
+            val today = LocalDate.now()
+            val existing = localDataSource.getRecordByFaceAndDate(params.faceId, today, schoolId)
+            if (existing != null) {
+                return@withContext Result.Success(com.azuratech.azuratime.domain.checkin.model.CheckInResult.AlreadyCheckedIn(params.studentName))
+            }
+
+            // 2. Class validation
+            if (params.activeClassId != null && params.activeClassId !in params.studentClassIds) {
+                return@withContext Result.Success(com.azuratech.azuratime.domain.checkin.model.CheckInResult.Rejected(params.studentName, "Bukan kelas ini"))
+            }
+
+            // 3. Save Record
+            val record = CheckInRecord(
+                recordId = "rec_${System.currentTimeMillis()}",
+                studentId = params.faceId,
+                studentName = params.studentName,
+                schoolId = schoolId,
+                classId = params.activeClassId ?: params.studentClassIds.firstOrNull() ?: "UNASSIGNED",
+                className = "Auto", 
+                timestamp = System.currentTimeMillis(),
+                status = CheckInStatus.PRESENT,
+                teacherEmail = params.teacherEmail
+            )
+            
+            saveRecord(record)
+            Result.Success(com.azuratech.azuratime.domain.checkin.model.CheckInResult.Success(params.studentName, "Berhasil Absen"))
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
         }

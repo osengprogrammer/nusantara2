@@ -7,8 +7,8 @@ import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.admin.usecase.AdminUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,7 +26,7 @@ class AdminViewModel @Inject constructor(
     application: Application,
     database: AppDatabase,
     private val repository: AdminRepository,
-    private val adminUseCase: AdminUseCase,
+    private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 
@@ -71,7 +71,7 @@ class AdminViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AdminUiState.Loading
             try {
-                adminUseCase.approveMembership(targetUserId, schoolId, schoolName, role, assignedClassIds)
+                userRepository.approveMembership(targetUserId, schoolId, schoolName, role, assignedClassIds)
                 _uiState.value = AdminUiState.Success("Akses $role diberikan!")
             } catch (e: Exception) {
                 _uiState.value = AdminUiState.Error("Gagal menyetujui: ${e.localizedMessage}")
@@ -82,7 +82,7 @@ class AdminViewModel @Inject constructor(
     fun revokeTeacherAccess(targetUserId: String, currentAdminSchoolId: String) {
         viewModelScope.launch {
             try {
-                adminUseCase.revokeTeacherAccessFromWorkspace(targetUserId, currentAdminSchoolId)
+                userRepository.revokeMembership(targetUserId, currentAdminSchoolId)
                 _uiState.value = AdminUiState.Success("Akses dicabut.")
             } catch (e: Exception) {
                 _uiState.value = AdminUiState.Error("Gagal: ${e.localizedMessage}")
@@ -98,7 +98,7 @@ class AdminViewModel @Inject constructor(
             try {
                 val schoolId = currentAdmin.activeSchoolId ?: return@launch
                 val schoolName = currentAdmin.memberships[schoolId]?.schoolName ?: ""
-                adminUseCase.inviteTeacherToWorkspace(schoolId, schoolName, teacherEmail, "TEACHER")
+                userRepository.sendFriendRequest(currentAdmin.userId, currentAdmin.name, currentAdmin.email, teacherEmail)
                 _uiState.value = AdminUiState.Success("Undangan dikirim ke $teacherEmail")
             } catch (e: Exception) {
                 _uiState.value = AdminUiState.Error("Gagal mengundang: ${e.localizedMessage}")

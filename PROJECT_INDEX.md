@@ -25,7 +25,7 @@
 | `BootViewModel.kt` | `core.boot` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `FaceListViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `FaceViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `RegisterViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ⚠️ Legacy |
+| `RegisterViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `StudentFormViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `PendingSchoolsViewModel.kt` | `ui.admin` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `ZoharAssistantViewModel.kt` | `ui.ai` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
@@ -34,7 +34,7 @@
 | `AuthViewModel.kt` | `ui.auth` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `BiometricViewModel.kt` | `ui.biometric` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `CheckInViewModel.kt` | `ui.checkin` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `ScannerViewModel.kt` | `ui.checkin` | Exposes reactive UI state via StateFlow; handles user actions | ⚠️ Legacy |
+| `ScannerViewModel.kt` | `ui.checkin` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `ClassViewModel.kt` | `ui.classes` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `FaceAssignmentViewModel.kt` | `ui.classes` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `DashboardViewModel.kt` | `ui.dashboard` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
@@ -47,55 +47,13 @@
 | `SchoolViewModel.kt` | `ui.school` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `SyncViewModel.kt` | `ui.sync` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `AdminViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `NetworkViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ⚠️ Legacy |
+| `NetworkViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `UserManagementViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `WorkspaceViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 
 ## 🔗 UseCases (Legacy/Active)
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `AdminUseCase.kt` | `domain.admin.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `AssignStudentToClassUseCase.kt` | `domain.assignment.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `RemoveStudentFromClassUseCase.kt` | `domain.assignment.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SyncAssignmentsUseCase.kt` | `domain.assignment.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `ProcessCheckInUseCase.kt` | `domain.checkin.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `ResolveConflictUseCase.kt` | `domain.checkin.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SyncCheckInRecordsUseCase.kt` | `domain.checkin.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `AssignClassToSchoolUseCase.kt` | `domain.classes.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `BackfillOrphanedClassesUseCase.kt` | `domain.classes.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `ImportClassesUseCase.kt` | `domain.classes.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SyncClassesUseCase.kt` | `domain.classes.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `UnassignClassFromSchoolUseCase.kt` | `domain.classes.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `DeleteFaceUseCase.kt` | `domain.face.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetAssignmentsForFaceUseCase.kt` | `domain.face.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetEnrolledFacesUseCase.kt` | `domain.face.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetFacesInClassUseCase.kt` | `domain.face.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetFacesWithDetailsUseCase.kt` | `domain.face.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetFaceWithDetailsUseCase.kt` | `domain.face.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SyncFacesUseCase.kt` | `domain.face.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `UpdateEmployeeClassUseCase.kt` | `domain.face.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetReportDataUseCase.kt` | `domain.report.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `ArchiveInactiveSchoolsUseCase.kt` | `domain.school.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetActiveSchoolContextUseCase.kt` | `domain.school.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SuperAdminApprovalUseCase.kt` | `domain.school.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SyncSchoolsUseCase.kt` | `domain.school.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `BackfillStudentsFromFacesUseCase.kt` | `domain.student.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `DeleteStudentProfileUseCase.kt` | `domain.student.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `DeleteStudentUseCase.kt` | `domain.student.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetStudentProfilesUseCase.kt` | `domain.student.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `PushStudentsUseCase.kt` | `domain.student.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SaveStudentProfileUseCase.kt` | `domain.student.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `UpdateStudentClassUseCase.kt` | `domain.student.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetLocalDataCountUseCase.kt` | `domain.sync.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `ProcessCsvUseCase.kt` | `domain.sync.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SyncMasterDataUseCase.kt` | `domain.sync.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `CancelJoinRequestUseCase.kt` | `domain.user.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `GetUserByIdUseCase.kt` | `domain.user.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `ObserveUserUseCase.kt` | `domain.user.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `RequestJoinSchoolUseCase.kt` | `domain.user.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `SyncUserUseCase.kt` | `domain.user.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `UpdateUserUseCase.kt` | `domain.user.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
-| `UserManagementUseCase.kt` | `domain.user.usecase` | [LEGACY] Business logic wrapper; being phased out for direct repo calls | 🗑️ Deprecated (if unused) |
 
 ## 🏰 Repositories
 | File | Package | Responsibility | SSOT Status |
@@ -108,16 +66,16 @@
 | `BootRepository.kt` | `repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `DataIntegrityRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `ExportRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `FaceRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `FaceRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `MainRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `MembershipRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `RegistrationRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `ReportRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `ScannerRepository.kt` | `data.repo` | * Handles real-time face matching and attendance stamping. | ⚠️ Legacy |
-| `SchoolRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `SecurityRepository.kt` | `data.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `SchoolRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `SecurityRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `SyncRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `UserRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `UserRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `WorkspaceRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `ZoharRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `CheckInRepository.kt` | `domain.checkin.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
@@ -126,7 +84,7 @@
 ## 🧩 Managers
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `SessionManager.kt` | `core.session` | Cross-cutting concern: session, sync orchestration, media handling | ⚠️ Legacy |
+| `SessionManager.kt` | `core.session` | Cross-cutting concern: session, sync orchestration, media handling | ✅ Migrated |
 | `SyncManager.kt` | `core.sync` | Cross-cutting concern: session, sync orchestration, media handling | ✅ Migrated |
 | `PhotoManager.kt` | `domain.media` | Cross-cutting concern: session, sync orchestration, media handling | ✅ Migrated |
 
@@ -145,10 +103,10 @@
 ## ⚙️ Workers
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `AccessSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ⚠️ Legacy |
-| `ProfileSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ⚠️ Legacy |
-| `SchoolSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ⚠️ Legacy |
-| `SyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ⚠️ Legacy |
+| `AccessSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
+| `ProfileSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
+| `SchoolSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
+| `SyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
 
 ## 🖥️ Screens
 | File | Package | Responsibility | SSOT Status |

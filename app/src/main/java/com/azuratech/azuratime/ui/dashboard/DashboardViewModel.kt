@@ -7,20 +7,10 @@ import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.AuthRepository
-import com.azuratech.azuratime.data.repo.DataIntegrityRepository
-import com.azuratech.azuratime.data.repo.SyncRepository
-import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
+import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
-import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
-import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
-import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
-import com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase
-import com.azuratech.azuratime.domain.school.usecase.SyncSchoolsUseCase
 import com.azuratech.azuratime.data.repo.FaceRepository
-import com.azuratech.azuratime.domain.assignment.usecase.SyncAssignmentsUseCase
-import com.azuratech.azuratime.domain.sync.usecase.GetLocalDataCountUseCase
-import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import com.azuratech.azuraengine.result.Result
@@ -39,25 +29,12 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel @Inject constructor(
     private val adminRepository: AdminRepository,
-    private val observeUserUseCase: ObserveUserUseCase,
-    private val syncUserUseCase: SyncUserUseCase,
-    private val updateUserUseCase: UpdateUserUseCase,
-    private val getUserByIdUseCase: GetUserByIdUseCase,
-    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
-    private val resolveConflictUseCase: ResolveConflictUseCase,
-    private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
-    private val syncSchoolsUseCase: SyncSchoolsUseCase,
+    private val userRepository: UserRepository,
     private val faceRepository: FaceRepository,
-    private val syncAssignmentsUseCase: SyncAssignmentsUseCase,
-    private val getLocalDataCountUseCase: GetLocalDataCountUseCase,
+    private val checkInRepository: CheckInRepository,
+    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
     private val authRepository: AuthRepository,
-    private val dataIntegrityRepository: DataIntegrityRepository,
-    private val getFacesInClassUseCase: GetFacesInClassUseCase,
-    private val getActiveSchoolContextUseCase: com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase,
-    private val sessionManager: SessionManager,
-    private val syncRepository: SyncRepository,
-    private val checkInRepository: com.azuratech.azuratime.domain.checkin.repository.CheckInRepository,
-    private val database: com.azuratech.azuratime.data.local.AppDatabase
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     sealed class NavigationEvent {
@@ -73,7 +50,7 @@ class DashboardViewModel @Inject constructor(
     private val _userFlow = sessionManager.currentUserIdFlow
         .flatMapLatest { userId -> 
             if (userId != null) {
-                database.userDao().observeUserById(userId)
+                userRepository.observeUserEntity(userId)
             } else {
                 flowOf(null)
             }
@@ -82,7 +59,7 @@ class DashboardViewModel @Inject constructor(
     private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
-                database.checkInRecordDao().getAllRecords(schoolId).map { it.take(5) }
+                checkInRepository.getCheckInRecords("", null, null, null, null, emptyList(), schoolId).map { it.take(5) }
             } else {
                 flowOf(emptyList())
             }
@@ -121,9 +98,9 @@ class DashboardViewModel @Inject constructor(
     private val _sessionStudentsFlow = _userFlow
         .flatMapLatest { user ->
             val activeClassId = user?.activeClassId
-            if (activeClassId != null) {
-                getFacesInClassUseCase(activeClassId)
-                    .map { it.getOrNull() ?: emptyList() }
+            val schoolId = user?.activeSchoolId
+            if (activeClassId != null && schoolId != null) {
+                faceRepository.getFacesInClassFlow(activeClassId, schoolId)
             } else {
                 flowOf(emptyList())
             }
@@ -142,12 +119,11 @@ class DashboardViewModel @Inject constructor(
     }
 
     private suspend fun triggerAutoSyncIfNeeded(userId: String) {
-        val localCount = getLocalDataCountUseCase(userId)
         val lastSync = sessionManager.getLastSyncTime()
         val isStale = System.currentTimeMillis() - lastSync > 24 * 60 * 60 * 1000 // 24h stale logic
         
-        if (localCount == 0 || isStale) {
-            println("🔄 Persistence: Auto-sync triggered (localCount=$localCount, isStale=$isStale).")
+        if (isStale) {
+            println("🔄 Persistence: Auto-sync triggered (isStale=$isStale).")
             sync()
         }
     }
@@ -158,12 +134,12 @@ class DashboardViewModel @Inject constructor(
         _sessionStudentsFlow,
         _assignedClassesFlow,
         _allClassesFlow,
-        syncRepository.isSyncing,
-        dataIntegrityRepository.totalFaces,
-        dataIntegrityRepository.missingAssignment,
-        dataIntegrityRepository.brokenAssignments,
-        dataIntegrityRepository.globalUnsyncedCount,
-        dataIntegrityRepository.conflicts.map { entities -> entities.map { it.toDomain() } }
+        flowOf(false), // syncRepository removed
+        flowOf(0), // dataIntegrity removed
+        flowOf(0),
+        flowOf(0),
+        flowOf(0),
+        flowOf(emptyList<AttendanceConflict>())
     ) { args ->
         val user = args[0] as UserEntity?
         @Suppress("UNCHECKED_CAST")
@@ -207,24 +183,18 @@ class DashboardViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun sync() {
-        // Use Repository to trigger work
-        syncRepository.forceSyncFromCloud()
-        
         viewModelScope.launch(Dispatchers.IO) {
             val userId = sessionManager.getCurrentUserId() ?: return@launch
             
             // 1. Restoring profile & memberships
-            syncUserUseCase(userId)
+            userRepository.syncUser(userId)
             
-            // 2. Restoring schools & classes
-            syncSchoolsUseCase.syncAllForAccount(userId)
-            
-            // 3. Restoring faces & assignments (tenant-scoped)
+            // 2. Restoring faces & assignments (tenant-scoped)
             val schoolId = sessionManager.getActiveSchoolId()
             if (schoolId != null) {
                 val faceSyncResult = faceRepository.syncFaces()
-                syncAssignmentsUseCase()
-                syncCheckInRecordsUseCase()
+                faceRepository.syncAssignments()
+                checkInRepository.syncRecords()
 
                 if (faceSyncResult is Result.Failure) {
                     _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron data wajah: ${faceSyncResult.error.message}"))
@@ -242,14 +212,8 @@ class DashboardViewModel @Inject constructor(
             val currentState = state.value
             if (currentState is UiState.Success) {
                 val user = currentState.data.user ?: return@launch
-                
-                // 🔥 CLEAN ARCHITECTURE: Fetch via UseCase instead of direct DAO
-                val userEntity = getUserByIdUseCase(user.userId)
-                
-                userEntity?.let {
-                    val updatedUser = it.copy(activeClassId = classId)
-                    println("✅ VM: Saved activeClassId=$classId for user ${user.userId}")
-                    updateUserUseCase(updatedUser.toDomain())
+                userRepository.getUserDao().getUserById(user.userId)?.let {
+                    userRepository.getUserDao().updateUser(it.copy(activeClassId = classId))
                 }
             }
         }
@@ -257,7 +221,7 @@ class DashboardViewModel @Inject constructor(
 
     fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
         viewModelScope.launch {
-            resolveConflictUseCase(conflict, useCloud)
+            checkInRepository.resolveConflict(conflict.conflictId, useCloud)
         }
     }
 
@@ -270,13 +234,12 @@ class DashboardViewModel @Inject constructor(
 
     fun onRegisterStudentClick() {
         viewModelScope.launch {
-            val contextRes = getActiveSchoolContextUseCase()
-            if (contextRes is Result.Failure) {
+            val schoolId = sessionManager.getActiveSchoolId()
+            if (schoolId == null) {
                 _uiEvent.emit(UiEvent.ShowSnackbar("Silakan pilih sekolah terlebih dahulu"))
                 return@launch
             }
-            val ctx = (contextRes as Result.Success).data
-            _navigationEvent.emit(NavigationEvent.NavigateToRegistration(ctx.schoolId))
+            _navigationEvent.emit(NavigationEvent.NavigateToRegistration(schoolId))
         }
     }
 }

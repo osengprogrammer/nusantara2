@@ -4,8 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
-import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
-import com.azuratech.azuratime.domain.assignment.usecase.RemoveStudentFromClassUseCase
+import com.azuratech.azuratime.data.repo.FaceRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,8 +24,7 @@ class FaceAssignmentViewModel @Inject constructor(
     database: AppDatabase,
     private val sessionManager: SessionManager,
     private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
-    private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
-    private val removeStudentFromClassUseCase: RemoveStudentFromClassUseCase
+    private val faceRepository: FaceRepository
 ) : ViewModel() {
 
     private val faceDao = database.faceDao()
@@ -58,19 +56,19 @@ class FaceAssignmentViewModel @Inject constructor(
 
     fun assignToClass(faceId: String, classId: String) {
         viewModelScope.launch {
-            assignStudentToClassUseCase(faceId, classId)
+            faceRepository.assignStudentToClass(faceId, classId)
         }
     }
 
     fun removeSpecificAssignment(faceId: String, classId: String) {
         viewModelScope.launch {
-            removeStudentFromClassUseCase(faceId, classId)
+            faceRepository.removeStudentFromClass(faceId, classId)
         }
     }
 
     fun removeAllAssignmentsForFace(faceId: String) {
         viewModelScope.launch {
-            removeStudentFromClassUseCase.removeAll(faceId)
+            faceRepository.removeAllAssignmentsForFace(faceId)
         }
     }
 }

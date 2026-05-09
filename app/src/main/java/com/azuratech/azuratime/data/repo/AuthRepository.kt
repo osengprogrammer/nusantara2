@@ -7,9 +7,9 @@ import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuraengine.result.Result as DomainResult
+import com.azuratech.azuratime.data.repo.SecurityRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -32,7 +32,8 @@ class AuthRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
-    private val syncUserUseCase: SyncUserUseCase
+    private val userRepository: UserRepository,
+    private val securityRepository: SecurityRepository
 ) {
     private val userDao = database.userDao()
 
@@ -50,7 +51,7 @@ class AuthRepository @Inject constructor(
             if (userEntity == null) {
                 // Not in Room, attempt to pull from Cloud
                 println("🔍 AuthRepository: User not in Room, pulling from Cloud...")
-                val syncResult = syncUserUseCase(uid)
+                val syncResult = userRepository.syncUser(uid)
                 if (syncResult is DomainResult.Success) {
                     userEntity = syncResult.data
                 }
@@ -85,7 +86,7 @@ class AuthRepository @Inject constructor(
             userEntity.activeSchoolId?.let { sessionManager.saveActiveSchoolId(it) }
 
             if (userEntity.status == SessionManager.STATUS_ACTIVE) {
-                sessionManager.refreshIsoKeyFromServer()
+                securityRepository.refreshIsoKeyFromServer()
             }
 
             return@withContext Pair(userEntity, false)

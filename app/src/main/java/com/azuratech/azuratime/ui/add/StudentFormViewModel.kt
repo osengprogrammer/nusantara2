@@ -3,12 +3,11 @@ package com.azuratech.azuratime.ui.add
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.domain.face.usecase.GetFaceWithDetailsUseCase
-import com.azuratech.azuratime.domain.student.usecase.SaveStudentProfileUseCase
+import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.domain.media.PhotoStorageUtils
-import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,11 +18,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
-    private val saveStudentProfileUseCase: SaveStudentProfileUseCase,
-    private val getFaceWithDetailsUseCase: GetFaceWithDetailsUseCase,
+    private val faceRepository: FaceRepository,
+    private val userRepository: UserRepository,
     private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
-    private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
-    private val getUserByIdUseCase: com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
     private val photoStorageUtils: PhotoStorageUtils
 ) : ViewModel() {
@@ -62,29 +59,24 @@ class StudentFormViewModel @Inject constructor(
 
     fun loadStudentForEdit(faceId: String) {
         viewModelScope.launch {
-            when (val result = getFaceWithDetailsUseCase(faceId)) {
-                is Result.Success -> {
-                    result.data?.let { faceWithDetails ->
-                        selectedClassId = faceWithDetails.classId
-                        updateState {
-                            it.copy(
-                                name = faceWithDetails.face.name,
-                                studentId = faceWithDetails.face.faceId,
-                                selectedClassId = faceWithDetails.classId,
-                                embedding = faceWithDetails.face.embedding,
-                                photoUrl = faceWithDetails.face.photoUrl,
-                                isEditMode = true,
-                                pageTitle = "Edit Profil Siswa"
-                            )
-                        }
-                    }
+            val schoolId = sessionManager.getActiveSchoolId() ?: ""
+            val faceWithDetails = faceRepository.getFaceWithDetails(faceId, schoolId)
+            
+            if (faceWithDetails != null) {
+                selectedClassId = faceWithDetails.classId
+                updateState {
+                    it.copy(
+                        name = faceWithDetails.face.name,
+                        studentId = faceWithDetails.face.faceId,
+                        selectedClassId = faceWithDetails.classId,
+                        embedding = faceWithDetails.face.embedding,
+                        photoUrl = faceWithDetails.face.photoUrl,
+                        isEditMode = true,
+                        pageTitle = "Edit Profil Siswa"
+                    )
                 }
-                is Result.Failure -> {
-                    updateState { it.copy(formError = result.error.message ?: "Gagal memuat data") }
-                }
-                is Result.Loading -> {
-                    updateState { it.copy(isSubmitting = true) }
-                }
+            } else {
+                updateState { it.copy(formError = "Gagal memuat data") }
             }
         }
     }
@@ -139,7 +131,7 @@ class StudentFormViewModel @Inject constructor(
             val photoBytes = currentState.capturedBitmap?.let { bitmapToByteArray(it) }
             val activeSchoolId = sessionManager.getActiveSchoolId()
             val currentUserId = sessionManager.getCurrentUserId()
-            val user = currentUserId?.let { getUserByIdUseCase(it) }
+            val user = currentUserId?.let { userRepository.getUserById(it) }
 
             user?.let { println("🔍 StudentForm: Fetched user ${it.userId} for save") }
 
@@ -177,9 +169,9 @@ class StudentFormViewModel @Inject constructor(
                 syncStatus = SyncStatus.PENDING_UPDATE
             )
 
-            // 2. Save via Modernized UseCase (now handles photoBytes)
-            when (val result = saveStudentProfileUseCase(profile, photoBytes)) {
-                is Result.Success -> {
+            // 2. Save via Repository
+            when (val result = faceRepository.saveStudentProfile(profile, photoBytes)) {
+                is Result.Success<Unit> -> {
                     val message = if (currentState.isEditMode) "Berhasil diperbarui" else "Siswa berhasil didaftarkan"
                     _uiEvent.emit(UiEvent.ShowSnackbar(message))
                     _uiEvent.emit(UiEvent.NavigateUp)

@@ -9,12 +9,8 @@ import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.local.toEntity
 import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
-import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
-import com.azuratech.azuratime.domain.user.usecase.UserManagementUseCase
-import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
-import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuraengine.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -33,12 +29,8 @@ class UserManagementViewModel @Inject constructor(
     application: Application,
     private val database: AppDatabase,
     private val repository: UserRepository,
-    private val sessionManager: SessionManager,
-    private val updateUserUseCase: UpdateUserUseCase,
-    private val resolveConflictUseCase: ResolveConflictUseCase,
-    private val userManagementUseCase: UserManagementUseCase,
-    private val syncUserUseCase: SyncUserUseCase,
-    private val observeUserUseCase: ObserveUserUseCase
+    private val checkInRepository: CheckInRepository,
+    private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 
     // =====================================================
@@ -112,8 +104,8 @@ class UserManagementViewModel @Inject constructor(
             userToUpdate?.let {
                 val updatedUser = it.copy(activeClassId = classId)
                 println("💾 DEBUG: Saving user with activeClassId=${updatedUser.activeClassId}")
-                val result = updateUserUseCase(updatedUser.toDomain())
-                if (result is com.azuratech.azuraengine.result.Result.Success) {
+                val result = repository.updateUser(updatedUser.toDomain())
+                if (result is com.azuratech.azuraengine.result.Result.Success<Unit>) {
                     println("✅ DEBUG: selectActiveClass success for classId=$classId")
                 } else if (result is com.azuratech.azuraengine.result.Result.Failure) {
                     println("❌ DEBUG: selectActiveClass failed: ${result.error}")
@@ -126,7 +118,7 @@ class UserManagementViewModel @Inject constructor(
         val targetId = targetUserId ?: currentUser.value?.userId ?: return
         val schoolId = currentUser.value?.activeSchoolId ?: return
         viewModelScope.launch {
-            userManagementUseCase.assignClassToUser(targetId, schoolId, classId)
+            repository.approveMembership(targetId, schoolId, "", "TEACHER", listOf(classId))
         }
     }
 
@@ -134,7 +126,7 @@ class UserManagementViewModel @Inject constructor(
         val targetId = targetUserId ?: currentUser.value?.userId ?: return
         val schoolId = currentUser.value?.activeSchoolId ?: return
         viewModelScope.launch {
-            userManagementUseCase.removeClassAccess(targetId, classId, schoolId)
+            repository.revokeMembership(targetId, schoolId)
         }
     }
 
@@ -145,7 +137,7 @@ class UserManagementViewModel @Inject constructor(
 
     fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
         viewModelScope.launch {
-            resolveConflictUseCase(conflict, useCloud)
+            checkInRepository.resolveConflict(conflict.conflictId, useCloud)
         }
     }
 
@@ -158,7 +150,7 @@ class UserManagementViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val updatedUser = user.copy(name = newName.trim())
-                updateUserUseCase(updatedUser.toDomain())
+                repository.updateUser(updatedUser)
                 onSuccess()
             } catch (e: Exception) {
                 onError(e.message ?: "Gagal memperbarui nama")
@@ -172,7 +164,7 @@ class UserManagementViewModel @Inject constructor(
     fun refreshCurrentUserFromCloud() {
         viewModelScope.launch(Dispatchers.IO) {
             val currentUserId = currentUser.value?.userId ?: return@launch
-            syncUserUseCase(currentUserId)
+            repository.syncUser(currentUserId)
         }
     }
 }

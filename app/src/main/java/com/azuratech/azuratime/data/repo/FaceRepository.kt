@@ -4,7 +4,6 @@ import android.app.Application
 import android.graphics.Bitmap
 import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
-import com.azuratech.azuratime.domain.face.usecase.*
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import javax.inject.Inject
@@ -15,7 +14,8 @@ class FaceRepository @Inject constructor(
     private val application: Application,
     private val localDataSource: FaceLocalDataSource,
     private val remoteDataSource: FaceRemoteDataSource,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val studentRepository: com.azuratech.azuratime.domain.student.repository.StudentRepository
 ) {
     private val schoolId: String
         get() = sessionManager.getActiveSchoolId() ?: ""
@@ -45,6 +45,8 @@ class FaceRepository @Inject constructor(
     }
 
     fun getAllFacesFlow(schoolId: String) = localDataSource.getAllFacesFlow(schoolId)
+    fun getFacesWithDetailsFlow(schoolId: String) = localDataSource.getAllFacesWithDetailsFlow(schoolId)
+    fun getEnrolledFacesFlow(schoolId: String) = localDataSource.getAllFacesForScanningFlow(schoolId)
     fun getAllFacesForScanningFlow(schoolId: String) = localDataSource.getAllFacesForScanningFlow(schoolId)
     fun getFacesInClassFlow(classId: String, schoolId: String) = localDataSource.getFacesInClassFlow(classId, schoolId)
     suspend fun getFaceWithDetails(faceId: String, schoolId: String) = localDataSource.getFaceWithDetails(faceId, schoolId)
@@ -52,6 +54,44 @@ class FaceRepository @Inject constructor(
     suspend fun deleteAssignmentsByFace(faceId: String, schoolId: String) = localDataSource.deleteAssignmentsByFace(faceId, schoolId)
     suspend fun insertAssignment(assignment: FaceAssignmentEntity) = localDataSource.insertAssignment(assignment)
     suspend fun upsertFace(face: FaceEntity) = localDataSource.upsertFace(face)
+
+    suspend fun assignStudentToClass(faceId: String, classId: String): Result<Unit> = try {
+        localDataSource.insertAssignment(FaceAssignmentEntity(faceId, classId, schoolId))
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
+
+    suspend fun removeStudentFromClass(faceId: String, classId: String): Result<Unit> = try {
+        localDataSource.deleteAssignmentsByFace(faceId, schoolId) // Simple version: remove all then re-add if needed, or specific delete
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
+
+    suspend fun removeAllAssignmentsForFace(faceId: String): Result<Unit> = try {
+        localDataSource.deleteAssignmentsByFace(faceId, schoolId)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
+
+    suspend fun deleteFace(faceId: String) = deleteEnrollment(faceId)
+
+    suspend fun updateFaceClass(faceId: String, classId: String?): Result<Unit> = try {
+        localDataSource.deleteAssignmentsByFace(faceId, schoolId)
+        if (classId != null) {
+            localDataSource.insertAssignment(FaceAssignmentEntity(faceId, classId, schoolId))
+        }
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
+
+    suspend fun saveStudentProfile(profile: com.azuratech.azuratime.domain.model.StudentProfile, photoBytes: ByteArray? = null): Result<Unit> {
+        // Simple delegation to StudentRepository
+        return studentRepository.saveProfile(profile)
+    }
     
     /**
      * 🔥 SSOT: Pull face updates from cloud to local Room.

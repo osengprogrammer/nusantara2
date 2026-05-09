@@ -1,21 +1,19 @@
 package com.azuratech.azuratime.ui.add
 
-import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repo.RegistrationRepository
 import com.azuratech.azuraengine.model.ProcessResult
-import com.azuratech.azuratime.domain.sync.usecase.ProcessCsvUseCase
+import com.azuratech.azuratime.data.repo.RegistrationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class RegisterState(
     val isProcessing: Boolean = false,
@@ -26,10 +24,8 @@ data class RegisterState(
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    application: Application,
-    private val repository: RegistrationRepository,
-    private val processCsvUseCase: ProcessCsvUseCase
-) : AndroidViewModel(application) {
+    private val repository: RegistrationRepository
+) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state.asStateFlow()
@@ -47,7 +43,7 @@ class RegisterViewModel @Inject constructor(
             val resultLogs = mutableListOf<ProcessResult>()
 
             try {
-                processCsvUseCase(uri.toString(), dataType).collect { result ->
+                repository.processCsv(uri.toString(), dataType).collect { result ->
                     if (result.status != "Syncing") {
                         resultLogs.add(result)
                     }

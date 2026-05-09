@@ -7,9 +7,9 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.FaceEntity
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuratime.domain.checkin.model.CheckInResult
-import com.azuratech.azuratime.domain.checkin.usecase.*
-import com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase
+import com.azuratech.azuratime.domain.checkin.repository.ProcessCheckInParams
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.data.repo.SchoolRepository
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,48 +26,45 @@ import java.time.LocalDate
 class CheckInViewModel @Inject constructor(
     application: Application,
     private val repository: CheckInRepository,
-    private val processCheckInUseCase: ProcessCheckInUseCase,
-    private val getActiveSchoolContextUseCase: GetActiveSchoolContextUseCase,
+    private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
     private val exportUtils: ExportUtils
 ) : AndroidViewModel(application) {
 
     private val _activeClassId = MutableStateFlow<String?>(null)
 
-    // 🔥 Stream reaktif untuk SchoolContext
+    // 🔥 Stream reaktif untuk SchoolId
     private val schoolContextFlow = sessionManager.activeSchoolIdFlow
-        .map { getActiveSchoolContextUseCase() }
-        .filterIsInstance<Result.Success<*>>()
-        .map { (it as Result.Success).data as com.azuratech.azuratime.domain.school.usecase.SchoolContext }
+        .filterNotNull()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val unassignedCount: StateFlow<Int> = schoolContextFlow
-        .flatMapLatest { ctx -> repository.getUnassignedStudentCount(ctx.schoolId) }
+        .flatMapLatest { schoolId -> repository.getUnassignedStudentCount(schoolId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val activeSessionStudents: StateFlow<List<FaceEntity>> = combine(_activeClassId, schoolContextFlow) { classId, ctx ->
-        classId to ctx
-    }.flatMapLatest { (classId, ctx) ->
-        if (classId != null) repository.getFacesByClass(classId, ctx.schoolId)
+    val activeSessionStudents: StateFlow<List<FaceEntity>> = combine(_activeClassId, schoolContextFlow) { classId, schoolId ->
+        classId to schoolId
+    }.flatMapLatest { (classId, schoolId) ->
+        if (classId != null) repository.getFacesByClass(classId, schoolId)
         else flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val activeStudentCount: StateFlow<Int> = combine(_activeClassId, schoolContextFlow) { classId, ctx ->
-        classId to ctx
-    }.flatMapLatest { (classId, ctx) ->
-        if (classId != null) repository.getStudentCountInClass(classId, ctx.schoolId)
+    val activeStudentCount: StateFlow<Int> = combine(_activeClassId, schoolContextFlow) { classId, schoolId ->
+        classId to schoolId
+    }.flatMapLatest { (classId, schoolId) ->
+        if (classId != null) repository.getStudentCountInClass(classId, schoolId)
         else flowOf(0)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val sessionSummary: StateFlow<Pair<Int, Int>> = combine(_activeClassId, schoolContextFlow) { classId, ctx ->
-        classId to ctx
-    }.flatMapLatest { (classId, ctx) ->
+    val sessionSummary: StateFlow<Pair<Int, Int>> = combine(_activeClassId, schoolContextFlow) { classId, schoolId ->
+        classId to schoolId
+    }.flatMapLatest { (classId, schoolId) ->
         if (classId != null) {
-            repository.getStudentCountInClass(classId, ctx.schoolId)
-                .combine(repository.getTodayPresentCount(LocalDate.now(), ctx.schoolId)) { total, present ->
+            repository.getStudentCountInClass(classId, schoolId)
+                .combine(repository.getTodayPresentCount(LocalDate.now(), schoolId)) { total, present ->
                     present to total
                 }
         } else flowOf(0 to 0)
@@ -110,17 +107,16 @@ class CheckInViewModel @Inject constructor(
     fun processScannedFace(scannedFaceId: String, studentName: String, onResult: (isSuccess: Boolean, message: String) -> Unit) {
         viewModelScope.launch {
             try {
-                val contextRes = getActiveSchoolContextUseCase()
-                if (contextRes is Result.Failure) {
-                    onResult(false, "❌ Error: ${contextRes.error.message ?: "Silakan pilih sekolah"}")
+                val schoolId = sessionManager.getActiveSchoolId()
+                if (schoolId == null) {
+                    onResult(false, "❌ Error: Silakan pilih sekolah")
                     return@launch
                 }
-                val ctx = (contextRes as Result.Success).data
                 
                 val currentSessionId = _activeClassId.value
                 val teacherEmail = _filterParams.value.userId ?: ""
                 val studentClasses = withContext(Dispatchers.IO) {
-                    repository.getClassIdsForFace(scannedFaceId, ctx.schoolId).firstOrNull() ?: emptyList()
+                    repository.getClassIdsForFace(scannedFaceId, schoolId).firstOrNull() ?: emptyList()
                 }
 
                 val params = ProcessCheckInParams(
@@ -131,11 +127,11 @@ class CheckInViewModel @Inject constructor(
                     studentClassIds = studentClasses
                 )
 
-                val result = processCheckInUseCase(params)
+                val result = repository.processCheckIn(params)
                 
                 withContext(Dispatchers.Main) {
                     when (result) {
-                        is Result.Success -> {
+                        is Result.Success<CheckInResult> -> {
                             when (val checkInRes = result.data) {
                                 is CheckInResult.Success -> onResult(true, checkInRes.message)
                                 is CheckInResult.Rejected -> onResult(false, checkInRes.reason)

@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.repo.SchoolRepository
-import com.azuratech.azuratime.domain.school.usecase.SuperAdminApprovalUseCase
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -14,8 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PendingSchoolsViewModel @Inject constructor(
-    private val schoolRepository: SchoolRepository,
-    private val approvalUseCase: SuperAdminApprovalUseCase
+    private val schoolRepository: SchoolRepository
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -33,7 +31,7 @@ class PendingSchoolsViewModel @Inject constructor(
 
     fun approve(schoolId: String) {
         viewModelScope.launch {
-            val result = approvalUseCase.approveSchool(schoolId)
+            val result = schoolRepository.approveSchool(schoolId)
             if (result is Result.Success) {
                 println("👑 SuperAdmin: Approved school $schoolId")
                 _uiEvent.emit(UiEvent.ShowSnackbar("Sekolah berhasil disetujui!"))
@@ -45,7 +43,7 @@ class PendingSchoolsViewModel @Inject constructor(
 
     fun reject(schoolId: String, reason: String) {
         viewModelScope.launch {
-            val result = approvalUseCase.rejectSchool(schoolId, reason)
+            val result = schoolRepository.rejectSchool(schoolId, reason)
             if (result is Result.Success) {
                 println("👑 SuperAdmin: Rejected school $schoolId")
                 _uiEvent.emit(UiEvent.ShowSnackbar("Sekolah telah ditolak."))

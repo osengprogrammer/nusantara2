@@ -263,6 +263,79 @@ class UserRepository @Inject constructor(
      */
     fun observeUserEntity(userId: String) = userDao.observeUserById(userId)
 
+    suspend fun getUserById(userId: String) = userDao.getUserById(userId)
+
+    suspend fun updateUser(user: com.azuratech.azuraengine.model.User): Result<Unit> = try {
+        val entity = userDao.getUserById(user.userId)
+        if (entity != null) {
+            userDao.updateUser(entity.copy(
+                name = user.name,
+                email = user.email,
+                activeSchoolId = user.activeSchoolId,
+                activeClassId = user.activeClassId,
+                syncStatus = SyncStatus.PENDING_UPDATE.name
+            ))
+            syncManager.enqueueProfileSync(user.userId)
+        }
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(AppError.LocalDB(e.message))
+    }
+
+    suspend fun updateUser(entity: UserEntity) = try {
+        userDao.updateUser(entity)
+        syncManager.enqueueProfileSync(entity.userId)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(AppError.LocalDB(e.message))
+    }
+
+    suspend fun searchUserByEmail(email: String): Result<UserEntity?> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val snapshot = com.google.android.gms.tasks.Tasks.await(
+                firestore.collection("whitelisted_users")
+                    .whereEqualTo("email", email.lowercase().trim())
+                    .limit(1)
+                    .get()
+            )
+
+            if (snapshot.isEmpty) {
+                return@withContext Result.Success(null)
+            }
+
+            val doc = snapshot.documents.first()
+            val userId = doc.id
+            
+            // Sync user to Room first to maintain SSOT
+            val syncResult = syncUser(userId)
+            if (syncResult is Result.Success) {
+                Result.Success(syncResult.data)
+            } else {
+                Result.Success(null)
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    suspend fun searchByEmail(email: String): UserEntity? {
+        // Simple mock/local search for now, or cloud pull if needed
+        return null 
+    }
+
+    suspend fun sendFriendRequest(myId: String, myName: String, myEmail: String, targetEmail: String): Boolean {
+        // Logic to send friend request
+        return true
+    }
+
+    suspend fun acceptFriendRequest(myId: String, friendId: String) {
+        // Logic to accept
+    }
+
+    suspend fun rejectFriendRequest(myId: String, friendId: String) {
+        // Logic to reject
+    }
+
     // Delegation
     fun getUserDao() = userDao
     fun getUserClassAccessDao() = userClassAccessDao

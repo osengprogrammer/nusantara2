@@ -5,10 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repo.ScannerRepository
 import com.azuratech.azuratime.domain.checkin.model.CheckInResult
-import com.azuratech.azuratime.domain.checkin.usecase.ProcessCheckInUseCase
-import com.azuratech.azuratime.domain.checkin.usecase.ProcessCheckInParams
-import com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase
+import com.azuratech.azuratime.domain.checkin.repository.ProcessCheckInParams
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+import com.azuratech.azuratime.data.repo.SchoolRepository
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -23,8 +22,8 @@ class ScannerViewModel @Inject constructor(
     application: Application,
     private val repository: ScannerRepository,
     private val checkInRepository: CheckInRepository,
-    private val processCheckInUseCase: ProcessCheckInUseCase,
-    private val getActiveSchoolContextUseCase: GetActiveSchoolContextUseCase
+    private val schoolRepository: SchoolRepository,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<CheckInUiState>(CheckInUiState.Idle)
@@ -45,9 +44,7 @@ class ScannerViewModel @Inject constructor(
     fun startScannerSession(email: String) {
         currentTeacherEmail = email
         viewModelScope.launch {
-            // 1. Resolve Context via UseCase
-            val contextResult = getActiveSchoolContextUseCase()
-            val resolvedSchoolId = if (contextResult is Result.Success) contextResult.data.schoolId else null
+            val resolvedSchoolId = sessionManager.getActiveSchoolId()
             
             // 2. Fetch Session Data
             val (classId, className, schoolId) = repository.getSessionData(email, resolvedSchoolId)
@@ -120,10 +117,10 @@ class ScannerViewModel @Inject constructor(
             studentClassIds = studentClassIds
         )
 
-        val result = processCheckInUseCase(params)
+        val result = checkInRepository.processCheckIn(params)
 
         when (result) {
-            is Result.Success -> {
+            is Result.Success<CheckInResult> -> {
                 when (val checkInRes = result.data) {
                     is CheckInResult.Success -> {
                         _uiState.value = CheckInUiState.Success(checkInRes.name, alreadyCheckedIn = false)
