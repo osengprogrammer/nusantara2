@@ -216,6 +216,49 @@ class UserRepository @Inject constructor(
     }
 
     /**
+     * 🔥 SSOT: Push user profile updates to Firestore.
+     */
+    suspend fun pushUser(userId: String): Result<Unit> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val user = userDao.getUserById(userId) ?: return@withContext Result.Failure(AppError.LocalDB("User not found: $userId"))
+
+            if (user.syncStatus == SyncStatus.SYNCED.name) {
+                return@withContext Result.Success(Unit)
+            }
+
+            // Map memberships to Firestore format
+            val membershipsData = user.memberships.mapValues { (_, membership) ->
+                mapOf(
+                    "schoolName" to membership.schoolName,
+                    "role" to membership.role,
+                    "assignedClassIds" to membership.assignedClassIds
+                )
+            }
+
+            val updateData = mapOf(
+                "memberships" to membershipsData,
+                "activeSchoolId" to user.activeSchoolId,
+                "status" to user.status,
+                "isActive" to user.isActive,
+                "activeClassId" to user.activeClassId,
+                "role" to user.role,
+                "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+            )
+
+            // Push to Firestore
+            com.google.android.gms.tasks.Tasks.await(
+                firestore.collection("whitelisted_users").document(userId).update(updateData)
+            )
+
+            // Success: Mark as synced
+            markUserSynced(userId)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    /**
      * Observe a specific user as a Flow of UserEntity.
      */
     fun observeUserEntity(userId: String) = userDao.observeUserById(userId)
