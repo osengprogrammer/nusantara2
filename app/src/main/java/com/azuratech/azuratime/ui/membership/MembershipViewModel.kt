@@ -2,141 +2,115 @@ package com.azuratech.azuratime.ui.membership
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repo.MembershipDocUpdate
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.sync.SyncManager
+import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.toProfile
+import com.azuratech.azuratime.data.repo.AccessRequestRepository
 import com.azuratech.azuratime.data.repo.MembershipRepository
-import com.azuratech.azuratime.data.local.Membership
+import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.domain.model.AccessRequestProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * 🛠️ MEMBERSHIP VIEW MODEL
- * 100% Menggunakan Hilt. Bebas dari Factory manual.
+ * 🔥 v3.1: Reactive SSOT Migration (Phase 7.6)
+ * Observes UserEntity and AccessRequestProfile from Room.
  */
 @HiltViewModel
 class MembershipViewModel @Inject constructor(
-    private val repository: MembershipRepository // 🔥 FIX: Diinjeksi otomatis oleh Hilt
+    private val userRepository: UserRepository,
+    private val accessRequestRepository: AccessRequestRepository,
+    private val membershipRepository: MembershipRepository,
+    private val sessionManager: SessionManager,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<MembershipState>(MembershipState.Idle)
-    val state: StateFlow<MembershipState> = _state.asStateFlow()
+    // =====================================================
+    // 📊 REACTIVE STREAMS (SSOT)
+    // =====================================================
 
-    private val _memberships = MutableStateFlow<List<Membership>?>(null)
-    val memberships: StateFlow<List<Membership>?> = _memberships.asStateFlow()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val user: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
+        .filterNotNull()
+        .flatMapLatest { uid -> userRepository.getUserDao().observeUserById(uid) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val hasNoSchools by lazy { memberships.value.isNullOrEmpty() }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val accessRequests: StateFlow<List<AccessRequestProfile>> = sessionManager.currentUserIdFlow
+        .filterNotNull()
+        .flatMapLatest { uid ->
+            accessRequestRepository.observeRequestsByUser(uid)
+                .map { entities -> entities.map { it.toProfile() } }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private var observeJob: Job? = null
+    /**
+     * 🔥 DERIVED UI STATE
+     * Combines user status and pending requests for a single SSOT state.
+     */
+    val state: StateFlow<MembershipState> = combine(user, accessRequests) { user, requests ->
+        when {
+            user == null -> MembershipState.Loading
+            user.status == SessionManager.STATUS_ACTIVE -> MembershipState.Approved
+            user.status == "REJECTED" -> MembershipState.Rejected("Akun Anda ditolak oleh administrator.")
+            requests.isNotEmpty() -> MembershipState.Pending
+            else -> MembershipState.Idle
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MembershipState.Loading)
+
+    val memberships: StateFlow<List<com.azuratech.azuratime.data.local.Membership>> = user.map { 
+        it?.memberships?.values?.toList() ?: emptyList() 
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // =====================================================
+    // 🛠️ ACTION HANDLERS
+    // =====================================================
 
     fun checkMembership(email: String, displayName: String? = null) {
-        _state.value = MembershipState.Loading
+        val uid = sessionManager.getCurrentUserId() ?: return
         
-        val uid = repository.getCurrentUid()
-        if (uid == null) {
-            _state.value = MembershipState.Error("Sesi login tidak valid. Silakan login ulang.")
-            return
-        }
-
         viewModelScope.launch {
-            try {
-                val whitelistData = repository.checkWhitelisted(uid)
-                if (whitelistData != null) {
-                    withContext(Dispatchers.Main) {
-                        activateMembership(whitelistData)
-                    }
-                    return@launch
-                }
+            // Trigger background sync to refresh Room from Firestore
+            syncManager.enqueueProfileSync(uid)
+            syncManager.enqueueAccessSync(uid)
 
-                val exists = repository.checkMembershipExists(uid)
-                if (!exists) {
-                    repository.createPendingUser(uid, email, displayName)
-                    _state.value = MembershipState.Pending
-                } 
-                
-                observeMembership(uid)
-
-            } catch (e: Exception) {
-                _state.value = MembershipState.Error(e.message ?: "Membership check failed")
+            // If user doesn't exist locally, create a stub to trigger UI
+            if (userRepository.getUserDao().getUserById(uid) == null) {
+                membershipRepository.createPendingUser(uid, email, displayName)
             }
         }
     }
 
-    private fun observeMembership(uid: String) {
-        observeJob?.cancel()
-        
-        observeJob = viewModelScope.launch {
-            // Observe Status
-            launch {
-                repository.observeMembershipFlow(uid).collect { update ->
-                    when (update) {
-                        is MembershipDocUpdate.StatusChanged -> {
-                            when (update.status) {
-                                "PENDING" -> {
-                                    repository.savePendingStatus()
-                                    _state.value = MembershipState.Pending
-                                }
-                                "ACTIVE", "APPROVED" -> {
-                                    activateMembership(update.data)
-                                }
-                                "REJECTED" -> {
-                                    _state.value = MembershipState.Rejected(update.reason)
-                                }
-                            }
-                        }
-                        is MembershipDocUpdate.DocumentMissing -> {
-                            checkWhitelistedFinal(uid)
-                        }
-                        is MembershipDocUpdate.Error -> {
-                            _state.value = MembershipState.Error(update.message)
-                        }
-                    }
-                }
-            }
-
-            // Observe Memberships List
-            launch {
-                repository.observeMemberships(uid).collect { list ->
-                    _memberships.value = list
-                }
-            }
-        }
-    }
-
-    private fun checkWhitelistedFinal(uid: String) {
+    /**
+     * Activation logic moved to handler to maintain security key injection.
+     */
+    fun activateMembership() {
         viewModelScope.launch {
-            try {
-                val finalData = repository.pollWhitelistedFinal(uid)
-                if (finalData != null) {
-                    withContext(Dispatchers.Main) {
-                        activateMembership(finalData)
-                    }
-                } else {
-                    _state.value = MembershipState.Error("Activation record moved but not found.")
-                }
-            } catch (e: Exception) {
-                _state.value = MembershipState.Error("Final check failed.")
+            val uid = sessionManager.getCurrentUserId() ?: return@launch
+            val userEntity = userRepository.getUserDao().getUserById(uid)
+            userEntity?.let {
+                val data = mapOf(
+                    "userId" to it.userId,
+                    "status" to it.status,
+                    "activeSchoolId" to (it.activeSchoolId ?: ""),
+                    "role" to it.role,
+                    "memberships" to it.memberships
+                )
+                membershipRepository.activateSession(data)
             }
         }
-    }
-
-    private fun activateMembership(data: Map<String, Any>?) {
-        val success = repository.activateSession(data)
-        if (success) {
-            _state.value = MembershipState.Approved
-        } else {
-            _state.value = MembershipState.Error("Activation failed: Invalid Security Key")
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        observeJob?.cancel()
     }
 }
+
 // 🔥 FACTORY DIHAPUS SEPENUHNYA DARI SINI

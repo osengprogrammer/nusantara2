@@ -5,11 +5,7 @@ import app.cash.turbine.test
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.domain.classes.usecase.*
-import com.azuratech.azuratime.domain.school.usecase.GetSchoolsUseCase
-import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.ui.util.UiState
+import com.azuratech.azuratime.data.repo.SchoolRepository
 import com.azuratech.azuratime.data.repo.UserRepository
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
@@ -27,16 +23,8 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class ClassViewModelTest {
 
-    @MockK lateinit var getClassesUseCase: GetClassesUseCase
-    @MockK lateinit var getAllClassesUseCase: GetAllClassesUseCase
-    @MockK lateinit var createClassUseCase: CreateClassUseCase
-    @MockK lateinit var updateClassUseCase: UpdateClassUseCase
-    @MockK lateinit var deleteClassUseCase: DeleteClassUseCase
-    @MockK lateinit var reassignClassUseCase: ReassignClassUseCase
+    @MockK lateinit var schoolRepository: SchoolRepository
     @MockK lateinit var importClassesUseCase: ImportClassesUseCase
-    @MockK lateinit var getAvailableClassesUseCase: GetAvailableClassesUseCase
-    @MockK lateinit var getSchoolsUseCase: GetSchoolsUseCase
-    @MockK lateinit var observeUserUseCase: ObserveUserUseCase
     @MockK lateinit var userRepository: UserRepository
     @MockK lateinit var sessionManager: SessionManager
 
@@ -57,10 +45,9 @@ class ClassViewModelTest {
         every { userRepository.observeUserEntity(any()) } returns flowOf(null)
         
         // Default behaviors
-        every { getClassesUseCase(schoolId) } returns flowOf(Result.Loading)
-        every { getAvailableClassesUseCase() } returns flowOf(emptyList())
-        every { getAllClassesUseCase(accountId) } returns flowOf(Result.Success(emptyList()))
-        every { getSchoolsUseCase(accountId) } returns flowOf(Result.Success(emptyList()))
+        every { schoolRepository.observeClasses(schoolId) } returns flowOf(Result.Loading)
+        every { schoolRepository.observeAllClassesForAccount(accountId) } returns flowOf(Result.Success(emptyList()))
+        every { schoolRepository.observeSchools(accountId) } returns flowOf(Result.Success(emptyList()))
     }
 
     @After
@@ -70,16 +57,8 @@ class ClassViewModelTest {
 
     private fun createViewModel() = ClassViewModel(
         SavedStateHandle(mapOf("schoolId" to schoolId, "accountId" to accountId)),
-        getClassesUseCase,
-        getAllClassesUseCase,
-        createClassUseCase,
-        updateClassUseCase,
-        deleteClassUseCase,
-        reassignClassUseCase,
+        schoolRepository,
         importClassesUseCase,
-        getAvailableClassesUseCase,
-        getSchoolsUseCase,
-        observeUserUseCase,
         userRepository,
         sessionManager
     )
@@ -88,7 +67,7 @@ class ClassViewModelTest {
     fun `uiState should emit Loading initially then Success when data is loaded`() = runTest {
         val classes = listOf(ClassModel(id = "1", schoolId = schoolId, name = "Class A", grade = "", teacherId = null, createdAt = 0L))
         val classesFlow = MutableStateFlow<Result<List<ClassModel>>>(Result.Loading)
-        every { getClassesUseCase(schoolId) } returns classesFlow
+        every { schoolRepository.observeClasses(schoolId) } returns classesFlow
 
         viewModel = createViewModel()
 
@@ -104,7 +83,7 @@ class ClassViewModelTest {
     @Test
     fun `uiState should emit Empty when data is empty`() = runTest {
         val classesFlow = flowOf(Result.Success(emptyList<ClassModel>()))
-        every { getClassesUseCase(schoolId) } returns classesFlow
+        every { schoolRepository.observeClasses(schoolId) } returns classesFlow
 
         viewModel = createViewModel()
 
@@ -115,26 +94,26 @@ class ClassViewModelTest {
     }
 
     @Test
-    fun `addClass should call createClassUseCase`() = runTest {
-        coEvery { createClassUseCase(accountId, any(), schoolId) } returns Result.Success(Unit)
+    fun `addClass should call schoolRepository saveClass`() = runTest {
+        coEvery { schoolRepository.saveClass(accountId, schoolId, any()) } returns Result.Success(Unit)
         viewModel = createViewModel()
 
         viewModel.addClass("New Class")
         advanceUntilIdle()
 
-        coVerify { createClassUseCase(accountId, "New Class", schoolId) }
+        coVerify { schoolRepository.saveClass(accountId, schoolId, match { it.name == "New Class" }) }
     }
 
     @Test
-    fun `deleteClass should call DeleteClassUseCase and trigger callback on success`() = runTest {
-        coEvery { deleteClassUseCase(accountId, schoolId, any()) } returns Result.Success(Unit)
+    fun `deleteClass should call schoolRepository deleteClass and trigger callback on success`() = runTest {
+        coEvery { schoolRepository.deleteClass(accountId, schoolId, any()) } returns Result.Success(Unit)
         viewModel = createViewModel()
         
         var successCalled = false
         viewModel.deleteClass("1", onSuccess = { successCalled = true })
         advanceUntilIdle()
 
-        coVerify { deleteClassUseCase(accountId, schoolId, "1") }
+        coVerify { schoolRepository.deleteClass(accountId, schoolId, "1") }
         assertTrue(successCalled)
     }
 }

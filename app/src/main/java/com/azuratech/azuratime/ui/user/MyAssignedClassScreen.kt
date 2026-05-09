@@ -33,8 +33,8 @@ fun MyAssignedClassScreen(
 ) {
     val assignedIds by (if (targetUserId == null) userViewModel.assignedClassIds
                         else userViewModel.targetAssignedClassIds)
-                        .collectAsStateWithLifecycle(emptyList())
-    val allClasses by classViewModel.classes.collectAsStateWithLifecycle(emptyList())
+                        .collectAsStateWithLifecycle()
+    val allClasses by classViewModel.classes.collectAsStateWithLifecycle()
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()
     val targetUser by userViewModel.selectedTargetUser.collectAsStateWithLifecycle()
 

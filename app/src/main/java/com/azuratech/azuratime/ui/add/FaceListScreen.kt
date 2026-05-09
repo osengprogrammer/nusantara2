@@ -15,9 +15,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuratime.domain.model.StudentProfile
+import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
+import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
 import com.azuratech.azuratime.ui.core.designsystem.FaceAvatar
 import com.azuratech.azuratime.ui.core.designsystem.MultiClassAssignmentDialog
@@ -35,6 +38,7 @@ fun FaceListScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val faceList by viewModel.faceList.collectAsStateWithLifecycle()
     val allClasses by viewModel.allClasses.collectAsStateWithLifecycle()
 
     var showClassPicker by remember { mutableStateOf(false) }
@@ -50,30 +54,9 @@ fun FaceListScreen(
         }
         is FaceListUiState.Success -> {
             val data = state.data
-            // Dialogs handled in the Screen wrapper
-            data.studentForQuickEdit?.let { faceWithDetails ->
-                QuickEditFaceDialog(
-                    face = faceWithDetails.face,
-                    onDismiss = { viewModel.onDismissDialog() },
-                    onSave = { updatedFace -> viewModel.onSaveChanges(updatedFace) }
-                )
-            }
-
-            data.studentForClassAssignment?.let { student ->
-                val studentDisplayItem = data.students.find { it.faceWithDetails.face.faceId == student.faceId }
-                MultiClassAssignmentDialog(
-                    studentName = student.name,
-                    allClasses = data.allClasses,
-                    assignedClassIds = studentDisplayItem?.assignedClassIds ?: emptyList(),
-                    onDismiss = { viewModel.onDismissDialog() },
-                    onToggle = { classId, isChecked ->
-                        viewModel.onToggleStudentClassAssignment(student.faceId, classId, isChecked)
-                    }
-                )
-            }
 
             data.studentForDeletion?.let { studentId ->
-                val studentName = data.students.find { it.faceWithDetails.face.studentId == studentId }?.faceWithDetails?.face?.name ?: "Siswa"
+                val studentName = faceList.find { it.studentId == studentId }?.name ?: "Siswa"
                 AlertDialog(
                     onDismissRequest = { viewModel.cancelDeleteStudent() },
                     title = { Text("Konfirmasi Hapus") },
@@ -120,16 +103,17 @@ fun FaceListScreen(
             }
 
             FaceListContent(
-                data = data,
+                faceList = faceList,
+                searchQuery = data.searchQuery,
                 onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
-                onQuickEdit = { faceWithDetails -> viewModel.onEditStudentClicked(faceWithDetails) },
+                onQuickEdit = { profile -> viewModel.onEditStudentClicked(profile) },
                 onFullEdit = onEditUser,
-                onManageClasses = { face -> 
-                    targetStudentId = face.studentId
+                onManageClasses = { profile -> 
+                    targetStudentId = profile.studentId
                     showClassPicker = true
                 },
-                onDelete = { face -> 
-                    face.studentId?.let { viewModel.requestDeleteStudent(it) }
+                onDelete = { profile -> 
+                    viewModel.requestDeleteStudent(profile.studentId)
                 }
             )
         }
@@ -145,19 +129,20 @@ fun FaceListScreen(
 
 @Composable
 fun FaceListContent(
-    data: FaceListData,
+    faceList: List<StudentProfile>,
+    searchQuery: String,
     onSearchQueryChanged: (String) -> Unit,
-    onQuickEdit: (com.azuratech.azuratime.data.local.FaceWithDetails) -> Unit,
+    onQuickEdit: (StudentProfile) -> Unit,
     onFullEdit: (String) -> Unit,
-    onManageClasses: (com.azuratech.azuratime.data.local.FaceEntity) -> Unit,
-    onDelete: (com.azuratech.azuratime.data.local.FaceEntity) -> Unit
+    onManageClasses: (StudentProfile) -> Unit,
+    onDelete: (StudentProfile) -> Unit
 ) {
     AzuraScreen(
         title = "Manajemen Personil",
         content = {
             Column(modifier = Modifier.fillMaxSize()) {
                 AzuraTextField(
-                    value = data.searchQuery,
+                    value = searchQuery,
                     onValueChange = onSearchQueryChanged,
                     label = "Cari nama...",
                     modifier = Modifier.fillMaxWidth().padding(top = AzuraSpacing.md),
@@ -166,7 +151,7 @@ fun FaceListContent(
 
                 Spacer(modifier = Modifier.height(AzuraSpacing.md))
 
-                if (data.students.isEmpty()) {
+                if (faceList.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("Tidak ada pengguna ditemukan", color = Color.Gray)
                     }
@@ -176,13 +161,13 @@ fun FaceListContent(
                         verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
-                        items(data.students, key = { it.faceWithDetails.face.faceId }) { student ->
+                        items(faceList, key = { it.studentId }) { profile ->
                             FaceListItemCard(
-                                student = student,
-                                onQuickEdit = { onQuickEdit(student.faceWithDetails) },
-                                onFullEdit = { onFullEdit(student.faceWithDetails.face.faceId) },
-                                onManageClasses = { onManageClasses(student.faceWithDetails.face) },
-                                onDelete = { onDelete(student.faceWithDetails.face) }
+                                profile = profile,
+                                onQuickEdit = { onQuickEdit(profile) },
+                                onFullEdit = { onFullEdit(profile.studentId) },
+                                onManageClasses = { onManageClasses(profile) },
+                                onDelete = { onDelete(profile) }
                             )
                         }
                     }
@@ -194,13 +179,13 @@ fun FaceListContent(
 
 @Composable
 fun FaceListItemCard(
-    student: StudentDisplayItem,
+    profile: StudentProfile,
     onQuickEdit: () -> Unit,
     onFullEdit: () -> Unit,
     onDelete: () -> Unit,
     onManageClasses: () -> Unit
 ) {
-    val isUnassigned = student.assignedClassNames == "Belum ada kelas"
+    val isUnassigned = profile.classIds.isEmpty()
     var showMenu by remember { mutableStateOf(false) }
 
     AzuraCard(
@@ -210,13 +195,13 @@ fun FaceListItemCard(
         ),
         content = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                FaceAvatar(photoPath = student.faceWithDetails.face.photoUrl, size = 64)
+                FaceAvatar(photoPath = profile.photoUrl, size = 64)
                 Spacer(modifier = Modifier.width(AzuraSpacing.md))
 
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(student.faceWithDetails.face.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        if (!student.faceWithDetails.face.isSynced) {
+                        Text(profile.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        if (profile.syncStatus != SyncStatus.SYNCED) {
                             Spacer(Modifier.width(4.dp))
                             Icon(
                                 Icons.Default.CloudOff, 
@@ -228,16 +213,16 @@ fun FaceListItemCard(
                     }
 
                     Text(
-                        text = student.assignedClassNames,
+                        text = if (isUnassigned) "Belum ada kelas" else "Terdaftar di ${profile.classIds.size} kelas",
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isUnassigned) Color.Red else MaterialTheme.colorScheme.primary,
                         maxLines = 1
                     )
 
                     Text(
-                        text = if (student.isBiometricReady) "📷 Biometric Ready" else "❌ No Photo",
+                        text = if (profile.faceExists) "📷 Biometric Ready" else "❌ No Photo",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (student.isBiometricReady) Color(0xFF2E7D32) else Color.Red
+                        color = if (profile.faceExists) Color(0xFF2E7D32) else Color.Red
                     )
                 }
 
@@ -290,13 +275,15 @@ fun FaceListItemCard(
 }
 
 
+
 @AzuraPreviews
 @Composable
 fun FaceListContentSuccessPreview() {
     AzuraTheme {
         Surface {
             FaceListContent(
-                data = PreviewMocks.mockFaceListData,
+                faceList = PreviewMocks.mockFaceListData.students.map { it.faceWithDetails.toProfile() },
+                searchQuery = "",
                 onSearchQueryChanged = {},
                 onQuickEdit = {},
                 onFullEdit = {},
@@ -313,7 +300,8 @@ fun FaceListContentLoadingPreview() {
     AzuraTheme {
         Surface {
             FaceListContent(
-                data = FaceListData(),
+                faceList = emptyList(),
+                searchQuery = "",
                 onSearchQueryChanged = {},
                 onQuickEdit = {},
                 onFullEdit = {},
@@ -323,3 +311,13 @@ fun FaceListContentLoadingPreview() {
         }
     }
 }
+
+// Helper for preview
+private fun com.azuratech.azuratime.data.local.FaceWithDetails.toProfile() = StudentProfile(
+    studentId = face.studentId ?: face.faceId,
+    name = face.name,
+    schoolId = face.schoolId,
+    photoUrl = face.photoUrl,
+    faceId = face.faceId
+)
+

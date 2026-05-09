@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 // 🔥 DB & ViewModels
+import com.azuratech.azuratime.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.domain.model.SyncStatus
 
@@ -40,9 +41,9 @@ fun FindSchoolScreen(
     workspaceViewModel: WorkspaceViewModel,
     currentUser: UserEntity?
 ) {
-    var searchQuery by remember { mutableStateOf("") }
+    val searchQuery by workspaceViewModel.searchQuery.collectAsStateWithLifecycle()
     val searchResults by workspaceViewModel.schoolSearchResults.collectAsStateWithLifecycle()
-    val accessRequests by workspaceViewModel.accessRequests.collectAsStateWithLifecycle(emptyList())
+    val accessRequests by workspaceViewModel.accessRequests.collectAsStateWithLifecycle()
     val uiState by workspaceViewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
 
@@ -89,8 +90,7 @@ fun FindSchoolScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = {
-                        searchQuery = it
-                        workspaceViewModel.searchSchools(it)
+                        workspaceViewModel.updateSearchQuery(it)
                     },
                     label = { Text("Cari Nama Sekolah atau ID...") },
                     modifier = Modifier.fillMaxWidth(),
@@ -126,11 +126,11 @@ fun FindSchoolScreen(
                                 
                                 // Cek status membership di semua level (Active/Pending)
                                 val membership = currentUser?.memberships?.get(schoolId)
-                                val localRequest = accessRequests.find { it.schoolId == schoolId }
+                                val profile = accessRequests.find { it.schoolId == schoolId }
                                 
-                                val isFollowing = membership != null || localRequest != null
-                                val status = membership?.role ?: localRequest?.status?.name ?: ""
-                                val isSynced = localRequest?.syncStatus == SyncStatus.SYNCED
+                                val isFollowing = membership != null || profile != null
+                                val status = membership?.role ?: profile?.status?.name ?: ""
+                                val isSynced = profile?.syncStatus == SyncStatus.SYNCED
 
                                 SchoolFollowCard(
                                     name = schoolName,
@@ -141,7 +141,7 @@ fun FindSchoolScreen(
                                     isLoading = uiState is WorkspaceViewModel.WorkspaceState.Switching,
                                     onFollowClick = {
                                         if (currentUser != null) {
-                                            workspaceViewModel.sendJoinRequest(currentUser, schoolId, schoolName)
+                                            workspaceViewModel.sendJoinRequest(currentUser.userId, schoolId, schoolName)
                                         }
                                     }
                                 )

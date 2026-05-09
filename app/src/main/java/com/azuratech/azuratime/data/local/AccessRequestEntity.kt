@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.azuratech.azuratime.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.domain.model.AccessRequestProfile
 
 /**
  * 🎫 Access Request Entity
@@ -26,17 +27,6 @@ data class AccessRequestEntity(
 /**
  * Domain projection for Access Request
  */
-data class AccessRequestProfile(
-    val requestId: String,
-    val requesterId: String,
-    val schoolId: String,
-    val schoolName: String,
-    val status: AccessRequestStatus,
-    val syncStatus: SyncStatus,
-    val createdAt: Long,
-    val updatedAt: Long
-)
-
 fun AccessRequestEntity.toProfile() = AccessRequestProfile(
     requestId = requestId,
     requesterId = requesterId,

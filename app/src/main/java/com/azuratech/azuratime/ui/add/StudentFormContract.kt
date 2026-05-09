@@ -15,6 +15,7 @@ data class StudentFormUiState(
     val selectedClassId: String? = null,
     val capturedBitmap: Bitmap? = null,
     val embedding: FloatArray? = null,
+    val photoUrl: String? = null,
 
     // UI State
     val availableClasses: List<ClassModel> = emptyList(),
@@ -41,6 +42,7 @@ data class StudentFormUiState(
             if (other.embedding == null) return false
             if (!embedding.contentEquals(other.embedding)) return false
         } else if (other.embedding != null) return false
+        if (photoUrl != other.photoUrl) return false
         if (availableClasses != other.availableClasses) return false
         if (isSubmitting != other.isSubmitting) return false
         if (formError != other.formError) return false
@@ -57,6 +59,7 @@ data class StudentFormUiState(
         result = 31 * result + (selectedClassId?.hashCode() ?: 0)
         result = 31 * result + (capturedBitmap?.hashCode() ?: 0)
         result = 31 * result + (embedding?.contentHashCode() ?: 0)
+        result = 31 * result + (photoUrl?.hashCode() ?: 0)
         result = 31 * result + availableClasses.hashCode()
         result = 31 * result + isSubmitting.hashCode()
         result = 31 * result + (formError?.hashCode() ?: 0)

@@ -41,6 +41,7 @@ class ProcessCsvUseCase @Inject constructor(
     private val faceDao = database.faceDao()
     private val faceAssignmentDao = database.faceAssignmentDao()
     private val classDao = database.classDao()
+    private val studentDao = database.studentDao()
 
     suspend operator fun invoke(uriString: String, type: String): Flow<ProcessResult> = flow {
         val schoolId = sessionManager.getActiveSchoolId() ?: return@flow
@@ -65,6 +66,18 @@ class ProcessCsvUseCase @Inject constructor(
                 bulkSyncFacesToCloud(schoolId, newlyRegisteredFaces)
                 val syncedFaces = newlyRegisteredFaces.map { it.copy(isSynced = true) }
                 faceDao.upsertAll(syncedFaces)
+                
+                // 🔥 Also ensure students table is updated for synced records
+                val syncedStudents = syncedFaces.map { face ->
+                    StudentEntity(
+                        studentId = face.studentId ?: face.faceId,
+                        schoolId = schoolId,
+                        name = face.name,
+                        createdAt = face.createdAt,
+                        isSynced = true
+                    )
+                }
+                studentDao.upsertAll(syncedStudents)
             } catch (e: Exception) {
                 println("ERROR: [ProcessCsvUseCase] Bulk sync failed: ${e.message}")
             }
@@ -83,6 +96,7 @@ class ProcessCsvUseCase @Inject constructor(
                 val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
                 val entity = FaceEntity(
                     faceId = doc.id,
+                    studentId = doc.getString("studentId") ?: doc.id, // Ensure studentId mapping
                     schoolId = schoolId,
                     name = doc.getString("name") ?: "",
                     embedding = embedding,
@@ -97,9 +111,25 @@ class ProcessCsvUseCase @Inject constructor(
             val toUpsert = updatedData.filter { it.second }.map { it.first }
             val toDelete = updatedData.filter { !it.second }.map { it.first }
 
-            if (toUpsert.isNotEmpty()) faceDao.upsertAll(toUpsert)
+            if (toUpsert.isNotEmpty()) {
+                faceDao.upsertAll(toUpsert)
+                // 🔥 Backfill students table from delta sync
+                val studentsToUpsert = toUpsert.map { face ->
+                    StudentEntity(
+                        studentId = face.studentId ?: face.faceId,
+                        schoolId = schoolId,
+                        name = face.name,
+                        createdAt = face.createdAt,
+                        isSynced = true
+                    )
+                }
+                studentDao.upsertAll(studentsToUpsert)
+            }
             if (toDelete.isNotEmpty()) {
-                toDelete.forEach { faceDao.deleteFaceById(it.faceId, schoolId) }
+                toDelete.forEach { face ->
+                    faceDao.deleteFaceById(face.faceId, schoolId)
+                    studentDao.markPendingDeletion(face.studentId ?: face.faceId, schoolId)
+                }
             }
             sessionManager.saveLastFacesSyncTime(System.currentTimeMillis())
         }
@@ -179,6 +209,7 @@ if (localPhotoPath == null) return Pair(ProcessResult(student.faceId, student.na
 
         val faceEntity = FaceEntity(
             faceId = finalFaceId,
+            studentId = finalFaceId, // Map faceId to studentId for consistency
             name = student.name,
             photoUrl = finalPhotoPath,
             embedding = embedding,
@@ -186,6 +217,16 @@ if (localPhotoPath == null) return Pair(ProcessResult(student.faceId, student.na
             isSynced = (cloudUrl != null)
         )
         faceDao.upsertFace(faceEntity)
+        
+        // 🔥 Ensure StudentEntity exists
+        studentDao.upsert(StudentEntity(
+            studentId = faceEntity.studentId!!,
+            schoolId = schoolId,
+            name = faceEntity.name,
+            createdAt = faceEntity.createdAt,
+            isSynced = faceEntity.isSynced
+        ))
+
         saveStudentAssignments(finalFaceId, student, schoolId)
 
         return Pair(ProcessResult(student.faceId, student.name, "Registered", category), faceEntity)

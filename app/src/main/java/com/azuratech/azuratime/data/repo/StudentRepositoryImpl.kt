@@ -9,8 +9,12 @@ import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.domain.student.repository.StudentRepository
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+
+import com.azuratech.azuratime.core.sync.SyncManager
 
 /**
  * 🏛️ STUDENT REPOSITORY IMPLEMENTATION
@@ -20,7 +24,10 @@ import javax.inject.Singleton
 @Singleton
 class StudentRepositoryImpl @Inject constructor(
     private val database: AppDatabase,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val syncManager: SyncManager,
+    private val firestore: com.google.firebase.firestore.FirebaseFirestore,
+    private val remoteDataSource: com.azuratech.azuratime.data.remote.FaceRemoteDataSource
 ) : StudentRepository {
 
     private val studentDao = database.studentDao()
@@ -48,7 +55,10 @@ class StudentRepositoryImpl @Inject constructor(
                 // 3. Insert new assignments
                 assignments.forEach { faceAssignmentDao.insertAssignment(it) }
             }
-            // TODO: Phase 3 - SyncManager.enqueueSync(profile.studentId)
+            
+            // 🔥 Phase 3 - Trigger background sync immediately
+            syncManager.enqueueSync()
+            
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -66,7 +76,10 @@ class StudentRepositoryImpl @Inject constructor(
                     faceDao.markPendingDeletion(face.faceId, schoolId)
                 }
             }
-            // TODO: Phase 3 - SyncManager.enqueueSync(studentId)
+            
+            // 🔥 Phase 3 - Trigger background sync immediately
+            syncManager.enqueueSync()
+            
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -96,6 +109,76 @@ class StudentRepositoryImpl @Inject constructor(
                     }
                     faceDao.upsertFace(updatedFace)
                 }
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun pushPendingProfiles(): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Success(Unit)
+        try {
+            // Logic from PushStudentsUseCase
+            val unsyncedStudents = studentDao.getUnsyncedStudents(schoolId)
+            for (student in unsyncedStudents) {
+                val docRef = firestore.collection("schools").document(schoolId)
+                    .collection("students").document(student.studentId)
+                
+                if (student.isDeleted) {
+                    com.google.android.gms.tasks.Tasks.await(docRef.delete())
+                } else {
+                    val data = mapOf(
+                        "studentId" to student.studentId,
+                        "schoolId" to student.schoolId,
+                        "name" to student.name,
+                        "studentCode" to student.studentCode,
+                        "classId" to student.classId,
+                        "createdAt" to student.createdAt,
+                        "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                    )
+                    com.google.android.gms.tasks.Tasks.await(docRef.set(data))
+                }
+                studentDao.upsert(student.copy(isSynced = true))
+            }
+
+            val unsyncedFaces = faceDao.getUnsyncedFaces(schoolId)
+            if (unsyncedFaces.isNotEmpty()) {
+                val syncResult = remoteDataSource.bulkSyncFaces(schoolId, unsyncedFaces)
+                if (syncResult is Result.Success) {
+                    unsyncedFaces.forEach { face ->
+                        faceDao.upsertFace(face.copy(isSynced = true))
+                    }
+                }
+            }
+
+            val unsyncedAssignments = faceAssignmentDao.getUnsyncedAssignments(schoolId)
+            for (assignment in unsyncedAssignments) {
+                val syncResult = remoteDataSource.syncFaceAssignment(assignment)
+                if (syncResult is Result.Success) {
+                    faceAssignmentDao.updateSyncStatus(assignment.faceId, assignment.classId, schoolId, true)
+                }
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun autoHealStudentIdentities(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            val faces = faceDao.getAllFacesForScanningList(schoolId)
+            val studentsToCreate = faces.map { face ->
+                StudentEntity(
+                    studentId = face.studentId ?: face.faceId,
+                    schoolId = schoolId,
+                    name = face.name,
+                    createdAt = face.createdAt,
+                    isSynced = true
+                )
+            }
+            if (studentsToCreate.isNotEmpty()) {
+                studentDao.upsertAll(studentsToCreate)
             }
             Result.Success(Unit)
         } catch (e: Exception) {

@@ -17,7 +17,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.school.AddSchoolDialog
-import com.azuratech.azuratime.ui.school.SchoolUiState
 import com.azuratech.azuratime.ui.school.SchoolViewModel
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
@@ -30,8 +29,7 @@ fun MySchoolsCard(
     onSchoolClick: () -> Unit,
     onAddSchool: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val schools = (uiState as? SchoolUiState.Success)?.schools ?: emptyList()
+    val schools by viewModel.schools.collectAsStateWithLifecycle()
     val canAddMore = schools.isEmpty() || isApproved
 
     AzuraCard {
@@ -61,30 +59,13 @@ fun MySchoolsCard(
                 }
             }
 
-            when (val state = uiState) {
-                is SchoolUiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    }
-                }
-                is SchoolUiState.Success -> {
-                    if (state.schools.isEmpty()) {
-                        EmptySchoolsState(onAddClick = onAddSchool)
-                    } else {
-                        SchoolsHorizontalList(
-                            schools = state.schools,
-                            onSchoolClick = onSchoolClick
-                        )
-                    }
-                }
-                is SchoolUiState.Error -> {
-                    Text(
-                        text = "Gagal memuat data sekolah",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(AzuraSpacing.sm)
-                    )
-                }
+            if (schools.isEmpty()) {
+                EmptySchoolsState(onAddClick = onAddSchool)
+            } else {
+                SchoolsHorizontalList(
+                    schools = schools,
+                    onSchoolClick = onSchoolClick
+                )
             }
         }
     }

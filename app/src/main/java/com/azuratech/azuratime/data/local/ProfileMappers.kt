@@ -1,5 +1,9 @@
 package com.azuratech.azuratime.data.local
 
+import com.azuratech.azuratime.domain.model.AuditLogProfile
+import com.azuratech.azuratime.domain.model.ExportJobProfile
+import com.azuratech.azuratime.domain.model.FaceEnrollmentProfile
+import com.azuratech.azuratime.domain.model.ReportSummaryProfile
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 
@@ -7,6 +11,60 @@ import com.azuratech.azuratime.domain.model.SyncStatus
  * 🗺️ PROFILE MAPPERS
  * Pure functions to bridge between Room Entities and the StudentProfile Domain Model.
  */
+
+/**
+ * Extension to convert AuditLogEntity to AuditLogProfile.
+ */
+fun AuditLogEntity.toProfile(): AuditLogProfile {
+    return AuditLogProfile(
+        logId = logId,
+        userId = userId,
+        action = action,
+        timestamp = timestamp,
+        details = details,
+        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE
+    )
+}
+
+/**
+ * Extension to convert ExportJobEntity to ExportJobProfile.
+ */
+fun ExportJobEntity.toProfile(): ExportJobProfile {
+    return ExportJobProfile(
+        jobId = jobId,
+        fileType = fileType,
+        status = status,
+        filePath = filePath,
+        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE
+    )
+}
+
+/**
+ * Extension to convert ReportEntity to ReportSummaryProfile.
+ */
+fun ReportEntity.toProfile(): ReportSummaryProfile {
+    return ReportSummaryProfile(
+        reportId = reportId,
+        reportName = name,
+        dateRange = "${java.time.Instant.ofEpochMilli(startDate)} - ${java.time.Instant.ofEpochMilli(endDate)}",
+        metrics = emptyMap(), // Logic to parse metricsJson can be added here
+        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE
+    )
+}
+
+/**
+ * Extension to convert FaceEntity to FaceEnrollmentProfile.
+ */
+fun FaceEntity.toProfile(): FaceEnrollmentProfile {
+    return FaceEnrollmentProfile(
+        faceId = faceId,
+        studentId = studentId,
+        studentName = name,
+        photoUri = photoUrl,
+        enrollmentDate = lastUpdated,
+        syncStatus = if (isSynced) SyncStatus.SYNCED else if (isDeleted) SyncStatus.PENDING_DELETE else SyncStatus.PENDING_UPDATE
+    )
+}
 
 /**
  * Extension to convert RawStudentProfile (JOIN result) to Domain Profile.

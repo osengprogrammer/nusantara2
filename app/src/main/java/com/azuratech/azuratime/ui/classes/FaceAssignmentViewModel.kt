@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
-import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
 import com.azuratech.azuratime.domain.assignment.usecase.RemoveStudentFromClassUseCase
 import com.azuratech.azuratime.core.session.SessionManager
@@ -25,7 +24,7 @@ import com.azuratech.azuraengine.model.ClassModel
 class FaceAssignmentViewModel @Inject constructor(
     database: AppDatabase,
     private val sessionManager: SessionManager,
-    private val getClassesUseCase: GetClassesUseCase,
+    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
     private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
     private val removeStudentFromClassUseCase: RemoveStudentFromClassUseCase
 ) : ViewModel() {
@@ -49,7 +48,7 @@ class FaceAssignmentViewModel @Inject constructor(
     val availableClasses: Flow<List<ClassModel>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
-            getClassesUseCase(schoolId).map { result: Result<List<ClassModel>> -> 
+            schoolRepository.observeClasses(schoolId).map { result: Result<List<ClassModel>> -> 
                 when(result) {
                     is Result.Success -> result.data
                     else -> emptyList()

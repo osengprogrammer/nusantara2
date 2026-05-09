@@ -12,6 +12,7 @@ interface FaceLocalDataSource {
     suspend fun getClassIdsForFace(faceId: String, schoolId: String): List<String>
     suspend fun getAllFacesForScanningList(schoolId: String): List<FaceEntity>
     suspend fun getFaceById(faceId: String, schoolId: String): FaceEntity?
+    suspend fun getFaceByStudentId(studentId: String, schoolId: String): FaceEntity?
     suspend fun upsertFace(face: FaceEntity)
     suspend fun upsertAll(faces: List<FaceEntity>)
     suspend fun deleteFace(face: FaceEntity)

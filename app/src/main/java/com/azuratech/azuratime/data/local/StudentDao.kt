@@ -43,4 +43,7 @@ interface StudentDao {
 
     @Query("UPDATE students SET isDeleted = 1, isSynced = 0 WHERE studentId = :studentId AND schoolId = :schoolId")
     suspend fun markPendingDeletion(studentId: String, schoolId: String)
+
+    @Query("SELECT * FROM students WHERE isSynced = 0 AND schoolId = :schoolId")
+    suspend fun getUnsyncedStudents(schoolId: String): List<StudentEntity>
 }

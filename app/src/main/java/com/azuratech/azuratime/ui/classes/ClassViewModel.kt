@@ -4,16 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.SavedStateHandle
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuratime.domain.school.usecase.GetSchoolsUseCase
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.domain.classes.usecase.DeleteClassUseCase
-import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
-import com.azuratech.azuratime.domain.classes.usecase.GetAllClassesUseCase
-import com.azuratech.azuratime.domain.classes.usecase.CreateClassUseCase
-import com.azuratech.azuratime.domain.classes.usecase.UpdateClassUseCase
-import com.azuratech.azuratime.domain.classes.usecase.ReassignClassUseCase
-import com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase
-import com.azuratech.azuratime.domain.classes.usecase.GetAvailableClassesUseCase
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
@@ -35,16 +26,8 @@ import android.net.Uri
 @HiltViewModel
 class ClassViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getClassesUseCase: GetClassesUseCase,
-    private val getAllClassesUseCase: GetAllClassesUseCase,
-    private val createClassUseCase: CreateClassUseCase,
-    private val updateClassUseCase: UpdateClassUseCase,
-    private val deleteClassUseCase: DeleteClassUseCase,
-    private val reassignClassUseCase: ReassignClassUseCase,
-    private val importClassesUseCase: ImportClassesUseCase,
-    private val getAvailableClassesUseCase: GetAvailableClassesUseCase,
-    private val getSchoolsUseCase: GetSchoolsUseCase,
-    private val observeUserUseCase: ObserveUserUseCase,
+    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
+    private val importClassesUseCase: com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase,
     private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -60,7 +43,6 @@ class ClassViewModel @Inject constructor(
         }
         .filterNotNull()
         .distinctUntilChanged()
-        .onEach { println("🔍 ClassViewModel: activeSchoolId='$it'") }
 
     private val schoolId: String 
         get() = sessionManager.getActiveSchoolId() ?: ""
@@ -79,33 +61,7 @@ class ClassViewModel @Inject constructor(
     // =====================================================
 
     val uiState: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdFlow
-        .flatMapLatest { id -> getClassesUseCase(id) }
-        .map { result: Result<List<ClassModel>> ->
-            when(result) {
-                is Result.Success -> {
-                    if (result.data.isEmpty()) UiState.Empty
-                    else UiState.Success(result.data)
-                }
-                is Result.Failure -> UiState.Error(result.error.message ?: "Unknown error")
-                is Result.Loading -> UiState.Loading
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UiState.Loading
-        )
-
-    val classes: StateFlow<List<ClassModel>> = uiState.map {
-        if (it is UiState.Success) it.data else emptyList()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // 🔥 Added Available Classes Flow
-    val availableClasses: StateFlow<List<String>> = getAvailableClassesUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // 🔥 Added All Classes for Account Flow
-    val allAccountClasses: StateFlow<UiState<List<ClassModel>>> = getAllClassesUseCase(accountId)
+        .flatMapLatest { id -> schoolRepository.observeClasses(id) }
         .map { result ->
             when(result) {
                 is Result.Success -> if (result.data.isEmpty()) UiState.Empty else UiState.Success(result.data)
@@ -115,7 +71,32 @@ class ClassViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
-    val schools: StateFlow<List<School>> = getSchoolsUseCase(accountId)
+    val classes: StateFlow<List<ClassModel>> = uiState.map {
+        if (it is UiState.Success) it.data else emptyList()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // 🔥 Added Available Classes Flow - Simplified to static for now
+    val availableClasses: StateFlow<List<String>> = flowOf(listOf(
+        "10-IPA-1", "10-IPA-2", "10-IPA-3",
+        "10-IPS-1", "10-IPS-2", "10-IPS-3",
+        "11-IPA-1", "11-IPA-2", "11-IPA-3",
+        "11-IPS-1", "11-IPS-2", "11-IPS-3",
+        "12-IPA-1", "12-IPA-2", "12-IPA-3",
+        "12-IPS-1", "12-IPS-2", "12-IPS-3"
+    )).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // 🔥 Added All Classes for Account Flow
+    val allAccountClasses: StateFlow<UiState<List<ClassModel>>> = schoolRepository.observeAllClassesForAccount(accountId)
+        .map { result ->
+            when(result) {
+                is Result.Success -> if (result.data.isEmpty()) UiState.Empty else UiState.Success(result.data)
+                is Result.Failure -> UiState.Error(result.error.message ?: "Unknown error")
+                is Result.Loading -> UiState.Loading
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
+
+    val schools: StateFlow<List<School>> = schoolRepository.observeSchools(accountId)
         .map { result ->
             if (result is Result.Success) result.data else emptyList()
         }
@@ -125,20 +106,22 @@ class ClassViewModel @Inject constructor(
     // ➕ CRUD OPERATIONS
     // =====================================================
 
-    fun createClass(name: String, schoolId: String? = null, grade: String = "") {
+    fun createClass(name: String, schoolId: String? = null, _grade: String = "") {
         val targetSchoolId = schoolId ?: this.schoolId
-        println("💾 DEBUG: ViewModel creating class: $name for schoolId=$targetSchoolId")
         viewModelScope.launch {
-            val result = createClassUseCase(accountId, name, targetSchoolId)
+            val classModel = ClassModel(
+                id = "cls_${System.currentTimeMillis()}",
+                name = name,
+                schoolId = targetSchoolId ?: "",
+                grade = _grade,
+                teacherId = null,
+                studentCount = 0,
+                createdAt = System.currentTimeMillis()
+            )
+            val result = schoolRepository.saveClass(accountId, targetSchoolId, classModel)
             when (result) {
-                is Result.Success -> {
-                    println("✅ DEBUG: Class created successfully")
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Kelas '$name' berhasil dibuat!"))
-                }
-                is Result.Failure -> {
-                    println("❌ DEBUG: Save failed: ${result.error}")
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal membuat kelas: ${result.error.message}"))
-                }
+                is Result.Success -> _uiEvent.emit(UiEvent.ShowSnackbar("Kelas '$name' berhasil dibuat!"))
+                is Result.Failure -> _uiEvent.emit(UiEvent.ShowSnackbar("Gagal membuat kelas: ${result.error.message}"))
                 else -> Unit
             }
         }
@@ -150,8 +133,11 @@ class ClassViewModel @Inject constructor(
 
     fun updateClass(classId: String, newName: String) {
         viewModelScope.launch {
-            // Update class in pool (schoolId is optional/null here for pool update)
-            updateClassUseCase(accountId, null, newName, classId)
+            // Fetch existing to preserve other fields
+            val allClasses = classes.value
+            val existing = allClasses.find { it.id == classId } ?: return@launch
+            val updated = existing.copy(name = newName)
+            schoolRepository.saveClass(accountId, null, updated)
         }
     }
 
@@ -168,9 +154,7 @@ class ClassViewModel @Inject constructor(
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
-            // schoolId is now less critical for delete if it's in a pool, 
-            // but we might still want to check if it's used in ANY school
-            val result = deleteClassUseCase(accountId, schoolId, classId)
+            val result = schoolRepository.deleteClass(accountId, schoolId, classId)
             withContext(Dispatchers.Main) {
                 when (result) {
                     is Result.Success -> onSuccess()
@@ -183,8 +167,7 @@ class ClassViewModel @Inject constructor(
 
     fun reassignClass(classId: String, newSchoolId: String) {
         viewModelScope.launch {
-            // This now adds/updates assignment
-            reassignClassUseCase(accountId, classId, newSchoolId)
+            schoolRepository.reassignClass(accountId, classId, newSchoolId)
         }
     }
 }

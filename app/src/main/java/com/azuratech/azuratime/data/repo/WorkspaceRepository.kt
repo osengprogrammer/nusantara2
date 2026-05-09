@@ -7,7 +7,6 @@ import com.azuratech.azuratime.data.local.*
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.domain.model.SyncStatus
-import com.azuratech.azuratime.domain.user.usecase.SubmitSchoolAccessUseCase
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,7 +25,7 @@ class WorkspaceRepository @Inject constructor(
     private val db: FirebaseFirestore,
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
-    private val submitSchoolAccessUseCase: SubmitSchoolAccessUseCase
+    private val accessRequestRepository: AccessRequestRepository
 ) {
     private val userDao        = database.userDao()
     private val faceDao        = database.faceDao()
@@ -58,7 +57,7 @@ class WorkspaceRepository @Inject constructor(
      * 🔥 Create School: SSOT way.
      * Return ID immediately after saving to Room.
      */
-    suspend fun createNewSchool(userId: String, userEmail: String, schoolName: String): String = withContext(Dispatchers.IO) {
+    suspend fun createNewSchool(userId: String, schoolName: String): String = withContext(Dispatchers.IO) {
         val schoolId = "sch_${System.currentTimeMillis()}"
         database.withTransaction {
             val school = SchoolEntity(
@@ -172,11 +171,11 @@ class WorkspaceRepository @Inject constructor(
 
     /**
      * 🚪 REQUEST TO JOIN
-     * Mengajukan diri untuk bergabung ke sebuah sekolah/instansi via UseCase.
+     * Mengajukan diri untuk bergabung ke sebuah sekolah/instansi via Repository.
      */
     suspend fun requestToJoinWorkspace(userId: String, schoolId: String, schoolName: String) =
         withContext(Dispatchers.IO) {
-            submitSchoolAccessUseCase(userId, schoolId, schoolName, "TEACHER")
-            Log.i("AZURA_WORKSPACE", "✅ Request join submitted via UseCase for: $schoolName")
+            accessRequestRepository.submitRequest(userId, schoolId, schoolName)
+            Log.i("AZURA_WORKSPACE", "✅ Request join submitted via Repository for: $schoolName")
         }
 }

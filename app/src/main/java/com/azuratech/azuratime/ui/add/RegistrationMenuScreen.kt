@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
@@ -29,6 +30,7 @@ import com.azuratech.azuratime.ui.theme.AzuraPrimaryDark
 fun RegistrationMenuScreen(
     onNavigateToAddUser: () -> Unit,
     onNavigateToBulkRegister: () -> Unit,
+    onNavigateToBiometricManagement: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     AzuraScreen(
@@ -80,6 +82,18 @@ fun RegistrationMenuScreen(
                     listOf(MaterialTheme.colorScheme.secondary, Color(0xFF5C6BC0))
                 ),
                 onClick = onNavigateToBulkRegister
+            )
+
+            Spacer(modifier = Modifier.height(AzuraSpacing.lg))
+
+            RegistrationCard(
+                title = "Manajemen Biometrik",
+                description = "Lihat, cari, dan kelola data pendaftaran wajah yang sudah ada.",
+                icon = Icons.Default.Face,
+                gradient = Brush.linearGradient(
+                    listOf(Color(0xFF4DB6AC), Color(0xFF00796B))
+                ),
+                onClick = onNavigateToBiometricManagement
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.xl))

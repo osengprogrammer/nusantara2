@@ -80,4 +80,7 @@ interface FaceDao {
 
     @Query("SELECT * FROM faces WHERE schoolId = :schoolId")
     fun getAllFacesFlow(schoolId: String): Flow<List<FaceEntity>>
+
+    @Query("SELECT * FROM faces WHERE isSynced = 0 AND schoolId = :schoolId")
+    suspend fun getUnsyncedFaces(schoolId: String): List<FaceEntity>
 }

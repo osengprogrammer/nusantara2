@@ -24,7 +24,8 @@ sealed class Screen(val route: String) {
     data object AddUser : Screen("add_user")
     data object BulkRegister : Screen("bulk_register")
     data object Manage : Screen("manage_faces")
-    data object FaceListBarcode : Screen("face_list_barcode") // 🔥 RUTE BARU UNTUK GENERATOR BARCODE
+    data object BiometricManagement : Screen("biometric_management")
+    data object FaceListBarcode : Screen("face_list_barcode")
     data object EditUser : Screen("edit_user/{faceId}") {
         fun createRoute(faceId: String) = "edit_user/$faceId"
     }

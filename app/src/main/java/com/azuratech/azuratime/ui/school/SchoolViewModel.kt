@@ -4,99 +4,67 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.domain.classes.usecase.GetAllClassesUseCase
-import com.azuratech.azuratime.domain.classes.usecase.ReassignClassUseCase
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.domain.school.usecase.CreateSchoolUseCase
-import com.azuratech.azuratime.domain.school.usecase.DeleteSchoolUseCase
-import com.azuratech.azuratime.domain.school.usecase.GetSchoolsUseCase
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.ui.core.UiEvent
+import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.data.repo.WorkspaceRepository
+import com.azuratech.azuratime.domain.model.SyncStatus
+import androidx.compose.ui.graphics.Color
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class SchoolUiState {
-    object Loading : SchoolUiState()
-    data class Success(val schools: List<School>) : SchoolUiState()
-    data class Error(val error: AppError) : SchoolUiState()
-}
-
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class SchoolViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getSchoolsUseCase: GetSchoolsUseCase,
-    private val createSchoolUseCase: CreateSchoolUseCase,
-    private val deleteSchoolUseCase: DeleteSchoolUseCase,
-    private val getAllClassesUseCase: GetAllClassesUseCase,
-    private val assignClassToSchoolUseCase: com.azuratech.azuratime.domain.classes.usecase.AssignClassToSchoolUseCase,
-    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
-    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
-    private val workspaceRepository: com.azuratech.azuratime.data.repo.WorkspaceRepository
+    private val sessionManager: SessionManager,
+    private val schoolRepository: SchoolRepository,
+    private val workspaceRepository: WorkspaceRepository
 ) : ViewModel() {
 
-    private val _uiEvent = MutableSharedFlow<com.azuratech.azuratime.ui.core.UiEvent>()
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _accountId = MutableStateFlow(savedStateHandle.get<String>("accountId") ?: "")
+    private val _accountId = MutableStateFlow(savedStateHandle.get<String>("accountId") ?: sessionManager.getCurrentUserId() ?: "")
     val accountId: StateFlow<String> = _accountId.asStateFlow()
 
-    // 🔥 Observation of active school ID from SessionManager
+    // 🔥 v3.1: Reactive School SSOT Migration (Phase 7.7)
+    val schools: StateFlow<List<School>> = _accountId
+        .filter { it.isNotEmpty() }
+        .flatMapLatest { id -> schoolRepository.observeSchools(id) }
+        .map { result ->
+            if (result is Result.Success) {
+                // Auto-select first school if none active (Side-effect in map for SSOT transition)
+                if (result.data.isNotEmpty() && sessionManager.getActiveSchoolId() == null) {
+                    selectSchool(result.data.first())
+                }
+                result.data
+            } else emptyList()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val activeSchoolId: StateFlow<String?> = sessionManager.activeSchoolIdFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), sessionManager.getActiveSchoolId())
 
-    // 🔥 Observation of active school details from Repository
     val activeSchool: StateFlow<School?> = activeSchoolId
         .flatMapLatest { id ->
-            if (id != null) {
-                flow<School?> { emit(schoolRepository.getSchoolById(id)) }
-            } else {
-                flowOf(null)
-            }
+            if (id != null) flow { emit(schoolRepository.getSchoolById(id)) }
+            else flowOf<School?>(null)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val uiState: StateFlow<SchoolUiState> = _accountId
-        .filter { it.isNotEmpty() }
-        .flatMapLatest { id ->
-            getSchoolsUseCase(id).onEach { result ->
-                // 🔥 Auto-select first school if none active
-                if (result is Result.Success && result.data.isNotEmpty() && sessionManager.getActiveSchoolId() == null) {
-                    val firstSchool = result.data.first()
-                    println("🚀 AUTO-INIT: Selecting first available school: ${firstSchool.name}")
-                    selectSchool(firstSchool)
-                }
-            }.map { result ->
-                when (result) {
-                    is Result.Success -> SchoolUiState.Success(result.data)
-                    is Result.Failure -> SchoolUiState.Error(result.error)
-                    is Result.Loading -> SchoolUiState.Loading
-                }
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SchoolUiState.Loading
-        )
-
-    // 🔥 Observation of all schools for pickers/selectors
-    val allSchools: StateFlow<List<School>> = uiState.map { 
-        if (it is SchoolUiState.Success) it.schools else emptyList() 
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val allSchools: StateFlow<List<School>> = schools
 
     // 🔥 Added Available Classes flow for selection
     val availableClasses: StateFlow<List<ClassModel>> = _accountId
         .filter { it.isNotEmpty() }
         .flatMapLatest { id ->
-            getAllClassesUseCase(id).onEach { result ->
-                if (result is Result.Success) {
-                    println("📚 DEBUG: Loaded ${result.data.size} classes from DB for picker")
-                }
-            }.map { result ->
+            schoolRepository.observeAllClassesForAccount(id).map { result ->
                 if (result is Result.Success) result.data else emptyList()
             }
         }
@@ -133,11 +101,11 @@ class SchoolViewModel @Inject constructor(
         
         println("💾 DEBUG: Creating school: $name with ${selectedClassIds.size} classes")
         viewModelScope.launch {
-            val result = createSchoolUseCase(currentId, name, timezone)
+            val result = schoolRepository.createSchool(currentId, name, timezone)
             if (result is Result.Success) {
                 val newSchoolId = result.data
                 selectedClassIds.forEach { classId ->
-                    assignClassToSchoolUseCase(newSchoolId, classId)
+                    schoolRepository.assignClassToSchool(newSchoolId, classId)
                 }
                 
                 val newSchool = schoolRepository.getSchoolById(newSchoolId)
@@ -145,17 +113,17 @@ class SchoolViewModel @Inject constructor(
                 // Show Feedback
                 val status = newSchool?.status ?: "PENDING"
                 if (status == "ACTIVE") {
-                    _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
+                    _uiEvent.emit(UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
                     
                     // 🔥 Auto-select if it's the first one/active
                     if (sessionManager.getActiveSchoolId() == null) {
                         newSchool?.let { selectSchool(it) }
                     }
                 } else {
-                    _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
+                    _uiEvent.emit(UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
                 }
             } else if (result is Result.Failure) {
-                _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("❌ Gagal: ${result.error.message}"))
+                _uiEvent.emit(UiEvent.ShowSnackbar("❌ Gagal: ${result.error.message}"))
             }
         }
     }
@@ -165,7 +133,7 @@ class SchoolViewModel @Inject constructor(
         if (currentId.isEmpty()) return
         
         viewModelScope.launch {
-            deleteSchoolUseCase(id, currentId)
+            schoolRepository.deleteSchool(id, currentId)
         }
     }
 

@@ -10,17 +10,14 @@ import com.azuratech.azuratime.data.repo.AuthRepository
 import com.azuratech.azuratime.data.repo.DataIntegrityRepository
 import com.azuratech.azuratime.data.repo.SyncRepository
 import com.azuratech.azuratime.domain.face.usecase.GetFacesInClassUseCase
-import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.domain.checkin.usecase.GetCheckInRecordsUseCase
-import com.azuratech.azuratime.domain.checkin.usecase.CheckInFilters
 import com.azuratech.azuratime.domain.checkin.usecase.SyncCheckInRecordsUseCase
 import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.UpdateUserUseCase
 import com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase
 import com.azuratech.azuratime.domain.school.usecase.SyncSchoolsUseCase
-import com.azuratech.azuratime.domain.face.usecase.SyncFacesUseCase
+import com.azuratech.azuratime.data.repo.FaceRepository
 import com.azuratech.azuratime.domain.assignment.usecase.SyncAssignmentsUseCase
 import com.azuratech.azuratime.domain.sync.usecase.GetLocalDataCountUseCase
 import com.azuratech.azuratime.domain.checkin.usecase.ResolveConflictUseCase
@@ -46,12 +43,11 @@ class DashboardViewModel @Inject constructor(
     private val syncUserUseCase: SyncUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
     private val getUserByIdUseCase: GetUserByIdUseCase,
-    private val getClassesUseCase: GetClassesUseCase,
+    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
     private val resolveConflictUseCase: ResolveConflictUseCase,
-    private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
     private val syncCheckInRecordsUseCase: SyncCheckInRecordsUseCase,
     private val syncSchoolsUseCase: SyncSchoolsUseCase,
-    private val syncFacesUseCase: SyncFacesUseCase,
+    private val faceRepository: FaceRepository,
     private val syncAssignmentsUseCase: SyncAssignmentsUseCase,
     private val getLocalDataCountUseCase: GetLocalDataCountUseCase,
     private val authRepository: AuthRepository,
@@ -60,6 +56,7 @@ class DashboardViewModel @Inject constructor(
     private val getActiveSchoolContextUseCase: com.azuratech.azuratime.domain.school.usecase.GetActiveSchoolContextUseCase,
     private val sessionManager: SessionManager,
     private val syncRepository: SyncRepository,
+    private val checkInRepository: com.azuratech.azuratime.domain.checkin.repository.CheckInRepository,
     private val database: com.azuratech.azuratime.data.local.AppDatabase
 ) : ViewModel() {
 
@@ -92,13 +89,10 @@ class DashboardViewModel @Inject constructor(
         }
 
     private val _allClassesFlow = sessionManager.activeSchoolIdFlow
+        .filterNotNull()
         .flatMapLatest { schoolId ->
-            if (schoolId != null) {
-                getClassesUseCase(schoolId).map { result ->
-                    if (result is Result.Success) result.data else emptyList()
-                }
-            } else {
-                flowOf(emptyList())
+            schoolRepository.observeClasses(schoolId).map { result ->
+                if (result is Result.Success) result.data else emptyList()
             }
         }
 
@@ -109,7 +103,7 @@ class DashboardViewModel @Inject constructor(
         schoolId to user
     }.flatMapLatest { (schoolId, user) ->
         if (schoolId != null && user != null) {
-            getClassesUseCase(schoolId).map { result ->
+            schoolRepository.observeClasses(schoolId).map { result ->
                 val allClasses = if (result is Result.Success) result.data else emptyList()
                 val membership = user.memberships[schoolId]
                 if (membership?.role == "ADMIN") {
@@ -169,7 +163,7 @@ class DashboardViewModel @Inject constructor(
         dataIntegrityRepository.missingAssignment,
         dataIntegrityRepository.brokenAssignments,
         dataIntegrityRepository.globalUnsyncedCount,
-        dataIntegrityRepository.conflicts
+        dataIntegrityRepository.conflicts.map { entities -> entities.map { it.toDomain() } }
     ) { args ->
         val user = args[0] as UserEntity?
         @Suppress("UNCHECKED_CAST")
@@ -228,9 +222,13 @@ class DashboardViewModel @Inject constructor(
             // 3. Restoring faces & assignments (tenant-scoped)
             val schoolId = sessionManager.getActiveSchoolId()
             if (schoolId != null) {
-                syncFacesUseCase()
+                val faceSyncResult = faceRepository.syncFaces()
                 syncAssignmentsUseCase()
                 syncCheckInRecordsUseCase()
+
+                if (faceSyncResult is Result.Failure) {
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron data wajah: ${faceSyncResult.error.message}"))
+                }
             }
             
             sessionManager.saveLastSyncTime(System.currentTimeMillis())

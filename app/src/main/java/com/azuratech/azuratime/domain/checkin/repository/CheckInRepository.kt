@@ -1,5 +1,6 @@
 package com.azuratech.azuratime.domain.checkin.repository
 
+import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.flow.Flow
@@ -18,12 +19,14 @@ interface CheckInRepository {
         classId: String?,
         assignedIds: List<String>,
         schoolId: String
-    ): Flow<List<CheckInRecord>>
+    ): Flow<List<CheckInRecordEntity>>
 
     suspend fun saveRecord(record: CheckInRecord): Result<Unit>
-    suspend fun updateRecord(record: CheckInRecord): Result<Unit>
-    suspend fun syncRecord(record: CheckInRecord): Result<Unit>
+    suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit>
     suspend fun deleteRecord(recordId: String, schoolId: String): Result<Unit>
+    
+    // 🔥 SYNC & MISC
+    suspend fun syncRecord(record: CheckInRecord): Result<Unit>
     fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Int>
     fun getUnassignedStudentCount(schoolId: String): Flow<Int>
     fun getFacesByClass(classId: String, schoolId: String): Flow<List<com.azuratech.azuratime.data.local.FaceEntity>>
@@ -32,5 +35,6 @@ interface CheckInRepository {
     suspend fun getFaceById(faceId: String, schoolId: String): com.azuratech.azuratime.data.local.FaceEntity?
     suspend fun getUnsyncedRecords(schoolId: String): List<CheckInRecord>
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<CheckInRecord>>
+    suspend fun syncRecords(): Result<Unit>
     suspend fun resolveConflict(conflictId: String, useCloud: Boolean): Result<Unit>
 }

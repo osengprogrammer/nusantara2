@@ -1,48 +1,47 @@
 package com.azuratech.azuratime.ui.user
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.data.repo.WorkspaceRepository
-import com.azuratech.azuratime.data.repo.UserRepository
-import com.azuratech.azuratime.core.session.SessionManager
-import com.google.firebase.firestore.FirebaseFirestore
-import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
-import com.azuratech.azuratime.domain.user.usecase.SubmitSchoolAccessUseCase
-import com.azuratech.azuratime.domain.user.usecase.CancelSchoolAccessUseCase
-import com.azuratech.azuratime.domain.school.usecase.CreateSchoolUseCase
-import com.azuratech.azuratime.domain.school.usecase.UpdateSchoolDetailsUseCase
-import com.azuratech.azuratime.data.repo.AccessRequestRepository
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.sync.SyncManager
+import com.azuratech.azuratime.data.local.toProfile
+import com.azuratech.azuratime.data.repo.AccessRequestRepository
+import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.WorkspaceRepository
+import com.azuratech.azuratime.domain.model.AccessRequestProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * 🛠️ WORKSPACE VIEW MODEL
  * Mengelola perpindahan antar sekolah, pencarian sekolah, dan pembuatan workspace baru.
- * 🔥 Sudah menggunakan Hilt Dependency Injection.
+ * 🔥 v3.1: Full Reactive SSOT dengan SchoolRepository dan debounced search.
  */
 @HiltViewModel
 class WorkspaceViewModel @Inject constructor(
-    application: Application,
     private val repository: WorkspaceRepository,
     private val userRepository: UserRepository,
-    private val syncUserUseCase: SyncUserUseCase,
-    private val submitRequestUseCase: SubmitSchoolAccessUseCase,
-    private val cancelRequestUseCase: CancelSchoolAccessUseCase,
-    private val createSchoolUseCase: CreateSchoolUseCase,
-    private val updateSchoolDetailsUseCase: UpdateSchoolDetailsUseCase,
+    private val schoolRepository: SchoolRepository,
     private val accessRequestRepository: AccessRequestRepository,
     private val sessionManager: SessionManager,
-    private val db: FirebaseFirestore
-) : AndroidViewModel(application) {
+    private val syncManager: SyncManager
+) : ViewModel() {
 
     sealed class WorkspaceState {
         object Idle : WorkspaceState()
@@ -72,8 +71,8 @@ class WorkspaceViewModel @Inject constructor(
                 // 2. Update Context
                 repository.switchWorkspace(userId, newSchoolId)
 
-                // 3. Sync User agar Role/Membership terbaru masuk ke Room
-                syncUserUseCase(userId)
+                // 3. Sync User agar Role/Membership terbaru masuk ke Room (Local-First)
+                syncManager.enqueueProfileSync(userId)
 
                 _uiState.value = WorkspaceState.Success(newSchoolName)
             } catch (e: Exception) {
@@ -87,25 +86,29 @@ class WorkspaceViewModel @Inject constructor(
     }
 
     // =====================================================
-    // 🔍 SCHOOL DISCOVERY & JOIN
+    // 🔍 SCHOOL DISCOVERY & JOIN (REACTIVE)
     // =====================================================
-    private val _schoolSearchResults = MutableStateFlow<List<Map<String, Any>>>(emptyList())
-    val schoolSearchResults: StateFlow<List<Map<String, Any>>> = _schoolSearchResults.asStateFlow()
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    fun searchSchools(query: String) {
-        if (query.length < 3) {
-            _schoolSearchResults.value = emptyList()
-            return
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    val schoolSearchResults: StateFlow<List<Map<String, Any>>> = _searchQuery
+        .debounce(300)
+        .distinctUntilChanged()
+        .map { query ->
+            if (query.length < 3) emptyList()
+            else repository.searchSchools(query)
         }
-        viewModelScope.launch {
-            _schoolSearchResults.value = repository.searchSchools(query)
-        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
     }
 
-    fun sendJoinRequest(user: UserEntity, schoolId: String, schoolName: String) {
+    fun sendJoinRequest(userId: String, schoolId: String, schoolName: String) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
-            submitRequestUseCase(user.userId, schoolId, schoolName, "TEACHER")
+            accessRequestRepository.submitRequest(userId, schoolId, schoolName)
                 .onSuccess { _uiState.value = WorkspaceState.RequestSent(schoolName) }
                 .onFailure { _uiState.value = WorkspaceState.RequestFailed(it.message) }
         }
@@ -113,7 +116,7 @@ class WorkspaceViewModel @Inject constructor(
 
     fun leaveSchool(schoolId: String) {
         viewModelScope.launch {
-            cancelRequestUseCase(currentUserId, schoolId)
+            accessRequestRepository.cancelRequest(currentUserId, schoolId)
         }
     }
 
@@ -124,7 +127,7 @@ class WorkspaceViewModel @Inject constructor(
     fun createNewSchool(userId: String, userEmail: String, schoolName: String) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
-            createSchoolUseCase(userId, schoolName)
+            schoolRepository.createSchool(userId, schoolName, "Asia/Jakarta")
                 .onSuccess { _uiState.value = WorkspaceState.Success(schoolName) }
                 .onFailure { _uiState.value = WorkspaceState.Error(it.message ?: "Gagal membuat sekolah") }
         }
@@ -132,14 +135,14 @@ class WorkspaceViewModel @Inject constructor(
 
     fun finalizeSetup(schoolId: String) {
         viewModelScope.launch {
-            updateSchoolDetailsUseCase(schoolId) // Default status in Entity is ACTIVE
+            schoolRepository.updateSchoolDetails(schoolId, name = null, timezone = null) // Triggers status change if needed
         }
     }
 
     fun updateSchoolName(schoolId: String, userId: String, newName: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
-            updateSchoolDetailsUseCase(schoolId, name = newName.trim())
+            schoolRepository.updateSchoolDetails(schoolId, name = newName.trim(), timezone = null)
                 .onSuccess {
                     _uiState.value = WorkspaceState.Idle
                     onSuccess()
@@ -152,8 +155,14 @@ class WorkspaceViewModel @Inject constructor(
     }
 
     /**
-     * Observe Access Requests for the current user
+     * Observe Access Requests for the current user (SSOT Stream)
      */
-    val accessRequests = accessRequestRepository.observeRequestsByUser(currentUserId)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val accessRequests: StateFlow<List<AccessRequestProfile>> =
+        sessionManager.currentUserIdFlow.filterNotNull()
+            .flatMapLatest { userId ->
+                accessRequestRepository.observeRequestsByUser(userId)
+                    .map { entities -> entities.map { it.toProfile() } }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }
-// 🔥 FACTORY DIHAPUS SEPENUHNYA

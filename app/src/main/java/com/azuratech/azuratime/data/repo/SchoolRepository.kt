@@ -151,6 +151,34 @@ class SchoolRepository @Inject constructor(
 
     suspend fun schoolExists(schoolId: String): Boolean = dao.getSchoolById(schoolId) != null
 
+    /**
+     * 🔥 SSOT: Sync classes for a specific school from Cloud to Local.
+     */
+    suspend fun syncClasses(accountId: String, schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            val remoteResult = remoteDataSource.getClasses(accountId, schoolId)
+            if (remoteResult is Result.Success) {
+                remoteResult.data.forEach { classModel ->
+                    saveClassLocally(
+                        ClassEntity(
+                            id = classModel.id,
+                            accountId = accountId,
+                            schoolId = classModel.schoolId,
+                            name = classModel.name,
+                            grade = classModel.grade,
+                            teacherId = classModel.teacherId,
+                            studentCount = classModel.studentCount,
+                            createdAt = classModel.createdAt
+                        )
+                    )
+                }
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
     suspend fun deleteSchool(id: String, accountId: String): Result<Unit> = try {
         database.withTransaction {
             val existing = dao.getSchoolById(id)
@@ -180,11 +208,11 @@ class SchoolRepository @Inject constructor(
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
-    suspend fun saveClass(accountId: String, schoolId: String?, classModel: ClassModel): Result<Unit> {
+    suspend fun saveClass(_accountId: String, schoolId: String?, classModel: ClassModel): Result<Unit> {
         return try {
             val entity = ClassEntity(
                 id = classModel.id,
-                accountId = accountId,
+                accountId = _accountId,
                 schoolId = schoolId, // Link if provided, otherwise independent
                 name = classModel.name,
                 grade = classModel.grade,
@@ -205,7 +233,7 @@ class SchoolRepository @Inject constructor(
                 // We still pass schoolId to remote if it exists, or handle as global class
                 val remoteSchoolId = schoolId ?: "global"
                 try {
-                    remoteDataSource.saveClass(accountId, remoteSchoolId, classModel)
+                    remoteDataSource.saveClass(_accountId, remoteSchoolId, classModel)
                     println("✅ Repository: Saved to Firestore -> schools/$remoteSchoolId/classes/${classModel.id}")
                 } catch (e: Exception) {
                     println("❌ Repository: Failed to save to Firestore -> ${e.message}")
@@ -234,7 +262,7 @@ class SchoolRepository @Inject constructor(
 
     suspend fun getAssignedClassIds(schoolId: String): List<String> = dao.getAssignedClassIds(schoolId)
 
-    suspend fun deleteClass(accountId: String, schoolId: String, classId: String): Result<Unit> {
+    suspend fun deleteClass(_accountId: String, schoolId: String, classId: String): Result<Unit> {
         return try {
             val studentCount = dao.getStudentCountForClass(schoolId, classId)
             if (studentCount > 0) {
@@ -245,7 +273,7 @@ class SchoolRepository @Inject constructor(
 
             // Async Sync to Remote
             repositoryScope.launch {
-                remoteDataSource.deleteClass(accountId, schoolId, classId)
+                remoteDataSource.deleteClass(_accountId, schoolId, classId)
             }
 
             Result.Success(Unit)

@@ -13,7 +13,7 @@ fun NavGraphBuilder.reportingGraph(
         route = "reporting_graph"
     ) {
         composable(Screen.AttendanceMatrix.route) {
-            com.azuratech.azuratime.ui.report.AttendanceMatrixScreen(
+            com.azuratech.azuratime.ui.attendance.AttendanceMatrixScreen(
                 onBack = { navController.popBackStack() },
                 onCellClick = { faceId, name, date ->
                     navController.navigate(Screen.DailyDetail.createRoute(faceId, name, date.toString()))
