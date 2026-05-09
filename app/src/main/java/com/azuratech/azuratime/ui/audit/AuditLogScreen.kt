@@ -28,7 +28,7 @@ fun AuditLogScreen(
     viewModel: AuditLogViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val logs by viewModel.auditLogs.collectAsStateWithLifecycle()
+    val logs by viewModel.auditLogsStateFlow.collectAsStateWithLifecycle()
 
     AzuraScreen(
         title = "Audit Trail",

@@ -28,7 +28,7 @@ class RegisterViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterState())
-    val state: StateFlow<RegisterState> = _state.asStateFlow()
+    val stateStateFlow: StateFlow<RegisterState> = _state.asStateFlow()
 
     fun resetState() {
         _state.value = RegisterState()

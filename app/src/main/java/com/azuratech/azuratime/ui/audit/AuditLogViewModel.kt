@@ -22,10 +22,10 @@ class AuditLogViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
+    val uiEventFlow = _uiEvent.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val auditLogs: StateFlow<List<AuditLogProfile>> = 
+    val auditLogsStateFlow: StateFlow<List<AuditLogProfile>> = 
         sessionManager.activeSchoolIdFlow.filterNotNull()
             .flatMapLatest { schoolId -> 
                 auditLogRepository.observeLogsBySchool(schoolId)
