@@ -40,6 +40,7 @@ class SchoolSyncWorker @AssistedInject constructor(
                 Log.e(TAG, "Sync failed for school $schoolId: ${result.error.message}")
                 handleSyncError(result.error)
             }
+            else -> Result.retry()
         }
     }
 

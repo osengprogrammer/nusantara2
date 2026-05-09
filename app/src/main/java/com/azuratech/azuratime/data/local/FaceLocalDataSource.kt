@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface FaceLocalDataSource {
     fun getAllFacesFlow(schoolId: String): Flow<List<FaceEntity>>
+    fun getAllFacesWithDetailsFlow(schoolId: String): Flow<List<FaceWithDetails>>
     fun getAllFacesForScanningFlow(schoolId: String): Flow<List<FaceEntity>>
     fun getFacesInClassFlow(classId: String, schoolId: String): Flow<List<FaceEntity>>
     fun observeClassesBySchool(schoolId: String): Flow<List<ClassEntity>>

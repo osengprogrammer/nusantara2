@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
-import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -14,12 +13,14 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
+import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+
 @HiltViewModel
 class DailyDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val repository: com.azuratech.azuratime.domain.checkin.repository.CheckInRepository,
-    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
-    private val observeUserUseCase: ObserveUserUseCase,
+    private val repository: CheckInRepository,
+    private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
     private val userRepository: UserRepository
 ) : ViewModel() {
@@ -30,7 +31,7 @@ class DailyDetailViewModel @Inject constructor(
 
     private val currentUser = sessionManager.currentUserIdFlow
         .filterNotNull()
-        .flatMapLatest { uid -> observeUserUseCase(uid) }
+        .flatMapLatest { uid -> userRepository.observeUserEntity(uid) }
 
     private val assignedClassIds = sessionManager.activeSchoolIdFlow
         .filterNotNull()

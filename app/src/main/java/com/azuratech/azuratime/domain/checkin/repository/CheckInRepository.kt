@@ -6,6 +6,14 @@ import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
+data class ProcessCheckInParams(
+    val faceId: String,
+    val studentName: String,
+    val teacherEmail: String,
+    val activeClassId: String?,
+    val studentClassIds: List<String>
+)
+
 /**
  * Repository interface for Check-In operations.
  * Following DIP, the interface lives in the domain layer.
@@ -37,4 +45,5 @@ interface CheckInRepository {
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<CheckInRecord>>
     suspend fun syncRecords(): Result<Unit>
     suspend fun resolveConflict(conflictId: String, useCloud: Boolean): Result<Unit>
+    suspend fun processCheckIn(params: ProcessCheckInParams): Result<com.azuratech.azuratime.domain.checkin.model.CheckInResult>
 }

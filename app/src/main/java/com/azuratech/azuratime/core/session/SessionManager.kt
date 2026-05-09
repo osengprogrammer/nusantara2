@@ -5,14 +5,9 @@ import android.provider.Settings
 import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.azuratech.azuratime.security.SecurityVault
-import com.google.firebase.functions.FirebaseFunctions
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class SessionManager private constructor(private val context: Context) {
 
@@ -58,26 +53,14 @@ class SessionManager private constructor(private val context: Context) {
         )
     }
 
-    // 🔥 REACTIVE TRIGGER: Shouts to ViewModels when data changes
-    private val _activeSchoolIdFlow = MutableSharedFlow<String?>(replay = 1)
-    private val _currentUserIdFlow = MutableSharedFlow<String?>(replay = 1)
+    // 🔥 REACTIVE TRIGGER: SSOT flows for user and school context
+    private val _activeSchoolIdFlow = MutableStateFlow<String?>(getActiveSchoolId())
+    val activeSchoolIdFlow: StateFlow<String?> = _activeSchoolIdFlow.asStateFlow()
 
-    val activeSchoolIdFlow: Flow<String?> = _activeSchoolIdFlow.asSharedFlow()
-        .onStart { emit(getActiveSchoolId()) }
-        .distinctUntilChanged()
-
-    val currentUserIdFlow: Flow<String?> = _currentUserIdFlow.asSharedFlow()
-        .onStart { 
-            val id = try { 
-                getCurrentUserId() 
-            } catch(e: Exception) { 
-                println("⚠ SessionManager: Keystore error -> ${e.message}")
-                null 
-            }
-            println("🔍 SessionManager: onStart emitting ID -> $id")
-            emit(id) 
-        }
-        .distinctUntilChanged()
+    private val _currentUserIdFlow = MutableStateFlow<String?>(
+        try { getCurrentUserId() } catch (e: Exception) { null }
+    )
+    val currentUserIdFlow: StateFlow<String?> = _currentUserIdFlow.asStateFlow()
 
     // =====================================================
     // IDENTITAS & TENANT
@@ -85,7 +68,7 @@ class SessionManager private constructor(private val context: Context) {
 
     fun saveActiveSchoolId(schoolId: String) {
         sharedPreferences.edit().putString(KEY_ACTIVE_SCHOOL_ID, schoolId).apply()
-        _activeSchoolIdFlow.tryEmit(schoolId) // 🔥 Push to UI listeners
+        _activeSchoolIdFlow.value = schoolId
     }
 
     fun getActiveSchoolId(): String? {
@@ -95,7 +78,7 @@ class SessionManager private constructor(private val context: Context) {
 
     fun saveCurrentUserId(userId: String) {
         sharedPreferences.edit().putString(KEY_USER_ID, userId).apply()
-        _currentUserIdFlow.tryEmit(userId)
+        _currentUserIdFlow.value = userId
     }
 
     fun getCurrentUserId(): String? = sharedPreferences.getString(KEY_USER_ID, null)
@@ -155,48 +138,6 @@ class SessionManager private constructor(private val context: Context) {
             putString(KEY_USER_STATUS, STATUS_ACTIVE)
         }.apply()
         Log.d(TAG, "Security envelope injected successfully.")
-    }
-
-    suspend fun refreshIsoKeyFromServer(): String {
-        return try {
-            val functions = FirebaseFunctions.getInstance("us-central1")
-            
-            val result = functions
-                .getHttpsCallable("getSecurityIsoKey")
-                .call(hashMapOf("hardwareId" to getHardwareId()))
-                .await() 
-
-            val response = result.data as? Map<*, *>
-            val isoKey = response?.get("isoKey") as? String ?: ""
-            val expireDate = (response?.get("expireDate") as? Number)?.toLong() ?: 0L
-
-            if (isoKey.isNotBlank() && expireDate > System.currentTimeMillis()) {
-                injectSecurityEnvelope(isoKey, expireDate)
-                isoKey
-            } else {
-                Log.w(TAG, "Refresh IsoKey gagal: Data tidak valid atau sudah expired.")
-                ""
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Refresh error: ${e.message}")
-            ""
-        }
-    }
-
-    fun validateSessionWithNative(): Int {
-        return try {
-            val vault = SecurityVault()
-            vault.checkAccessStatus(
-                getLastSyncTime(),
-                getExpireDate(),
-                getUserStatus(),
-                getHardwareId(),
-                getCloudKey()
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Native validation crashed: ${e.message}")
-            -99
-        }
     }
 
     // =====================================================

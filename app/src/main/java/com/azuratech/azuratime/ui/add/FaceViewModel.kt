@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.azuratech.azuraengine.face.RegisterResult
-import com.azuratech.azuratime.domain.face.usecase.*
 import com.azuratech.azuratime.data.repo.FaceRepository
 import com.azuratech.azuratime.ui.core.UiEvent
 import com.azuratech.azuratime.core.session.SessionManager
@@ -30,7 +29,6 @@ import com.azuratech.azuratime.data.local.FaceWithDetails
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-import com.azuratech.azuratime.domain.student.usecase.SaveStudentProfileUseCase
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 
@@ -40,12 +38,6 @@ import com.azuratech.azuratime.domain.model.SyncStatus
 @HiltViewModel
 class FaceViewModel @Inject constructor(
     application: Application,
-    private val getFacesWithDetailsUseCase: GetFacesWithDetailsUseCase,
-    private val getEnrolledFacesUseCase: GetEnrolledFacesUseCase,
-    private val saveStudentProfileUseCase: SaveStudentProfileUseCase,
-    private val deleteFaceUseCase: DeleteFaceUseCase,
-    private val updateEmployeeClassUseCase: UpdateEmployeeClassUseCase,
-    private val getFacesInClassUseCase: GetFacesInClassUseCase,
     private val faceRepository: FaceRepository,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
@@ -56,13 +48,8 @@ class FaceViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val faceList: StateFlow<List<FaceWithDetails>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
-        .flatMapLatest { getFacesWithDetailsUseCase() }
-        .map { result ->
-            when (result) {
-                is Result.Success -> result.data
-                else -> emptyList()
-            }
-        }
+        .flatMapLatest { schoolId -> faceRepository.getFacesWithDetailsFlow(schoolId) }
+        .map { it }
         .stateIn(
             scope = viewModelScope, 
             started = SharingStarted.WhileSubscribed(5000), 
@@ -72,13 +59,8 @@ class FaceViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val enrolledFaceList: StateFlow<List<FaceEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
-        .flatMapLatest { getEnrolledFacesUseCase() }
-        .map { result ->
-            when (result) {
-                is Result.Success -> result.data
-                else -> emptyList()
-            }
-        }
+        .flatMapLatest { schoolId -> faceRepository.getEnrolledFacesFlow(schoolId) }
+        .map { it }
         .stateIn(
             scope = viewModelScope, 
             started = SharingStarted.WhileSubscribed(5000), 
@@ -86,12 +68,7 @@ class FaceViewModel @Inject constructor(
         )
 
     fun getFacesInClassFlow(classId: String): Flow<List<FaceEntity>> = 
-        getFacesInClassUseCase(classId).map { result ->
-            when (result) {
-                is Result.Success -> result.data
-                else -> emptyList()
-            }
-        }
+        faceRepository.getFacesInClassFlow(classId, sessionManager.getActiveSchoolId() ?: "").map { it }
 
     fun registerFace(
         inputId: String, 
@@ -121,10 +98,10 @@ class FaceViewModel @Inject constructor(
                 syncStatus = SyncStatus.PENDING_UPDATE
             )
 
-            val result = saveStudentProfileUseCase(profile, photoBytes)
+            val result = faceRepository.saveStudentProfile(profile, photoBytes)
             withContext(Dispatchers.Main) {
                 when (result) {
-                    is Result.Success -> onSuccess()
+                    is Result.Success<Unit> -> onSuccess()
                     is Result.Failure -> onError(result.error.message ?: "Gagal registrasi")
                     is Result.Loading -> { /* Handle loading if needed */ }
                 }
@@ -140,7 +117,7 @@ class FaceViewModel @Inject constructor(
 
     fun deleteFace(face: FaceEntity) { 
         viewModelScope.launch { 
-            val result = deleteFaceUseCase(face.faceId)
+            val result = faceRepository.deleteFace(face.faceId)
             if (result is Result.Failure) {
                 android.util.Log.e("FaceViewModel", "Gagal hapus: ${result.error.message}")
             }
@@ -149,7 +126,7 @@ class FaceViewModel @Inject constructor(
 
     fun updateEmployeeClass(faceId: String, classId: String?) {
         viewModelScope.launch { 
-            val result = updateEmployeeClassUseCase(faceId, classId)
+            val result = faceRepository.updateFaceClass(faceId, classId)
             if (result is Result.Failure) {
                 android.util.Log.e("FaceViewModel", "Gagal update kelas: ${result.error.message}")
             }
@@ -169,7 +146,7 @@ class FaceViewModel @Inject constructor(
                 syncStatus = SyncStatus.PENDING_UPDATE
             )
             
-            val result = saveStudentProfileUseCase(profile)
+            val result = faceRepository.saveStudentProfile(profile)
             withContext(Dispatchers.Main) { 
                 if (result is Result.Failure) {
                     android.util.Log.e("FaceViewModel", "Gagal update face: ${result.error.message}")

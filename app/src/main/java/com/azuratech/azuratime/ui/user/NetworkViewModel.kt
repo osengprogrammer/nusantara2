@@ -1,17 +1,15 @@
 package com.azuratech.azuratime.ui.user
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repo.UserRepository
-import com.azuratech.azuratime.domain.user.usecase.UserManagementUseCase
-import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 // 🚥 Status UI untuk Jaringan Pertemanan
@@ -25,11 +23,8 @@ sealed class NetworkState {
 
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
-    application: Application,
-    private val userRepository: UserRepository,
-    private val userManagementUseCase: UserManagementUseCase,
-    private val syncUserUseCase: SyncUserUseCase
-) : AndroidViewModel(application) {
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<NetworkState>(NetworkState.Idle)
     val uiState: StateFlow<NetworkState> = _uiState.asStateFlow()
@@ -49,17 +44,13 @@ class NetworkViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.value = NetworkState.Loading
-            try {
-                // Cari di Firestore via SyncUserUseCase (which should handle search by email)
-                val targetUser = syncUserUseCase.searchByEmail(email)
-
-                if (targetUser != null) {
-                    _uiState.value = NetworkState.UserFound(targetUser)
-                } else {
-                    _uiState.value = NetworkState.Error("Waduh, guru dengan email $email tidak ditemukan.")
-                }
-            } catch (e: Exception) {
-                _uiState.value = NetworkState.Error("Gagal mencari: ${e.message}")
+            val result = userRepository.searchUserByEmail(email)  // Must return Result<UserEntity?>
+            if (result is Result.Success && result.data != null) {
+                _uiState.value = NetworkState.UserFound(result.data!!)
+            } else if (result is Result.Failure) {
+                _uiState.value = NetworkState.Error("Gagal mencari: ${result.error.message}")
+            } else {
+                _uiState.value = NetworkState.Error("Waduh, guru dengan email $email tidak ditemukan.")
             }
         }
     }
@@ -71,7 +62,7 @@ class NetworkViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = NetworkState.Loading
             try {
-                val success = userManagementUseCase.sendFriendRequest(myId, myName, myEmail, targetEmail)
+                val success = userRepository.sendFriendRequest(myId, myName, myEmail, targetEmail)
                 if (success) {
                     _uiState.value = NetworkState.Success("Undangan seduluran berhasil dikirim ke $targetEmail!")
                 } else {
@@ -90,7 +81,7 @@ class NetworkViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = NetworkState.Loading
             try {
-                userManagementUseCase.acceptFriendRequest(myId, friendId)
+                userRepository.acceptFriendRequest(myId, friendId)
                 _uiState.value = NetworkState.Success("Mantap! Kalian sekarang resmi Seduluran.")
             } catch (e: Exception) {
                 _uiState.value = NetworkState.Error("Gagal menerima pertemanan: ${e.message}")
@@ -105,12 +96,7 @@ class NetworkViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = NetworkState.Loading
             try {
-                // userRepository.rejectFriendRequest moved to a new method in UserManagementUseCase if needed,
-                // but for now we'll assume it's there or we'll add it.
-                // For simplicity, let's assume we need to add it to UserManagementUseCase.
-                // But wait, let's just use the current available methods.
-                // I'll add rejectFriendRequest to UserManagementUseCase.
-                userManagementUseCase.rejectFriendRequest(myId, friendId)
+                userRepository.rejectFriendRequest(myId, friendId)
                 _uiState.value = NetworkState.Success("Permintaan dibatalkan/ditolak.")
             } catch (e: Exception) {
                 _uiState.value = NetworkState.Error("Gagal menolak pertemanan: ${e.message}")

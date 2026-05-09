@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.SavedStateHandle
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.domain.user.usecase.ObserveUserUseCase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
@@ -27,7 +26,7 @@ import android.net.Uri
 class ClassViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
-    private val importClassesUseCase: com.azuratech.azuratime.domain.classes.usecase.ImportClassesUseCase,
+    private val registrationRepository: com.azuratech.azuratime.data.repo.RegistrationRepository,
     private val userRepository: UserRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -143,7 +142,7 @@ class ClassViewModel @Inject constructor(
 
     fun importClassesFromCsv(uri: Uri, onComplete: () -> Unit) {
         viewModelScope.launch {
-            importClassesUseCase(uri.toString())
+            registrationRepository.processCsv(uri.toString(), "CLASS").collect { }
             onComplete()
         }
     }

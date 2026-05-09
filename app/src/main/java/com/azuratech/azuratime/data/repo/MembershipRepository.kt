@@ -3,7 +3,6 @@ package com.azuratech.azuratime.data.repo
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.data.local.UserDao
-import com.azuratech.azuratime.domain.user.usecase.SyncUserUseCase
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -35,7 +34,7 @@ class MembershipRepository @Inject constructor(
     private val sessionManager: SessionManager,
     private val userDao: UserDao,
     private val syncManager: SyncManager,
-    private val syncUserUseCase: SyncUserUseCase
+    private val userRepository: UserRepository
 ) {
     fun getCurrentUid(): String? = firebaseAuth.currentUser?.uid
 
@@ -51,7 +50,7 @@ class MembershipRepository @Inject constructor(
         }
 
         // Trigger sync as a refresh
-        syncUserUseCase(uid)
+        userRepository.syncUser(uid)
         
         // Re-read after sync attempt
         val refreshedUser = userDao.getUserById(uid)
@@ -66,7 +65,7 @@ class MembershipRepository @Inject constructor(
         if (user != null) return@withContext true
         
         // Refresh from cloud
-        syncUserUseCase(uid)
+        userRepository.syncUser(uid)
         return@withContext userDao.getUserById(uid) != null
     }
 
@@ -143,7 +142,7 @@ class MembershipRepository @Inject constructor(
         // SSOT Migration v7.1: Polling now checks Room while background sync runs
         var retryCount = 0
         while (retryCount < 5) {
-            syncUserUseCase(uid)
+            userRepository.syncUser(uid)
             val user = userDao.getUserById(uid)
             if (user != null && user.status == SessionManager.STATUS_ACTIVE) {
                 return@withContext userToMap(user)

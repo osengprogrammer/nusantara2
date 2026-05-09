@@ -314,6 +314,32 @@ class SchoolRepository @Inject constructor(
         dao.assignClass(com.azuratech.azuratime.data.local.SchoolClassAssignment(schoolId, classId))
     }
 
+    suspend fun approveSchool(schoolId: String): Result<Unit> = try {
+        database.withTransaction {
+            val school = dao.getSchoolById(schoolId)
+            if (school != null) {
+                dao.upsertSchool(school.copy(status = "ACTIVE", syncStatus = SyncStatus.PENDING_UPDATE.name))
+                syncManager.enqueueSchoolSync(schoolId)
+            }
+        }
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(AppError.LocalDB(e.message))
+    }
+
+    suspend fun rejectSchool(schoolId: String, reason: String): Result<Unit> = try {
+        database.withTransaction {
+            val school = dao.getSchoolById(schoolId)
+            if (school != null) {
+                dao.upsertSchool(school.copy(status = "REJECTED", syncStatus = SyncStatus.PENDING_UPDATE.name))
+                syncManager.enqueueSchoolSync(schoolId)
+            }
+        }
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(AppError.LocalDB(e.message))
+    }
+
     /**
      * 🔥 SSOT: Push school updates to Firestore.
      */

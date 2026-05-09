@@ -60,6 +60,9 @@ interface CheckInRecordDao {
     @Query("SELECT COUNT(*) FROM check_in_records WHERE schoolId = :schoolId")
     fun getTotalCountFlow(schoolId: String): Flow<Int>
 
+    @Query("SELECT * FROM check_in_records WHERE faceId = :faceId AND attendanceDate = :date AND schoolId = :schoolId LIMIT 1")
+    suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): CheckInRecordEntity?
+
     // 🔥 Added for ReportRepository
     @Query("SELECT * FROM check_in_records WHERE schoolId = :schoolId AND classId IN (:classIds) AND attendanceDate >= :start AND attendanceDate <= :end ORDER BY attendanceDate DESC, checkInTime DESC")
     fun getReportsByMultipleClasses(classIds: List<String>, start: LocalDate, end: LocalDate, schoolId: String): Flow<List<CheckInRecordEntity>>
