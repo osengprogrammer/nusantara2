@@ -18,7 +18,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
     private val db: FirebaseFirestore
 ) : SchoolRemoteDataSource {
 
-    private fun getAccountRef(accountId: String) = db.collection("accounts").document(accountId)
+    private fun getAccountRef(_accountId: String) = db.collection("accounts").document(_accountId)
     private fun getSchoolsRef(accountId: String) = getAccountRef(accountId).collection("schools")
     
     // 🔥 Top-level collection for school discovery
@@ -140,7 +140,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveClass(accountId: String, schoolId: String, classModel: ClassModel): Result<Unit> {
+    override suspend fun saveClass(_accountId: String, schoolId: String, classModel: ClassModel): Result<Unit> {
         return try {
             val data = hashMapOf(
                 "id" to classModel.id,
@@ -151,25 +151,25 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 "studentCount" to classModel.studentCount,
                 "createdAt" to classModel.createdAt
             )
-            getClassesRef(accountId, schoolId).document(classModel.id).set(data, SetOptions.merge()).await()
+            getClassesRef(_accountId, schoolId).document(classModel.id).set(data, SetOptions.merge()).await()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
         }
     }
 
-    override suspend fun deleteClass(accountId: String, schoolId: String, classId: String): Result<Unit> {
+    override suspend fun deleteClass(_accountId: String, schoolId: String, classId: String): Result<Unit> {
         return try {
-            getClassesRef(accountId, schoolId).document(classId).delete().await()
+            getClassesRef(_accountId, schoolId).document(classId).delete().await()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
         }
     }
 
-    override suspend fun getClasses(accountId: String, schoolId: String): Result<List<ClassModel>> {
+    override suspend fun getClasses(_accountId: String, schoolId: String): Result<List<ClassModel>> {
         return try {
-            val snapshot = getClassesRef(accountId, schoolId).get().await()
+            val snapshot = getClassesRef(_accountId, schoolId).get().await()
             val classes = snapshot.documents.mapNotNull { doc ->
                 try {
                     ClassModel(

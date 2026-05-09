@@ -4,73 +4,47 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.domain.face.usecase.GetFaceWithDetailsUseCase
-import com.azuratech.azuratime.domain.student.usecase.CreateStudentUseCase
-import com.azuratech.azuratime.domain.face.usecase.UpdateFaceWithPhotoUseCase
-import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
+import com.azuratech.azuratime.domain.student.usecase.SaveStudentProfileUseCase
+import com.azuratech.azuratime.domain.model.StudentProfile
+import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.domain.media.PhotoStorageUtils
 import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
-    private val createStudentUseCase: CreateStudentUseCase,
-    private val updateFaceWithPhotoUseCase: UpdateFaceWithPhotoUseCase,
+    private val saveStudentProfileUseCase: SaveStudentProfileUseCase,
     private val getFaceWithDetailsUseCase: GetFaceWithDetailsUseCase,
-    private val getClassesUseCase: GetClassesUseCase,
+    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
     private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
     private val getUserByIdUseCase: com.azuratech.azuratime.domain.user.usecase.GetUserByIdUseCase,
-    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
+    private val photoStorageUtils: PhotoStorageUtils
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
     val uiState: StateFlow<StudentFormUiState> = _uiState.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
+    val uiEvent: SharedFlow<UiEvent> = _uiEvent.asSharedFlow()
 
     // 🎓 REACTIVE CLASSES FLOW
     private val _classesFlow = sessionManager.activeSchoolIdFlow
-        .onStart { 
-            val id = sessionManager.getActiveSchoolId()
-            println("📚 DEBUG: StudentFormVM _classesFlow onStart -> $id")
-            emit(id) 
-        }
-        .onEach { println("📚 DEBUG: StudentFormVM SchoolId flow emitted: $it") }
-        .filter { id -> 
-            val isValid = !id.isNullOrBlank()
-            if (!isValid) println("⚠️ DEBUG: StudentFormVM - Filtering out null/blank schoolId")
-            isValid
-        }
         .filterNotNull()
         .flatMapLatest { schoolId ->
-            println("📚 DEBUG: StudentFormVM - flatMapLatest loading for $schoolId")
-            getClassesUseCase(schoolId)
+            schoolRepository.observeClasses(schoolId)
         }
-        .onEach { println("📚 DEBUG: StudentFormVM - UseCase result received: $it") }
         .map { result ->
             when (result) {
-                is Result.Success -> {
-                    println("✅ DEBUG: StudentFormVM - Successfully loaded ${result.data.size} classes")
-                    result.data
-                }
-                is Result.Failure -> {
-                    println("❌ DEBUG: StudentFormVM - Failed to load classes: ${result.error.message}")
-                    emptyList()
-                }
-                is Result.Loading -> {
-                    println("⏳ DEBUG: StudentFormVM - Classes are loading...")
-                    emptyList()
-                }
+                is Result.Success -> result.data
+                else -> emptyList()
             }
-        }
-        .catch { e ->
-            println("❌ Classes load exception: ${e.message}")
-            e.printStackTrace()
-            emit(emptyList())
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
@@ -98,6 +72,7 @@ class StudentFormViewModel @Inject constructor(
                                 studentId = faceWithDetails.face.faceId,
                                 selectedClassId = faceWithDetails.classId,
                                 embedding = faceWithDetails.face.embedding,
+                                photoUrl = faceWithDetails.face.photoUrl,
                                 isEditMode = true,
                                 pageTitle = "Edit Profil Siswa"
                             )
@@ -136,8 +111,10 @@ class StudentFormViewModel @Inject constructor(
     }
 
     fun onPhotoCaptured(bitmap: Bitmap) {
-        // In a real implementation, you would process the bitmap to get an embedding here.
-        // For now, we just store the bitmap.
+        updateState { it.copy(capturedBitmap = bitmap) }
+    }
+
+    fun onPhotoUploaded(bitmap: Bitmap) {
         updateState { it.copy(capturedBitmap = bitmap) }
     }
 
@@ -164,7 +141,7 @@ class StudentFormViewModel @Inject constructor(
             val currentUserId = sessionManager.getCurrentUserId()
             val user = currentUserId?.let { getUserByIdUseCase(it) }
 
-            user?.let { println("🔍 StudentForm: Fetched user ${it.userId} for edit") }
+            user?.let { println("🔍 StudentForm: Fetched user ${it.userId} for save") }
 
             if (activeSchoolId == null && user?.role == "SUPER_ADMIN") {
                 updateState { it.copy(isSubmitting = false) }
@@ -172,49 +149,47 @@ class StudentFormViewModel @Inject constructor(
                 return@launch
             }
 
-            if (currentState.isEditMode) {
-                // Update existing student/face
-                val result = updateFaceWithPhotoUseCase(
-                    face = currentState.toFaceEntity(),
-                    photoBytes = photoBytes,
-                    embedding = currentState.embedding!!
-                )
-                
-                when (result) {
-                    is Result.Success -> {
-                        _uiEvent.emit(UiEvent.ShowSnackbar("Berhasil diperbarui"))
-                        _uiEvent.emit(UiEvent.NavigateUp)
-                    }
-                    is Result.Failure -> {
-                        val errorMsg = result.error.message ?: "Update gagal"
-                        updateState { it.copy(isSubmitting = false, formError = errorMsg) }
-                        _uiEvent.emit(UiEvent.ShowSnackbar("Gagal menyimpan: $errorMsg"))
-                    }
-                    else -> {}
-                }
-            } else {
-                // Create new student identity & biometric
-                val result = createStudentUseCase(
-                    schoolId = activeSchoolId,
-                    name = currentState.name,
-                    studentCode = currentState.studentCode,
-                    classId = selectedClassId, // Use the variable
-                    faceEmbedding = currentState.embedding,
-                    photoBytes = photoBytes
-                )
+            val resolvedSchoolId = activeSchoolId ?: ""
+            if (resolvedSchoolId.isBlank()) {
+                updateState { it.copy(isSubmitting = false) }
+                _uiEvent.emit(UiEvent.ShowSnackbar("School context required"))
+                return@launch
+            }
 
-                when (result) {
-                    is Result.Success -> {
-                        _uiEvent.emit(UiEvent.ShowSnackbar("Siswa berhasil didaftarkan"))
-                        _uiEvent.emit(UiEvent.NavigateUp)
-                    }
-                    is Result.Failure -> {
-                        val errorMsg = result.error.message ?: "Pendaftaran gagal"
-                        updateState { it.copy(isSubmitting = false, formError = errorMsg) }
-                        _uiEvent.emit(UiEvent.ShowSnackbar("Gagal menyimpan: $errorMsg"))
-                    }
-                    is Result.Loading -> {}
+            // Determine IDs
+            val studentId = if (currentState.isEditMode) currentState.studentId else "STU-${UUID.randomUUID().toString().take(8)}"
+            val faceId = if (currentState.isEditMode) {
+                currentState.studentId 
+            } else {
+                "FACE-${studentId}-${System.currentTimeMillis()}"
+            }
+
+            // 1. Construct StudentProfile
+            val profile = StudentProfile(
+                studentId = studentId,
+                studentCode = currentState.studentCode,
+                name = currentState.name,
+                schoolId = resolvedSchoolId,
+                classIds = listOfNotNull(selectedClassId),
+                faceId = faceId,
+                embedding = currentState.embedding,
+                photoUrl = currentState.photoUrl,
+                syncStatus = SyncStatus.PENDING_UPDATE
+            )
+
+            // 2. Save via Modernized UseCase (now handles photoBytes)
+            when (val result = saveStudentProfileUseCase(profile, photoBytes)) {
+                is Result.Success -> {
+                    val message = if (currentState.isEditMode) "Berhasil diperbarui" else "Siswa berhasil didaftarkan"
+                    _uiEvent.emit(UiEvent.ShowSnackbar(message))
+                    _uiEvent.emit(UiEvent.NavigateUp)
                 }
+                is Result.Failure -> {
+                    val errorMsg = result.error.message ?: "Gagal menyimpan"
+                    updateState { it.copy(isSubmitting = false, formError = errorMsg) }
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal menyimpan: $errorMsg"))
+                }
+                is Result.Loading -> {}
             }
         }
     }
@@ -238,11 +213,4 @@ class StudentFormViewModel @Inject constructor(
                 state.selectedClassId != null &&
                 state.embedding != null
     }
-
-    private fun StudentFormUiState.toFaceEntity() = com.azuratech.azuratime.data.local.FaceEntity(
-        faceId = this.studentId,
-        name = this.name,
-        embedding = this.embedding,
-        photoUrl = null // Photo path is handled by the UseCase
-    )
 }

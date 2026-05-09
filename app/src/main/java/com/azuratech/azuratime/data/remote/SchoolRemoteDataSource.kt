@@ -12,7 +12,7 @@ interface SchoolRemoteDataSource {
     suspend fun getSchools(accountId: String): Result<List<School>>
     suspend fun getSchoolsByIds(schoolIds: List<String>): Result<List<School>>
 
-    suspend fun saveClass(accountId: String, schoolId: String, classModel: ClassModel): Result<Unit>
-    suspend fun deleteClass(accountId: String, schoolId: String, classId: String): Result<Unit>
-    suspend fun getClasses(accountId: String, schoolId: String): Result<List<ClassModel>>
+    suspend fun saveClass(_accountId: String, schoolId: String, classModel: ClassModel): Result<Unit>
+    suspend fun deleteClass(_accountId: String, schoolId: String, classId: String): Result<Unit>
+    suspend fun getClasses(_accountId: String, schoolId: String): Result<List<ClassModel>>
 }

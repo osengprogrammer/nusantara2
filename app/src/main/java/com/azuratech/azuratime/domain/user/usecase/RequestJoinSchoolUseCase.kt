@@ -2,6 +2,7 @@ package com.azuratech.azuratime.domain.user.usecase
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.domain.model.MembershipStatus
 import com.azuratech.azuratime.domain.model.SyncStatus
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +14,8 @@ import javax.inject.Inject
  * Follows SSOT: Saves to Room first, sync happens in background.
  */
 class RequestJoinSchoolUseCase @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val syncManager: SyncManager
 ) {
     suspend operator fun invoke(
         userId: String,
@@ -31,7 +33,8 @@ class RequestJoinSchoolUseCase @Inject constructor(
                 role = requestedRole
             )
             
-            // TODO: Trigger ProfileSyncWorker.enqueue(userId) for background Firestore update
+            // 🔥 Trigger background sync
+            syncManager.enqueueProfileSync(userId)
             
             Result.Success(Unit)
         } catch (e: Exception) {

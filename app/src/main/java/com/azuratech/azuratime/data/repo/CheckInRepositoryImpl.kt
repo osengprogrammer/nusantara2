@@ -20,7 +20,9 @@ import javax.inject.Singleton
 class CheckInRepositoryImpl @Inject constructor(
     private val database: com.azuratech.azuratime.data.local.AppDatabase,
     private val localDataSource: CheckInLocalDataSource,
-    private val remoteDataSource: CheckInRemoteDataSource
+    private val remoteDataSource: CheckInRemoteDataSource,
+    private val syncManager: com.azuratech.azuratime.core.sync.SyncManager,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : CheckInRepository {
 
     private val checkInRecordDao = database.checkInRecordDao()
@@ -36,26 +38,34 @@ class CheckInRepositoryImpl @Inject constructor(
         classId: String?,
         assignedIds: List<String>,
         schoolId: String
-    ): Flow<List<CheckInRecord>> {
+    ): Flow<List<CheckInRecordEntity>> {
         return localDataSource.getFilteredRecords(
             name, startDate, endDate, userId, classId, assignedIds, schoolId
-        ).map { entities ->
-            entities.map { it.toDomain() }
-        }
+        )
     }
 
     override suspend fun saveRecord(record: CheckInRecord): Result<Unit> {
         return try {
             localDataSource.insert(CheckInRecordEntity.fromDomain(record))
+            syncManager.enqueueSync() // Background sync
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
         }
     }
 
-    override suspend fun updateRecord(record: CheckInRecord): Result<Unit> {
+    override suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit> {
         return try {
-            localDataSource.update(CheckInRecordEntity.fromDomain(record))
+            val record = checkInRecordDao.getRecordByIdNoSchool(recordId) 
+                ?: return Result.Failure(AppError.BusinessRule("Record not found"))
+
+            val updated = record.copy(
+                classId = classId,
+                className = className,
+                isSynced = false
+            )
+            checkInRecordDao.update(updated)
+            syncManager.enqueueSync() // Background sync
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -80,7 +90,7 @@ class CheckInRepositoryImpl @Inject constructor(
             val entity = localDataSource.getRecordById(recordId, schoolId)
             if (entity != null) {
                 localDataSource.delete(entity)
-                remoteDataSource.deleteRecord(schoolId, recordId)
+                syncManager.enqueueSync() // Background sync (will handle remote delete via worker)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -122,6 +132,47 @@ class CheckInRepositoryImpl @Inject constructor(
             is Result.Success -> Result.Success(result.data.map { it.toDomain() })
             is Result.Failure -> Result.Failure(result.error)
             is Result.Loading -> Result.Loading
+        }
+    }
+
+    override suspend fun syncRecords(): Result<Unit> = withContext(Dispatchers.IO) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: ""
+        if (schoolId.isBlank()) return@withContext Result.Success(Unit)
+
+        // 1. PUSH PHASE: Upload local changes to cloud
+        try {
+            val unsyncedRecords = getUnsyncedRecords(schoolId)
+            for (record in unsyncedRecords) {
+                val syncRes = syncRecord(record)
+                if (syncRes is Result.Failure) {
+                    if (syncRes.error is AppError.Network) {
+                        return@withContext Result.Failure(syncRes.error)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            println("ERROR: [CheckInRepository] Error during push phase: ${e.message}")
+        }
+
+        // 2. PULL PHASE: Delta sync from cloud to local
+        val lastSync = sessionManager.getLastRecordsSyncTime()
+        try {
+            val syncResult = getRecordUpdates(schoolId, lastSync)
+            if (syncResult is Result.Success) {
+                val records = syncResult.data
+                if (records.isNotEmpty()) {
+                    records.forEach { record ->
+                        saveRecord(record)
+                    }
+                    sessionManager.saveLastRecordsSyncTime()
+                    println("[CheckInRepository] ✅ Delta Sync: Pulled ${records.size} records")
+                }
+                Result.Success(Unit)
+            } else {
+                syncResult as Result.Failure
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
         }
     }
 

@@ -39,6 +39,9 @@ class FaceLocalDataSourceImpl @Inject constructor(
     override suspend fun getFaceById(faceId: String, schoolId: String): FaceEntity? =
         faceDao.getFaceById(faceId, schoolId)
 
+    override suspend fun getFaceByStudentId(studentId: String, schoolId: String): FaceEntity? =
+        faceDao.getFaceByStudentId(studentId, schoolId)
+
     override suspend fun upsertFace(face: FaceEntity) =
         faceDao.upsertFace(face)
 

@@ -12,6 +12,9 @@ interface CheckInRecordDao {
     @Query("SELECT * FROM check_in_records WHERE isSynced = 0 AND schoolId = :schoolId")
     suspend fun getUnsyncedRecords(schoolId: String): List<CheckInRecordEntity>
 
+    @Query("SELECT * FROM check_in_records WHERE id = :recordId LIMIT 1")
+    suspend fun getRecordByIdNoSchool(recordId: String): CheckInRecordEntity?
+
     @Query("SELECT * FROM check_in_records WHERE id = :recordId AND schoolId = :schoolId LIMIT 1")
     suspend fun getRecordById(recordId: String, schoolId: String): CheckInRecordEntity?
 

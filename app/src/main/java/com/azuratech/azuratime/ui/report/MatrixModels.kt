@@ -47,6 +47,7 @@ data class AttendanceMatrixData(
     val endDate: LocalDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()),
     val selectedClassId: String? = "ALL",
     val policy: String = "SCHOOL",
+    val selectedTabIndex: Int = 0,
     val isExporting: Boolean = false,
     val exportedFile: String? = null
 )

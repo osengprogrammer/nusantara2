@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -70,7 +71,7 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(Unit) {
-        schoolViewModel.uiEvent.collect { event ->
+        schoolViewModel.uiEvent.collect { event: UiEvent ->
             when (event) {
                 is UiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(event.message)
@@ -223,12 +224,18 @@ fun DashboardContent(
 
                 if (data.currentRole == "ADMIN" || data.currentRole == "SUPER_ADMIN") {
                     item {
-                        IntegritySummaryWidget(
-                            totalFaces = data.totalFaces,
-                            unassignedCount = data.unassignedStudents,
-                            brokenLinks = data.brokenAssignments,
-                            unsyncedCount = data.unsyncedRecords
-                        )
+                        Surface(
+                            onClick = { navController.navigate(Screen.DataDashboard.route) },
+                            color = Color.Transparent,
+                            shape = AzuraShapes.medium
+                        ) {
+                            IntegritySummaryWidget(
+                                totalFaces = data.totalFaces,
+                                unassignedCount = data.unassignedStudents,
+                                brokenLinks = data.brokenAssignments,
+                                unsyncedCount = data.unsyncedRecords
+                            )
+                        }
                     }
                 }
 

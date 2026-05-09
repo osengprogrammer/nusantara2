@@ -27,16 +27,9 @@ import com.azuratech.azuratime.ui.core.navigation.graphs.userGraph
 
 @Composable
 fun MainScreen() {
-    val context = LocalContext.current
-
-    // 🔥 Inisialisasi UserViewModel menggunakan Hilt
-    val userViewModel: UserManagementViewModel = hiltViewModel()
-    val user by userViewModel.currentUser.collectAsStateWithLifecycle()
-
     val navController = rememberNavController()
     var showZoharChat by remember { mutableStateOf(false) }
 
-    val teacherEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 

@@ -71,9 +71,11 @@ class DataIntegrityRepository @Inject constructor(
         }
     }
 
-    val conflicts: Flow<List<AttendanceConflict>> = conflictDao.getAllConflicts().map { entities: List<com.azuratech.azuratime.data.local.AttendanceConflictEntity> ->
-        entities.map { it.toDomain() }
-    }
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val conflicts: Flow<List<com.azuratech.azuratime.data.local.AttendanceConflictEntity>> = 
+        schoolIdFlow.flatMapLatest { id ->
+            conflictDao.observeConflictsBySchool(id)
+        }
 
     // =====================================================
     // 🔧 CORRECTION MODE — Return the specific people who need fixing

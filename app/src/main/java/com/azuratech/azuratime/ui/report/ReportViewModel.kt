@@ -1,220 +1,49 @@
 package com.azuratech.azuratime.ui.report
 
-import android.app.Application
-import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.*
-import com.azuratech.azuratime.data.repo.ReportRepository
-import com.azuratech.azuratime.domain.report.usecase.GetReportDataUseCase
-import com.azuratech.azuratime.domain.sync.usecase.SyncMasterDataUseCase
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.data.local.toProfile
+import com.azuratech.azuratime.data.repo.ReportRepository
+import com.azuratech.azuratime.domain.model.ReportSummaryProfile
+import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.time.Duration
-import java.time.LocalDate
 import javax.inject.Inject
 
+/**
+ * 📊 REPORT VIEW MODEL - Phase 7.10 SSOT Migration
+ * Observes ReportSummaryProfile stream directly from Room.
+ */
 @HiltViewModel
 class ReportViewModel @Inject constructor(
-    application: Application,
-    private val repository: ReportRepository,
-    private val getReportDataUseCase: GetReportDataUseCase,
-    private val syncMasterDataUseCase: SyncMasterDataUseCase,
-    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
-) : AndroidViewModel(application) {
+    private val reportRepository: ReportRepository,
+    private val sessionManager: SessionManager
+) : ViewModel() {
 
-    private val _startDate = MutableStateFlow(LocalDate.now().withDayOfMonth(1))
-    private val _endDate = MutableStateFlow(LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()))
-    private val _selectedClassId = MutableStateFlow<String?>("ALL")
-    private val _userRole = MutableStateFlow("ADMIN")
-    private val _assignedClasses = MutableStateFlow<List<String>>(emptyList())
-    private val _reportPolicy = MutableStateFlow("SCHOOL")
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val availableClasses: StateFlow<List<ClassModel>> = combine(
-        _userRole, _assignedClasses, sessionManager.activeSchoolIdFlow
-    ) { role, assigned, schoolId ->
-        Triple(role, assigned, schoolId ?: "")
-    }.flatMapLatest { (role, assigned, schoolId) ->
-        getReportDataUseCase.getAvailableClasses(schoolId, role, assigned)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val reportList: StateFlow<List<ReportSummaryProfile>> = 
+        sessionManager.activeSchoolIdFlow.filterNotNull()
+            .flatMapLatest { schoolId -> 
+                reportRepository.observeReportsByDateRange(schoolId)
+                    .map { entities -> entities.map { it.toProfile() } }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    @Suppress("UNCHECKED_CAST")
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val uiState: StateFlow<ReportUiState> =
-        combine(
-            _startDate, _endDate, _selectedClassId, _userRole, _assignedClasses, _reportPolicy, sessionManager.activeSchoolIdFlow
-        ) { args: Array<*> ->
-            val start = args[0] as LocalDate
-            val end = args[1] as LocalDate
-            val classId = args[2] as String?
-            val role = args[3] as String
-            val assigned = args[4] as List<String>
-            val policy = args[5] as String
-            val schoolId = args[6] as String? ?: ""
-            Triple(MatrixParams(start, end, classId, role, assigned, schoolId), policy, generateDateRange(start, end))
-        }
-        .debounce(200)
-        .flatMapLatest { (params, policy, dateRange) ->
-            combine(
-                getReportDataUseCase.getStudentsInReport(params.schoolId, params.role, params.classId, params.assigned),
-                repository.getCheckInRecordDao().getFilteredRecords(
-                    schoolId = params.schoolId,
-                    startDate = params.start,
-                    endDate = params.end,
-                    classId = params.classId,
-                    assignedIds = params.assigned
-                ),
-                availableClasses,
-                _startDate,
-                _endDate,
-                _selectedClassId,
-                _reportPolicy
-            ) { results: Array<*> ->
-                val students = results[0] as List<FaceEntity>
-                val logs = results[1] as List<CheckInRecordEntity>
-                val classes = results[2] as List<ClassModel>
-                val start = results[3] as LocalDate
-                val end = results[4] as LocalDate
-                val classId = results[5] as String?
-                val policy = results[6] as String
-
-                val rows = buildMatrix(students, logs, dateRange, policy, classes.associate { it.id to it.name })
-                
-                ReportUiState.Success(
-                    ReportData(
-                        rows = rows,
-                        availableClasses = classes,
-                        dateRange = dateRange,
-                        startDate = start,
-                        endDate = end,
-                        selectedClassId = classId,
-                        policy = policy
-                    )
-                )
+    fun generateReport(startDate: Long, endDate: Long) {
+        viewModelScope.launch {
+            val result = reportRepository.generateReport(startDate, endDate)
+            if (result is Result.Success) {
+                _uiEvent.emit(UiEvent.ShowSnackbar("Report generated"))
+            } else if (result is Result.Failure) {
+                _uiEvent.emit(UiEvent.ShowSnackbar("Gagal: ${result.error.message}"))
             }
         }
-        .flowOn(Dispatchers.Default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReportUiState.Loading)
-
-    // --- The Engine ---
-    private suspend fun buildMatrix(
-        students: List<FaceEntity>,
-        logs: List<CheckInRecordEntity>,
-        dateRange: List<LocalDate>,
-        policy: String,
-        classMap: Map<String, String>
-    ): List<MatrixRowModel> = withContext(Dispatchers.Default) {
-        val logsByFace = logs.groupBy { it.faceId }
-
-        students.map { student ->
-            var aggregateMinutes = 0L
-            var h = 0; var s = 0; var i = 0; var a = 0
-
-            val cells = dateRange.map { date ->
-                val dailyLogs = logsByFace[student.faceId]?.filter { it.attendanceDate == date }?.sortedBy { it.checkInTime } ?: emptyList()
-                val status = dailyLogs.firstOrNull()?.status ?: if (!date.isAfter(LocalDate.now())) "A" else "-"
-
-                var dailyMinutes = 0L
-                if (dailyLogs.size >= 2) {
-                    for (idx in 0 until (dailyLogs.size - 1) step 2) {
-                        val startTime = dailyLogs[idx].checkInTime
-                        val endTime = dailyLogs[idx + 1].checkInTime
-                        if (startTime != null && endTime != null && endTime.isAfter(startTime)) {
-                            dailyMinutes += Duration.between(startTime, endTime).toMinutes()
-                        }
-                    }
-                }
-
-                aggregateMinutes += dailyMinutes
-                when (status) {
-                    "H" -> h++; "S" -> s++; "I" -> i++; "A" -> a++
-                }
-
-                val cellText = getCellText(policy, dailyMinutes, status, dailyLogs)
-                val (textColor, bgColor) = getCellColors(dailyMinutes, status)
-
-                MatrixCellModel(text = cellText, textColor = textColor, bgColor = bgColor, isBold = dailyMinutes > 0)
-            }
-
-            val totalHours = if (policy != "SCHOOL") {
-                val hours = aggregateMinutes / 60
-                val mins = aggregateMinutes % 60
-                if (policy == "HOURLY") String.format("%d.%02d", hours, mins) else "${hours}j ${mins}m"
-            } else ""
-
-            MatrixRowModel(
-                studentId = student.faceId,
-                studentName = student.name,
-                studentClass = logsByFace[student.faceId]?.firstOrNull()?.let { classMap[it.classId] } ?: "Tanpa Kelas",
-                cells = cells,
-                totalHours = totalHours,
-                summaryH = h.toString(),
-                summaryS = s.toString(),
-                summaryI = i.toString(),
-                summaryA = a.toString(),
-                estimatedSalary = "Rp 0" // Salary logic can be added here
-            )
-        }
-    }
-
-    private fun getCellText(policy: String, dailyMinutes: Long, status: String, logs: List<CheckInRecordEntity>): String {
-        return when (policy.trim().uppercase()) {
-            "HOURLY" -> when {
-                dailyMinutes > 0 -> {
-                    val hours = dailyMinutes / 60
-                    val mins = dailyMinutes % 60
-                    String.format("%d.%02d", hours, mins)
-                }
-                status == "A" || status == "H" -> "0"
-                else -> status
-            }
-            "GARMENT", "FACTORY" -> when {
-                dailyMinutes > 0 -> "${dailyMinutes / 60}j ${dailyMinutes % 60}m"
-                status == "H" -> "Incomp."
-                else -> status
-            }
-            else -> status // SCHOOL / OFFICE
-        }
-    }
-
-    private fun getCellColors(dailyMinutes: Long, status: String): Pair<Color, Color> {
-        return when {
-            dailyMinutes > 0 -> Color(0xFF2E7D32) to Color(0xFFE8F5E9)
-            status == "S" -> Color(0xFFF9A825) to Color(0xFFFFF9C4)
-            status == "I" -> Color(0xFF1565C0) to Color(0xFFE3F2FD)
-            status == "A" -> Color(0xFFC62828) to Color(0xFFFFEBEE)
-            else -> Color.Gray.copy(alpha = 0.4f) to Color.Transparent
-        }
-    }
-
-    private fun generateDateRange(start: LocalDate, end: LocalDate): List<LocalDate> {
-        val dates = mutableListOf<LocalDate>()
-        var current = start
-        while (!current.isAfter(end)) {
-            dates.add(current)
-            current = current.plusDays(1)
-        }
-        return dates
-    }
-
-    fun setClassId(id: String?) { _selectedClassId.value = id }
-    fun setDateRange(start: LocalDate, end: LocalDate) {
-        _startDate.value = start
-        _endDate.value = end
-    }
-    fun setUserRole(role: String) { _userRole.value = role }
-    fun setAssignedClasses(classes: List<String>) { _assignedClasses.value = classes }
-    fun setPolicy(policy: String) { _reportPolicy.value = policy }
-
-    fun refreshMasterData() {
-        viewModelScope.launch { syncMasterDataUseCase() }
     }
 }

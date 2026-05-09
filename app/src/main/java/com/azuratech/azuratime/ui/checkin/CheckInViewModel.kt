@@ -26,10 +26,7 @@ import java.time.LocalDate
 class CheckInViewModel @Inject constructor(
     application: Application,
     private val repository: CheckInRepository,
-    private val getCheckInRecordsUseCase: GetCheckInRecordsUseCase,
     private val processCheckInUseCase: ProcessCheckInUseCase,
-    private val updateCheckInRecordUseCase: UpdateCheckInRecordUseCase,
-    private val deleteCheckInRecordUseCase: DeleteCheckInRecordUseCase,
     private val getActiveSchoolContextUseCase: GetActiveSchoolContextUseCase,
     private val sessionManager: SessionManager,
     private val exportUtils: ExportUtils
@@ -94,21 +91,21 @@ class CheckInViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val checkInRecords: StateFlow<List<CheckInRecord>> =
-        _filterParams
-            .flatMapLatest { params ->
-                val targetClassId = if (params.classId == "ALL" || params.classId.isNullOrBlank()) null else params.classId
-                val filters = CheckInFilters(
-                    name = params.name,
-                    startDate = params.start,
-                    endDate = params.end,
-                    userId = params.userId,
-                    classId = targetClassId,
-                    assignedIds = params.assignedIds
-                )
-                getCheckInRecordsUseCase(filters)
-            }
-            .map { it.getOrNull() ?: emptyList() }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        combine(sessionManager.activeSchoolIdFlow.filterNotNull(), _filterParams) { schoolId, params ->
+            schoolId to params
+        }.flatMapLatest { (schoolId, params) ->
+            val targetClassId = if (params.classId == "ALL" || params.classId.isNullOrBlank()) null else params.classId
+            repository.getCheckInRecords(
+                name = params.name,
+                startDate = params.start,
+                endDate = params.end,
+                userId = params.userId,
+                classId = targetClassId,
+                assignedIds = params.assignedIds,
+                schoolId = schoolId
+            ).map { entities -> entities.map { it.toDomain() } }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun processScannedFace(scannedFaceId: String, studentName: String, onResult: (isSuccess: Boolean, message: String) -> Unit) {
         viewModelScope.launch {
@@ -167,30 +164,28 @@ class CheckInViewModel @Inject constructor(
     fun updateNameFilter(name: String) { _filterParams.value = _filterParams.value.copy(name = name) }
     
     fun updateRecord(record: CheckInRecord) { 
-        viewModelScope.launch { updateCheckInRecordUseCase(record) } 
+        viewModelScope.launch { 
+            repository.updateRecord(record.recordId, record.classId, record.className)
+        } 
     }
     
     fun addRecord(record: CheckInRecord) { 
         viewModelScope.launch { 
-            val params = ProcessCheckInParams(
-                faceId = record.studentId,
-                studentName = record.studentName,
-                teacherEmail = record.teacherEmail,
-                activeClassId = record.classId,
-                studentClassIds = record.classId.let { listOf(it) }
-            )
-            processCheckInUseCase(params)
+            repository.saveRecord(record)
         } 
     }
     
     fun updateRecordClass(record: CheckInRecord, selectedClass: ClassModel) {
         viewModelScope.launch { 
-            updateCheckInRecordUseCase.updateClass(record.recordId, selectedClass.id, selectedClass.name) 
+            repository.updateRecord(record.recordId, selectedClass.id, selectedClass.name) 
         }
     }
     
     fun deleteRecord(record: CheckInRecord) { 
-        viewModelScope.launch { deleteCheckInRecordUseCase(record.recordId) } 
+        viewModelScope.launch { 
+            val schoolId = sessionManager.getActiveSchoolId() ?: ""
+            repository.deleteRecord(record.recordId, schoolId) 
+        } 
     }
 
     fun exportRecords(records: List<CheckInRecord>) {

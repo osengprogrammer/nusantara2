@@ -29,7 +29,7 @@ fun SchoolListScreen(
     onSchoolClick: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val schools by viewModel.schools.collectAsStateWithLifecycle()
     val availableClasses by viewModel.availableClasses.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -42,26 +42,12 @@ fun SchoolListScreen(
             }
         }
     ) {
-        when (val state = uiState) {
-            is SchoolUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            is SchoolUiState.Success -> {
-                SchoolList(
-                    schools = state.schools,
-                    onSchoolClick = onSchoolClick,
-                    onDeleteSchool = { viewModel.deleteSchool(it.id) },
-                    onAddSchool = { showAddDialog = true }
-                )
-            }
-            is SchoolUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error: ${state.error.message}", color = MaterialTheme.colorScheme.error)
-                }
-            }
-        }
+        SchoolList(
+            schools = schools,
+            onSchoolClick = onSchoolClick,
+            onDeleteSchool = { viewModel.deleteSchool(it.id) },
+            onAddSchool = { showAddDialog = true }
+        )
     }
 
     if (showAddDialog) {
@@ -248,3 +234,4 @@ fun SchoolItem(
         }
     }
 }
+

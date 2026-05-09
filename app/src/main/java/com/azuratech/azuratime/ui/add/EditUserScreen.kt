@@ -1,5 +1,10 @@
 package com.azuratech.azuratime.ui.add
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.provider.MediaStore
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,6 +41,25 @@ fun EditUserScreen(
     var showFaceCapture by remember { mutableStateOf(false) }
     var isClassExpanded by remember { mutableStateOf(false) }
 
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            try {
+                val bitmap = if (Build.VERSION.SDK_INT < 28) {
+                    @Suppress("DEPRECATION")
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+                } else {
+                    val source = ImageDecoder.createSource(context.contentResolver, it)
+                    ImageDecoder.decodeBitmap(source)
+                }
+                viewModel.onPhotoUploaded(bitmap)
+            } catch (e: Exception) {
+                context.showToast("Gagal memuat gambar")
+            }
+        }
+    }
+
     LaunchedEffect(faceId) {
         viewModel.loadStudentForEdit(faceId)
     }
@@ -58,7 +82,7 @@ fun EditUserScreen(
         onClassSelected = { id, name -> viewModel.onClassSelected(id, name) },
         onCaptureEmbedding = { showFaceCapture = true },
         onCapturePhoto = { showFaceCapture = true },
-        onUploadPhoto = { /* TODO */ },
+        onUploadPhoto = { galleryLauncher.launch("image/*") },
         onSubmit = {
             viewModel.saveStudent()
                 onNavigateBack()

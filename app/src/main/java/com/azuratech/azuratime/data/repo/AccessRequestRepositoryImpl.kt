@@ -20,15 +20,21 @@ class AccessRequestRepositoryImpl @Inject constructor(
 
     private val accessRequestDao = database.accessRequestDao()
 
-    override suspend fun submitRequest(profile: AccessRequestProfile): Result<Unit> {
+    override suspend fun submitRequest(userId: String, schoolId: String, schoolName: String): Result<Unit> {
         return try {
+            val requestId = "req_${userId}_${schoolId}_${System.currentTimeMillis()}"
             database.withTransaction {
-                accessRequestDao.insertRequest(profile.toEntity().copy(
+                accessRequestDao.insertRequest(AccessRequestEntity(
+                    requestId = requestId,
+                    requesterId = userId,
+                    schoolId = schoolId,
+                    schoolName = schoolName,
                     status = AccessRequestStatus.PENDING,
                     syncStatus = SyncStatus.PENDING_INSERT,
+                    createdAt = System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis()
                 ))
-                syncManager.enqueueAccessSync(profile.requesterId)
+                syncManager.enqueueAccessSync(userId)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -55,9 +61,7 @@ class AccessRequestRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeRequestsByUser(userId: String): Flow<List<AccessRequestProfile>> {
-        return accessRequestDao.observeRequestsByUser(userId).map { list ->
-            list.map { it.toProfile() }
-        }
+    override fun observeRequestsByUser(userId: String): Flow<List<AccessRequestEntity>> {
+        return accessRequestDao.observeRequestsByUser(userId)
     }
 }

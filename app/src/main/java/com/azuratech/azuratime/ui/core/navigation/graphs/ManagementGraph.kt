@@ -10,8 +10,11 @@ import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.Screen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.ui.add.*
+import com.azuratech.azuratime.ui.biometric.BiometricScreen
 import com.azuratech.azuratime.ui.classes.*
 import com.azuratech.azuratime.ui.admin.PendingSchoolsScreen
+import com.azuratech.azuratime.ui.data.DataIntegrityScreen
+import com.azuratech.azuratime.ui.data.DataManagementScreen
 
 fun NavGraphBuilder.managementGraph(
     navController: NavController
@@ -26,6 +29,7 @@ fun NavGraphBuilder.managementGraph(
             RegistrationMenuScreen(
                 onNavigateToAddUser = { navController.navigate(Screen.AddUser.route) },
                 onNavigateToBulkRegister = { navController.navigate(Screen.BulkRegister.route) },
+                onNavigateToBiometricManagement = { navController.navigate(Screen.BiometricManagement.route) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -40,15 +44,28 @@ fun NavGraphBuilder.managementGraph(
                 bulkViewModel = hiltViewModel()
             )
         }
-        composable(Screen.Manage.route) {
-            FaceListScreen(
-                onEditUser = { id -> navController.navigate(Screen.EditUser.createRoute(id)) },
+        composable(Screen.BiometricManagement.route) {
+            BiometricScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.FaceListBarcode.route) {
-            FaceListBarcodeScreen(
+        composable(Screen.Manage.route) {
+            FaceListScreen(
+                onEditUser = { faceId -> navController.navigate(Screen.EditUser.createRoute(faceId)) },
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.DataDashboard.route) {
+            DataIntegrityScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.DataManagement.route) {
+            DataManagementScreen(
+                initialDataType = it.arguments?.getString("dataType") ?: "FACES",
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToClassList = { navController.navigate(Screen.Manage.route) },
+                registerViewModel = hiltViewModel()
             )
         }
         composable(

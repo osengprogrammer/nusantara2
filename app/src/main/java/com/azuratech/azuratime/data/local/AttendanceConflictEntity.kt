@@ -7,7 +7,13 @@ import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
  * Persistence entity for Attendance Conflicts.
  * Stores both local and cloud versions of a check-in record for resolution.
  */
-@Entity(tableName = "attendance_conflicts")
+@Entity(
+    tableName = "attendance_conflicts",
+    indices = [
+        Index(value = ["local_schoolId"]),
+        Index(value = ["cloud_schoolId"])
+    ]
+)
 data class AttendanceConflictEntity(
     @PrimaryKey val conflictId: String,
     @Embedded(prefix = "local_") val local: CheckInRecordEntity,
@@ -26,6 +32,9 @@ data class AttendanceConflictEntity(
 interface AttendanceConflictDao {
     @Query("SELECT * FROM attendance_conflicts WHERE conflictId = :conflictId")
     suspend fun getConflictById(conflictId: String): AttendanceConflictEntity?
+
+    @Query("SELECT * FROM attendance_conflicts WHERE local_schoolId = :schoolId")
+    fun observeConflictsBySchool(schoolId: String): kotlinx.coroutines.flow.Flow<List<AttendanceConflictEntity>>
 
     @Query("SELECT * FROM attendance_conflicts")
     fun getAllConflicts(): kotlinx.coroutines.flow.Flow<List<AttendanceConflictEntity>>

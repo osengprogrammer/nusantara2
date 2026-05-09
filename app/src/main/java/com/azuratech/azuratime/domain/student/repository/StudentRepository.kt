@@ -29,4 +29,14 @@ interface StudentRepository {
      * Update the sync status of a student profile after a remote operation.
      */
     suspend fun updateSyncStatus(studentId: String, status: SyncStatus): Result<Unit>
+
+    /**
+     * 🔥 SSOT Push: Upload all local changes to cloud.
+     */
+    suspend fun pushPendingProfiles(): Result<Unit>
+
+    /**
+     * 🔥 SSOT Auto-Heal: Ensure every face has a student identity.
+     */
+    suspend fun autoHealStudentIdentities(schoolId: String): Result<Unit>
 }

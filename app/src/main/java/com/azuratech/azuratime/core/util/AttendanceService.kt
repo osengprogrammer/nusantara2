@@ -25,7 +25,6 @@ object AttendanceService {
         activeClassId: String? = null,
         activeClassName: String? = null,
         status: String = "H",
-        attendanceDate: LocalDate = LocalDate.now(),
         checkInTime: LocalDateTime? = LocalDateTime.now()
     ): CheckInRecord {
         val dateTime = checkInTime ?: LocalDateTime.now()

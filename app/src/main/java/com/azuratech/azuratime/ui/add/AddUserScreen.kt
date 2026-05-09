@@ -1,5 +1,11 @@
 package com.azuratech.azuratime.ui.add
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.provider.MediaStore
+import com.azuratech.azuratime.core.util.showToast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,11 +31,30 @@ fun AddUserScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val classes by viewModel.classes.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
     var showFaceCapture by remember { mutableStateOf(false) }
     var captureMode by remember { mutableStateOf(CaptureMode.PHOTO) }
     var isClassExpanded by remember { mutableStateOf(false) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            try {
+                val bitmap = if (Build.VERSION.SDK_INT < 28) {
+                    @Suppress("DEPRECATION")
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+                } else {
+                    val source = ImageDecoder.createSource(context.contentResolver, it)
+                    ImageDecoder.decodeBitmap(source)
+                }
+                viewModel.onPhotoUploaded(bitmap)
+            } catch (e: Exception) {
+                context.showToast("Gagal memuat gambar")
+            }
+        }
+    }
 
     // Handle submission feedback
     LaunchedEffect(Unit) {
@@ -64,7 +89,7 @@ fun AddUserScreen(
             captureMode = CaptureMode.PHOTO
             showFaceCapture = true 
         },
-        onUploadPhoto = { /* TODO */ },
+        onUploadPhoto = { galleryLauncher.launch("image/*") },
         onSubmit = {
             viewModel.saveStudent()
         },

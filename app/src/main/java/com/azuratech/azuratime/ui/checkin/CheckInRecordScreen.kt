@@ -35,15 +35,12 @@ fun CheckInRecordScreen(
     userViewModel: UserManagementViewModel,
     classViewModel: ClassViewModel
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    
     // 1. Observation
-    val globalClasses by classViewModel.classes.collectAsStateWithLifecycle(emptyList())
+    val globalClasses by classViewModel.classes.collectAsStateWithLifecycle()
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()
     val records by checkInViewModel.checkInRecords.collectAsStateWithLifecycle()
     val filterParams by checkInViewModel.filterParams.collectAsStateWithLifecycle()
-    val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle(emptyList())
+    val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
 
     var editingRecord by remember { mutableStateOf<CheckInRecord?>(null) }
     var showFilters by remember { mutableStateOf(false) }

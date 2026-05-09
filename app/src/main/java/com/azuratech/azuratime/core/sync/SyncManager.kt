@@ -94,4 +94,30 @@ class SyncManager @Inject constructor(
         
         android.util.Log.d("SyncManager", "Enqueued school sync for school $schoolId")
     }
+
+    /**
+     * Enqueue a global synchronization for the current active school.
+     */
+    fun enqueueSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(constraints)
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                10,
+                TimeUnit.SECONDS
+            )
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "AzuraManualSync",
+            ExistingWorkPolicy.REPLACE,
+            request
+        )
+        
+        android.util.Log.d("SyncManager", "Enqueued global manual sync")
+    }
 }

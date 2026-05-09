@@ -13,7 +13,7 @@ mlkit-face-detection = "16.1.5"
 tensorflow-lite = "2.14.0"
 tensorflow-lite-support = "0.4.3"
 kspVersion = "1.9.22-1.0.16"
-composeCompiler = "1.5.10"
+composeCompiler = "1.5.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

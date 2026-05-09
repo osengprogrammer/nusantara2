@@ -2,15 +2,11 @@ package com.azuratech.azuratime.ui.add
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.FaceEntity
-import com.azuratech.azuratime.data.local.FaceWithDetails
+import com.azuratech.azuratime.data.local.StudentEntity
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.domain.assignment.usecase.AssignStudentToClassUseCase
-import com.azuratech.azuratime.domain.assignment.usecase.RemoveStudentFromClassUseCase
-import com.azuratech.azuratime.domain.classes.usecase.GetClassesUseCase
-import com.azuratech.azuratime.domain.face.usecase.DeleteFaceUseCase
-import com.azuratech.azuratime.domain.face.usecase.GetFacesWithDetailsUseCase
-import com.azuratech.azuratime.domain.face.usecase.UpdateFaceUseCase
+import com.azuratech.azuratime.domain.student.repository.StudentRepository
+import com.azuratech.azuratime.domain.model.StudentProfile
+import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,27 +15,19 @@ import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
 
-import com.azuratech.azuratime.domain.student.usecase.DeleteStudentUseCase
-import com.azuratech.azuratime.domain.student.usecase.UpdateStudentClassUseCase
-
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class FaceListViewModel @Inject constructor(
-    private val getFacesWithDetailsUseCase: GetFacesWithDetailsUseCase,
-    private val updateFaceUseCase: UpdateFaceUseCase,
-    private val deleteFaceUseCase: DeleteFaceUseCase,
-    private val getClassesUseCase: GetClassesUseCase,
-    private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
-    private val removeStudentFromClassUseCase: RemoveStudentFromClassUseCase,
-    private val updateStudentClassUseCase: UpdateStudentClassUseCase,
-    private val deleteStudentUseCase: DeleteStudentUseCase,
-    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
+    private val studentRepository: StudentRepository,
+    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
+    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
+    private val syncManager: com.azuratech.azuratime.core.sync.SyncManager
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
-    private val _selectedClassName = MutableStateFlow<String?>(null)
-    private val _editingStudent = MutableStateFlow<FaceWithDetails?>(null)
-    private val _assigningStudent = MutableStateFlow<FaceEntity?>(null)
+    private val _selectedClassId = MutableStateFlow<String?>(null)
+    private val _editingStudent = MutableStateFlow<StudentProfile?>(null)
+    private val _assigningStudent = MutableStateFlow<StudentProfile?>(null)
     private val _deletingStudentId = MutableStateFlow<String?>(null)
     private val _refreshTrigger = MutableStateFlow(System.currentTimeMillis())
 
@@ -49,24 +37,35 @@ class FaceListViewModel @Inject constructor(
     init {
         // Refresh when school changes
         sessionManager.activeSchoolIdFlow
-            .onEach { loadStudents() }
+            .onEach { schoolId ->
+                loadStudents()
+                // 🔥 Fresh Install Guard: Trigger sync if local data might be missing
+                if (schoolId != null) {
+                    syncManager.enqueueSync()
+                }
+            }
             .launchIn(viewModelScope)
     }
+
+    private fun StudentEntity.toProfile(): StudentProfile = StudentProfile(
+        studentId = studentId,
+        name = name,
+        schoolId = schoolId,
+        classIds = listOfNotNull(classId),
+        studentCode = studentCode,
+        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE,
+        createdAt = createdAt
+    )
 
     fun loadStudents() {
         println("🔄 ViewModel: Refreshing student list...")
         _refreshTrigger.value = System.currentTimeMillis()
     }
 
-    // Data flows from UseCases
-    private val _allFacesFlow = _refreshTrigger.flatMapLatest {
-        getFacesWithDetailsUseCase()
-    }
-
     private val _allClassesFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> 
-            getClassesUseCase(schoolId) 
+            schoolRepository.observeClasses(schoolId) 
         }
         .map { result ->
             when(result) {
@@ -81,63 +80,44 @@ class FaceListViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    // The "Search Machine" combines all data sources with the search query
-    private val _filteredStudents = combine(
+    // SSOT: Direct stream from Repository
+    val faceList: StateFlow<List<StudentProfile>> = combine(
         _searchQuery.debounce(300),
-        _selectedClassName,
-        _allFacesFlow,
-        _refreshTrigger
-    ) { query, className, facesResult, _ ->
-        val faces = facesResult.getOrNull() ?: emptyList()
-        faces.filter { face ->
-            val matchesQuery = if (query.isBlank()) true else face.face.name.contains(query, ignoreCase = true)
-            val matchesClass = if (className == null) true else face.className?.contains(className, ignoreCase = true) == true
+        _selectedClassId,
+        _refreshTrigger.flatMapLatest { studentRepository.getStudentProfiles() }
+    ) { query, classId, profiles ->
+        profiles.filter { profile ->
+            val matchesQuery = if (query.isBlank()) true else profile.name.contains(query, ignoreCase = true)
+            val matchesClass = if (classId == null) true else profile.classIds.contains(classId)
             matchesQuery && matchesClass
         }
-    }
-
-    // This flow creates the display-ready items
-    private val _studentDisplayItems = _filteredStudents.map { students ->
-        students.distinctBy { it.face.faceId }.map { student ->
-            StudentDisplayItem(
-                faceWithDetails = student,
-                assignedClassNames = student.className ?: "Belum ada kelas",
-                isBiometricReady = student.face.photoUrl?.let { it.startsWith("http") || File(it).exists() } == true,
-                assignedClassIds = student.classIds
-            )
-        }
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     val uiState: StateFlow<FaceListUiState> = combine(
-        _studentDisplayItems,
-        _allClassesFlow,
+        faceList,
+        allClasses,
         _searchQuery,
-        _selectedClassName,
+        _selectedClassId,
         _editingStudent,
         _assigningStudent,
         _deletingStudentId
     ) { args ->
-        @Suppress("UNCHECKED_CAST")
-        val students = args[0] as List<StudentDisplayItem>
-        @Suppress("UNCHECKED_CAST")
-        val allClasses = args[1] as List<ClassModel>
         val query = args[2] as String
-        val className = args[3] as String?
-        @Suppress("UNCHECKED_CAST")
-        val editing = args[4] as FaceWithDetails?
-        @Suppress("UNCHECKED_CAST")
-        val assigning = args[5] as FaceEntity?
-        @Suppress("UNCHECKED_CAST")
+        val classId = args[3] as String?
         val deletingId = args[6] as String?
 
         FaceListUiState.Success(
             FaceListData(
-                students = students,
-                allClasses = allClasses,
+                students = emptyList(), // Screen now observes faceList directly
+                allClasses = args[1] as List<ClassModel>,
                 searchQuery = query,
-                selectedClassName = className,
-                studentForQuickEdit = editing,
-                studentForClassAssignment = assigning,
+                selectedClassName = classId,
+                studentForQuickEdit = null, // Logic moved to StudentProfile
+                studentForClassAssignment = null,
                 studentForDeletion = deletingId
             )
         )
@@ -153,15 +133,15 @@ class FaceListViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
-    fun onClassFilterChanged(className: String?) {
-        _selectedClassName.value = className
+    fun onClassFilterChanged(classId: String?) {
+        _selectedClassId.value = classId
     }
 
-    fun onEditStudentClicked(student: FaceWithDetails) {
+    fun onEditStudentClicked(student: StudentProfile) {
         _editingStudent.value = student
     }
 
-    fun onAssignClassesClicked(student: FaceEntity) {
+    fun onAssignClassesClicked(student: StudentProfile) {
         _assigningStudent.value = student
     }
 
@@ -171,15 +151,14 @@ class FaceListViewModel @Inject constructor(
         _deletingStudentId.value = null
     }
 
-    fun onSaveChanges(updatedFace: FaceEntity) {
+    fun onSaveChanges(profile: StudentProfile) {
         viewModelScope.launch {
-            updateFaceUseCase(updatedFace)
+            studentRepository.saveProfile(profile.copy(syncStatus = SyncStatus.PENDING_UPDATE))
             onDismissDialog()
         }
     }
 
     fun requestDeleteStudent(studentId: String) {
-        println("🗑️ ViewModel: Requesting deletion for studentId=$studentId")
         _deletingStudentId.value = studentId
     }
 
@@ -190,23 +169,12 @@ class FaceListViewModel @Inject constructor(
     fun confirmDeleteStudent() {
         viewModelScope.launch {
             val studentId = _deletingStudentId.value ?: return@launch
-            println("🗑️ ViewModel: Confirming deletion for studentId=$studentId")
-            
-            val currentState = uiState.value
-            val faceId = if (currentState is FaceListUiState.Success) {
-                currentState.data.students.find { it.faceWithDetails.face.studentId == studentId }?.faceWithDetails?.face?.faceId
-            } else null
-            
-            if (faceId != null) {
-                val result = deleteStudentUseCase(studentId, faceId)
-                if (result is Result.Success) {
-                    _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("Siswa berhasil dihapus"))
-                    loadStudents()
-                } else if (result is Result.Failure) {
-                    _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("Gagal hapus: ${result.error.message}"))
-                }
-            } else {
-                android.util.Log.e("FaceListViewModel", "❌ FaceId not found for studentId=$studentId")
+            val result = studentRepository.deleteProfile(studentId)
+            if (result is Result.Success) {
+                _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("Siswa berhasil dihapus"))
+                loadStudents()
+            } else if (result is Result.Failure) {
+                _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("Gagal hapus: ${result.error.message}"))
             }
             onDismissDialog()
         }
@@ -214,33 +182,38 @@ class FaceListViewModel @Inject constructor(
 
     fun onAssignStudentToClass(studentId: String, classId: String) {
         viewModelScope.launch {
-            println("🎓 ViewModel: Assigning studentId=$studentId to classId=$classId")
-            
-            val activeSchoolId = sessionManager.getActiveSchoolId()
-            val result = updateStudentClassUseCase(studentId, classId, activeSchoolId)
-            
+            val profiles = faceList.value
+            val profile = profiles.find { it.studentId == studentId } ?: return@launch
+            val updatedProfile = profile.copy(
+                classIds = (profile.classIds + classId).distinct(),
+                syncStatus = SyncStatus.PENDING_UPDATE
+            )
+            val result = studentRepository.saveProfile(updatedProfile)
             if (result is Result.Success) {
                 _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("Kelas berhasil diperbarui"))
                 loadStudents()
                 onDismissDialog()
-            } else if (result is Result.Failure) {
-                _uiEvent.emit(com.azuratech.azuratime.ui.core.UiEvent.ShowSnackbar("Gagal update kelas: ${result.error.message}"))
             }
         }
     }
 
     fun onToggleStudentClassAssignment(studentId: String, classId: String, isChecked: Boolean) {
         viewModelScope.launch {
-            try {
-                if (isChecked) {
-                    onAssignStudentToClass(studentId, classId)
-                } else {
-                    removeStudentFromClassUseCase(studentId, classId)
-                    loadStudents()
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("FaceListViewModel", "Gagal merubah kelas: ${e.message}")
+            val profiles = faceList.value
+            val profile = profiles.find { it.studentId == studentId } ?: return@launch
+            val newClassIds = if (isChecked) {
+                (profile.classIds + classId).distinct()
+            } else {
+                profile.classIds.filter { it != classId }
             }
+            
+            val updatedProfile = profile.copy(
+                classIds = newClassIds,
+                syncStatus = SyncStatus.PENDING_UPDATE
+            )
+            studentRepository.saveProfile(updatedProfile)
+            loadStudents()
         }
     }
 }
+

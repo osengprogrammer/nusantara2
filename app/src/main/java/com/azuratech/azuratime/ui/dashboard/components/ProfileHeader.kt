@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Logout
 
 
 @Composable
@@ -55,7 +55,7 @@ fun ProfileHeader(
             }
             IconButton(onClick = onLogout) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Filled.Logout,
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
                     contentDescription = "Logout"
                 )
             }

@@ -26,11 +26,14 @@ fun AttendanceMatrixContent(
     onDateRangeSelected: (LocalDate, LocalDate) -> Unit,
     onClassSelected: (String?) -> Unit,
     onPolicySelected: (String) -> Unit,
+    onTabSelected: (Int) -> Unit,
+    onBack: () -> Unit,
     onCellClick: (String, String, LocalDate) -> Unit,
     onExportClick: () -> Unit
 ) {
     AzuraScreen(
         title = "Rekap Kehadiran",
+        onBack = onBack,
         actions = {
             if (data.isExporting) {
                 CircularProgressIndicator(
@@ -65,10 +68,10 @@ fun AttendanceMatrixContent(
                 )
 
                 ReportTabSection(
-                    selectedTabIndex = 0,
+                    selectedTabIndex = data.selectedTabIndex,
                     historyCount = 0,
                     currentPolicy = data.policy,
-                    onTabSelected = { /* TODO */ },
+                    onTabSelected = onTabSelected,
                     onPolicySelected = onPolicySelected
                 )
 
@@ -104,6 +107,8 @@ fun AttendanceMatrixContentSuccessPreview() {
                 onDateRangeSelected = { _, _ -> },
                 onClassSelected = {},
                 onPolicySelected = {},
+                onTabSelected = {},
+                onBack = {},
                 onCellClick = { _, _, _ -> },
                 onExportClick = {}
             )
@@ -122,6 +127,8 @@ fun AttendanceMatrixContentLoadingPreview() {
                 onDateRangeSelected = { _, _ -> },
                 onClassSelected = {},
                 onPolicySelected = {},
+                onTabSelected = {},
+                onBack = {},
                 onCellClick = { _, _, _ -> },
                 onExportClick = {}
             )

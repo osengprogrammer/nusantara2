@@ -2,6 +2,7 @@ package com.azuratech.azuratime.domain.user.usecase
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.domain.model.MembershipStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,7 +12,8 @@ import javax.inject.Inject
  * UseCase to handle user cancelling a pending join request.
  */
 class CancelJoinRequestUseCase @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val syncManager: SyncManager
 ) {
     suspend operator fun invoke(
         userId: String,
@@ -27,7 +29,8 @@ class CancelJoinRequestUseCase @Inject constructor(
                 role = ""
             )
             
-            // TODO: Trigger ProfileSyncWorker.enqueue(userId) for background Firestore update
+            // 🔥 Trigger background sync
+            syncManager.enqueueProfileSync(userId)
             
             Result.Success(Unit)
         } catch (e: Exception) {

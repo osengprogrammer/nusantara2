@@ -21,10 +21,10 @@ fun ManualAttendanceScreen(
     initialDate: String = "",
     onBack: () -> Unit
 ) {
-    val faces by faceViewModel.faceList.collectAsStateWithLifecycle(emptyList())
+    val faces by faceViewModel.faceList.collectAsStateWithLifecycle()
     val currentUser by userViewModel.currentUser.collectAsStateWithLifecycle()
-    val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle(emptyList())
-    val globalClasses by classViewModel.classes.collectAsStateWithLifecycle(emptyList())
+    val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
+    val globalClasses by classViewModel.classes.collectAsStateWithLifecycle()
 
     // Role-Based Class Access
     val isAdmin = currentUser?.memberships?.get(currentUser?.activeSchoolId)?.role == "ADMIN"
@@ -78,7 +78,6 @@ fun ManualAttendanceScreen(
                     activeClassId = selectedClass?.id,
                     activeClassName = selectedClass?.name ?: "Umum / Tanpa Kelas",
                     status = selectedStatus,
-                    attendanceDate = selectedDate,
                     checkInTime = finalDateTime
                 )
                 checkInViewModel.addRecord(newRecord)

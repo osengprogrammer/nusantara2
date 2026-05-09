@@ -1,10 +1,14 @@
 package com.azuratech.azuratime.ui.membership
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Refresh
@@ -13,11 +17,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel // 🔥 Gunakan Hilt
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.boot.BootViewModel
+import com.azuratech.azuratime.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.domain.model.SyncStatus
 
 // 🔥 Azura Design System Imports
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
@@ -28,14 +36,13 @@ fun MembershipScreen(
     email: String,
     onApproved: () -> Unit,
     onLogout: () -> Unit
-    // ❌ FIX: Parameter factory dihapus
 ) {
-    // 🔥 FIX: Inisialisasi menggunakan Hilt
     val membershipViewModel: MembershipViewModel = hiltViewModel()
     val bootViewModel: BootViewModel = hiltViewModel()
 
-    val state by membershipViewModel.state.collectAsState()
-    val memberships by membershipViewModel.memberships.collectAsState()
+    val state by membershipViewModel.state.collectAsStateWithLifecycle()
+    val memberships by membershipViewModel.memberships.collectAsStateWithLifecycle()
+    val accessRequests by membershipViewModel.accessRequests.collectAsStateWithLifecycle()
 
     LaunchedEffect(email) {
         membershipViewModel.checkMembership(email)
@@ -43,6 +50,7 @@ fun MembershipScreen(
 
     LaunchedEffect(state) {
         if (state is MembershipState.Approved) {
+            membershipViewModel.activateMembership()
             bootViewModel.recheck()
             onApproved()
         }
@@ -57,7 +65,7 @@ fun MembershipScreen(
             
             if (currentState is MembershipState.Loading) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            } else if (memberships != null && memberships!!.isEmpty()) {
+            } else if (memberships.isEmpty() && accessRequests.isEmpty()) {
                 EmptyMembershipView(
                     onJoinByCode = { /* Open Dialog/Bottom Sheet */ },
                     onSearch = { /* Navigate to SchoolSearchScreen Stub */ }
@@ -65,7 +73,11 @@ fun MembershipScreen(
             } else {
                 when (currentState) {
                     is MembershipState.Pending -> {
-                        PendingView(email = email, onLogout = onLogout)
+                        PendingView(
+                            email = email, 
+                            accessRequests = accessRequests,
+                            onLogout = onLogout
+                        )
                     }
                     is MembershipState.Rejected -> {
                         RejectedView(reason = currentState.reason, onLogout = onLogout)
@@ -77,7 +89,16 @@ fun MembershipScreen(
                             onLogout = onLogout
                         )
                     }
-                    else -> {}
+                    else -> {
+                        // For Approved or Idle state when we have data
+                        if (memberships.isNotEmpty() || accessRequests.isNotEmpty()) {
+                             PendingView(
+                                email = email, 
+                                accessRequests = accessRequests,
+                                onLogout = onLogout
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -136,12 +157,16 @@ fun EmptyMembershipView(onJoinByCode: () -> Unit, onSearch: () -> Unit) {
 }
 
 @Composable
-fun PendingView(email: String, onLogout: () -> Unit) {
+fun PendingView(
+    email: String, 
+    accessRequests: List<AccessRequestProfile>,
+    onLogout: () -> Unit
+) {
     Column(
-        modifier = Modifier.padding(AzuraSpacing.xl),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(AzuraSpacing.xl))
         Icon(Icons.Default.HourglassEmpty, null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(AzuraSpacing.lg))
         Text("Menunggu Persetujuan", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
@@ -156,8 +181,29 @@ fun PendingView(email: String, onLogout: () -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(AzuraSpacing.xl))
-        CircularProgressIndicator()
-        Spacer(modifier = Modifier.height(AzuraSpacing.xl))
+        
+        if (accessRequests.isNotEmpty()) {
+            Text(
+                "Permintaan Bergabung:", 
+                style = MaterialTheme.typography.titleSmall, 
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Start
+            )
+            Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+            ) {
+                items(accessRequests) { request ->
+                    AccessRequestItem(request)
+                }
+            }
+        } else {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(AzuraSpacing.xl))
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
 
         TextButton(onClick = onLogout) {
             Text("Bukan akun Anda? Ganti Akun")
@@ -166,9 +212,35 @@ fun PendingView(email: String, onLogout: () -> Unit) {
 }
 
 @Composable
+fun AccessRequestItem(request: AccessRequestProfile) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(AzuraSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Business, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(AzuraSpacing.md))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(request.schoolName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                Text(request.status.name, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            }
+            if (request.syncStatus != SyncStatus.SYNCED) {
+                Icon(Icons.Default.CloudOff, contentDescription = "Unsynced", modifier = Modifier.size(16.dp), tint = Color.Gray)
+            }
+        }
+    }
+}
+
+@Composable
 fun RejectedView(reason: String?, onLogout: () -> Unit) {
     Column(
-        modifier = Modifier.padding(AzuraSpacing.xl),
+        modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -190,7 +262,7 @@ fun RejectedView(reason: String?, onLogout: () -> Unit) {
 @Composable
 fun ErrorView(message: String, onRetry: () -> Unit, onLogout: () -> Unit) {
     Column(
-        modifier = Modifier.padding(AzuraSpacing.xl),
+        modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
