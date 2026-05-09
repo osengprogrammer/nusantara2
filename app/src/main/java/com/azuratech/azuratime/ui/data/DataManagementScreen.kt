@@ -42,7 +42,7 @@ fun DataManagementScreen(
     registerViewModel: RegisterViewModel
 ) {
     val context = LocalContext.current
-    val state by registerViewModel.state.collectAsState()
+    val state by registerViewModel.stateStateFlow.collectAsState()
     var selectedType by remember { mutableStateOf(initialDataType) }
 
     val screenTitle = when(selectedType) {
