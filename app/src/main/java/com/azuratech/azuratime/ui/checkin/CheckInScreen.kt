@@ -18,12 +18,12 @@ fun CheckInScreen(
     onNavigateToBarcode: () -> Unit,
     viewModel: ScannerViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
     val voiceAssistant = rememberVoiceAssistant()
 
     // Side Effects: Voice Assistant
     LaunchedEffect(Unit) {
-        viewModel.sideEffect.onEach { effect ->
+        viewModel.sideEffectFlow.onEach { effect ->
             when (effect) {
                 is CheckInSideEffect.Speak -> voiceAssistant.speak(effect.message)
                 is CheckInSideEffect.NavigateBack -> { /* Handle navigation */ }
