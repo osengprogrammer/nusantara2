@@ -50,7 +50,7 @@ fun AttendanceMatrixScreen(
         )
         
         // Sync Indicators
-        attendanceMatrix.forEach { entry: AttendanceProfile -> profile ->
+        attendanceMatrix.forEach { profile ->
             if (profile.syncStatus != SyncStatus.SYNCED) {
                 Icon(Icons.Default.CloudOff, contentDescription = null, tint = Color.Gray)
             }

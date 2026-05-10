@@ -16,6 +16,7 @@
 - **Report Summary SSOT**: Migrated the Report Dashboard to a reactive pipeline using the `ReportSummaryProfile` domain model.
 - **Data Layer Enhancements**: Created `ReportEntity` and added `toProfile()` mappers to support local-first reporting.
 - **Reactive UI**: Implemented `ReportScreen` and `ReportViewModel` observing data directly from Room via `ReportRepository`.
+- **Bug Fix**: Fixed a syntax error in `AttendanceMatrixScreen.kt` where an invalid lambda expression was causing build failures.
 
 ### Phase 7.9: Reactive Biometric & Class Management
 - **Biometric Enrollment SSOT**: Migrated Biometric Enrollment to a reactive Room-first pipeline using the `FaceEnrollmentProfile` domain model.
