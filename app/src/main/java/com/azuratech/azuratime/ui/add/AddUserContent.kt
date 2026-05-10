@@ -30,7 +30,7 @@ fun AddUserContent(
     onCaptureEmbedding: () -> Unit,
     onCapturePhoto: () -> Unit,
     onUploadPhoto: () -> Unit,
-    onSubmit: () -> Unit,
+    onSubmitClick: () -> Unit,
     onFlipCamera: () -> Unit, // Added for consistency with a potential capture flow
     isClassExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
@@ -135,7 +135,7 @@ fun AddUserContent(
 
                 AzuraButton(
                     text = "Daftarkan Siswa",
-                    onClick = onSubmit,
+                    onClick = onSubmitClick,
                     enabled = uiState.isFormValid && !uiState.isSubmitting,
                     isLoading = uiState.isSubmitting,
                     icon = Icons.Default.PersonAdd,

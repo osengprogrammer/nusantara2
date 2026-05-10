@@ -90,7 +90,7 @@ fun AddUserScreen(
             showFaceCapture = true 
         },
         onUploadPhoto = { galleryLauncher.launch("image/*") },
-        onSubmit = {
+        onSubmitClick = {
             viewModel.saveStudent()
         },
         onFlipCamera = { /* Camera logic managed in capture screen */ },
