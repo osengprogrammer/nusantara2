@@ -55,9 +55,9 @@ fun ClassManagementScreen(
     }
     
     // State Observation
-    val allClassState by viewModel.allAccountClasses.collectAsStateWithLifecycle()
-    val schools by viewModel.schools.collectAsStateWithLifecycle()
-    val availableClasses by viewModel.availableClasses.collectAsStateWithLifecycle()
+    val allClassState by viewModel.allAccountClassesStateFlow.collectAsStateWithLifecycle()
+    val schools by viewModel.schoolsStateFlow.collectAsStateWithLifecycle()
+    val availableClasses by viewModel.availableClassesStateFlow.collectAsStateWithLifecycle()
     val user by viewModel.user.collectAsStateWithLifecycle()
     
     // UI Local State
@@ -139,7 +139,7 @@ fun ClassManagementScreen(
                         Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
                     }
                 }
-                is UiState.Success -> {
+                is UiState.Success<List<ClassModel>> -> {
                     val filteredClasses: List<ClassModel> = remember(searchQuery, state.data, schools) {
                         state.data.filter { cls ->
                             val schoolName = schools.find { it.id == cls.schoolId }?.name ?: ""

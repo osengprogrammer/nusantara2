@@ -24,12 +24,12 @@ fun ManualAttendanceScreen(
     val faces by faceViewModel.faceList.collectAsStateWithLifecycle()
     val currentUser by userViewModel.currentUser.collectAsStateWithLifecycle()
     val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
-    val globalClasses by classViewModel.classes.collectAsStateWithLifecycle()
+    val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
 
     // Role-Based Class Access
     val isAdmin = currentUser?.memberships?.get(currentUser?.activeSchoolId)?.role == "ADMIN"
     val availableClasses = remember(globalClasses, assignedIds, isAdmin) {
-        if (isAdmin) globalClasses else globalClasses.filter { it.id in assignedIds }
+        if (isAdmin) globalClasses else globalClasses.filter { classItem: ClassModel -> classItem.id in assignedIds }
     }
 
     // 🔥 Make Class Selection Optional
