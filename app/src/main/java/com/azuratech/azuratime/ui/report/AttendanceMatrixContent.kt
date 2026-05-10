@@ -22,7 +22,7 @@ import java.time.LocalDate
 @Composable
 fun AttendanceMatrixContent(
     data: AttendanceMatrixData,
-    onSearchChange: (String) -> Unit,
+    onSearchChanged: (String) -> Unit,
     onDateRangeSelected: (LocalDate, LocalDate) -> Unit,
     onClassSelected: (String?) -> Unit,
     onPolicySelected: (String) -> Unit,
@@ -62,7 +62,7 @@ fun AttendanceMatrixContent(
                     searchQuery = data.searchQuery,
                     selectedClassId = data.selectedClassId,
                     availableClasses = data.availableClasses,
-                    onSearchChange = onSearchChange,
+                    onSearchChange = onSearchChanged,
                     onDateRangeSelected = onDateRangeSelected,
                     onClassSelected = onClassSelected
                 )
@@ -103,7 +103,7 @@ fun AttendanceMatrixContentSuccessPreview() {
         Surface {
             AttendanceMatrixContent(
                 data = PreviewMocks.mockMatrixData,
-                onSearchChange = {},
+                onSearchChanged = {},
                 onDateRangeSelected = { _, _ -> },
                 onClassSelected = {},
                 onPolicySelected = {},
@@ -123,7 +123,7 @@ fun AttendanceMatrixContentLoadingPreview() {
         Surface {
             AttendanceMatrixContent(
                 data = AttendanceMatrixData(),
-                onSearchChange = {},
+                onSearchChanged = {},
                 onDateRangeSelected = { _, _ -> },
                 onClassSelected = {},
                 onPolicySelected = {},
