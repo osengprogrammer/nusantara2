@@ -159,11 +159,11 @@ fun ClassManagementScreen(
                                 classItem = classItem,
                                 schoolName = schoolName,
                                 onClick = { onClassClick(classItem.id, classItem.name) },
-                                onEdit = {
+                                onEditClick = {
                                     editingClass = classItem
                                     showDialog = true
                                 },
-                                onDelete = {
+                                onDeleteClick = {
                                     viewModel.deleteClass(
                                         classId = classItem.id,
                                         onFailure = { msg -> context.showToast(msg) }
@@ -201,8 +201,8 @@ fun ClassItemRow(
     classItem: ClassModel,
     schoolName: String?,
     onClick: () -> Unit = {},
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
@@ -229,10 +229,10 @@ fun ClassItemRow(
                 }
             }
             Row {
-                IconButton(onClick = onEdit) {
+                IconButton(onClick = onEditClick) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = onDeleteClick) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                 }
             }
