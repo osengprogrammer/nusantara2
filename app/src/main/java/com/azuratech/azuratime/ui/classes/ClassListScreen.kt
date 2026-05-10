@@ -77,8 +77,8 @@ fun ClassListScreen(
                         ClassItemCard(
                             classItem = classItem,
                             onClick = { onNavigateToDetail(classItem.id, classItem.name) },
-                            onEdit = { classToEdit = classItem },
-                            onDelete = { classToDelete = classItem }
+                            onEditClick = { classToEdit = classItem },
+                            onDeleteClick = { classToDelete = classItem }
                         )
                     }
                 }
@@ -146,8 +146,8 @@ fun ClassListScreen(
 fun ClassItemCard(
     classItem: ClassModel, // 🔥 Changed from OptionEntity
     onClick: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -172,10 +172,10 @@ fun ClassItemCard(
             )
 
             Row {
-                IconButton(onClick = onEdit) {
+                IconButton(onClick = onEditClick) {
                     Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = onDeleteClick) {
                     Icon(Icons.Default.Delete, "Hapus", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
                 }
             }
