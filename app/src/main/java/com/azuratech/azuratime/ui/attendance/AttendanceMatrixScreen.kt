@@ -25,7 +25,7 @@ import java.time.LocalDate
 @Composable
 fun AttendanceMatrixScreen(
     viewModel: AttendanceMatrixViewModel = hiltViewModel(),
-    onBack: () -> Unit,
+    onNavigateBack: () -> Unit,
     onCellClick: (String, String, LocalDate) -> Unit
 ) {
     val attendanceMatrix by viewModel.attendanceMatrixStateFlow.collectAsStateWithLifecycle()
@@ -34,17 +34,17 @@ fun AttendanceMatrixScreen(
 
     AzuraScreen(
         title = "Rekap Kehadiran",
-        onBack = onBack
+        onBack = onNavigateBack
     ) {
         // Render Matrix using AttendanceProfile stream
         AttendanceMatrixContent(
             data = (uiState as? AttendanceMatrixUiState.Success)?.data ?: AttendanceMatrixData(),
-            onSearchChange = { viewModel.onSearchQueryChanged(it) },
+            onSearchChanged = { viewModel.onSearchQueryChanged(it) },
             onDateRangeSelected = { start, end -> viewModel.onDateRangeSelected(start, end) },
             onClassSelected = { viewModel.onClassSelected(it) },
             onPolicySelected = { viewModel.onPolicySelected(it) },
             onTabSelected = { viewModel.onTabSelected(it) },
-            onBack = onBack,
+            onBack = onNavigateBack,
             onCellClick = onCellClick,
             onExportClick = { viewModel.exportReport() }
         )
