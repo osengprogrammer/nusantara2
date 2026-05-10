@@ -40,7 +40,7 @@ fun DailyDetailScreen(
     studentName: String,
     dateString: String,
     viewModel: DailyDetailViewModel = hiltViewModel(),
-    onBack: () -> Unit,
+    onNavigateBack: () -> Unit,
     onNavigateToManual: (String, String) -> Unit
 ) {
     val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
@@ -52,7 +52,7 @@ fun DailyDetailScreen(
 
     when (val state = uiState) {
         is DailyDetailUiState.Loading -> {
-            AzuraScreen(title = "Detail: $studentName", onBack = onBack) {
+            AzuraScreen(title = "Detail: $studentName", onBack = onNavigateBack) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -63,7 +63,7 @@ fun DailyDetailScreen(
             
             AzuraScreen(
                 title = "Detail: $studentName",
-                onBack = onBack
+                onBack = onNavigateBack
             ) {
                 Column(modifier = Modifier.fillMaxSize().padding(top = AzuraSpacing.md)) {
                     
@@ -162,7 +162,7 @@ fun DailyDetailScreen(
             }
         }
         is DailyDetailUiState.Error -> {
-            AzuraScreen(title = "Detail: $studentName", onBack = onBack) {
+            AzuraScreen(title = "Detail: $studentName", onBack = onNavigateBack) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
                 }
