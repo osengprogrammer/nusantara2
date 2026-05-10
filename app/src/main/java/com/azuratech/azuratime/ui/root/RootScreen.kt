@@ -44,8 +44,8 @@ fun RootScreen() {
                 val authViewModel: AuthViewModel = hiltViewModel()
                 MembershipScreen(
                     email = email,
-                    onApproved = { bootViewModel.recheck() },
-                    onLogout = { authViewModel.logout { bootViewModel.recheck() } }
+                    onApprovedClick = { bootViewModel.recheck() },
+                    onLogoutClick = { authViewModel.logout { bootViewModel.recheck() } }
                 )
             }
             BootState.Ready -> {

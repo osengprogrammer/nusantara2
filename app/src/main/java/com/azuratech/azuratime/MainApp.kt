@@ -59,8 +59,8 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                     
                     MembershipScreen(
                         email = email,
-                        onApproved = { bootViewModel.recheck() },
-                        onLogout = { authViewModel.logout { bootViewModel.recheck() } }
+                        onApprovedClick = { bootViewModel.recheck() },
+                        onLogoutClick = { authViewModel.logout { bootViewModel.recheck() } }
                     )
                 }
 
