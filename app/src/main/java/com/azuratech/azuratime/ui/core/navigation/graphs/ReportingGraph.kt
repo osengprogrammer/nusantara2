@@ -33,7 +33,7 @@ fun NavGraphBuilder.reportingGraph(
                 faceId = entry.arguments?.getString("faceId") ?: "",
                 studentName = entry.arguments?.getString("name") ?: "",
                 dateString = entry.arguments?.getString("date") ?: "",
-                onBack = { navController.popBackStack() },
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToManual = { fId, dStr ->
                     navController.navigate(Screen.ManualAttendance.createRoute(fId, dStr))
                 }
