@@ -34,8 +34,8 @@ import com.azuratech.azuratime.ui.theme.AzuraShapes
 @Composable
 fun MembershipScreen(
     email: String,
-    onApproved: () -> Unit,
-    onLogout: () -> Unit
+    onApprovedClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     val membershipViewModel: MembershipViewModel = hiltViewModel()
     val bootViewModel: BootViewModel = hiltViewModel()
@@ -52,7 +52,7 @@ fun MembershipScreen(
         if (state is MembershipState.Approved) {
             membershipViewModel.activateMembership()
             bootViewModel.recheck()
-            onApproved()
+            onApprovedClick()
         }
     }
 
@@ -76,17 +76,17 @@ fun MembershipScreen(
                         PendingView(
                             email = email, 
                             accessRequests = accessRequests,
-                            onLogout = onLogout
+                            onLogoutClick = onLogoutClick
                         )
                     }
                     is MembershipState.Rejected -> {
-                        RejectedView(reason = currentState.reason, onLogout = onLogout)
+                        RejectedView(reason = currentState.reason, onLogoutClick = onLogoutClick)
                     }
                     is MembershipState.Error -> {
                         ErrorView(
                             message = currentState.message,
                             onRetry = { membershipViewModel.checkMembership(email) },
-                            onLogout = onLogout
+                            onLogoutClick = onLogoutClick
                         )
                     }
                     else -> {
@@ -95,7 +95,7 @@ fun MembershipScreen(
                              PendingView(
                                 email = email, 
                                 accessRequests = accessRequests,
-                                onLogout = onLogout
+                                onLogoutClick = onLogoutClick
                             )
                         }
                     }
@@ -160,7 +160,7 @@ fun EmptyMembershipView(onJoinByCode: () -> Unit, onSearch: () -> Unit) {
 fun PendingView(
     email: String, 
     accessRequests: List<AccessRequestProfile>,
-    onLogout: () -> Unit
+    onLogoutClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
@@ -205,7 +205,7 @@ fun PendingView(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        TextButton(onClick = onLogout) {
+        TextButton(onClick = onLogoutClick) {
             Text("Bukan akun Anda? Ganti Akun")
         }
     }
@@ -238,7 +238,7 @@ fun AccessRequestItem(request: AccessRequestProfile) {
 }
 
 @Composable
-fun RejectedView(reason: String?, onLogout: () -> Unit) {
+fun RejectedView(reason: String?, onLogoutClick: () -> Unit) {
     Column(
         modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -251,7 +251,7 @@ fun RejectedView(reason: String?, onLogout: () -> Unit) {
         Text(reason ?: "Akun ini tidak memiliki akses ke dalam sistem. Silakan hubungi administrator.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(AzuraSpacing.xl))
 
-        Button(onClick = onLogout, shape = AzuraShapes.medium, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+        Button(onClick = onLogoutClick, shape = AzuraShapes.medium, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
             Icon(Icons.AutoMirrored.Filled.Logout, null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(AzuraSpacing.sm))
             Text("Keluar")
@@ -260,7 +260,7 @@ fun RejectedView(reason: String?, onLogout: () -> Unit) {
 }
 
 @Composable
-fun ErrorView(message: String, onRetry: () -> Unit, onLogout: () -> Unit) {
+fun ErrorView(message: String, onRetry: () -> Unit, onLogoutClick: () -> Unit) {
     Column(
         modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -274,7 +274,7 @@ fun ErrorView(message: String, onRetry: () -> Unit, onLogout: () -> Unit) {
         Spacer(modifier = Modifier.height(AzuraSpacing.xl))
 
         Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
-            OutlinedButton(onClick = onLogout, shape = AzuraShapes.medium) { Text("Keluar") }
+            OutlinedButton(onClick = onLogoutClick, shape = AzuraShapes.medium) { Text("Keluar") }
             Button(onClick = onRetry, shape = AzuraShapes.medium) {
                 Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(AzuraSpacing.sm))
