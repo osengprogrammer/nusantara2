@@ -34,7 +34,7 @@ fun RootScreen() {
             }
             BootState.NeedLogin -> {
                 LoginScreen(
-                    onLoginSuccess = { email: String, role: String? -> 
+                    onLoginSuccessClick = { email: String, role: String? -> 
                         bootViewModel.recheck() 
                     }
                 )
