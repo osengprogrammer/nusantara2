@@ -42,11 +42,11 @@ class AttendanceMatrixViewModel @Inject constructor(
     private val _assignedClasses = MutableStateFlow<List<String>>(emptyList())
 
     // 🔥 v3.1: Reactive Attendance SSOT Migration (Phase 7.8)
-    val attendanceMatrix: StateFlow<List<AttendanceProfile>> = combine(
+    val attendanceMatrixStateFlow: StateFlow<List<AttendanceProfile>> = combine(
         sessionManager.activeSchoolIdFlow.filterNotNull(),
         _startDate, _endDate, _selectedClassId, _searchQuery
     ) { schoolId, start, end, classId, query ->
-        params(schoolId, start, end, classId, query)
+        AttendanceParams(schoolId, start, end, classId, query)
     }
     .debounce(300)
     .flatMapLatest { p ->
@@ -60,9 +60,9 @@ class AttendanceMatrixViewModel @Inject constructor(
     }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private data class params(val schoolId: String, val start: LocalDate, val end: LocalDate, val classId: String?, val query: String)
+    private data class AttendanceParams(val schoolId: String, val start: LocalDate, val end: LocalDate, val classId: String?, val query: String)
 
-    val availableClasses: StateFlow<List<ClassModel>> = sessionManager.activeSchoolIdFlow
+    val availableClassesStateFlow: StateFlow<List<ClassModel>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             schoolRepository.observeClasses(schoolId).map { 
@@ -73,9 +73,9 @@ class AttendanceMatrixViewModel @Inject constructor(
     private val _isExporting = MutableStateFlow(false)
     private val _exportedFile = MutableStateFlow<String?>(null)
 
-    val uiState: StateFlow<com.azuratech.azuratime.ui.report.AttendanceMatrixUiState> = combine(
-        attendanceMatrix,
-        availableClasses,
+    val uiStateStateFlow: StateFlow<com.azuratech.azuratime.ui.report.AttendanceMatrixUiState> = combine(
+        attendanceMatrixStateFlow,
+        availableClassesStateFlow,
         _searchQuery,
         _startDate, _endDate,
         _selectedClassId, _policy, _selectedTabIndex,
@@ -157,7 +157,7 @@ class AttendanceMatrixViewModel @Inject constructor(
 
     fun exportReport() {
         viewModelScope.launch {
-            val currentState = uiState.value
+            val currentState = uiStateStateFlow.value
             if (currentState !is com.azuratech.azuratime.ui.report.AttendanceMatrixUiState.Success) return@launch
 
             _isExporting.value = true

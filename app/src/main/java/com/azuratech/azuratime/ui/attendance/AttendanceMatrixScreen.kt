@@ -28,8 +28,8 @@ fun AttendanceMatrixScreen(
     onBack: () -> Unit,
     onCellClick: (String, String, LocalDate) -> Unit
 ) {
-    val attendanceMatrix by viewModel.attendanceMatrix.collectAsStateWithLifecycle()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val attendanceMatrix by viewModel.attendanceMatrixStateFlow.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     AzuraScreen(
@@ -50,7 +50,7 @@ fun AttendanceMatrixScreen(
         )
         
         // Sync Indicators
-        attendanceMatrix.forEach { profile ->
+        attendanceMatrix.forEach { entry: AttendanceProfile -> profile ->
             if (profile.syncStatus != SyncStatus.SYNCED) {
                 Icon(Icons.Default.CloudOff, contentDescription = null, tint = Color.Gray)
             }
