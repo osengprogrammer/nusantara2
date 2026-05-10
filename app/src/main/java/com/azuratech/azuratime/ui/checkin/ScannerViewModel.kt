@@ -27,10 +27,10 @@ class ScannerViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<CheckInUiState>(CheckInUiState.Idle)
-    val uiState: StateFlow<CheckInUiState> = _uiState.asStateFlow()
+    val uiStateStateFlow: StateFlow<CheckInUiState> = _uiState.asStateFlow()
 
     private val _sideEffect = Channel<CheckInSideEffect>()
-    val sideEffect = _sideEffect.receiveAsFlow()
+    val sideEffectFlow = _sideEffect.receiveAsFlow()
 
     private var gallery: List<Pair<String, FloatArray>> = emptyList()
     private var currentTeacherEmail: String = ""

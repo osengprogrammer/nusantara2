@@ -30,11 +30,11 @@ fun BarcodeScreen(
     viewModel: ScannerViewModel = hiltViewModel()
 ) {
     val voiceAssistant = rememberVoiceAssistant()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
     var currentCameraIsBack by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        viewModel.sideEffect.onEach { effect ->
+        viewModel.sideEffectFlow.onEach { effect ->
             when (effect) {
                 is CheckInSideEffect.Speak -> voiceAssistant.speak(effect.message)
                 else -> {}
