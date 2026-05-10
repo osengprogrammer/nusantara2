@@ -83,7 +83,7 @@ fun EditUserScreen(
         onCaptureEmbedding = { showFaceCapture = true },
         onCapturePhoto = { showFaceCapture = true },
         onUploadPhoto = { galleryLauncher.launch("image/*") },
-        onSubmit = {
+        onSubmitClick = {
             viewModel.saveStudent()
                 onNavigateBack()
         },
@@ -117,7 +117,7 @@ fun EditUserContent(
     onCaptureEmbedding: () -> Unit,
     onCapturePhoto: () -> Unit,
     onUploadPhoto: () -> Unit,
-    onSubmit: () -> Unit,
+    onSubmitClick: () -> Unit,
     isClassExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit
 ) {
@@ -218,7 +218,7 @@ fun EditUserContent(
 
             AzuraButton(
                 text = "Simpan Perubahan",
-                onClick = onSubmit,
+                onClick = onSubmitClick,
                 enabled = uiState.isFormValid && !uiState.isSubmitting,
                 isLoading = uiState.isSubmitting,
                 icon = Icons.Default.Save,
