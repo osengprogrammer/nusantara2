@@ -43,7 +43,7 @@ fun DailyDetailScreen(
     onBack: () -> Unit,
     onNavigateToManual: (String, String) -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
 
     // UI Local State
     var selectedRecordForAction by remember { mutableStateOf<CheckInRecord?>(null) }

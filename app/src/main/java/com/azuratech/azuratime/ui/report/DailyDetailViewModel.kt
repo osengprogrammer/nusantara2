@@ -33,12 +33,12 @@ class DailyDetailViewModel @Inject constructor(
         .filterNotNull()
         .flatMapLatest { uid -> userRepository.observeUserEntity(uid) }
 
-    private val assignedClassIds = sessionManager.activeSchoolIdFlow
+    private val assignedClassIdsFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .combine(sessionManager.currentUserIdFlow.filterNotNull()) { schoolId, userId -> schoolId to userId }
         .flatMapLatest { (schoolId, userId) -> userRepository.getUserClassAccessDao().observeClassIdsForUser(userId, schoolId) }
 
-    private val checkInRecords = sessionManager.activeSchoolIdFlow
+    private val checkInRecordsFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             repository.getCheckInRecords(
@@ -52,7 +52,7 @@ class DailyDetailViewModel @Inject constructor(
             ).map { entities -> entities.map { it.toDomain() } }
         }
 
-    private val classes = sessionManager.activeSchoolIdFlow
+    private val classesFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             schoolRepository.observeClasses(schoolId).map { 
@@ -60,10 +60,10 @@ class DailyDetailViewModel @Inject constructor(
             }
         }
 
-    val uiState: StateFlow<DailyDetailUiState> = combine(
-        checkInRecords,
-        classes,
-        assignedClassIds,
+    val uiStateStateFlow: StateFlow<DailyDetailUiState> = combine(
+        checkInRecordsFlow,
+        classesFlow,
+        assignedClassIdsFlow,
         currentUser
     ) { dailyLogs, globalClasses, assignedIds, user ->
         val filteredLogs = dailyLogs.filter { it.studentId == faceId }
