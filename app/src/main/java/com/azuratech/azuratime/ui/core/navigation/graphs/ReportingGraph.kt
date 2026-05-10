@@ -4,15 +4,16 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.Screen
+import com.azuratech.azuratime.navigation.NavigationRoutes
 
 fun NavGraphBuilder.reportingGraph(
     navController: androidx.navigation.NavController
 ) {
     navigation(
-        startDestination = Screen.AttendanceMatrix.route,
-        route = "reporting_graph"
+        startDestination = NavigationRoutes.ATTENDANCE_MATRIX,
+        route = NavigationRoutes.REPORTING_GRAPH
     ) {
-        composable(Screen.AttendanceMatrix.route) {
+        composable(NavigationRoutes.ATTENDANCE_MATRIX) {
             com.azuratech.azuratime.ui.attendance.AttendanceMatrixScreen(
                 onBack = { navController.popBackStack() },
                 onCellClick = { faceId, name, date ->
@@ -21,7 +22,7 @@ fun NavGraphBuilder.reportingGraph(
             )
         }
         composable(
-            route = Screen.DailyDetail.route,
+            route = NavigationRoutes.DAILY_DETAIL,
             arguments = listOf(
                 androidx.navigation.navArgument("faceId") { androidx.navigation.NavType.StringType },
                 androidx.navigation.navArgument("name") { androidx.navigation.NavType.StringType },

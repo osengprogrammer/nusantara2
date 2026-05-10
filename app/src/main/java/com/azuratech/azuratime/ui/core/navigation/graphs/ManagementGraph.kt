@@ -8,6 +8,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.Screen
+import com.azuratech.azuratime.navigation.NavigationRoutes
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.ui.add.*
 import com.azuratech.azuratime.ui.biometric.BiometricScreen
@@ -22,54 +23,54 @@ fun NavGraphBuilder.managementGraph(
     val uri = "azuratime://azuratech.com"
 
     navigation(
-        startDestination = Screen.RegistrationMenu.route,
-        route = "management_graph"
+        startDestination = NavigationRoutes.REGISTRATION_MENU,
+        route = NavigationRoutes.MANAGEMENT_GRAPH
     ) {
-        composable(Screen.RegistrationMenu.route) {
+        composable(NavigationRoutes.REGISTRATION_MENU) {
             RegistrationMenuScreen(
-                onNavigateToAddUser = { navController.navigate(Screen.AddUser.route) },
-                onNavigateToBulkRegister = { navController.navigate(Screen.BulkRegister.route) },
-                onNavigateToBiometricManagement = { navController.navigate(Screen.BiometricManagement.route) },
+                onNavigateToAddUser = { navController.navigate(NavigationRoutes.ADD_USER) },
+                onNavigateToBulkRegister = { navController.navigate(NavigationRoutes.BULK_REGISTER) },
+                onNavigateToBiometricManagement = { navController.navigate(NavigationRoutes.BIOMETRIC_MANAGEMENT) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.AddUser.route) {
+        composable(NavigationRoutes.ADD_USER) {
             AddUserScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.BulkRegister.route) {
+        composable(NavigationRoutes.BULK_REGISTER) {
             BulkRegistrationScreen(
                 onNavigateBack = { navController.popBackStack() },
                 bulkViewModel = hiltViewModel()
             )
         }
-        composable(Screen.BiometricManagement.route) {
+        composable(NavigationRoutes.BIOMETRIC_MANAGEMENT) {
             BiometricScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.Manage.route) {
+        composable(NavigationRoutes.MANAGE_FACES) {
             FaceListScreen(
                 onEditUser = { faceId -> navController.navigate(Screen.EditUser.createRoute(faceId)) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.DataDashboard.route) {
+        composable(NavigationRoutes.DATA_DASHBOARD) {
             DataIntegrityScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.DataManagement.route) {
+        composable(NavigationRoutes.DATA_MANAGEMENT) {
             DataManagementScreen(
                 initialDataType = it.arguments?.getString("dataType") ?: "FACES",
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToClassList = { navController.navigate(Screen.Manage.route) },
+                onNavigateToClassList = { navController.navigate(NavigationRoutes.MANAGE_FACES) },
                 registerViewModel = hiltViewModel()
             )
         }
         composable(
-            route = Screen.EditUser.route,
+            route = NavigationRoutes.EDIT_USER,
             arguments = listOf(navArgument("faceId") { type = NavType.StringType })
         ) { entry ->
             EditUserScreen(
@@ -78,7 +79,7 @@ fun NavGraphBuilder.managementGraph(
             )
         }
         composable(
-            route = Screen.ClassList.route,
+            route = NavigationRoutes.CLASS_LIST,
             arguments = listOf(navArgument("schoolId") { type = NavType.StringType }),
             deepLinks = listOf(navDeepLink { uriPattern = "$uri/classes/{schoolId}" })
         ) { 
@@ -90,7 +91,7 @@ fun NavGraphBuilder.managementGraph(
             )
         }
         composable(
-            route = Screen.ClassManagement.route,
+            route = NavigationRoutes.CLASS_MANAGEMENT,
             arguments = listOf(navArgument("accountId") { type = NavType.StringType })
         ) {
             ClassManagementScreen(
@@ -101,7 +102,7 @@ fun NavGraphBuilder.managementGraph(
             )
         }
         composable(
-            route = Screen.ClassDetail.route,
+            route = NavigationRoutes.CLASS_DETAIL,
             arguments = listOf(
                 navArgument("classId") { type = NavType.StringType },
                 navArgument("className") { type = NavType.StringType }
@@ -114,11 +115,11 @@ fun NavGraphBuilder.managementGraph(
                 classViewModel = hiltViewModel(),
                 faceViewModel = hiltViewModel(),
                 onBack = { navController.popBackStack() },
-                onAddStudent = { navController.navigate(Screen.Manage.route) }
+                onAddStudent = { navController.navigate(NavigationRoutes.MANAGE_FACES) }
             )
         }
 
-        composable(Screen.PendingSchools.route) {
+        composable(NavigationRoutes.PENDING_SCHOOLS) {
             PendingSchoolsScreen(
                 onBack = { navController.popBackStack() }
             )
