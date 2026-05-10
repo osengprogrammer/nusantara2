@@ -4,29 +4,30 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.Screen
+import com.azuratech.azuratime.navigation.NavigationRoutes
 
 fun NavGraphBuilder.attendanceGraph(
     navController: androidx.navigation.NavController
 ) {
     navigation(
-        startDestination = Screen.CheckIn.route,
-        route = "attendance_graph"
+        startDestination = NavigationRoutes.CHECK_IN,
+        route = NavigationRoutes.ATTENDANCE_GRAPH
     ) {
-        composable(Screen.CheckIn.route) {
+        composable(NavigationRoutes.CHECK_IN) {
             com.azuratech.azuratime.ui.checkin.CheckInScreen(
                 useBackCamera = false,
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 teacherEmail = "", // This will be passed via ViewModel or provided externally
-                onNavigateToBarcode = { navController.navigate(Screen.BarcodeScan.route) }
+                onNavigateToBarcode = { navController.navigate(NavigationRoutes.BARCODE_SCAN) }
             )
         }
-        composable(Screen.BarcodeScan.route) {
+        composable(NavigationRoutes.BARCODE_SCAN) {
             com.azuratech.azuratime.ui.checkin.BarcodeScreen(
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 teacherEmail = ""
             )
         }
-        composable(Screen.CheckInRecordEntity.route) {
+        composable(NavigationRoutes.CHECKIN_HISTORY) {
             com.azuratech.azuratime.ui.checkin.CheckInRecordScreen(
                 userEmail = "",
                 onNavigateBack = { navController.popBackStack() },
@@ -35,7 +36,7 @@ fun NavGraphBuilder.attendanceGraph(
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel()
             )
         }
-        composable(Screen.ManualAttendance.route) {
+        composable(NavigationRoutes.MANUAL_ATTENDANCE) {
             com.azuratech.azuratime.ui.checkin.ManualAttendanceScreen(
                 faceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 checkInViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
