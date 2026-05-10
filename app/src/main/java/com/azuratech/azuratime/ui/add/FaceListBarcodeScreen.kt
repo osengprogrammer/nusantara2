@@ -49,8 +49,8 @@ fun FaceListBarcodeScreen(
     viewModel: FaceListViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var expandedFace by remember { mutableStateOf<FaceWithDetails?>(null) }
+    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
+    var expandedFace by remember { mutableStateOf<com.azuratech.azuratime.data.local.FaceWithDetails?>(null) }
 
     when (val state = uiState) {
         is FaceListUiState.Loading -> {

@@ -32,7 +32,7 @@ class FaceListViewModel @Inject constructor(
     private val _refreshTrigger = MutableStateFlow(System.currentTimeMillis())
 
     private val _uiEvent = MutableSharedFlow<com.azuratech.azuratime.ui.core.UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
+    val uiEventFlow = _uiEvent.asSharedFlow()
 
     init {
         // Refresh when school changes
@@ -74,14 +74,14 @@ class FaceListViewModel @Inject constructor(
             }
         }
 
-    val allClasses: StateFlow<List<ClassModel>> = _allClassesFlow.stateIn(
+    val allClassesStateFlow: StateFlow<List<ClassModel>> = _allClassesFlow.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
     // SSOT: Direct stream from Repository
-    val faceList: StateFlow<List<StudentProfile>> = combine(
+    val faceListStateFlow: StateFlow<List<StudentProfile>> = combine(
         _searchQuery.debounce(300),
         _selectedClassId,
         _refreshTrigger.flatMapLatest { studentRepository.getStudentProfiles() }
@@ -97,9 +97,9 @@ class FaceListViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    val uiState: StateFlow<FaceListUiState> = combine(
-        faceList,
-        allClasses,
+    val uiStateStateFlow: StateFlow<FaceListUiState> = combine(
+        faceListStateFlow,
+        allClassesStateFlow,
         _searchQuery,
         _selectedClassId,
         _editingStudent,
@@ -112,7 +112,7 @@ class FaceListViewModel @Inject constructor(
 
         FaceListUiState.Success(
             FaceListData(
-                students = emptyList(), // Screen now observes faceList directly
+                students = emptyList(), // Screen now observes faceListStateFlow directly
                 allClasses = args[1] as List<ClassModel>,
                 searchQuery = query,
                 selectedClassName = classId,
@@ -182,7 +182,7 @@ class FaceListViewModel @Inject constructor(
 
     fun onAssignStudentToClass(studentId: String, classId: String) {
         viewModelScope.launch {
-            val profiles = faceList.value
+            val profiles = faceListStateFlow.value
             val profile = profiles.find { it.studentId == studentId } ?: return@launch
             val updatedProfile = profile.copy(
                 classIds = (profile.classIds + classId).distinct(),
@@ -199,7 +199,7 @@ class FaceListViewModel @Inject constructor(
 
     fun onToggleStudentClassAssignment(studentId: String, classId: String, isChecked: Boolean) {
         viewModelScope.launch {
-            val profiles = faceList.value
+            val profiles = faceListStateFlow.value
             val profile = profiles.find { it.studentId == studentId } ?: return@launch
             val newClassIds = if (isChecked) {
                 (profile.classIds + classId).distinct()

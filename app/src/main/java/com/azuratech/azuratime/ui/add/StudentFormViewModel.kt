@@ -26,10 +26,10 @@ class StudentFormViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
-    val uiState: StateFlow<StudentFormUiState> = _uiState.asStateFlow()
+    val uiStateStateFlow: StateFlow<StudentFormUiState> = _uiState.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent: SharedFlow<UiEvent> = _uiEvent.asSharedFlow()
+    val uiEventFlow: SharedFlow<UiEvent> = _uiEvent.asSharedFlow()
 
     // 🎓 REACTIVE CLASSES FLOW
     private val _classesFlow = sessionManager.activeSchoolIdFlow
@@ -45,7 +45,7 @@ class StudentFormViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
-    val classes: StateFlow<List<com.azuratech.azuraengine.model.ClassModel>> = _classesFlow
+    val classesStateFlow: StateFlow<List<com.azuratech.azuraengine.model.ClassModel>> = _classesFlow
 
     private var selectedClassId: String? = null
     private var selectedClassName: String? = null

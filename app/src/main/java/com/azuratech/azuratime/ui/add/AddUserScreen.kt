@@ -29,8 +29,8 @@ fun AddUserScreen(
     onNavigateBack: () -> Unit,
     viewModel: StudentFormViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val classes by viewModel.classes.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
+    val classes by viewModel.classesStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     var showFaceCapture by remember { mutableStateOf(false) }
@@ -58,7 +58,7 @@ fun AddUserScreen(
 
     // Handle submission feedback
     LaunchedEffect(Unit) {
-        viewModel.uiEvent.collect { event ->
+        viewModel.uiEventFlow.collect { event ->
             when (event) {
                 is UiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(event.message)
