@@ -34,7 +34,7 @@ import com.azuratech.azuratime.ui.theme.AzuraTheme
 @Composable
 fun FaceListScreen(
     viewModel: FaceListViewModel = hiltViewModel(),
-    onEditUser: (String) -> Unit,
+    onEditUserClick: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
@@ -108,7 +108,7 @@ fun FaceListScreen(
                 searchQuery = data.searchQuery,
                 onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
                 onQuickEdit = { profile -> viewModel.onEditStudentClicked(profile) },
-                onFullEdit = onEditUser,
+                onFullEdit = onEditUserClick,
                 onManageClasses = { profile -> 
                     targetStudentId = profile.studentId
                     showClassPicker = true

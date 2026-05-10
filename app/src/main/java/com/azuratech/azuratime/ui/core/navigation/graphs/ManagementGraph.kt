@@ -52,7 +52,7 @@ fun NavGraphBuilder.managementGraph(
         }
         composable(NavigationRoutes.MANAGE_FACES) {
             FaceListScreen(
-                onEditUser = { faceId -> navController.navigate(Screen.EditUser.createRoute(faceId)) },
+                onEditUserClick = { faceId -> navController.navigate(Screen.EditUser.createRoute(faceId)) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
