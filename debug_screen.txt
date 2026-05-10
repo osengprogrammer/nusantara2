@@ -1,0 +1,41 @@
+    35	fun FaceListScreen(
+    36	    viewModel: FaceListViewModel = hiltViewModel(),
+    37	    onEditUser: (String) -> Unit,
+    38	    onNavigateBack: () -> Unit
+    39	) {
+    40	    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    41	    val faceList by viewModel.faceListStateFlow.collectAsStateWithLifecycle()
+    42	    val allClasses by viewModel.allClassesStateFlow.collectAsStateWithLifecycle()
+    43	
+    44	    var showClassPicker by remember { mutableStateOf(false) }
+    45	    var targetStudentId by remember { mutableStateOf<String?>(null) }
+    46	
+    47	    when (val state = uiState) {
+    48	        is FaceListUiState.Loading -> {
+    49	            AzuraScreen(title = "Manajemen Personil") {
+    50	                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    51	                    CircularProgressIndicator()
+    52	                }
+    53	            }
+    54	        }
+    55	        is FaceListUiState.Success -> {
+    56	            val data = state.data
+    57	
+    58	            data.studentForDeletion?.let { studentId ->
+    59	                val studentName = faceList.find { it.studentId == studentId }?.name ?: "Siswa"
+    60	                AlertDialog(
+    61	                    onDismissRequest = { viewModel.cancelDeleteStudent() },
+    62	                    title = { Text("Konfirmasi Hapus") },
+    63	                    text = { Text("Apakah Anda yakin ingin menghapus $studentName? Data absensi dan biometric akan hilang.") },
+    64	                    confirmButton = {
+    65	                        TextButton(
+    66	                            onClick = { viewModel.confirmDeleteStudent() },
+    67	                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+    68	                        ) {
+    69	                            Text("Hapus")
+    70	                        }
+    71	                    },
+    72	                    dismissButton = {
+    73	                        TextButton(onClick = { viewModel.cancelDeleteStudent() }) {
+    74	                            Text("Batal")
+    75	                        }

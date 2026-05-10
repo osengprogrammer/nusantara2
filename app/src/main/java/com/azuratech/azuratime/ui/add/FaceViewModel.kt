@@ -43,10 +43,10 @@ class FaceViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
+    val uiEventFlow = _uiEvent.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val faceList: StateFlow<List<FaceWithDetails>> = sessionManager.activeSchoolIdFlow
+    val faceListStateFlow: StateFlow<List<FaceWithDetails>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> faceRepository.getFacesWithDetailsFlow(schoolId) }
         .map { it }
@@ -57,7 +57,7 @@ class FaceViewModel @Inject constructor(
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val enrolledFaceList: StateFlow<List<FaceEntity>> = sessionManager.activeSchoolIdFlow
+    val enrolledFaceListStateFlow: StateFlow<List<FaceEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> faceRepository.getEnrolledFacesFlow(schoolId) }
         .map { it }

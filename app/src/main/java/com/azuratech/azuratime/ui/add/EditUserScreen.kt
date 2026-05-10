@@ -35,8 +35,8 @@ fun EditUserScreen(
     onNavigateBack: () -> Unit,
     viewModel: StudentFormViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val classes by viewModel.classes.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
+    val classes by viewModel.classesStateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showFaceCapture by remember { mutableStateOf(false) }
     var isClassExpanded by remember { mutableStateOf(false) }

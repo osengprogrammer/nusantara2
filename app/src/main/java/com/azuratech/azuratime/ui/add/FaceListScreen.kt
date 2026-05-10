@@ -37,9 +37,9 @@ fun FaceListScreen(
     onEditUser: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val faceList by viewModel.faceList.collectAsStateWithLifecycle()
-    val allClasses by viewModel.allClasses.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
+    val faceList by viewModel.faceListStateFlow.collectAsStateWithLifecycle()
+    val allClasses by viewModel.allClassesStateFlow.collectAsStateWithLifecycle()
 
     var showClassPicker by remember { mutableStateOf(false) }
     var targetStudentId by remember { mutableStateOf<String?>(null) }
@@ -55,8 +55,9 @@ fun FaceListScreen(
         is FaceListUiState.Success -> {
             val data = state.data
 
-            data.studentForDeletion?.let { studentId ->
-                val studentName = faceList.find { it.studentId == studentId }?.name ?: "Siswa"
+            val studentForDeletion = data.studentForDeletion
+            if (studentForDeletion != null) {
+                val studentName = faceList.find { it.studentId == studentForDeletion }?.name ?: "Siswa"
                 AlertDialog(
                     onDismissRequest = { viewModel.cancelDeleteStudent() },
                     title = { Text("Konfirmasi Hapus") },
@@ -282,7 +283,7 @@ fun FaceListContentSuccessPreview() {
     AzuraTheme {
         Surface {
             FaceListContent(
-                faceList = PreviewMocks.mockFaceListData.students.map { it.faceWithDetails.toProfile() },
+                faceList = PreviewMocks.mockFaceListData.students.map { item: StudentDisplayItem -> item.faceWithDetails.toProfile() },
                 searchQuery = "",
                 onSearchQueryChanged = {},
                 onQuickEdit = {},
