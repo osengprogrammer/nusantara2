@@ -34,18 +34,22 @@ fun MyAssignedClassScreen(
     val assignedIds by (if (targetUserId == null) userViewModel.assignedClassIds
                         else userViewModel.targetAssignedClassIds)
                         .collectAsStateWithLifecycle()
-    val allClasses by classViewModel.classes.collectAsStateWithLifecycle()
+    val allClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()
     val targetUser by userViewModel.selectedTargetUser.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
 
     val myClasses = remember(allClasses, assignedIds, searchQuery) {
-        allClasses.filter { it.id in assignedIds && it.name.contains(searchQuery, true) }
+        allClasses.filter { classItem -> 
+            classItem.id in assignedIds && classItem.name.contains(searchQuery, true) 
+        }
     }
 
     val availableClasses = remember(allClasses, assignedIds, searchQuery) {
-        allClasses.filter { it.id !in assignedIds && it.name.contains(searchQuery, true) }
+        allClasses.filter { classItem -> 
+            classItem.id !in assignedIds && classItem.name.contains(searchQuery, true) 
+        }
     }
 
     val screenTitle = if (targetUserId == null) "Otoritas Kelas Saya"

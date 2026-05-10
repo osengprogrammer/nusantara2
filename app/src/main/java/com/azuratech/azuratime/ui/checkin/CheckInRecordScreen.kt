@@ -36,7 +36,7 @@ fun CheckInRecordScreen(
     classViewModel: ClassViewModel
 ) {
     // 1. Observation
-    val globalClasses by classViewModel.classes.collectAsStateWithLifecycle()
+    val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()
     val records by checkInViewModel.checkInRecords.collectAsStateWithLifecycle()
     val filterParams by checkInViewModel.filterParams.collectAsStateWithLifecycle()

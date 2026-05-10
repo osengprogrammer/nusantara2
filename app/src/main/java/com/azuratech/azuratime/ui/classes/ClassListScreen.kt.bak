@@ -30,8 +30,8 @@ fun ClassListScreen(
     val context = LocalContext.current 
     
     // 🔥 Consume UiState instead of raw list
-    val uiState by classViewModel.uiStateStateFlow.collectAsStateWithLifecycle()
-    val availableClasses by classViewModel.availableClassesStateFlow.collectAsStateWithLifecycle()
+    val uiState by classViewModel.uiState.collectAsStateWithLifecycle()
+    val availableClasses by classViewModel.availableClasses.collectAsStateWithLifecycle()
     
     var showAddDialog by remember { mutableStateOf(false) }
     var classToEdit by remember { mutableStateOf<ClassModel?>(null) }
@@ -67,7 +67,7 @@ fun ClassListScreen(
                 }
             }
             is UiState.Success -> {
-                val classes: List<ClassModel> = state.data ?: emptyList()
+                val classes = state.data
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
