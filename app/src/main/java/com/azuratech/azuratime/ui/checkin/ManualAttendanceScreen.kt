@@ -19,7 +19,7 @@ fun ManualAttendanceScreen(
     classViewModel: ClassViewModel, 
     initialFaceId: String = "",
     initialDate: String = "",
-    onBack: () -> Unit
+    onNavigateBack: () -> Unit
 ) {
     val faces by faceViewModel.faceListStateFlow.collectAsStateWithLifecycle()
     val currentUser by userViewModel.currentUser.collectAsStateWithLifecycle()
@@ -81,9 +81,9 @@ fun ManualAttendanceScreen(
                     checkInTime = finalDateTime
                 )
                 checkInViewModel.addRecord(newRecord)
-                onBack()
+                onNavigateBack()
             }
         },
-        onBack = onBack
+        onBack = onNavigateBack
     )
 }
