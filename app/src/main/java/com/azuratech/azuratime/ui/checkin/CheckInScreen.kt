@@ -42,8 +42,8 @@ fun CheckInScreen(
         uiState = uiState,
         activeClassName = "", // Can be passed from viewModel.uiState
         useBackCamera = currentCameraIsBack,
-        onFlipCamera = { currentCameraIsBack = !currentCameraIsBack },
-        onSwitchToBarcode = onNavigateToBarcode,
+        onFlipCameraClick = { currentCameraIsBack = !currentCameraIsBack },
+        onSwitchToBarcodeClick = onNavigateToBarcode,
         onFaceEmbeddingReady = { embedding ->
             viewModel.processScannedFace(embedding)
         }

@@ -22,8 +22,8 @@ fun CheckInContent(
     uiState: CheckInUiState,
     activeClassName: String,
     useBackCamera: Boolean,
-    onFlipCamera: () -> Unit,
-    onSwitchToBarcode: () -> Unit,
+    onFlipCameraClick: () -> Unit,
+    onSwitchToBarcodeClick: () -> Unit,
     onFaceEmbeddingReady: (FloatArray) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -54,12 +54,12 @@ fun CheckInContent(
                 Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
                     AzuraButton(
                         text = "Flip",
-                        onClick = onFlipCamera,
+                        onClick = onFlipCameraClick,
                         modifier = Modifier.height(40.dp)
                     )
                     AzuraButton(
                         text = "Barcode",
-                        onClick = onSwitchToBarcode,
+                        onClick = onSwitchToBarcodeClick,
                         modifier = Modifier.height(40.dp)
                     )
                 }
@@ -135,8 +135,8 @@ fun CheckInContentSuccessPreview() {
                 uiState = CheckInUiState.Success(name = "Budi Santoso", alreadyCheckedIn = false),
                 activeClassName = "Kelas 10A",
                 useBackCamera = false,
-                onFlipCamera = {},
-                onSwitchToBarcode = {},
+                onFlipCameraClick = {},
+                onSwitchToBarcodeClick = {},
                 onFaceEmbeddingReady = {}
             )
         }
@@ -152,8 +152,8 @@ fun CheckInContentProcessingPreview() {
                 uiState = CheckInUiState.Processing,
                 activeClassName = "Kelas 10A",
                 useBackCamera = false,
-                onFlipCamera = {},
-                onSwitchToBarcode = {},
+                onFlipCameraClick = {},
+                onSwitchToBarcodeClick = {},
                 onFaceEmbeddingReady = {}
             )
         }
