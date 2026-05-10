@@ -42,7 +42,7 @@ fun NavGraphBuilder.attendanceGraph(
                 checkInViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                onBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
