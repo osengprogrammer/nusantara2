@@ -12,7 +12,7 @@ import java.util.UUID
         Index(value = ["studentId"])
     ]
 )
-data class FaceEntity(
+data class BiometricFaceEntity(
     @PrimaryKey val faceId: String = UUID.randomUUID().toString(),
     val studentId: String? = null,
     val schoolId: String = "",
@@ -25,3 +25,5 @@ data class FaceEntity(
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false
 )
+
+typealias FaceEntity = BiometricFaceEntity
