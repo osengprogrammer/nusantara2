@@ -72,5 +72,3 @@ data class MatrixParams(
     val assigned: List<String>,
     val schoolId: String
 )
-
-typealias ReportData = AttendanceMatrixData

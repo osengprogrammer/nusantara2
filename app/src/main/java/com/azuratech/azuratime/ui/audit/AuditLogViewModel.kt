@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.AuditLogRepository
-import com.azuratech.azuratime.domain.model.AuditLogProfile
+import com.azuratech.azuratime.domain.model.SystemAuditTrail
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,7 +25,7 @@ class AuditLogViewModel @Inject constructor(
     val uiEventFlow = _uiEvent.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val auditLogsStateFlow: StateFlow<List<AuditLogProfile>> = 
+    val auditLogsStateFlow: StateFlow<List<SystemAuditTrail>> = 
         sessionManager.activeSchoolIdFlow.filterNotNull()
             .flatMapLatest { schoolId -> 
                 auditLogRepository.observeLogsBySchool(schoolId)

@@ -6,7 +6,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.ReportRepository
-import com.azuratech.azuratime.domain.model.ReportSummaryProfile
+import com.azuratech.azuratime.domain.model.SchoolAnalyticsSummary
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 /**
  * 📊 REPORT VIEW MODEL - Phase 7.10 SSOT Migration
- * Observes ReportSummaryProfile stream directly from Room.
+ * Observes SchoolAnalyticsSummary stream directly from Room.
  */
 @HiltViewModel
 class ReportViewModel @Inject constructor(
@@ -28,7 +28,7 @@ class ReportViewModel @Inject constructor(
     val uiEvent = _uiEvent.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val reportList: StateFlow<List<ReportSummaryProfile>> = 
+    val reportList: StateFlow<List<SchoolAnalyticsSummary>> = 
         sessionManager.activeSchoolIdFlow.filterNotNull()
             .flatMapLatest { schoolId -> 
                 reportRepository.observeReportsByDateRange(schoolId)

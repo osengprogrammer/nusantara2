@@ -10,5 +10,3 @@ data class SchoolAnalyticsSummary(
     val metrics: Map<String, String>,
     val syncStatus: SyncStatus
 )
-
-typealias ReportSummaryProfile = SchoolAnalyticsSummary

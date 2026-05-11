@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.domain.model.ReportSummaryProfile
+import com.azuratech.azuratime.domain.model.SchoolAnalyticsSummary
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuraengine.result.Result
@@ -54,7 +54,7 @@ fun ReportScreen(
 }
 
 @Composable
-fun ReportItemCard(profile: ReportSummaryProfile) {
+fun ReportItemCard(profile: SchoolAnalyticsSummary) {
     AzuraCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(AzuraSpacing.md),
