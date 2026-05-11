@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.ui.core.preview
 
 import androidx.compose.ui.graphics.Color
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.data.local.AttendanceRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.data.local.StaffAccountEntity
@@ -40,9 +40,9 @@ object PreviewMocks {
     )
 
     val mockRecentRecords = listOf(
-        CheckInRecordEntity(
+        AttendanceRecordEntity(
             id = "1",
-            faceId = "face_1",
+            studentId = "face_1",
             name = "Budi Santoso",
             classId = "cls_1",
             className = "Kelas 10A",
@@ -54,9 +54,9 @@ object PreviewMocks {
             isSynced = true,
             timestamp = System.currentTimeMillis() - 300000
         ),
-        CheckInRecordEntity(
+        AttendanceRecordEntity(
             id = "2",
-            faceId = "face_2",
+            studentId = "face_2",
             name = "Siti Aminah",
             classId = "cls_1",
             className = "Kelas 10A",

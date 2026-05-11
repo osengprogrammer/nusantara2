@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.data.remote
 
 import android.util.Log
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.local.toCheckInRecordEntity
+import com.azuratech.azuratime.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.data.local.toAttendanceRecordEntity
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,7 +16,7 @@ class CheckInRemoteDataSourceImpl @Inject constructor(
     private val db: FirebaseFirestore
 ) : CheckInRemoteDataSource {
 
-    override suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<CheckInRecordEntity>> {
+    override suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecordEntity>> {
         return try {
             val lastTimestamp = com.google.firebase.Timestamp(java.util.Date(lastSync))
             val snapshot = db.collection("schools").document(schoolId)
@@ -25,7 +25,7 @@ class CheckInRemoteDataSourceImpl @Inject constructor(
                 .get().await()
 
             val records = snapshot.documents.mapNotNull { doc ->
-                doc.toCheckInRecordEntity(schoolId)
+                doc.toAttendanceRecordEntity(schoolId)
             }
             Result.Success(records)
         } catch (e: Exception) {
@@ -33,7 +33,7 @@ class CheckInRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun syncRecord(record: CheckInRecordEntity): Result<Unit> {
+    override suspend fun syncRecord(record: AttendanceRecordEntity): Result<Unit> {
         return try {
             val batch = db.batch()
             val data = record.toFirestoreMap().toMutableMap()
