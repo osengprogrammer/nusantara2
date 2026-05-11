@@ -38,7 +38,7 @@ import com.azuratech.azuratime.core.util.showToast
 fun ClassManagementScreen(
     viewModel: ClassViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
-    onClassClick: (id: String, name: String) -> Unit = { _, _ -> }
+    onClassSelected: (id: String, name: String) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -158,7 +158,7 @@ fun ClassManagementScreen(
                             ClassItemRow(
                                 classItem = classItem,
                                 schoolName = schoolName,
-                                onClick = { onClassClick(classItem.id, classItem.name) },
+                                onClick = { onClassSelected(classItem.id, classItem.name) },
                                 onEditClick = {
                                     editingClass = classItem
                                     showDialog = true
