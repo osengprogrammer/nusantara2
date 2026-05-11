@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 
 // 🔥 DB & ViewModels
 import com.azuratech.azuratime.domain.model.AccessRequestProfile
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.domain.model.SyncStatus
 
 // 🔥 Azura Design System
@@ -39,7 +39,7 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 fun FindSchoolScreen(
     navController: NavController,
     workspaceViewModel: WorkspaceViewModel,
-    currentUser: UserEntity?
+    currentUser: StaffAccountEntity?
 ) {
     val searchQuery by workspaceViewModel.searchQuery.collectAsStateWithLifecycle()
     val searchResults by workspaceViewModel.schoolSearchResults.collectAsStateWithLifecycle()

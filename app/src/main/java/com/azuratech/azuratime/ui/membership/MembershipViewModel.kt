@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.AccessRequestRepository
 import com.azuratech.azuratime.data.repo.MembershipRepository
@@ -25,7 +25,7 @@ import javax.inject.Inject
 /**
  * 🛠️ MEMBERSHIP VIEW MODEL
  * 🔥 v3.1: Reactive SSOT Migration (Phase 7.6)
- * Observes UserEntity and AccessRequestProfile from Room.
+ * Observes StaffAccountEntity and AccessRequestProfile from Room.
  */
 @HiltViewModel
 class MembershipViewModel @Inject constructor(
@@ -41,7 +41,7 @@ class MembershipViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val user: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
+    val user: StateFlow<StaffAccountEntity?> = sessionManager.currentUserIdFlow
         .filterNotNull()
         .flatMapLatest { uid -> userRepository.getUserDao().observeUserById(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

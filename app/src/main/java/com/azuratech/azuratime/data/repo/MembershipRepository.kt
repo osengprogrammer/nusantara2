@@ -2,7 +2,7 @@ package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.data.local.UserDao
+import com.azuratech.azuratime.data.local.StaffAccountDao
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,7 +32,7 @@ class MembershipRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
     private val sessionManager: SessionManager,
-    private val userDao: UserDao,
+    private val userDao: StaffAccountDao,
     private val syncManager: SyncManager,
     private val userRepository: StaffAccountRepository
 ) {
@@ -75,7 +75,7 @@ class MembershipRepository @Inject constructor(
 
     suspend fun createPendingUser(uid: String, email: String, displayName: String?) = withContext(Dispatchers.IO) {
         // SSOT Migration v7.1: Save to Room first, then sync
-        val user = com.azuratech.azuratime.data.local.UserEntity(
+        val user = com.azuratech.azuratime.data.local.StaffAccountEntity(
             userId = uid,
             email = email,
             name = displayName ?: "User",
@@ -153,7 +153,7 @@ class MembershipRepository @Inject constructor(
         null
     }
 
-    private fun userToMap(user: com.azuratech.azuratime.data.local.UserEntity): Map<String, Any> {
+    private fun userToMap(user: com.azuratech.azuratime.data.local.StaffAccountEntity): Map<String, Any> {
         return mapOf(
             "userId" to user.userId,
             "email" to user.email,

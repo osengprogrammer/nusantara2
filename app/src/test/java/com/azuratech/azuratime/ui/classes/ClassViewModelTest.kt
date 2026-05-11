@@ -6,7 +6,7 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.domain.classes.usecase.*
 import com.azuratech.azuratime.data.repo.SchoolRepository
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +25,7 @@ class ClassViewModelTest {
 
     @MockK lateinit var schoolRepository: SchoolRepository
     @MockK lateinit var importClassesUseCase: ImportClassesUseCase
-    @MockK lateinit var userRepository: UserRepository
+    @MockK lateinit var userRepository: StaffAccountRepository
     @MockK lateinit var sessionManager: SessionManager
 
     private lateinit var viewModel: ClassViewModel

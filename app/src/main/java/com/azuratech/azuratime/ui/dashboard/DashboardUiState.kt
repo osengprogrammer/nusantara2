@@ -3,11 +3,11 @@ package com.azuratech.azuratime.ui.dashboard
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.BiometricFaceEntity
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 
 data class DashboardUiState(
-    val user: UserEntity? = null,
+    val user: StaffAccountEntity? = null,
     val assignedClasses: List<ClassModel> = emptyList(),
     val allClasses: List<ClassModel> = emptyList(), // 🔥 Added
     val recentRecords: List<CheckInRecordEntity> = emptyList(), // SSOT: using Entity

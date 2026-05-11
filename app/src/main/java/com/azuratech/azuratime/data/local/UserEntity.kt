@@ -74,7 +74,7 @@ data class StaffAccountEntity(
      * Critical: ensure global role is mapped correctly for Dashboard logic.
      */
     fun toDomain(): com.azuratech.azuraengine.model.User {
-        println("🔄 UserEntity.toDomain: role=$role")
+        println("🔄 StaffAccountEntity.toDomain: role=$role")
         return com.azuratech.azuraengine.model.User(
             userId = userId,
             email = email,
@@ -135,5 +135,3 @@ fun com.azuratech.azuraengine.model.User.toEntity(): StaffAccountEntity {
         createdAt = createdAt
     )
 }
-
-typealias UserEntity = StaffAccountEntity

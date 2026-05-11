@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.AuthRepository
 import com.azuratech.azuratime.data.repo.StaffAccountRepository
@@ -141,7 +141,7 @@ class DashboardViewModel @Inject constructor(
         flowOf(0),
         flowOf(emptyList<AttendanceConflict>())
     ) { args ->
-        val user = args[0] as UserEntity?
+        val user = args[0] as StaffAccountEntity?
         @Suppress("UNCHECKED_CAST")
         val recentRecords = args[1] as List<CheckInRecordEntity>
         @Suppress("UNCHECKED_CAST")

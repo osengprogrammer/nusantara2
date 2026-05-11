@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.local.toEntity
 import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import com.azuratech.azuratime.data.repo.StaffAccountRepository
@@ -22,7 +22,7 @@ import javax.inject.Inject
 /**
  * 🛠️ USER MANAGEMENT VIEW MODEL
  * Pengelola profil user, hak akses kelas, dan relasi antar pengajar.
- * 🔥 Refactored: Fully SSOT! Observing UserEntity directly.
+ * 🔥 Refactored: Fully SSOT! Observing StaffAccountEntity directly.
  */
 @HiltViewModel
 class UserManagementViewModel @Inject constructor(
@@ -38,7 +38,7 @@ class UserManagementViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val currentUser: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
+    val currentUser: StateFlow<StaffAccountEntity?> = sessionManager.currentUserIdFlow
         .filterNotNull()
         .flatMapLatest { uid -> repository.getUserDao().observeUserById(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -55,7 +55,7 @@ class UserManagementViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val allUsersInSameSchool: StateFlow<List<UserEntity>> = sessionManager.activeSchoolIdFlow
+    val allUsersInSameSchool: StateFlow<List<StaffAccountEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             repository.getUserDao().observeAllUsers().map { users ->
@@ -68,8 +68,8 @@ class UserManagementViewModel @Inject constructor(
     // 3. TARGET MANAGEMENT (Managing other teachers)
     // =====================================================
 
-    private val _selectedTargetUser = MutableStateFlow<UserEntity?>(null)
-    val selectedTargetUser: StateFlow<UserEntity?> = _selectedTargetUser.asStateFlow()
+    private val _selectedTargetUser = MutableStateFlow<StaffAccountEntity?>(null)
+    val selectedTargetUser: StateFlow<StaffAccountEntity?> = _selectedTargetUser.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val targetAssignedClassIds: StateFlow<List<String>> = _selectedTargetUser
@@ -79,7 +79,7 @@ class UserManagementViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setTargetUser(userId: String, name: String, email: String) {
-        _selectedTargetUser.value = UserEntity(
+        _selectedTargetUser.value = StaffAccountEntity(
             userId = userId,
             name = name,
             email = email
@@ -95,7 +95,7 @@ class UserManagementViewModel @Inject constructor(
         println("🖱 DEBUG: selectActiveClass called for userId=$userId, classId=$classId")
         
         viewModelScope.launch {
-            val userToUpdate: UserEntity? = if (targetUserId == null || targetUserId == currentUser.value?.userId) {
+            val userToUpdate: StaffAccountEntity? = if (targetUserId == null || targetUserId == currentUser.value?.userId) {
                 currentUser.value
             } else {
                 repository.getUserDao().getUserById(targetUserId)

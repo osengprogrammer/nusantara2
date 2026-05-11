@@ -33,7 +33,7 @@ class StaffAccountRepository @Inject constructor(
     /**
      * 🔥 SSOT: Sync user profile from Cloud to Local.
      */
-    suspend fun syncUser(userId: String): Result<UserEntity> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    suspend fun syncUser(userId: String): Result<StaffAccountEntity> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         try {
             // Logic from SyncUserUseCase
             var snapshot = com.google.android.gms.tasks.Tasks.await(firestore.collection("whitelisted_users").document(userId).get())
@@ -85,7 +85,7 @@ class StaffAccountRepository @Inject constructor(
                 )
             }
 
-            val user = UserEntity(
+            val user = StaffAccountEntity(
                 userId = userId,
                 email = data["email"] as? String ?: "",
                 name = data["name"] as? String ?: "User",
@@ -259,7 +259,7 @@ class StaffAccountRepository @Inject constructor(
     }
 
     /**
-     * Observe a specific user as a Flow of UserEntity.
+     * Observe a specific user as a Flow of StaffAccountEntity.
      */
     fun observeUserEntity(userId: String) = userDao.observeUserById(userId)
 
@@ -282,7 +282,7 @@ class StaffAccountRepository @Inject constructor(
         Result.Failure(AppError.LocalDB(e.message))
     }
 
-    suspend fun updateUser(entity: UserEntity) = try {
+    suspend fun updateUser(entity: StaffAccountEntity) = try {
         userDao.updateUser(entity)
         syncManager.enqueueProfileSync(entity.userId)
         Result.Success(Unit)
@@ -290,7 +290,7 @@ class StaffAccountRepository @Inject constructor(
         Result.Failure(AppError.LocalDB(e.message))
     }
 
-    suspend fun searchUserByEmail(email: String): Result<UserEntity?> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    suspend fun searchUserByEmail(email: String): Result<StaffAccountEntity?> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         try {
             val snapshot = com.google.android.gms.tasks.Tasks.await(
                 firestore.collection("whitelisted_users")
@@ -318,7 +318,7 @@ class StaffAccountRepository @Inject constructor(
         }
     }
 
-    suspend fun searchByEmail(email: String): UserEntity? {
+    suspend fun searchByEmail(email: String): StaffAccountEntity? {
         // Simple mock/local search for now, or cloud pull if needed
         return null 
     }
@@ -346,5 +346,3 @@ class StaffAccountRepository @Inject constructor(
     
     fun setConflicts(list: List<AttendanceConflict>) { _conflicts.value = list }
 }
-
-typealias UserRepository = StaffAccountRepository

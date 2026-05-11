@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.ui.core.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDropdownField

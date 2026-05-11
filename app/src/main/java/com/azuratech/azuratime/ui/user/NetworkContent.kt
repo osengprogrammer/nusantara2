@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
@@ -26,7 +26,7 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 
 @Composable
 fun NetworkContent(
-    currentUser: UserEntity?,
+    currentUser: StaffAccountEntity?,
     uiState: NetworkState,
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit,
@@ -70,7 +70,7 @@ fun NetworkContent(
 
 @Composable
 fun FriendListSection(
-    currentUser: UserEntity?,
+    currentUser: StaffAccountEntity?,
     onAcceptFriend: (String) -> Unit,
     onRejectFriend: (String) -> Unit,
     onViewTargetUserClasses: (String, String, String) -> Unit
@@ -137,7 +137,7 @@ fun FriendListSection(
 
 @Composable
 fun SearchFriendSection(
-    currentUser: UserEntity?,
+    currentUser: StaffAccountEntity?,
     uiState: NetworkState,
     onQueryChange: (String) -> Unit,
     onSearchUser: (String) -> Unit,

@@ -4,7 +4,7 @@ import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.domain.model.SyncStatus
@@ -37,7 +37,7 @@ class AuthRepository @Inject constructor(
 ) {
     private val userDao = database.userDao()
 
-    suspend fun signInWithGoogle(idToken: String): Pair<UserEntity?, Boolean> = withContext(Dispatchers.IO) {
+    suspend fun signInWithGoogle(idToken: String): Pair<StaffAccountEntity?, Boolean> = withContext(Dispatchers.IO) {
         try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
@@ -60,7 +60,7 @@ class AuthRepository @Inject constructor(
             if (userEntity == null) {
                 // Truly a new user
                 println("🔍 AuthRepository: New user detected.")
-                val newUser = UserEntity(
+                val newUser = StaffAccountEntity(
                     userId = uid,
                     email = email,
                     name = firebaseUser.displayName ?: "User Baru",
