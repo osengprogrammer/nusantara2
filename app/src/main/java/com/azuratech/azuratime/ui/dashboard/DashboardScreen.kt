@@ -105,7 +105,7 @@ fun DashboardScreen(
                 if (data.conflicts.isNotEmpty()) {
                     ConflictResolverDialog(
                         conflict = data.conflicts.first(),
-                        onResolve = { useCloud -> viewModel.resolveConflict(data.conflicts.first(), useCloud) }
+                        onResolveClick = { useCloud -> viewModel.resolveConflict(data.conflicts.first(), useCloud) }
                     )
                 }
 

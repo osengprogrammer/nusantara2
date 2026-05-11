@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ConflictResolverDialog(
     conflict: AttendanceConflict,
-    onResolve: (useCloud: Boolean) -> Unit
+    onResolveClick: (useCloud: Boolean) -> Unit
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
@@ -104,7 +104,7 @@ fun ConflictResolverDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onResolve(true) },
+                onClick = { onResolveClick(true) },
                 shape = AzuraShapes.medium
             ) {
                 Text("Gunakan Data Cloud")
@@ -112,7 +112,7 @@ fun ConflictResolverDialog(
         },
         dismissButton = {
             OutlinedButton(
-                onClick = { onResolve(false) },
+                onClick = { onResolveClick(false) },
                 shape = AzuraShapes.medium
             ) {
                 Text("Tetap Data Lokal")
