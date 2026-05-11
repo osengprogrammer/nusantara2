@@ -3,7 +3,7 @@ package com.azuratech.azuratime.ui.attendance
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.AttendanceEntity
+import com.azuratech.azuratime.data.local.AttendanceSummary
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.domain.model.AttendanceProfile
 import com.azuratech.azuratime.domain.model.SyncStatus

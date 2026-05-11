@@ -5,18 +5,18 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 @Dao
-interface CheckInRecordDao {
+interface AttendanceRecordDao {
     @Query("SELECT * FROM check_in_records WHERE schoolId = :schoolId ORDER BY attendanceDate DESC, checkInTime DESC")
-    fun getAllRecords(schoolId: String): Flow<List<CheckInRecordEntity>>
+    fun getAllRecords(schoolId: String): Flow<List<AttendanceRecordEntity>>
 
     @Query("SELECT * FROM check_in_records WHERE isSynced = 0 AND schoolId = :schoolId")
-    suspend fun getUnsyncedRecords(schoolId: String): List<CheckInRecordEntity>
+    suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecordEntity>
 
     @Query("SELECT * FROM check_in_records WHERE id = :recordId LIMIT 1")
-    suspend fun getRecordByIdNoSchool(recordId: String): CheckInRecordEntity?
+    suspend fun getRecordByIdNoSchool(recordId: String): AttendanceRecordEntity?
 
     @Query("SELECT * FROM check_in_records WHERE id = :recordId AND schoolId = :schoolId LIMIT 1")
-    suspend fun getRecordById(recordId: String, schoolId: String): CheckInRecordEntity?
+    suspend fun getRecordById(recordId: String, schoolId: String): AttendanceRecordEntity?
 
     @Query("""
         SELECT * FROM check_in_records 
@@ -37,16 +37,16 @@ interface CheckInRecordDao {
     fun getFilteredRecords(
         nameFilter: String = "", startDate: LocalDate? = null, endDate: LocalDate? = null,
         userId: String? = null, classId: String? = null, assignedIds: List<String> = emptyList(), schoolId: String
-    ): Flow<List<CheckInRecordEntity>>
+    ): Flow<List<AttendanceRecordEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(record: CheckInRecordEntity)
+    suspend fun insert(record: AttendanceRecordEntity)
 
     @Update
-    suspend fun update(record: CheckInRecordEntity)
+    suspend fun update(record: AttendanceRecordEntity)
 
     @Delete
-    suspend fun delete(record: CheckInRecordEntity)
+    suspend fun delete(record: AttendanceRecordEntity)
     
     @Query("SELECT COUNT(*) FROM check_in_records WHERE isSynced = 0 AND schoolId = :schoolId")
     fun getUnsyncedRecordsCountFlow(schoolId: String): Flow<Int>
@@ -61,12 +61,14 @@ interface CheckInRecordDao {
     fun getTotalCountFlow(schoolId: String): Flow<Int>
 
     @Query("SELECT * FROM check_in_records WHERE faceId = :faceId AND attendanceDate = :date AND schoolId = :schoolId LIMIT 1")
-    suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): CheckInRecordEntity?
+    suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
 
     // 🔥 Added for ReportRepository
     @Query("SELECT * FROM check_in_records WHERE schoolId = :schoolId AND classId IN (:classIds) AND attendanceDate >= :start AND attendanceDate <= :end ORDER BY attendanceDate DESC, checkInTime DESC")
-    fun getReportsByMultipleClasses(classIds: List<String>, start: LocalDate, end: LocalDate, schoolId: String): Flow<List<CheckInRecordEntity>>
+    fun getReportsByMultipleClasses(classIds: List<String>, start: LocalDate, end: LocalDate, schoolId: String): Flow<List<AttendanceRecordEntity>>
 
     @Query("SELECT * FROM check_in_records WHERE schoolId = :schoolId AND attendanceDate >= :start AND attendanceDate <= :end ORDER BY attendanceDate DESC, checkInTime DESC")
-    fun getReportsByDateRange(start: LocalDate, end: LocalDate, schoolId: String): Flow<List<CheckInRecordEntity>>
+    fun getReportsByDateRange(start: LocalDate, end: LocalDate, schoolId: String): Flow<List<AttendanceRecordEntity>>
 }
+
+typealias CheckInRecordDao = AttendanceRecordDao

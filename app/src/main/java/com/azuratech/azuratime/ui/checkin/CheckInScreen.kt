@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 
 @Composable
-fun CheckInScreen(
+fun AttendanceCaptureScreen(
     useBackCamera: Boolean,
     teacherEmail: String,
     onBarcodeScanClick: () -> Unit,

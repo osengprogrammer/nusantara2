@@ -13,7 +13,7 @@ import java.util.UUID
     tableName = "attendance",
     indices = [Index(value = ["schoolId"])]
 )
-data class AttendanceEntity(
+data class AttendanceSummary(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val schoolId: String,
     val studentId: String,
@@ -27,7 +27,7 @@ data class AttendanceEntity(
     val timestamp: Long = System.currentTimeMillis()
 )
 
-fun AttendanceEntity.toProfile() = AttendanceProfile(
+fun AttendanceSummary.toProfile() = AttendanceProfile(
     studentId = studentId,
     studentName = name,
     schoolId = schoolId,
@@ -39,3 +39,5 @@ fun AttendanceEntity.toProfile() = AttendanceProfile(
     syncStatus = syncStatus,
     timestamp = timestamp
 )
+
+typealias AttendanceEntity = AttendanceSummary
