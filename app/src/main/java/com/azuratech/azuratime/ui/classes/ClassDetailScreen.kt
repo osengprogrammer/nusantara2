@@ -26,7 +26,7 @@ fun ClassDetailScreen(
     className: String,
     @Suppress("UNUSED_PARAMETER") classViewModel: ClassViewModel,
     faceViewModel: FaceViewModel,
-    onBack: () -> Unit,
+    onNavigateBack: () -> Unit,
     onAddStudent: (String) -> Unit // Navigates to student selection
 ) {
     // 1. Observe Students in this class
@@ -36,7 +36,7 @@ fun ClassDetailScreen(
 
     AzuraScreen(
         title = className,
-        onBack = onBack,
+        onBack = onNavigateBack,
         actions = {
             IconButton(onClick = { onAddStudent(classId) }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Student")

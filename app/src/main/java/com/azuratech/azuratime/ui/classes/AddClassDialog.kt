@@ -22,8 +22,8 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 fun AddClassDialog(
     editingClass: ClassModel? = null,
     availableClasses: List<String> = emptyList(),
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onDismissRequest: () -> Unit,
+    onConfirmClick: (String) -> Unit
 ) {
     var name by remember { mutableStateOf(editingClass?.name ?: "") }
     var searchQuery by remember { mutableStateOf("") }
@@ -35,7 +35,7 @@ fun AddClassDialog(
     }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = onDismissRequest,
         title = { Text(if (editingClass == null) "Tambah Kelas" else "Ubah Nama Kelas") },
         text = {
             Column(
@@ -131,7 +131,7 @@ fun AddClassDialog(
             Button(
                 onClick = { 
                     println("✅ DEBUG: Confirming class: $name")
-                    onConfirm(name) 
+                    onConfirmClick(name) 
                 },
                 enabled = isNameValid
             ) {
@@ -139,7 +139,7 @@ fun AddClassDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onDismissRequest) {
                 Text("Batal")
             }
         }
