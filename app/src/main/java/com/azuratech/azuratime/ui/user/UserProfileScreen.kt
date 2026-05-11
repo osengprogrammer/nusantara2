@@ -16,7 +16,7 @@ import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
-import com.azuratech.azuratime.ui.core.designsystem.FaceAvatar
+import com.azuratech.azuratime.ui.core.designsystem.StudentAvatar
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 
 @Composable
@@ -137,7 +137,7 @@ fun UserProfileContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
             ) {
-                FaceAvatar(photoPath = null, size = 96)
+                StudentAvatar(photoPath = null, size = 96)
 
                 Text(
                     text = user?.email ?: "—",

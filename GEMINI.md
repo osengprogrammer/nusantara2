@@ -2,6 +2,12 @@
 
 ## 🚀 Recent Updates (May 7, 2026)
 
+### Phase 7.18: Student Domain Refinement
+- **Standardized Domain Models**: Renamed `FaceEnrollmentProfile` to `BiometricEnrollmentProfile` to better reflect its purpose in the UI.
+- **Design System Alignment**: Renamed `QuickEditFaceDialog` to `QuickEditStudentDialog` and `FaceAvatar` to `StudentAvatar`.
+- **UI Integration**: Updated all call sites in `BiometricScreen`, `StudentRosterScreen`, `UserProfileScreen`, and `ClassDetailScreen` to use the new standardized components.
+- **Project Index Cleanup**: Updated `PROJECT_INDEX.md` to reflect recent file renames and standardizations.
+
 ### Phase 7.17: Student Roster Naming Cascade
 - **UI Naming Alignment**: Renamed `FaceListScreen` to `StudentRosterScreen` and `FaceListBarcodeScreen` to `StudentRosterBarcodeScreen`.
 - **ViewModel Naming**: Renamed `FaceListViewModel` to `StudentRosterViewModel` and updated associated state flows for domain consistency.

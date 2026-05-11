@@ -23,7 +23,7 @@
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
 | `BootViewModel.kt` | `core.boot` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `FaceListViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `StudentRosterViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `FaceViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `RegisterViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `StudentFormViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
@@ -96,7 +96,7 @@
 | `AttendanceProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
 | `AuditLogProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
 | `ExportJobProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `FaceEnrollmentProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
+| `BiometricEnrollmentProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
 | `ReportSummaryProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
 | `StudentProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ⚠️ Legacy |
 
@@ -114,7 +114,7 @@
 | `AddStudentScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `BulkRegistrationScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `EditStudentScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `FaceCaptureScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `BiometricCaptureScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `StudentRosterBarcodeScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `StudentRosterScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `RegistrationMenuScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |

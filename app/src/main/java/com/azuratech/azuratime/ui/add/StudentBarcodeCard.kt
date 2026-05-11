@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import com.azuratech.azuratime.data.local.FaceWithDetails
-import com.azuratech.azuratime.ui.core.designsystem.FaceAvatar
+import com.azuratech.azuratime.ui.core.designsystem.StudentAvatar
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import com.google.zxing.BarcodeFormat
@@ -53,7 +53,7 @@ fun StudentBarcodeCard(
             modifier = Modifier.padding(AzuraSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FaceAvatar(photoPath = detail.face.photoUrl, size = 56)
+            StudentAvatar(photoPath = detail.face.photoUrl, size = 56)
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
             Column(modifier = Modifier.weight(1f)) {
                 Text(detail.face.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)

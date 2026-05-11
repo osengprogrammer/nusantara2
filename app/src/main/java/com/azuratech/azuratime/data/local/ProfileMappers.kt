@@ -2,7 +2,7 @@ package com.azuratech.azuratime.data.local
 
 import com.azuratech.azuratime.domain.model.AuditLogProfile
 import com.azuratech.azuratime.domain.model.ExportJobProfile
-import com.azuratech.azuratime.domain.model.FaceEnrollmentProfile
+import com.azuratech.azuratime.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.domain.model.ReportSummaryProfile
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
@@ -53,10 +53,10 @@ fun ReportEntity.toProfile(): ReportSummaryProfile {
 }
 
 /**
- * Extension to convert FaceEntity to FaceEnrollmentProfile.
+ * Extension to convert FaceEntity to BiometricEnrollmentProfile.
  */
-fun FaceEntity.toProfile(): FaceEnrollmentProfile {
-    return FaceEnrollmentProfile(
+fun FaceEntity.toProfile(): BiometricEnrollmentProfile {
+    return BiometricEnrollmentProfile(
         faceId = faceId,
         studentId = studentId,
         studentName = name,

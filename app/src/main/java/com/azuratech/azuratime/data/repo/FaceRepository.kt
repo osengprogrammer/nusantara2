@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FaceRepository @Inject constructor(
+class BiometricFaceRepository @Inject constructor(
     private val application: Application,
     private val localDataSource: FaceLocalDataSource,
     private val remoteDataSource: FaceRemoteDataSource,
@@ -146,3 +146,5 @@ class FaceRepository @Inject constructor(
     suspend fun bulkSyncFaces(schoolId: String, faces: List<FaceEntity>) = remoteDataSource.bulkSyncFaces(schoolId, faces)
     suspend fun uploadFacePhoto(schoolId: String, faceId: String, imageBytes: ByteArray) = remoteDataSource.uploadFacePhoto(schoolId, faceId, imageBytes)
 }
+
+typealias FaceRepository = BiometricFaceRepository
