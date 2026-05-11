@@ -25,5 +25,3 @@ data class BiometricFaceEntity(
     val isSynced: Boolean = false,
     val isDeleted: Boolean = false
 )
-
-typealias FaceEntity = BiometricFaceEntity

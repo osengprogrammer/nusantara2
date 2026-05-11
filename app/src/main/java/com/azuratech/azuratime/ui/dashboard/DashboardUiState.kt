@@ -2,7 +2,7 @@ package com.azuratech.azuratime.ui.dashboard
 
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 
@@ -11,7 +11,7 @@ data class DashboardUiState(
     val assignedClasses: List<ClassModel> = emptyList(),
     val allClasses: List<ClassModel> = emptyList(), // 🔥 Added
     val recentRecords: List<CheckInRecordEntity> = emptyList(), // SSOT: using Entity
-    val sessionStudents: List<FaceEntity> = emptyList(),
+    val sessionStudents: List<BiometricFaceEntity> = emptyList(),
     val isSyncing: Boolean = false,
     val isReady: Boolean = false, // 🔥 Added
     val pendingRequests: Int = 0,

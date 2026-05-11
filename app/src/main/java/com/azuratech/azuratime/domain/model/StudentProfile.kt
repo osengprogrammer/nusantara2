@@ -4,7 +4,7 @@ package com.azuratech.azuratime.domain.model
  * 🎓 STUDENT PROFILE - THE SINGLE SOURCE OF TRUTH (SSOT)
  *
  * This domain model represents a complete person within the system, combining
- * their identity (StudentEntity), biometric data (FaceEntity), and class 
+ * their identity (StudentEntity), biometric data (BiometricFaceEntity), and class 
  * assignments (FaceAssignmentEntity).
  *
  * All UI components and business logic UseCases should use this model to 

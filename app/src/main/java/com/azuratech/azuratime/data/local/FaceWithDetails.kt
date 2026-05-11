@@ -9,7 +9,7 @@ import androidx.room.Ignore
  * Kelas di layar manajemen tanpa banyak query manual.
  */
 data class FaceWithDetails(
-    @Embedded val face: FaceEntity,
+    @Embedded val face: BiometricFaceEntity,
 
     @ColumnInfo(name = "className")
     val className: String? = null,
@@ -21,5 +21,5 @@ data class FaceWithDetails(
     val classIds: List<String> = emptyList()
 ) {
     // Required secondary constructor for Room to use when not providing @Ignore fields
-    constructor(face: FaceEntity, className: String?, classId: String?) : this(face, className, classId, emptyList())
+    constructor(face: BiometricFaceEntity, className: String?, classId: String?) : this(face, className, classId, emptyList())
 }

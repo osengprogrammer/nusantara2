@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.data.local.FaceWithDetails
 
 import kotlinx.coroutines.launch
@@ -57,7 +57,7 @@ class FaceViewModel @Inject constructor(
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val enrolledStudentFlow: StateFlow<List<FaceEntity>> = sessionManager.activeSchoolIdFlow
+    val enrolledStudentFlow: StateFlow<List<BiometricFaceEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> faceRepository.getEnrolledFacesFlow(schoolId) }
         .map { it }
@@ -67,7 +67,7 @@ class FaceViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    fun getFacesInClassFlow(classId: String): Flow<List<FaceEntity>> = 
+    fun getFacesInClassFlow(classId: String): Flow<List<BiometricFaceEntity>> = 
         faceRepository.getFacesInClassFlow(classId, sessionManager.getActiveSchoolId() ?: "").map { it }
 
     fun registerFace(
@@ -114,7 +114,7 @@ class FaceViewModel @Inject constructor(
         return stream.toByteArray()
     }
 
-    fun deleteFace(face: FaceEntity) { 
+    fun deleteFace(face: BiometricFaceEntity) { 
         viewModelScope.launch { 
             val result = faceRepository.deleteFace(face.faceId)
             if (result is Result.Failure) {
@@ -132,7 +132,7 @@ class FaceViewModel @Inject constructor(
         }
     }
 
-    fun updateFace(face: FaceEntity, onComplete: () -> Unit) {
+    fun updateFace(face: BiometricFaceEntity, onComplete: () -> Unit) {
         viewModelScope.launch {
             val profile = StudentProfile(
                 studentId = face.studentId ?: face.faceId,

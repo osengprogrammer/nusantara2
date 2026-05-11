@@ -2,7 +2,7 @@ package com.azuratech.azuratime.data.remote
 
 import android.util.Log
 import com.azuratech.azuratime.data.local.FaceAssignmentEntity
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FieldValue
@@ -21,7 +21,7 @@ class FaceRemoteDataSourceImpl @Inject constructor(
 
     private fun getTenantRef(schoolId: String) = db.collection("schools").document(schoolId)
 
-    override suspend fun getFaceUpdates(schoolId: String, lastSync: Long): Result<List<Pair<FaceEntity, Boolean>>> {
+    override suspend fun getFaceUpdates(schoolId: String, lastSync: Long): Result<List<Pair<BiometricFaceEntity, Boolean>>> {
         return try {
             val lastTimestamp = com.google.firebase.Timestamp(java.util.Date(lastSync))
             
@@ -31,7 +31,7 @@ class FaceRemoteDataSourceImpl @Inject constructor(
             val updatedData = snapshot.documents.mapNotNull { doc ->
                 try {
                     val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
-                    val entity = FaceEntity(
+                    val entity = BiometricFaceEntity(
                         faceId = doc.id,
                         schoolId = schoolId,
                         name = doc.getString("name") ?: "",
@@ -61,7 +61,7 @@ class FaceRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun bulkSyncFaces(schoolId: String, faces: List<FaceEntity>): Result<Unit> {
+    override suspend fun bulkSyncFaces(schoolId: String, faces: List<BiometricFaceEntity>): Result<Unit> {
         return try {
             if (faces.isEmpty()) return Result.Success(Unit)
             faces.chunked(500).forEach { chunk ->

@@ -35,7 +35,7 @@ class FaceAssignmentViewModel @Inject constructor(
             .flatMapLatest { schoolId: String? ->
                 faceDao.getAllFacesFlow(schoolId ?: "")
             }
-            .flatMapLatest { faces: List<com.azuratech.azuratime.data.local.FaceEntity> ->
+            .flatMapLatest { faces: List<com.azuratech.azuratime.data.local.BiometricFaceEntity> ->
                 if (faces.isEmpty()) return@flatMapLatest flowOf(emptyMap<String, List<ClassModel>>())
                 // Simplified for brevity, logic remains similar
                 flowOf(emptyMap<String, List<ClassModel>>()) 

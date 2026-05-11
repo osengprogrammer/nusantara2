@@ -2,7 +2,7 @@ package com.azuratech.azuratime.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
@@ -145,7 +145,7 @@ class DashboardViewModel @Inject constructor(
         @Suppress("UNCHECKED_CAST")
         val recentRecords = args[1] as List<CheckInRecordEntity>
         @Suppress("UNCHECKED_CAST")
-        val sessionStudents = args[2] as List<FaceEntity>
+        val sessionStudents = args[2] as List<BiometricFaceEntity>
         @Suppress("UNCHECKED_CAST")
         val assignedClasses = args[3] as List<ClassModel>
         @Suppress("UNCHECKED_CAST")

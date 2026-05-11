@@ -41,7 +41,7 @@ object AppModule {
     fun provideStudentDao(db: AppDatabase) = db.studentDao()
 
     @Provides
-    fun provideFaceDao(db: AppDatabase) = db.faceDao()
+    fun provideFaceDao(db: AppDatabase): com.azuratech.azuratime.data.local.BiometricFaceDao = db.faceDao()
 
     @Provides
     fun provideFaceAssignmentDao(db: AppDatabase) = db.faceAssignmentDao()

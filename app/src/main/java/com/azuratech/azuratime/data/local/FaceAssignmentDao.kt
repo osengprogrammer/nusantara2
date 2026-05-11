@@ -27,7 +27,7 @@ interface FaceAssignmentDao {
     fun getAllAssignments(schoolId: String): Flow<List<FaceAssignmentEntity>>
 
     @Query("SELECT faces.* FROM faces INNER JOIN face_assignments ON faces.faceId = face_assignments.faceId WHERE face_assignments.classId = :classId AND faces.schoolId = :schoolId")
-    fun getFacesByClass(classId: String, schoolId: String): Flow<List<FaceEntity>>
+    fun getFacesByClass(classId: String, schoolId: String): Flow<List<BiometricFaceEntity>>
 
     @Query("SELECT COUNT(DISTINCT faceId) FROM face_assignments WHERE classId = :classId AND schoolId = :schoolId")
     fun getStudentCountInClass(classId: String, schoolId: String): Flow<Int>
@@ -55,5 +55,5 @@ interface FaceAssignmentDao {
 
     // 🔥 Added for ReportRepository
     @Query("SELECT faces.* FROM faces INNER JOIN face_assignments ON faces.faceId = face_assignments.faceId WHERE face_assignments.classId IN (:classIds) AND faces.schoolId = :schoolId")
-    fun getFacesByMultipleClasses(classIds: List<String>, schoolId: String): Flow<List<FaceEntity>>
+    fun getFacesByMultipleClasses(classIds: List<String>, schoolId: String): Flow<List<BiometricFaceEntity>>
 }

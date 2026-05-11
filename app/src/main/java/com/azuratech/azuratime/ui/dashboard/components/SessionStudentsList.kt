@@ -6,11 +6,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 
 @Composable
-fun SessionStudentsList(students: List<FaceEntity>, modifier: Modifier = Modifier) {
+fun SessionStudentsList(students: List<BiometricFaceEntity>, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(horizontal = AzuraSpacing.md)) {
         Text(text = "Siswa Terpindai", style = MaterialTheme.typography.titleMedium)
         // You can add a list of students here

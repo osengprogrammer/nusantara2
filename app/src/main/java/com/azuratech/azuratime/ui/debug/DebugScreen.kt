@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 // 🔥 DB, ML, & Utils
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.FaceCache
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.ml.matcher.NativeSecurityVault
 import com.azuratech.azuratime.ml.recognizer.FaceNetConstants
 import com.azuratech.azuratime.core.session.SessionManager
@@ -36,7 +36,7 @@ fun DebugScreen(
     val sessionManager = SessionManager.getInstance(context)
     val schoolId = sessionManager.getActiveSchoolId() ?: "NO_SCHOOL"
 
-    var faces by remember { mutableStateOf<List<FaceEntity>>(emptyList()) }
+    var faces by remember { mutableStateOf<List<BiometricFaceEntity>>(emptyList()) }
     var cacheData by remember { mutableStateOf<List<Pair<String, FloatArray>>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     var debugInfo by remember { mutableStateOf("") }
