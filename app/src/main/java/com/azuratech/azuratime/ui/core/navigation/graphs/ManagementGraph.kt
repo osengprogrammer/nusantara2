@@ -85,7 +85,7 @@ fun NavGraphBuilder.managementGraph(
         ) { 
             ClassManagementScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onClassClick = { id, name ->
+                onClassSelected = { id, name ->
                     navController.navigate(Screen.ClassDetail.createRoute(id, name))
                 }
             )
@@ -96,7 +96,7 @@ fun NavGraphBuilder.managementGraph(
         ) {
             ClassManagementScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onClassClick = { id, name ->
+                onClassSelected = { id, name ->
                     navController.navigate(Screen.ClassDetail.createRoute(id, name))
                 }
             )
