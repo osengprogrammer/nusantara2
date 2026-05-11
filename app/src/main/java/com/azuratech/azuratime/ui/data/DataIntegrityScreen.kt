@@ -89,7 +89,7 @@ fun DataIntegrityScreen(
         selectedConflict?.let { conflict ->
             ConflictResolverDialog(
                 conflict = conflict,
-                onResolve = { useCloud -> 
+                onResolveClick = { useCloud -> 
                     viewModel.resolveConflict(conflict.conflictId, useCloud)
                     selectedConflict = null
                 }
