@@ -21,7 +21,7 @@ fun NavGraphBuilder.userGraph(
             com.azuratech.azuratime.ui.user.UserProfileScreen(
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 workspaceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                onBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable(

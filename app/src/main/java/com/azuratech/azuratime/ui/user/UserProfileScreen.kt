@@ -23,7 +23,7 @@ import com.azuratech.azuratime.ui.theme.AzuraSpacing
 fun UserProfileScreen(
     userViewModel: UserManagementViewModel,
     workspaceViewModel: WorkspaceViewModel,
-    onBack: () -> Unit
+    onNavigateBack: () -> Unit
 ) {
     val user by userViewModel.currentUser.collectAsState()
     val activeSchoolId = user?.activeSchoolId
@@ -57,7 +57,7 @@ fun UserProfileScreen(
         schoolInput = schoolInput,
         onToggleNameEdit = { editingName = !editingName },
         onToggleSchoolEdit = { editingSchool = !editingSchool },
-        onSaveName = { newName ->
+        onSaveNameClick = { newName ->
             if (newName.isBlank()) {
                 snackMessage = "Nama tidak boleh kosong"
             } else {
@@ -95,8 +95,9 @@ fun UserProfileScreen(
             schoolInput = schoolName
             editingSchool = false
         },
-        onNameInputChange = { nameInput = it },
-        onSchoolInputChange = { schoolInput = it }
+        onNameChanged = { nameInput = it },
+        onSchoolInputChange = { schoolInput = it },
+        onNavigateBack = onNavigateBack
     )
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -116,15 +117,17 @@ fun UserProfileContent(
     schoolInput: String,
     onToggleNameEdit: () -> Unit,
     onToggleSchoolEdit: () -> Unit,
-    onSaveName: (String) -> Unit,
+    onSaveNameClick: (String) -> Unit,
     onCancelNameEdit: () -> Unit,
     onSaveSchool: (String) -> Unit,
     onCancelSchoolEdit: () -> Unit,
-    onNameInputChange: (String) -> Unit,
-    onSchoolInputChange: (String) -> Unit
+    onNameChanged: (String) -> Unit,
+    onSchoolInputChange: (String) -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     AzuraScreen(
         title = "Profil Saya",
+        onBack = onNavigateBack,
         content = {
             Column(
                 modifier = Modifier
@@ -149,7 +152,7 @@ fun UserProfileContent(
                         Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
                             AzuraTextField(
                                 value = nameInput,
-                                onValueChange = onNameInputChange,
+                                onValueChange = onNameChanged,
                                 label = "Nama Baru"
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
@@ -159,7 +162,7 @@ fun UserProfileContent(
                                 ) { Text("Batal") }
                                 AzuraButton(
                                     text = "Simpan",
-                                    onClick = { onSaveName(nameInput) },
+                                    onClick = { onSaveNameClick(nameInput) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
