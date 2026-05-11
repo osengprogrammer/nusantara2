@@ -6,7 +6,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.FaceRepository
-import com.azuratech.azuratime.domain.model.FaceEnrollmentProfile
+import com.azuratech.azuratime.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 /**
  * 🛠️ BIOMETRIC VIEW MODEL - Phase 7.9 SSOT Migration
- * Observes FaceEnrollmentProfile stream directly from Room.
+ * Observes BiometricEnrollmentProfile stream directly from Room.
  */
 @HiltViewModel
 class BiometricViewModel @Inject constructor(
@@ -31,7 +31,7 @@ class BiometricViewModel @Inject constructor(
     val searchQuery = _searchQuery.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val enrollmentList: StateFlow<List<FaceEnrollmentProfile>> = 
+    val enrollmentList: StateFlow<List<BiometricEnrollmentProfile>> = 
         sessionManager.activeSchoolIdFlow.filterNotNull()
             .flatMapLatest { schoolId -> 
                 faceRepository.observeEnrollmentsBySchool(schoolId)

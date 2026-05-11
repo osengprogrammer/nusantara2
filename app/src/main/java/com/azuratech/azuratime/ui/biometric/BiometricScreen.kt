@@ -15,12 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.domain.model.FaceEnrollmentProfile
+import com.azuratech.azuratime.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
-import com.azuratech.azuratime.ui.core.designsystem.FaceAvatar
+import com.azuratech.azuratime.ui.core.designsystem.StudentAvatar
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.ui.core.preview.AzuraPreviews
 
@@ -70,7 +70,7 @@ fun BiometricScreen(
 
 @Composable
 fun BiometricEnrollmentItem(
-    profile: FaceEnrollmentProfile,
+    profile: BiometricEnrollmentProfile,
     onDelete: () -> Unit
 ) {
     AzuraCard(modifier = Modifier.fillMaxWidth()) {
@@ -78,7 +78,7 @@ fun BiometricEnrollmentItem(
             modifier = Modifier.padding(AzuraSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FaceAvatar(photoPath = profile.photoUri, size = 56)
+            StudentAvatar(photoPath = profile.photoUri, size = 56)
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
             
             Column(modifier = Modifier.weight(1f)) {
