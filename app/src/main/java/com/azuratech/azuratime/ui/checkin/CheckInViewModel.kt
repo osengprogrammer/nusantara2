@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.BiometricFaceEntity
-import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.AttendanceRecord
 import com.azuratech.azuratime.domain.checkin.model.CheckInResult
 import com.azuratech.azuratime.domain.checkin.repository.ProcessCheckInParams
 import com.azuratech.azuratime.core.session.SessionManager
@@ -23,7 +23,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 @HiltViewModel
-class CheckInViewModel @Inject constructor(
+class AttendanceCaptureViewModel @Inject constructor(
     application: Application,
     private val repository: CheckInRepository,
     private val schoolRepository: SchoolRepository,
@@ -87,7 +87,7 @@ class CheckInViewModel @Inject constructor(
     val filterParams: StateFlow<FilterParams> = _filterParams.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val checkInRecords: StateFlow<List<CheckInRecord>> =
+    val checkInRecords: StateFlow<List<AttendanceRecord>> =
         combine(sessionManager.activeSchoolIdFlow.filterNotNull(), _filterParams) { schoolId, params ->
             schoolId to params
         }.flatMapLatest { (schoolId, params) ->
@@ -159,32 +159,34 @@ class CheckInViewModel @Inject constructor(
 
     fun updateNameFilter(name: String) { _filterParams.value = _filterParams.value.copy(name = name) }
     
-    fun updateRecord(record: CheckInRecord) { 
+    fun updateRecord(record: AttendanceRecord) { 
         viewModelScope.launch { 
             repository.updateRecord(record.recordId, record.classId, record.className)
         } 
     }
     
-    fun addRecord(record: CheckInRecord) { 
+    fun addRecord(record: AttendanceRecord) { 
         viewModelScope.launch { 
             repository.saveRecord(record)
         } 
     }
     
-    fun updateRecordClass(record: CheckInRecord, selectedClass: ClassModel) {
+    fun updateRecordClass(record: AttendanceRecord, selectedClass: ClassModel) {
         viewModelScope.launch { 
             repository.updateRecord(record.recordId, selectedClass.id, selectedClass.name) 
         }
     }
     
-    fun deleteRecord(record: CheckInRecord) { 
+    fun deleteRecord(record: AttendanceRecord) { 
         viewModelScope.launch { 
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
             repository.deleteRecord(record.recordId, schoolId) 
         } 
     }
 
-    fun exportRecords(records: List<CheckInRecord>) {
+    fun exportRecords(records: List<AttendanceRecord>) {
         viewModelScope.launch { exportUtils.exportRawLogsToCsv(records) }
     }
 }
+
+typealias CheckInViewModel = AttendanceCaptureViewModel

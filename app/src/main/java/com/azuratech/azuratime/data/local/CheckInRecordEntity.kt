@@ -1,11 +1,12 @@
 package com.azuratech.azuratime.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
-import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.domain.checkin.model.AttendanceRecord
 import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
 import java.time.Instant
 import java.time.LocalDate
@@ -18,10 +19,10 @@ import java.util.UUID
     tableName = "check_in_records",
     indices = [Index(value = ["schoolId"])]
 )
-data class CheckInRecordEntity(
+data class AttendanceRecordEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val schoolId: String = "",
-    val faceId: String, 
+    @ColumnInfo(name = "faceId") val studentId: String,
     val name: String,
     val userId: String, 
     val status: String, 
@@ -43,10 +44,10 @@ data class CheckInRecordEntity(
             return createdAtDateTime.format(formatter)
         }
 
-    fun toDomain(): CheckInRecord {
-        return CheckInRecord(
+    fun toDomain(): AttendanceRecord {
+        return AttendanceRecord(
             recordId = id,
-            studentId = faceId,
+            studentId = studentId,
             studentName = name,
             classId = classId ?: "",
             className = className ?: "",
@@ -62,7 +63,7 @@ data class CheckInRecordEntity(
         return mapOf(
             "id" to id,
             "schoolId" to schoolId,
-            "faceId" to faceId,
+            "faceId" to studentId,
             "name" to name,
             "teacherEmail" to userId,
             "status" to status,
@@ -77,15 +78,15 @@ data class CheckInRecordEntity(
     }
 
     companion object {
-        fun fromDomain(domain: CheckInRecord): CheckInRecordEntity {
+        fun fromDomain(domain: AttendanceRecord): AttendanceRecordEntity {
             val dateTime = LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(domain.timestamp),
                 ZoneId.systemDefault()
             )
-            return CheckInRecordEntity(
+            return AttendanceRecordEntity(
                 id = domain.recordId,
                 schoolId = domain.schoolId,
-                faceId = domain.studentId,
+                studentId = domain.studentId,
                 name = domain.studentName,
                 userId = domain.teacherEmail,
                 status = domain.status.toCode(),
@@ -104,15 +105,15 @@ data class CheckInRecordEntity(
  * 🔥 EXTENSION: DARI CLOUD KE LOKAL (SNAPSHOT PARSER)
  * Diletakkan di luar class agar bisa diakses langsung oleh FirestoreManager.
  */
-fun com.google.firebase.firestore.DocumentSnapshot.toCheckInRecordEntity(schoolId: String): CheckInRecordEntity? {
+fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(schoolId: String): AttendanceRecordEntity? {
     return try {
         val dateStr = getString("attendanceDate") ?: java.time.LocalDate.now().toString()
         val timeStr = getString("checkInTime")
         
-        CheckInRecordEntity(
+        AttendanceRecordEntity(
             id = id, 
             schoolId = schoolId,
-            faceId = getString("faceId") ?: "",
+            studentId = getString("faceId") ?: "",
             name = getString("name") ?: "Siswa",
             userId = getString("teacherEmail") ?: "",
             status = getString("status") ?: "Hadir",
@@ -127,3 +128,5 @@ fun com.google.firebase.firestore.DocumentSnapshot.toCheckInRecordEntity(schoolI
         null 
     }
 }
+
+typealias CheckInRecordEntity = AttendanceRecordEntity

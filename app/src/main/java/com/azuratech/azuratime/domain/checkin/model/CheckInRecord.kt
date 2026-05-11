@@ -4,7 +4,7 @@ package com.azuratech.azuratime.domain.checkin.model
  * Pure Domain Model for Check-In Records.
  * Zero dependencies on Android, Room, or Firebase.
  */
-data class CheckInRecord(
+data class AttendanceRecord(
     val recordId: String,
     val studentId: String,
     val studentName: String,
@@ -41,3 +41,5 @@ enum class CheckInStatus {
         }
     }
 }
+
+typealias CheckInRecord = AttendanceRecord

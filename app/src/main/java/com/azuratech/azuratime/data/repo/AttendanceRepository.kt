@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.data.repo
 
-import com.azuratech.azuratime.data.local.AttendanceEntity
+import com.azuratech.azuratime.data.local.AttendanceSummary
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuraengine.result.Result
@@ -15,14 +15,14 @@ class AttendanceRepository @Inject constructor(
     private val syncManager: SyncManager
 ) {
     // This is a simplified version for the migration
-    fun observeAttendanceMatrix(schoolId: String): Flow<List<AttendanceEntity>> {
+    fun observeAttendanceMatrix(schoolId: String): Flow<List<AttendanceSummary>> {
         // In reality, this would call a DAO method
         return database.checkInRecordDao().getAllRecords(schoolId).map { records ->
             records.map { record ->
-                AttendanceEntity(
+                AttendanceSummary(
                     id = record.id,
                     schoolId = record.schoolId,
-                    studentId = record.faceId,
+                    studentId = record.studentId,
                     name = record.name,
                     status = record.status,
                     attendanceDate = record.attendanceDate,
