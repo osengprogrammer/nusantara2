@@ -14,7 +14,7 @@ fun NavGraphBuilder.attendanceGraph(
         route = NavigationRoutes.ATTENDANCE_GRAPH
     ) {
         composable(NavigationRoutes.CHECK_IN) {
-            com.azuratech.azuratime.ui.checkin.CheckInScreen(
+            com.azuratech.azuratime.ui.checkin.AttendanceCaptureScreen(
                 useBackCamera = false,
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 teacherEmail = "", // This will be passed via ViewModel or provided externally
