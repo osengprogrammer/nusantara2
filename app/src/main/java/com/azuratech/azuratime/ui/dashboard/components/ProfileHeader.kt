@@ -24,7 +24,7 @@ fun ProfileHeader(
     email: String?,
     schoolName: String?,
     photoUrl: Uri?,
-    onLogout: () -> Unit,
+    onLogoutClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
     Card(
@@ -53,7 +53,7 @@ fun ProfileHeader(
                 Text(text = email ?: "", style = MaterialTheme.typography.bodyMedium)
                 Text(text = schoolName ?: "", style = MaterialTheme.typography.bodyMedium)
             }
-            IconButton(onClick = onLogout) {
+            IconButton(onClick = onLogoutClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Logout,
                     contentDescription = "Logout"

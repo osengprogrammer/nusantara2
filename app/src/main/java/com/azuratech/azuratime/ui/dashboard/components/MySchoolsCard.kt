@@ -27,7 +27,7 @@ fun MySchoolsCard(
     accountId: String,
     isApproved: Boolean,
     onSchoolClick: () -> Unit,
-    onAddSchool: () -> Unit
+    onAddSchoolClick: () -> Unit
 ) {
     val schools by viewModel.schools.collectAsStateWithLifecycle()
     val canAddMore = schools.isEmpty() || isApproved
@@ -46,7 +46,7 @@ fun MySchoolsCard(
                     color = MaterialTheme.colorScheme.primary
                 )
                 if (canAddMore) {
-                    IconButton(onClick = onAddSchool) {
+                    IconButton(onClick = onAddSchoolClick) {
                         Icon(Icons.Default.Add, contentDescription = "Tambah Sekolah", tint = MaterialTheme.colorScheme.primary)
                     }
                 } else {
@@ -60,7 +60,7 @@ fun MySchoolsCard(
             }
 
             if (schools.isEmpty()) {
-                EmptySchoolsState(onAddClick = onAddSchool)
+                EmptySchoolsState(onAddClick = onAddSchoolClick)
             } else {
                 SchoolsHorizontalList(
                     schools = schools,
