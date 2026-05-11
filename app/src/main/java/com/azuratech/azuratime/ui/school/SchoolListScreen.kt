@@ -53,8 +53,8 @@ fun SchoolListScreen(
     if (showAddDialog) {
         AddSchoolDialog(
             availableClasses = availableClasses,
-            onDismiss = { showAddDialog = false },
-            onConfirm = { name, timezone, selectedClassIds ->
+            onDismissRequest = { showAddDialog = false },
+            onConfirmClick = { name, timezone, selectedClassIds ->
                 viewModel.createSchool(name, timezone, selectedClassIds)
                 showAddDialog = false
             }
@@ -65,8 +65,8 @@ fun SchoolListScreen(
 @Composable
 fun AddSchoolDialog(
     availableClasses: List<com.azuratech.azuraengine.model.ClassModel> = emptyList(),
-    onDismiss: () -> Unit,
-    onConfirm: (String, String, List<String>) -> Unit
+    onDismissRequest: () -> Unit,
+    onConfirmClick: (String, String, List<String>) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var timezone by remember { mutableStateOf("Asia/Jakarta") }
@@ -80,7 +80,7 @@ fun AddSchoolDialog(
     val isNameValid = name.isNotBlank()
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = onDismissRequest,
         title = { Text("Tambah Sekolah Baru") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
@@ -155,14 +155,14 @@ fun AddSchoolDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(name, timezone, selectedClassIds.toList()) },
+                onClick = { onConfirmClick(name, timezone, selectedClassIds.toList()) },
                 enabled = isNameValid
             ) {
                 Text("Simpan")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onDismissRequest) {
                 Text("Batal")
             }
         }
