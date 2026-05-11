@@ -8,7 +8,7 @@ import androidx.work.WorkerParameters
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.data.repo.BiometricFaceRepository
 import com.azuratech.azuratime.data.repo.SchoolRepository
 import com.azuratech.azuratime.domain.student.repository.StudentRepository
 import dagger.assisted.Assisted
@@ -23,7 +23,7 @@ import dagger.assisted.AssistedInject
 class AccessSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val faceRepository: FaceRepository,
+    private val faceRepository: BiometricFaceRepository,
     private val schoolRepository: SchoolRepository,
     private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager

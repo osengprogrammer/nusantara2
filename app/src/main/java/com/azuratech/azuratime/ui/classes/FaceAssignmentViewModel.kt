@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
-import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.data.repo.BiometricFaceRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +24,7 @@ class FaceAssignmentViewModel @Inject constructor(
     database: AppDatabase,
     private val sessionManager: SessionManager,
     private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
-    private val faceRepository: FaceRepository
+    private val faceRepository: BiometricFaceRepository
 ) : ViewModel() {
 
     private val faceDao = database.faceDao()

@@ -8,7 +8,7 @@ import androidx.work.WorkerParameters
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.data.repo.BiometricFaceRepository
 import com.azuratech.azuratime.data.repo.UserRepository
 import com.azuratech.azuratime.domain.student.repository.StudentRepository
 import dagger.assisted.Assisted
@@ -24,7 +24,7 @@ class ProfileSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val userRepository: UserRepository,
-    private val faceRepository: FaceRepository,
+    private val faceRepository: BiometricFaceRepository,
     private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
