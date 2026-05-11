@@ -102,7 +102,7 @@ fun AddUserScreen(
     if (showFaceCapture) {
         FaceCaptureScreen(
             mode = captureMode,
-            onClose = { showFaceCapture = false },
+            onCloseClick = { showFaceCapture = false },
             onEmbeddingCaptured = { embedding ->
                 if (uiState.capturedBitmap != null) {
                     viewModel.onFaceCaptured(uiState.capturedBitmap!!, embedding)
