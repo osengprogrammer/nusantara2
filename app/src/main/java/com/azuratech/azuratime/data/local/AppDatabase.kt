@@ -15,7 +15,7 @@ import androidx.room.TypeConverters
         BiometricFaceEntity::class,
         FaceAssignmentEntity::class,
         CheckInRecordEntity::class,
-        UserEntity::class,
+        StaffAccountEntity::class,
         UserClassAccessEntity::class,
         StudentEntity::class,          // 🔥 NEW: Student Identity
         AccessRequestEntity::class,    // 🔥 NEW: Access Request SSOT
@@ -36,7 +36,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun schoolDao(): SchoolDao // 🔥 NEW DAO
     abstract fun schoolClassDao(): SchoolClassDao
     abstract fun checkInRecordDao(): CheckInRecordDao
-    abstract fun userDao(): UserDao
+    abstract fun userDao(): com.azuratech.azuratime.data.local.StaffAccountDao
     abstract fun userClassAccessDao(): UserClassAccessDao
     abstract fun studentDao(): StudentDao // 🔥 NEW DAO
     abstract fun accessRequestDao(): AccessRequestDao // 🔥 NEW DAO

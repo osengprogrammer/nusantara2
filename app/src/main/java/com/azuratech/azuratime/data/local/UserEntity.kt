@@ -26,7 +26,7 @@ data class FriendConnection(
     tableName = "users",
     indices = [Index(value = ["email"], unique = true)]
 )
-data class UserEntity(
+data class StaffAccountEntity(
     @PrimaryKey
     val userId: String,
 
@@ -107,8 +107,8 @@ data class UserEntity(
 /**
  * 🔄 MAPPER: Domain -> Entity
  */
-fun com.azuratech.azuraengine.model.User.toEntity(): UserEntity {
-    return UserEntity(
+fun com.azuratech.azuraengine.model.User.toEntity(): StaffAccountEntity {
+    return StaffAccountEntity(
         userId = userId,
         email = email,
         name = name,
@@ -135,3 +135,5 @@ fun com.azuratech.azuraengine.model.User.toEntity(): UserEntity {
         createdAt = createdAt
     )
 }
+
+typealias UserEntity = StaffAccountEntity
