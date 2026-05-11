@@ -3,7 +3,7 @@ package com.azuratech.azuratime.ui.core.preview
 import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.ui.dashboard.DashboardUiState
 import com.azuratech.azuratime.ui.report.AttendanceMatrixUiState
@@ -34,9 +34,9 @@ object PreviewMocks {
     )
 
     val mockStudents = listOf(
-        FaceEntity(faceId = "face_1", name = "Budi Santoso", embedding = null),
-        FaceEntity(faceId = "face_2", name = "Siti Aminah", embedding = null),
-        FaceEntity(faceId = "face_3", name = "Agus Setiawan", embedding = null)
+        BiometricFaceEntity(faceId = "face_1", name = "Budi Santoso", embedding = null),
+        BiometricFaceEntity(faceId = "face_2", name = "Siti Aminah", embedding = null),
+        BiometricFaceEntity(faceId = "face_3", name = "Agus Setiawan", embedding = null)
     )
 
     val mockRecentRecords = listOf(

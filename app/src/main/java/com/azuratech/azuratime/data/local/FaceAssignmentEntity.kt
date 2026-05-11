@@ -15,7 +15,7 @@ import androidx.room.Index
     foreignKeys = [
         // 1. Link to the Face (Student)
         ForeignKey(
-            entity = FaceEntity::class,
+            entity = BiometricFaceEntity::class,
             parentColumns = ["faceId"],
             childColumns = ["faceId"],
             onDelete = ForeignKey.CASCADE, // Auto-delete if Face is deleted

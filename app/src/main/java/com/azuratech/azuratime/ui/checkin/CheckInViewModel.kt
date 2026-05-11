@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuratime.domain.checkin.model.CheckInResult
 import com.azuratech.azuratime.domain.checkin.repository.ProcessCheckInParams
@@ -43,7 +43,7 @@ class CheckInViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val activeSessionStudents: StateFlow<List<FaceEntity>> = combine(_activeClassId, schoolContextFlow) { classId, schoolId ->
+    val activeSessionStudents: StateFlow<List<BiometricFaceEntity>> = combine(_activeClassId, schoolContextFlow) { classId, schoolId ->
         classId to schoolId
     }.flatMapLatest { (classId, schoolId) ->
         if (classId != null) repository.getFacesByClass(classId, schoolId)

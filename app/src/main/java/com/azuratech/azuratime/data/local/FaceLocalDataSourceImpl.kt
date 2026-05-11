@@ -12,16 +12,16 @@ class FaceLocalDataSourceImpl @Inject constructor(
     private val faceDao = database.faceDao()
     private val faceAssignmentDao = database.faceAssignmentDao()
 
-    override fun getAllFacesFlow(schoolId: String): Flow<List<FaceEntity>> =
+    override fun getAllFacesFlow(schoolId: String): Flow<List<BiometricFaceEntity>> =
         faceDao.getAllFacesFlow(schoolId)
 
     override fun getAllFacesWithDetailsFlow(schoolId: String): Flow<List<FaceWithDetails>> =
         faceDao.getAllFacesWithDetailsFlow(schoolId)
 
-    override fun getAllFacesForScanningFlow(schoolId: String): Flow<List<FaceEntity>> =
+    override fun getAllFacesForScanningFlow(schoolId: String): Flow<List<BiometricFaceEntity>> =
         faceDao.getAllFacesForScanning(schoolId)
 
-    override fun getFacesInClassFlow(classId: String, schoolId: String): Flow<List<FaceEntity>> =
+    override fun getFacesInClassFlow(classId: String, schoolId: String): Flow<List<BiometricFaceEntity>> =
         faceAssignmentDao.getFacesByClass(classId, schoolId)
 
     override fun observeClassesBySchool(schoolId: String): Flow<List<ClassEntity>> =
@@ -36,22 +36,22 @@ class FaceLocalDataSourceImpl @Inject constructor(
     override suspend fun getClassIdsForFace(faceId: String, schoolId: String): List<String> =
         faceAssignmentDao.getClassIdsForFace(faceId, schoolId).firstOrNull() ?: emptyList()
 
-    override suspend fun getAllFacesForScanningList(schoolId: String): List<FaceEntity> =
+    override suspend fun getAllFacesForScanningList(schoolId: String): List<BiometricFaceEntity> =
         faceDao.getAllFacesForScanningList(schoolId)
 
-    override suspend fun getFaceById(faceId: String, schoolId: String): FaceEntity? =
+    override suspend fun getFaceById(faceId: String, schoolId: String): BiometricFaceEntity? =
         faceDao.getFaceById(faceId, schoolId)
 
-    override suspend fun getFaceByStudentId(studentId: String, schoolId: String): FaceEntity? =
+    override suspend fun getFaceByStudentId(studentId: String, schoolId: String): BiometricFaceEntity? =
         faceDao.getFaceByStudentId(studentId, schoolId)
 
-    override suspend fun upsertFace(face: FaceEntity) =
+    override suspend fun upsertFace(face: BiometricFaceEntity) =
         faceDao.upsertFace(face)
 
-    override suspend fun upsertAll(faces: List<FaceEntity>) =
+    override suspend fun upsertAll(faces: List<BiometricFaceEntity>) =
         faceDao.upsertAll(faces)
 
-    override suspend fun deleteFace(face: FaceEntity) =
+    override suspend fun deleteFace(face: BiometricFaceEntity) =
         faceDao.deleteFace(face)
 
     override suspend fun deleteFaceById(faceId: String, schoolId: String) =

@@ -2,7 +2,7 @@ package com.azuratech.azuratime.core.util
 
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -20,7 +20,7 @@ object AttendanceService {
      * Membuat CheckInRecord yang valid dan siap lapor.
      */
     fun createRecord(
-        face: FaceEntity,
+        face: BiometricFaceEntity,
         teacherEmail: String = "",
         activeClassId: String? = null,
         activeClassName: String? = null,

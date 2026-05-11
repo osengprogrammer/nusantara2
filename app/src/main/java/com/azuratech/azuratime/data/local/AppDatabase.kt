@@ -12,7 +12,7 @@ import androidx.room.TypeConverters
         SchoolEntity::class,
         ClassEntity::class,           // 🔥 NEW: Pure class table
         SchoolClassAssignment::class, // 🔥 NEW: Join table
-        FaceEntity::class,
+        BiometricFaceEntity::class,
         FaceAssignmentEntity::class,
         CheckInRecordEntity::class,
         UserEntity::class,
@@ -30,7 +30,7 @@ import androidx.room.TypeConverters
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun faceDao(): FaceDao
+    abstract fun faceDao(): BiometricFaceDao
     abstract fun faceAssignmentDao(): FaceAssignmentDao
     abstract fun classDao(): ClassDao // 🔥 NEW DAO
     abstract fun schoolDao(): SchoolDao // 🔥 NEW DAO

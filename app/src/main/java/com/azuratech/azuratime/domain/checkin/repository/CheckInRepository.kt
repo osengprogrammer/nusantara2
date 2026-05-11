@@ -37,10 +37,10 @@ interface CheckInRepository {
     suspend fun syncRecord(record: CheckInRecord): Result<Unit>
     fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Int>
     fun getUnassignedStudentCount(schoolId: String): Flow<Int>
-    fun getFacesByClass(classId: String, schoolId: String): Flow<List<com.azuratech.azuratime.data.local.FaceEntity>>
+    fun getFacesByClass(classId: String, schoolId: String): Flow<List<com.azuratech.azuratime.data.local.BiometricFaceEntity>>
     fun getStudentCountInClass(classId: String, schoolId: String): Flow<Int>
     fun getClassIdsForFace(faceId: String, schoolId: String): Flow<List<String>>
-    suspend fun getFaceById(faceId: String, schoolId: String): com.azuratech.azuratime.data.local.FaceEntity?
+    suspend fun getFaceById(faceId: String, schoolId: String): com.azuratech.azuratime.data.local.BiometricFaceEntity?
     suspend fun getUnsyncedRecords(schoolId: String): List<CheckInRecord>
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<CheckInRecord>>
     suspend fun syncRecords(): Result<Unit>

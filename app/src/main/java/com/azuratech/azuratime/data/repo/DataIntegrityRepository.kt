@@ -2,7 +2,7 @@ package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.FaceEntity
+import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -82,7 +82,7 @@ class DataIntegrityRepository @Inject constructor(
     // =====================================================
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    fun getIncompleteProfiles(type: String): Flow<List<FaceEntity>> = schoolIdFlow.flatMapLatest { id ->
+    fun getIncompleteProfiles(type: String): Flow<List<BiometricFaceEntity>> = schoolIdFlow.flatMapLatest { id ->
         when (type) {
             "CLASS"  -> faceDao.getFacesMissingAssignment(id)
             else     -> flowOf(emptyList())

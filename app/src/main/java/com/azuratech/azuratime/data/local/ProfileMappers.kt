@@ -53,9 +53,9 @@ fun ReportEntity.toProfile(): ReportSummaryProfile {
 }
 
 /**
- * Extension to convert FaceEntity to BiometricEnrollmentProfile.
+ * Extension to convert BiometricFaceEntity to BiometricEnrollmentProfile.
  */
-fun FaceEntity.toProfile(): BiometricEnrollmentProfile {
+fun BiometricFaceEntity.toProfile(): BiometricEnrollmentProfile {
     return BiometricEnrollmentProfile(
         faceId = faceId,
         studentId = studentId,
@@ -93,10 +93,10 @@ fun RawStudentProfile.toDomain(): StudentProfile {
 
 /**
  * Extension to convert StudentEntity to Domain Profile.
- * Joins with optional FaceEntity and class list.
+ * Joins with optional BiometricFaceEntity and class list.
  */
 fun StudentEntity.toDomain(
-    face: FaceEntity? = null, 
+    face: BiometricFaceEntity? = null, 
     classIds: List<String> = emptyList()
 ): StudentProfile {
     val status = when {
@@ -124,10 +124,10 @@ fun StudentEntity.toDomain(
 }
 
 /**
- * Extension to convert FaceEntity to Domain Profile.
- * Fallback for cases where FaceEntity exists but StudentEntity is missing.
+ * Extension to convert BiometricFaceEntity to Domain Profile.
+ * Fallback for cases where BiometricFaceEntity exists but StudentEntity is missing.
  */
-fun FaceEntity.toDomain(
+fun BiometricFaceEntity.toDomain(
     student: StudentEntity? = null, 
     classIds: List<String> = emptyList()
 ): StudentProfile {
@@ -160,7 +160,7 @@ fun FaceEntity.toDomain(
  * requires associated Face and optional Student.
  */
 fun FaceAssignmentEntity.toDomain(
-    face: FaceEntity, 
+    face: BiometricFaceEntity, 
     student: StudentEntity? = null
 ): StudentProfile {
     return face.toDomain(student, listOf(classId))
@@ -168,9 +168,9 @@ fun FaceAssignmentEntity.toDomain(
 
 /**
  * Convert a Domain StudentProfile back to its constituent Room Entities.
- * Returns a Triple of (StudentEntity, FaceEntity, List<FaceAssignmentEntity>).
+ * Returns a Triple of (StudentEntity, BiometricFaceEntity, List<FaceAssignmentEntity>).
  */
-fun StudentProfile.toEntities(): Triple<StudentEntity, FaceEntity, List<FaceAssignmentEntity>> {
+fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List<FaceAssignmentEntity>> {
     val isSynced = syncStatus == SyncStatus.SYNCED
     val isDeleted = syncStatus == SyncStatus.PENDING_DELETE
     
@@ -185,7 +185,7 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, FaceEntity, List<FaceAssi
         isDeleted = isDeleted
     )
 
-    val faceEntity = FaceEntity(
+    val faceEntity = BiometricFaceEntity(
         faceId = faceId ?: "FACE-$studentId", // Stable deterministic ID fallback
         studentId = studentId,
         schoolId = schoolId,

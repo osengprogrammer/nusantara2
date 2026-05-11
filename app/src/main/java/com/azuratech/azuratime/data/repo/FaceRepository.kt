@@ -53,7 +53,7 @@ class BiometricFaceRepository @Inject constructor(
     suspend fun getClassIdsForFace(faceId: String, schoolId: String) = localDataSource.getClassIdsForFace(faceId, schoolId)
     suspend fun deleteAssignmentsByFace(faceId: String, schoolId: String) = localDataSource.deleteAssignmentsByFace(faceId, schoolId)
     suspend fun insertAssignment(assignment: FaceAssignmentEntity) = localDataSource.insertAssignment(assignment)
-    suspend fun upsertFace(face: FaceEntity) = localDataSource.upsertFace(face)
+    suspend fun upsertFace(face: BiometricFaceEntity) = localDataSource.upsertFace(face)
 
     suspend fun assignStudentToClass(faceId: String, classId: String): Result<Unit> = try {
         localDataSource.insertAssignment(FaceAssignmentEntity(faceId, classId, schoolId))
@@ -143,8 +143,6 @@ class BiometricFaceRepository @Inject constructor(
 
     // Remote delegation
     suspend fun syncFaceAssignment(assignment: FaceAssignmentEntity) = remoteDataSource.syncFaceAssignment(assignment)
-    suspend fun bulkSyncFaces(schoolId: String, faces: List<FaceEntity>) = remoteDataSource.bulkSyncFaces(schoolId, faces)
+    suspend fun bulkSyncFaces(schoolId: String, faces: List<BiometricFaceEntity>) = remoteDataSource.bulkSyncFaces(schoolId, faces)
     suspend fun uploadFacePhoto(schoolId: String, faceId: String, imageBytes: ByteArray) = remoteDataSource.uploadFacePhoto(schoolId, faceId, imageBytes)
 }
-
-typealias FaceRepository = BiometricFaceRepository

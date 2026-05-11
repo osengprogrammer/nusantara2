@@ -108,7 +108,7 @@ class CheckInRepositoryImpl @Inject constructor(
         return faceAssignmentDao.getUnassignedStudentCount(schoolId)
     }
 
-    override fun getFacesByClass(classId: String, schoolId: String): Flow<List<com.azuratech.azuratime.data.local.FaceEntity>> {
+    override fun getFacesByClass(classId: String, schoolId: String): Flow<List<com.azuratech.azuratime.data.local.BiometricFaceEntity>> {
         return faceAssignmentDao.getFacesByClass(classId, schoolId)
     }
 
@@ -120,7 +120,7 @@ class CheckInRepositoryImpl @Inject constructor(
         return faceAssignmentDao.getClassIdsForFace(faceId, schoolId)
     }
 
-    override suspend fun getFaceById(faceId: String, schoolId: String): com.azuratech.azuratime.data.local.FaceEntity? {
+    override suspend fun getFaceById(faceId: String, schoolId: String): com.azuratech.azuratime.data.local.BiometricFaceEntity? {
         return faceDao.getFaceById(faceId, schoolId)
     }
 
