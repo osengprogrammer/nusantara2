@@ -18,7 +18,7 @@ fun NavGraphBuilder.attendanceGraph(
                 useBackCamera = false,
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 teacherEmail = "", // This will be passed via ViewModel or provided externally
-                onNavigateToBarcode = { navController.navigate(NavigationRoutes.BARCODE_SCAN) }
+                onBarcodeScanClick = { navController.navigate(NavigationRoutes.BARCODE_SCAN) }
             )
         }
         composable(NavigationRoutes.BARCODE_SCAN) {
