@@ -3,7 +3,7 @@ package com.azuratech.azuratime.domain.model
 /**
  * 📝 AUDIT LOG PROFILE - UI model for system audit trails
  */
-data class AuditLogProfile(
+data class SystemAuditTrail(
     val logId: String,
     val userId: String,
     val action: String,
@@ -11,3 +11,5 @@ data class AuditLogProfile(
     val details: String?,
     val syncStatus: SyncStatus
 )
+
+typealias AuditLogProfile = SystemAuditTrail
