@@ -58,20 +58,9 @@ sealed class AttendanceMatrixUiState {
     data class Error(val message: String) : AttendanceMatrixUiState()
 }
 
-data class ReportData(
-    val rows: List<MatrixRowModel> = emptyList(),
-    val dateRange: List<LocalDate> = emptyList(),
-    val availableClasses: List<ClassModel> = emptyList(),
-    val searchQuery: String = "",
-    val startDate: LocalDate = LocalDate.now().withDayOfMonth(1),
-    val endDate: LocalDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()),
-    val selectedClassId: String? = "ALL",
-    val policy: String = "SCHOOL"
-)
-
 sealed class ReportUiState {
     object Loading : ReportUiState()
-    data class Success(val data: ReportData) : ReportUiState()
+    data class Success(val data: AttendanceMatrixData) : ReportUiState()
     data class Error(val message: String) : ReportUiState()
 }
 
@@ -83,3 +72,5 @@ data class MatrixParams(
     val assigned: List<String>,
     val schoolId: String
 )
+
+typealias ReportData = AttendanceMatrixData
