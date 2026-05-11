@@ -3,7 +3,7 @@ package com.azuratech.azuratime.ui.user
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,7 @@ sealed class NetworkState {
     object Loading : NetworkState()
     data class Success(val message: String) : NetworkState()
     data class Error(val message: String) : NetworkState()
-    data class UserFound(val targetUser: UserEntity) : NetworkState()
+    data class UserFound(val targetUser: StaffAccountEntity) : NetworkState()
 }
 
 @HiltViewModel
@@ -44,7 +44,7 @@ class NetworkViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.value = NetworkState.Loading
-            val result = userRepository.searchUserByEmail(email)  // Must return Result<UserEntity?>
+            val result = userRepository.searchUserByEmail(email)  // Must return Result<StaffAccountEntity?>
             if (result is Result.Success && result.data != null) {
                 _uiState.value = NetworkState.UserFound(result.data!!)
             } else if (result is Result.Failure) {

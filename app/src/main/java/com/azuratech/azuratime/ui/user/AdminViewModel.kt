@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
@@ -47,8 +47,8 @@ class AdminViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AdminUiState>(AdminUiState.Idle)
     val uiState: StateFlow<AdminUiState> = _uiState.asStateFlow()
 
-    private val _teachersList = MutableStateFlow<List<UserEntity>>(emptyList())
-    val teachersList: StateFlow<List<UserEntity>> = _teachersList.asStateFlow()
+    private val _teachersList = MutableStateFlow<List<StaffAccountEntity>>(emptyList())
+    val teachersList: StateFlow<List<StaffAccountEntity>> = _teachersList.asStateFlow()
 
     fun startObservingTeachers(currentAdminSchoolId: String) {
         viewModelScope.launch {
@@ -92,7 +92,7 @@ class AdminViewModel @Inject constructor(
 
     fun resetState() { _uiState.value = AdminUiState.Idle }
 
-    fun inviteTeacherByEmail(teacherEmail: String, currentAdmin: UserEntity) {
+    fun inviteTeacherByEmail(teacherEmail: String, currentAdmin: StaffAccountEntity) {
         viewModelScope.launch {
             _uiState.value = AdminUiState.Loading
             try {

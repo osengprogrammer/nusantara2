@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
@@ -85,7 +85,7 @@ fun MyAssignedClassContent(
     onRemoveClass: (String) -> Unit,
     onSelectActiveClass: (String) -> Unit,
     onAssignClass: (String) -> Unit,
-    user: UserEntity?
+    user: StaffAccountEntity?
 ) {
     AzuraScreen(
         title = title,

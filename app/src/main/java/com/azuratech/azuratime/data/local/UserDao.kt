@@ -64,5 +64,3 @@ interface StaffAccountDao {
     @Query("DELETE FROM users")
     suspend fun clearAllUsers()
 }
-
-typealias UserDao = StaffAccountDao

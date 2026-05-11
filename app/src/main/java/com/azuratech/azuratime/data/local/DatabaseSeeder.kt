@@ -27,7 +27,7 @@ object DatabaseSeeder {
                 val schoolName = "Azura Academy"
 
                 // 2. Seed Default Admin User
-                val defaultAdmin = UserEntity(
+                val defaultAdmin = StaffAccountEntity(
                     userId = UUID.randomUUID().toString(),
                     email = "admin@azuratech.com",
                     name = "Admin Azura",

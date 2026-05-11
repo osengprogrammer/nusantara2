@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.local.UserClassAccessEntity
 import com.azuratech.azuratime.data.local.Membership
 import com.google.firebase.firestore.FieldValue
@@ -31,7 +31,7 @@ class AdminRepository @Inject constructor(
     fun getUserDao() = userDao
     fun getUserClassAccessDao() = userClassAccessDao
     
-    fun observeUsersForSchool(schoolId: String): Flow<List<UserEntity>> =
+    fun observeUsersForSchool(schoolId: String): Flow<List<StaffAccountEntity>> =
         userDao.observeAllUsers().map { users ->
             users.filter { it.memberships.containsKey(schoolId) }
         }

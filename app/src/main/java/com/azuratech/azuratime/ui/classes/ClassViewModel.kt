@@ -9,7 +9,7 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
 import com.azuratech.azuratime.ui.core.UiEvent
-import com.azuratech.azuratime.data.local.UserEntity
+import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -49,8 +49,8 @@ class ClassViewModel @Inject constructor(
     private val accountId: String = savedStateHandle.get<String>("accountId")
         ?: sessionManager.getCurrentUserId() ?: ""
 
-    // 🔥 User Flow for UI - Using UserEntity for SSOT
-    val user: StateFlow<UserEntity?> = sessionManager.currentUserIdFlow
+    // 🔥 User Flow for UI - Using StaffAccountEntity for SSOT
+    val user: StateFlow<StaffAccountEntity?> = sessionManager.currentUserIdFlow
         .filterNotNull()
         .flatMapLatest { userRepository.observeUserEntity(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
