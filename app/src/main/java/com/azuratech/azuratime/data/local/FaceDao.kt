@@ -4,7 +4,7 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface FaceDao {
+interface BiometricFaceDao {
     @Upsert
     suspend fun upsertFace(face: FaceEntity)
 
@@ -84,3 +84,5 @@ interface FaceDao {
     @Query("SELECT * FROM faces WHERE isSynced = 0 AND schoolId = :schoolId")
     suspend fun getUnsyncedFaces(schoolId: String): List<FaceEntity>
 }
+
+typealias FaceDao = BiometricFaceDao
