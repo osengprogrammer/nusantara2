@@ -28,7 +28,7 @@ import com.azuratech.azuratime.ui.theme.AzuraPrimaryDark
 
 @Composable
 fun RegistrationMenuScreen(
-    onNavigateToAddUser: () -> Unit,
+    onNavigateToAddStudent: () -> Unit,
     onNavigateToBulkRegister: () -> Unit,
     onNavigateToBiometricManagement: () -> Unit,
     onNavigateBack: () -> Unit
@@ -69,7 +69,7 @@ fun RegistrationMenuScreen(
                 gradient = Brush.linearGradient(
                     listOf(MaterialTheme.colorScheme.primary, AzuraPrimaryDark)
                 ),
-                onClick = onNavigateToAddUser
+                onClick = onNavigateToAddStudent
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.lg))

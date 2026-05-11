@@ -111,12 +111,12 @@
 ## 🖥️ Screens
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `AddUserScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `AddStudentScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `BulkRegistrationScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `EditUserScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `EditStudentScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `FaceCaptureScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `FaceListBarcodeScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `FaceListScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `StudentRosterBarcodeScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `StudentRosterScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `RegistrationMenuScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `PendingSchoolsScreen.kt` | `ui.admin` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `AttendanceMatrixScreen.kt` | `ui.attendance` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |

@@ -46,7 +46,7 @@ class FaceViewModel @Inject constructor(
     val uiEventFlow = _uiEvent.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val faceListStateFlow: StateFlow<List<FaceWithDetails>> = sessionManager.activeSchoolIdFlow
+    val studentRosterFlow: StateFlow<List<FaceWithDetails>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> faceRepository.getFacesWithDetailsFlow(schoolId) }
         .map { it }
@@ -57,7 +57,7 @@ class FaceViewModel @Inject constructor(
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val enrolledFaceListStateFlow: StateFlow<List<FaceEntity>> = sessionManager.activeSchoolIdFlow
+    val enrolledStudentFlow: StateFlow<List<FaceEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> faceRepository.getEnrolledFacesFlow(schoolId) }
         .map { it }
@@ -77,7 +77,6 @@ class FaceViewModel @Inject constructor(
         embedding: FloatArray,
         photoBitmap: Bitmap? = null,
         onSuccess: () -> Unit, 
-        onDuplicate: (existingName: String) -> Unit, 
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {

@@ -51,7 +51,7 @@ class StudentFormViewModel @Inject constructor(
     private var selectedClassName: String? = null
 
     init {
-        // Keep UI state synced with classes flow for AddUserContent compatibility
+        // Keep UI state synced with classes flow for AddStudentContent compatibility
         _classesFlow.onEach { classes ->
             updateState { it.copy(availableClasses = classes) }
         }.launchIn(viewModelScope)

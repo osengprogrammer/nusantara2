@@ -70,7 +70,7 @@ fun TeacherTasksGrid(
                 { navController.navigate(Screen.CheckIn.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
 
             DashboardActionCard("Cetak Barcode", Icons.Default.QrCode, MaterialTheme.colorScheme.secondary, 
-                { navController.navigate(Screen.FaceListBarcode.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
+                { navController.navigate(Screen.StudentRosterBarcode.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
         }
 
         // ======================================================
@@ -88,7 +88,7 @@ fun TeacherTasksGrid(
                         }
                     }, modifier = Modifier.weight(1f), enabled = isEnabled)
                 DashboardActionCard("Manajemen Siswa", Icons.Default.People, MaterialTheme.colorScheme.secondary,
-                    { navController.navigate(Screen.Manage.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
+                    { navController.navigate(Screen.StudentRoster.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
             }
         }
 

@@ -156,7 +156,7 @@ object PreviewMocks {
         )
     )
 
-    val mockFaceListData = com.azuratech.azuratime.ui.add.FaceListData(
+    val mockStudentRosterData = com.azuratech.azuratime.ui.add.StudentRosterData(
         searchQuery = "",
         selectedClassName = null,
         students = mockStudentDisplayItems,
@@ -165,9 +165,9 @@ object PreviewMocks {
         studentForQuickEdit = null
     )
 
-    val mockFaceListStateSuccess = com.azuratech.azuratime.ui.add.FaceListUiState.Success(
-        mockFaceListData
+    val mockStudentRosterStateSuccess = com.azuratech.azuratime.ui.add.StudentRosterUiState.Success(
+        mockStudentRosterData
     )
 
-    val mockFaceListStateLoading = com.azuratech.azuratime.ui.add.FaceListUiState.Loading
+    val mockStudentRosterStateLoading = com.azuratech.azuratime.ui.add.StudentRosterUiState.Loading
 }
