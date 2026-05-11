@@ -340,8 +340,8 @@ fun DashboardContent(
             if (showAddSchoolDialog) {
                 AddSchoolDialog(
                     availableClasses = availableClasses,
-                    onDismiss = onDismissAddSchool,
-                    onConfirm = { name, timezone, selectedClassIds ->
+                    onDismissRequest = onDismissAddSchool,
+                    onConfirmClick = { name, timezone, selectedClassIds ->
                         schoolViewModel.createSchool(name, timezone, selectedClassIds)
                         onDismissAddSchool()
                     }
