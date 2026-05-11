@@ -16,16 +16,16 @@ object FirebaseModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
+    fun provideFirebaseAuth(): com.google.firebase.auth.FirebaseAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
 
     @Provides
     @Singleton
-    fun provideFirebaseFirestore(): FirebaseFirestore {
-        val db = FirebaseFirestore.getInstance()
+    fun provideFirebaseFirestore(): com.google.firebase.firestore.FirebaseFirestore {
+        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
 
         // 🔥 Konfigurasi Offline Persistence (100MB Cache)
-        db.firestoreSettings = firestoreSettings {
-            setLocalCacheSettings(persistentCacheSettings {
+        db.firestoreSettings = com.google.firebase.firestore.firestoreSettings {
+            setLocalCacheSettings(com.google.firebase.firestore.persistentCacheSettings {
                 setSizeBytes(100 * 1024 * 1024)
             })
         }

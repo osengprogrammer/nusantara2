@@ -29,41 +29,41 @@ abstract class DataSourceModule {
     @Singleton
     abstract fun bindSchoolRemoteDataSource(
         impl: SchoolRemoteDataSourceImpl
-    ): SchoolRemoteDataSource
+    ): com.azuratech.azuratime.data.remote.SchoolRemoteDataSource
 
     @Binds
     @Singleton
     abstract fun bindImageProcessor(
         impl: AndroidImageProcessor
-    ): ImageProcessor
+    ): com.azuratech.azuraengine.core.ImageProcessor
 
     @Binds
     @Singleton
     abstract fun bindStorageProvider(
         impl: AndroidStorageProvider
-    ): StorageProvider
+    ): com.azuratech.azuraengine.core.StorageProvider
 
     @Binds
     @Singleton
     abstract fun bindFaceLocalDataSource(
         impl: FaceLocalDataSourceImpl
-    ): FaceLocalDataSource
+    ): com.azuratech.azuratime.data.local.FaceLocalDataSource
 
     @Binds
     @Singleton
     abstract fun bindFaceRemoteDataSource(
         impl: FaceRemoteDataSourceImpl
-    ): FaceRemoteDataSource
+    ): com.azuratech.azuratime.data.remote.FaceRemoteDataSource
 
     @Binds
     @Singleton
     abstract fun bindCheckInLocalDataSource(
         impl: CheckInLocalDataSourceImpl
-    ): CheckInLocalDataSource
+    ): com.azuratech.azuratime.data.local.CheckInLocalDataSource
 
     @Binds
     @Singleton
     abstract fun bindCheckInRemoteDataSource(
         impl: CheckInRemoteDataSourceImpl
-    ): CheckInRemoteDataSource
+    ): com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
 }
