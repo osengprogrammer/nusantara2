@@ -181,8 +181,8 @@ fun ClassManagementScreen(
         AddClassDialog(
             editingClass = editingClass,
             availableClasses = availableClasses,
-            onDismiss = { showDialog = false },
-            onConfirm = { name ->
+            onDismissRequest = { showDialog = false },
+            onConfirmClick = { name ->
                 if (editingClass == null) {
                     user?.let { println("📡 DEBUG: Calling createClass with accountId=${it.userId}") }
                     viewModel.createClass(name, schoolId = null)

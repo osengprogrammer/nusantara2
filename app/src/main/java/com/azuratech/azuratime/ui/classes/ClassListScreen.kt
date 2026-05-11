@@ -89,8 +89,8 @@ fun ClassListScreen(
         if (showAddDialog) {
             AddClassDialog(
                 availableClasses = availableClasses,
-                onDismiss = { showAddDialog = false },
-                onConfirm = { newName ->
+                onDismissRequest = { showAddDialog = false },
+                onConfirmClick = { newName ->
                     classViewModel.addClass(newName) // 🔥 Simplified call
                     showAddDialog = false
                 }
@@ -102,8 +102,8 @@ fun ClassListScreen(
             AddClassDialog(
                 editingClass = item,
                 availableClasses = availableClasses,
-                onDismiss = { classToEdit = null },
-                onConfirm = { newName ->
+                onDismissRequest = { classToEdit = null },
+                onConfirmClick = { newName ->
                     classViewModel.updateClass(item.id, newName) // 🔥 Simplified call
                     classToEdit = null
                 }
