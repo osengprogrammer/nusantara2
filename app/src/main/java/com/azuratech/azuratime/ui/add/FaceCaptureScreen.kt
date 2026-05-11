@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun FaceCaptureScreen(
     mode: CaptureMode,
-    onClose: () -> Unit,
+    onCloseClick: () -> Unit,
     onEmbeddingCaptured: (FloatArray) -> Unit = {},
     onPhotoCaptured: (Bitmap) -> Unit = {}
 ) {
@@ -192,7 +192,7 @@ fun FaceCaptureScreen(
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.lg)
         ) {
             Button(
-                onClick = onClose, 
+                onClick = onCloseClick, 
                 enabled = !isProcessing, 
                 shape = AzuraShapes.large,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
@@ -216,7 +216,7 @@ fun FaceCaptureScreen(
                                     captureSuccess = true
                                     delay(1000)
                                     isProcessing = false
-                                    onClose()
+                                    onCloseClick()
                                 } ?: run {
                                     isProcessing = false
                                     showCaptureFeedback = false
@@ -251,7 +251,7 @@ fun FaceCaptureScreen(
                                                     captureSuccess = false
                                                 } finally {
                                                     isProcessing = false
-                                                    if (!captureSuccess) showCaptureFeedback = false else onClose()
+                                                    if (!captureSuccess) showCaptureFeedback = false else onCloseClick()
                                                     imageProxy.close()
                                                 }
                                             }
@@ -283,7 +283,7 @@ fun FaceCaptureScreen(
         }
         
         IconButton(
-            onClick = onClose, 
+            onClick = onCloseClick, 
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(AzuraSpacing.md)

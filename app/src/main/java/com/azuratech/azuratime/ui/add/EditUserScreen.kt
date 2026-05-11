@@ -94,7 +94,7 @@ fun EditUserScreen(
     if (showFaceCapture) {
         FaceCaptureScreen(
             mode = CaptureMode.EMBEDDING,
-            onClose = { showFaceCapture = false },
+            onCloseClick = { showFaceCapture = false },
             onEmbeddingCaptured = { embedding ->
                 viewModel.onFaceCaptured(uiState.capturedBitmap!!, embedding)
                 showFaceCapture = false
