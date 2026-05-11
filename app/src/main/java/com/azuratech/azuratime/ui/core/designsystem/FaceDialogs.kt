@@ -16,13 +16,13 @@ import com.azuratech.azuratime.ui.theme.AzuraShapes
 @Composable
 fun QuickEditFaceDialog(
     face: FaceEntity,
-    onDismiss: () -> Unit,
-    onSave: (FaceEntity) -> Unit
+    onDismissRequest: () -> Unit,
+    onSaveClick: (FaceEntity) -> Unit
 ) {
     var editName by remember { mutableStateOf(face.name) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = onDismissRequest,
         title = { Text("Edit Singkat") },
         text = {
             OutlinedTextField(
@@ -33,10 +33,10 @@ fun QuickEditFaceDialog(
             )
         },
         confirmButton = {
-            Button(onClick = { onSave(face.copy(name = editName)) }, shape = AzuraShapes.medium) { Text("Simpan") }
+            Button(onClick = { onSaveClick(face.copy(name = editName)) }, shape = AzuraShapes.medium) { Text("Simpan") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Batal") }
+            TextButton(onClick = onDismissRequest) { Text("Batal") }
         }
     )
 }
@@ -46,11 +46,11 @@ fun MultiClassAssignmentDialog(
     studentName: String,
     allClasses: List<ClassModel>,
     assignedClassIds: List<String>,
-    onDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
     onToggle: (String, Boolean) -> Unit
 ) {
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = onDismissRequest,
         title = { Text("Set Kelas untuk $studentName", style = MaterialTheme.typography.titleMedium) },
         text = {
             if (allClasses.isEmpty()) {
@@ -83,7 +83,7 @@ fun MultiClassAssignmentDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onDismiss, shape = AzuraShapes.medium) {
+            Button(onClick = onDismissRequest, shape = AzuraShapes.medium) {
                 Text("Selesai")
             }
         },
