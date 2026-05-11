@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.onEach
 fun CheckInScreen(
     useBackCamera: Boolean,
     teacherEmail: String,
-    onNavigateToBarcode: () -> Unit,
+    onBarcodeScanClick: () -> Unit,
     viewModel: ScannerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
@@ -43,7 +43,7 @@ fun CheckInScreen(
         activeClassName = "", // Can be passed from viewModel.uiState
         useBackCamera = currentCameraIsBack,
         onFlipCameraClick = { currentCameraIsBack = !currentCameraIsBack },
-        onSwitchToBarcodeClick = onNavigateToBarcode,
+        onSwitchToBarcodeClick = onBarcodeScanClick,
         onFaceEmbeddingReady = { embedding ->
             viewModel.processScannedFace(embedding)
         }
