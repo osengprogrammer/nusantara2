@@ -8,7 +8,7 @@ import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.local.toEntity
 import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.model.User
@@ -28,7 +28,7 @@ import javax.inject.Inject
 class UserManagementViewModel @Inject constructor(
     application: Application,
     private val database: AppDatabase,
-    private val repository: UserRepository,
+    private val repository: StaffAccountRepository,
     private val checkInRepository: CheckInRepository,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {

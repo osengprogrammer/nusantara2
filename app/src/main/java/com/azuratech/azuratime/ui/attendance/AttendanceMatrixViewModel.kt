@@ -8,7 +8,7 @@ import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.domain.model.AttendanceProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.data.repo.AttendanceRepository
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.domain.sync.ExportUtils
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.model.ClassModel
@@ -26,7 +26,7 @@ import javax.inject.Inject
 class AttendanceMatrixViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val exportUtils: ExportUtils,
     private val sessionManager: SessionManager
 ) : ViewModel() {

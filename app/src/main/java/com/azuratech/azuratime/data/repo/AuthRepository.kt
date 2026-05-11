@@ -32,7 +32,7 @@ class AuthRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val securityRepository: SecurityRepository
 ) {
     private val userDao = database.userDao()

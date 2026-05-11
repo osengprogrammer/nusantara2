@@ -10,7 +10,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
 import com.azuratech.azuratime.ui.core.UiEvent
 import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +27,7 @@ class ClassViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
     private val registrationRepository: com.azuratech.azuratime.data.repo.RegistrationRepository,
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 

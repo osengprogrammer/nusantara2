@@ -9,7 +9,7 @@ import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.AccessRequestRepository
 import com.azuratech.azuratime.data.repo.SchoolRepository
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.data.repo.WorkspaceRepository
 import com.azuratech.azuratime.domain.model.AccessRequestProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +36,7 @@ import javax.inject.Inject
 @HiltViewModel
 class WorkspaceViewModel @Inject constructor(
     private val repository: WorkspaceRepository,
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val schoolRepository: SchoolRepository,
     private val accessRequestRepository: AccessRequestRepository,
     private val sessionManager: SessionManager,

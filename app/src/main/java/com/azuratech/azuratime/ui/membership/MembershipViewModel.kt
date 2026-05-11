@@ -8,7 +8,7 @@ import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.AccessRequestRepository
 import com.azuratech.azuratime.data.repo.MembershipRepository
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.domain.model.AccessRequestProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,7 +29,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MembershipViewModel @Inject constructor(
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val accessRequestRepository: AccessRequestRepository,
     private val membershipRepository: MembershipRepository,
     private val sessionManager: SessionManager,
