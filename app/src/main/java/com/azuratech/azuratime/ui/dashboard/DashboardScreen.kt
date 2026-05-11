@@ -125,7 +125,7 @@ fun DashboardScreen(
                         println("💾 DASHBOARD: Updating activeClassId in ViewModel")
                         viewModel.selectActiveClass(classId) 
                     },
-                    onLogout = {
+                    onLogoutClick = {
                         viewModel.logout {
                             val intent = Intent(context, MainActivity::class.java)
                             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -161,7 +161,7 @@ fun DashboardContent(
     onSyncClick: () -> Unit,
     onRegisterStudentClick: () -> Unit, // 👈 Added
     onSelectClass: (String?) -> Unit,
-    onLogout: () -> Unit
+    onLogoutClick: () -> Unit
 ) {
     val activeSchool by schoolViewModel.activeSchool.collectAsStateWithLifecycle()
     val schools by schoolViewModel.allSchools.collectAsStateWithLifecycle()
@@ -210,7 +210,7 @@ fun DashboardContent(
                         email = user.email,
                         schoolName = activeSchool?.name ?: user.schoolName ?: "",
                         photoUrl = photoUrl,
-                        onLogout = onLogout,
+                        onLogout = onLogoutClick,
                         onProfileClick = { navController.navigate(Screen.Profile.route) }
                     )
                 }
@@ -287,7 +287,7 @@ fun DashboardContent(
                                 println("🏫 DEBUG: userId=${user.userId}, route=${Screen.SchoolList.createRoute(user.userId)}")
                                 navController.navigate(Screen.SchoolList.createRoute(user.userId))
                             },
-                            onAddSchool = {
+                            onAddSchoolClick = {
                                 println("➕ DEBUG: Add School clicked")
                                 onAddSchoolClick()
                             }
@@ -368,7 +368,7 @@ fun DashboardContentSuccessPreview() {
                 onSyncClick = {},
                 onRegisterStudentClick = {}, // 👈 Added
                 onSelectClass = {},
-                onLogout = {}
+                onLogoutClick = {}
             )
         }
     }
@@ -391,7 +391,7 @@ fun DashboardContentLoadingPreview() {
                 onSyncClick = {},
                 onRegisterStudentClick = {}, // 👈 Added
                 onSelectClass = {},
-                onLogout = {}
+                onLogoutClick = {}
             )
         }
     }
