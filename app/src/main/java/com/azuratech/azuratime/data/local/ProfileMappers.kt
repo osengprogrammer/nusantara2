@@ -1,9 +1,9 @@
 package com.azuratech.azuratime.data.local
 
-import com.azuratech.azuratime.domain.model.AuditLogProfile
+import com.azuratech.azuratime.domain.model.SystemAuditTrail
 import com.azuratech.azuratime.domain.model.ExportJobProfile
 import com.azuratech.azuratime.domain.model.BiometricEnrollmentProfile
-import com.azuratech.azuratime.domain.model.ReportSummaryProfile
+import com.azuratech.azuratime.domain.model.SchoolAnalyticsSummary
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 
@@ -13,10 +13,10 @@ import com.azuratech.azuratime.domain.model.SyncStatus
  */
 
 /**
- * Extension to convert AuditLogEntity to AuditLogProfile.
+ * Extension to convert AuditLogEntity to SystemAuditTrail.
  */
-fun AuditLogEntity.toProfile(): AuditLogProfile {
-    return AuditLogProfile(
+fun AuditLogEntity.toProfile(): SystemAuditTrail {
+    return SystemAuditTrail(
         logId = logId,
         userId = userId,
         action = action,
@@ -40,10 +40,10 @@ fun ExportJobEntity.toProfile(): ExportJobProfile {
 }
 
 /**
- * Extension to convert ReportEntity to ReportSummaryProfile.
+ * Extension to convert ReportEntity to SchoolAnalyticsSummary.
  */
-fun ReportEntity.toProfile(): ReportSummaryProfile {
-    return ReportSummaryProfile(
+fun ReportEntity.toProfile(): SchoolAnalyticsSummary {
+    return SchoolAnalyticsSummary(
         reportId = reportId,
         reportName = name,
         dateRange = "${java.time.Instant.ofEpochMilli(startDate)} - ${java.time.Instant.ofEpochMilli(endDate)}",

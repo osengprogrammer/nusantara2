@@ -11,5 +11,3 @@ data class SystemAuditTrail(
     val details: String?,
     val syncStatus: SyncStatus
 )
-
-typealias AuditLogProfile = SystemAuditTrail

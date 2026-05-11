@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.domain.model.AuditLogProfile
+import com.azuratech.azuratime.domain.model.SystemAuditTrail
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
@@ -54,7 +54,7 @@ fun AuditLogScreen(
 }
 
 @Composable
-fun AuditLogItem(log: AuditLogProfile) {
+fun AuditLogItem(log: SystemAuditTrail) {
     val formatter = remember {
         DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm:ss")
             .withZone(ZoneId.systemDefault())
