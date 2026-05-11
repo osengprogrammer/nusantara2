@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.toProfile
-import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.data.repo.BiometricFaceRepository
 import com.azuratech.azuratime.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +20,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class BiometricViewModel @Inject constructor(
-    private val faceRepository: FaceRepository,
+    private val faceRepository: BiometricFaceRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 

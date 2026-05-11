@@ -15,7 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 import com.azuratech.azuratime.data.repo.SchoolRepository
-import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.data.repo.BiometricFaceRepository
 import com.azuratech.azuratime.domain.student.repository.StudentRepository
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuratime.data.repo.UserRepository
@@ -31,7 +31,7 @@ class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val schoolRepository: SchoolRepository,
-    private val faceRepository: FaceRepository,
+    private val faceRepository: BiometricFaceRepository,
     private val studentRepository: StudentRepository,
     private val checkInRepository: CheckInRepository,
     private val userRepository: UserRepository,

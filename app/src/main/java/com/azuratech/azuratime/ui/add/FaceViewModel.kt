@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.azuratech.azuraengine.face.RegisterResult
-import com.azuratech.azuratime.data.repo.FaceRepository
+import com.azuratech.azuratime.data.repo.BiometricFaceRepository
 import com.azuratech.azuratime.ui.core.UiEvent
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,7 +38,7 @@ import com.azuratech.azuratime.domain.model.SyncStatus
 @HiltViewModel
 class FaceViewModel @Inject constructor(
     application: Application,
-    private val faceRepository: FaceRepository,
+    private val faceRepository: BiometricFaceRepository,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 
