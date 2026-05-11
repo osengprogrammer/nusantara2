@@ -4,7 +4,7 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface UserDao {
+interface StaffAccountDao {
 
     // =====================================================
     // 📖 READ OPERATIONS
@@ -12,24 +12,24 @@ interface UserDao {
 
     // THE NEW GOLD STANDARD: Get user by UUID
     @Query("SELECT * FROM users WHERE userId = :userId LIMIT 1")
-    suspend fun getUserById(userId: String): UserEntity?
+    suspend fun getUserById(userId: String): StaffAccountEntity?
 
     // Legacy / Search (Used for invites and login flow)
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
-    suspend fun getUserByEmail(email: String): UserEntity?
+    suspend fun getUserByEmail(email: String): StaffAccountEntity?
 
     // REQUIRED FOR SEEDER: Check if any users exist in the DB
     @Query("SELECT * FROM users")
-    suspend fun getAllUsersOnce(): List<UserEntity>
+    suspend fun getAllUsersOnce(): List<StaffAccountEntity>
 
     // Real-time UI: Observe the logged-in user's data
     @Query("SELECT * FROM users WHERE userId = :userId")
-    fun observeUserById(userId: String): Flow<UserEntity?>
+    fun observeUserById(userId: String): Flow<StaffAccountEntity?>
 
     // 🔥 Observe ALL users. 
     // The Repository handles the multi-tenant filtering using Kotlin to parse the JSON memberships map.
     @Query("SELECT * FROM users ORDER BY name ASC")
-    fun observeAllUsers(): Flow<List<UserEntity>>
+    fun observeAllUsers(): Flow<List<StaffAccountEntity>>
 
     // =====================================================
     // ✍️ WRITE OPERATIONS
@@ -37,10 +37,10 @@ interface UserDao {
 
     // Initial Registration or Sync from Firestore
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUser(user: UserEntity)
+    suspend fun insertUser(user: StaffAccountEntity)
 
     @Update
-    suspend fun updateUser(user: UserEntity)
+    suspend fun updateUser(user: StaffAccountEntity)
 
     // Phase 1 Security: Hardware Binding
     @Query("UPDATE users SET deviceId = :deviceId WHERE userId = :userId")
@@ -59,8 +59,10 @@ interface UserDao {
     // =====================================================
 
     @Delete
-    suspend fun deleteUser(user: UserEntity)
+    suspend fun deleteUser(user: StaffAccountEntity)
 
     @Query("DELETE FROM users")
     suspend fun clearAllUsers()
 }
+
+typealias UserDao = StaffAccountDao

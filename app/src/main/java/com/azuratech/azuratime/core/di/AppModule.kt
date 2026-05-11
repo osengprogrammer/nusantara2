@@ -47,7 +47,7 @@ object AppModule {
     fun provideFaceAssignmentDao(db: AppDatabase) = db.faceAssignmentDao()
 
     @Provides
-    fun provideUserDao(db: AppDatabase) = db.userDao()
+    fun provideUserDao(db: AppDatabase): com.azuratech.azuratime.data.local.StaffAccountDao = db.userDao()
 
     @Provides
     fun provideClassDao(db: AppDatabase) = db.classDao()
