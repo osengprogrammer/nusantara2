@@ -18,7 +18,7 @@ import com.azuratech.azuratime.data.repo.SchoolRepository
 import com.azuratech.azuratime.data.repo.BiometricFaceRepository
 import com.azuratech.azuratime.domain.student.repository.StudentRepository
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 
 /**
  * 🛡️ THE INVISIBLE GUARDRAIL: Persistent Background Sync
@@ -34,7 +34,7 @@ class SyncWorker @AssistedInject constructor(
     private val faceRepository: BiometricFaceRepository,
     private val studentRepository: StudentRepository,
     private val checkInRepository: CheckInRepository,
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
 

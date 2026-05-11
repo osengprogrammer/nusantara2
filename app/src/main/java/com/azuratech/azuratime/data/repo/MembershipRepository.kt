@@ -34,7 +34,7 @@ class MembershipRepository @Inject constructor(
     private val sessionManager: SessionManager,
     private val userDao: UserDao,
     private val syncManager: SyncManager,
-    private val userRepository: UserRepository
+    private val userRepository: StaffAccountRepository
 ) {
     fun getCurrentUid(): String? = firebaseAuth.currentUser?.uid
 

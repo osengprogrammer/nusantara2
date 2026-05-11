@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repo.BiometricFaceRepository
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.domain.media.PhotoStorageUtils
@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
     private val faceRepository: BiometricFaceRepository,
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
     private val photoStorageUtils: PhotoStorageUtils

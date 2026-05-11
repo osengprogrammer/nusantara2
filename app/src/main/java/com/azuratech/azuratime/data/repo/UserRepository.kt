@@ -19,7 +19,7 @@ import javax.inject.Singleton
  * Thin wrapper for User Data Sources.
  */
 @Singleton
-class UserRepository @Inject constructor(
+class StaffAccountRepository @Inject constructor(
     private val database: AppDatabase,
     private val syncManager: com.azuratech.azuratime.core.sync.SyncManager,
     private val firestore: com.google.firebase.firestore.FirebaseFirestore,
@@ -346,3 +346,5 @@ class UserRepository @Inject constructor(
     
     fun setConflicts(list: List<AttendanceConflict>) { _conflicts.value = list }
 }
+
+typealias UserRepository = StaffAccountRepository

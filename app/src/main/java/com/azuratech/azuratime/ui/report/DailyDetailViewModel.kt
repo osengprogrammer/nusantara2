@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +22,7 @@ class DailyDetailViewModel @Inject constructor(
     private val repository: CheckInRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
-    private val userRepository: UserRepository
+    private val userRepository: StaffAccountRepository
 ) : ViewModel() {
 
     private val faceId: String = savedStateHandle["faceId"] ?: ""

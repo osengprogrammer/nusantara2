@@ -7,7 +7,7 @@ import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,7 +26,7 @@ class AdminViewModel @Inject constructor(
     application: Application,
     database: AppDatabase,
     private val repository: AdminRepository,
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 

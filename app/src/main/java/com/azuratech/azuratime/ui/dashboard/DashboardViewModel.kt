@@ -7,7 +7,7 @@ import com.azuratech.azuratime.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.data.local.UserEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
 import com.azuratech.azuratime.data.repo.AuthRepository
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.repo.BiometricFaceRepository
@@ -29,7 +29,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel @Inject constructor(
     private val adminRepository: AdminRepository,
-    private val userRepository: UserRepository,
+    private val userRepository: StaffAccountRepository,
     private val faceRepository: BiometricFaceRepository,
     private val checkInRepository: CheckInRepository,
     private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,

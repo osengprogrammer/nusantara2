@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.data.local.UserEntity
-import com.azuratech.azuratime.data.repo.UserRepository
+import com.azuratech.azuratime.data.repo.StaffAccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +23,7 @@ sealed class NetworkState {
 
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: StaffAccountRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<NetworkState>(NetworkState.Idle)
