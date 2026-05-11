@@ -24,12 +24,12 @@ object NavigationRoutes {
 
     // --- 👤 REGISTRATION & FACE DATA ---
     const val REGISTRATION_MENU = "registration_menu"
-    const val ADD_USER = "add_user"
+    const val ADD_STUDENT = "add_student"
     const val BULK_REGISTER = "bulk_register"
-    const val MANAGE_FACES = "manage_faces"
+    const val STUDENT_ROSTER = "student_roster"
     const val BIOMETRIC_MANAGEMENT = "biometric_management"
-    const val FACE_LIST_BARCODE = "face_list_barcode"
-    const val EDIT_USER = "edit_user/{faceId}"
+    const val STUDENT_ROSTER_BARCODE = "student_roster_barcode"
+    const val EDIT_STUDENT = "edit_student/{faceId}"
 
     // --- 🏫 CLASS MANAGEMENT ---
     const val CLASS_LIST = "class_list/{schoolId}"

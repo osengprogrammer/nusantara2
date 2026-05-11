@@ -2,6 +2,13 @@
 
 ## 🚀 Recent Updates (May 7, 2026)
 
+### Phase 7.17: Student Roster Naming Cascade
+- **UI Naming Alignment**: Renamed `FaceListScreen` to `StudentRosterScreen` and `FaceListBarcodeScreen` to `StudentRosterBarcodeScreen`.
+- **ViewModel Naming**: Renamed `FaceListViewModel` to `StudentRosterViewModel` and updated associated state flows for domain consistency.
+- **Navigation SSOT**: Updated `NavigationRoutes` and `NavGraph` to use `STUDENT_ROSTER` instead of legacy `MANAGE_FACES` and `FACE_LIST`.
+- **Bug Fixes**: Restored missing `StudentRosterBarcodeScreen` entry in the `ManagementGraph` and fixed unresolved preview references.
+- **Warning Cleanup**: Resolved several Kotlin warnings (unused parameters, unchecked casts, missing navigation handlers).
+
 ### Phase 7.12: Reactive Audit Log
 - **Audit Trail SSOT**: Implemented a reactive system audit trail using the `AuditLogProfile` domain model.
 - **Data Layer**: Created `AuditLogEntity` and `AuditLogDao` to persist system actions locally.

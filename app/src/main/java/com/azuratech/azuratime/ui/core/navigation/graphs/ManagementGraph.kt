@@ -28,14 +28,14 @@ fun NavGraphBuilder.managementGraph(
     ) {
         composable(NavigationRoutes.REGISTRATION_MENU) {
             RegistrationMenuScreen(
-                onNavigateToAddUser = { navController.navigate(NavigationRoutes.ADD_USER) },
+                onNavigateToAddStudent = { navController.navigate(NavigationRoutes.ADD_STUDENT) },
                 onNavigateToBulkRegister = { navController.navigate(NavigationRoutes.BULK_REGISTER) },
                 onNavigateToBiometricManagement = { navController.navigate(NavigationRoutes.BIOMETRIC_MANAGEMENT) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(NavigationRoutes.ADD_USER) {
-            AddUserScreen(
+        composable(NavigationRoutes.ADD_STUDENT) {
+            AddStudentScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -50,9 +50,14 @@ fun NavGraphBuilder.managementGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(NavigationRoutes.MANAGE_FACES) {
-            FaceListScreen(
-                onEditUserClick = { faceId -> navController.navigate(Screen.EditUser.createRoute(faceId)) },
+        composable(NavigationRoutes.STUDENT_ROSTER) {
+            StudentRosterScreen(
+                onEditStudentClick = { faceId -> navController.navigate(Screen.EditStudent.createRoute(faceId)) },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(NavigationRoutes.STUDENT_ROSTER_BARCODE) {
+            StudentRosterBarcodeScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -65,15 +70,15 @@ fun NavGraphBuilder.managementGraph(
             DataManagementScreen(
                 initialDataType = it.arguments?.getString("dataType") ?: "FACES",
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToClassList = { navController.navigate(NavigationRoutes.MANAGE_FACES) },
+                onNavigateToClassList = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
                 registerViewModel = hiltViewModel()
             )
         }
         composable(
-            route = NavigationRoutes.EDIT_USER,
+            route = NavigationRoutes.EDIT_STUDENT,
             arguments = listOf(navArgument("faceId") { type = NavType.StringType })
         ) { entry ->
-            EditUserScreen(
+            EditStudentScreen(
                 faceId = entry.arguments?.getString("faceId") ?: "",
                 onNavigateBack = { navController.popBackStack() }
             )
@@ -115,7 +120,7 @@ fun NavGraphBuilder.managementGraph(
                 classViewModel = hiltViewModel(),
                 faceViewModel = hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() },
-                onAddStudent = { navController.navigate(NavigationRoutes.MANAGE_FACES) }
+                onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) }
             )
         }
 

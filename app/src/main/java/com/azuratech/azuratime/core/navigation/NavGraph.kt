@@ -22,13 +22,13 @@ sealed class Screen(val route: String) {
 
     // --- 👤 REGISTRATION & FACE DATA ---
     data object RegistrationMenu : Screen(NavigationRoutes.REGISTRATION_MENU)
-    data object AddUser : Screen(NavigationRoutes.ADD_USER)
+    data object AddStudent : Screen(NavigationRoutes.ADD_STUDENT)
     data object BulkRegister : Screen(NavigationRoutes.BULK_REGISTER)
-    data object Manage : Screen(NavigationRoutes.MANAGE_FACES)
+    data object StudentRoster : Screen(NavigationRoutes.STUDENT_ROSTER)
     data object BiometricManagement : Screen(NavigationRoutes.BIOMETRIC_MANAGEMENT)
-    data object FaceListBarcode : Screen(NavigationRoutes.FACE_LIST_BARCODE)
-    data object EditUser : Screen(NavigationRoutes.EDIT_USER) {
-        fun createRoute(faceId: String) = "edit_user/$faceId"
+    data object StudentRosterBarcode : Screen(NavigationRoutes.STUDENT_ROSTER_BARCODE)
+    data object EditStudent : Screen(NavigationRoutes.EDIT_STUDENT) {
+        fun createRoute(faceId: String) = "edit_student/$faceId"
     }
 
     // --- 📊 ATTENDANCE & REPORT ---

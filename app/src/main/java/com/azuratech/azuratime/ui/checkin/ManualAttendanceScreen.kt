@@ -21,7 +21,7 @@ fun ManualAttendanceScreen(
     initialDate: String = "",
     onNavigateBack: () -> Unit
 ) {
-    val faces by faceViewModel.faceListStateFlow.collectAsStateWithLifecycle()
+    val faces by faceViewModel.studentRosterFlow.collectAsStateWithLifecycle()
     val currentUser by userViewModel.currentUser.collectAsStateWithLifecycle()
     val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
     val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
