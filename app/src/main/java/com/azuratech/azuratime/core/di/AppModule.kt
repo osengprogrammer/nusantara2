@@ -21,8 +21,8 @@ object AppModule {
     // =====================================================
     @Provides
     @Singleton
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return AppDatabase.getInstance(context)
+    fun provideAppDatabase(@ApplicationContext context: Context): com.azuratech.azuratime.data.local.AppDatabase {
+        return com.azuratech.azuratime.data.local.AppDatabase.getInstance(context)
     }
 
     // =====================================================
@@ -30,39 +30,39 @@ object AppModule {
     // =====================================================
     @Provides
     @Singleton
-    fun provideSessionManager(@ApplicationContext context: Context): SessionManager {
-        return SessionManager.getInstance(context)
+    fun provideSessionManager(@ApplicationContext context: Context): com.azuratech.azuratime.core.session.SessionManager {
+        return com.azuratech.azuratime.core.session.SessionManager.getInstance(context)
     }
 
     // =====================================================
     // 🗡️ DAO PROVIDERS
     // =====================================================
     @Provides
-    fun provideStudentDao(db: AppDatabase) = db.studentDao()
+    fun provideStudentDao(db: AppDatabase): com.azuratech.azuratime.data.local.StudentDao = db.studentDao()
 
     @Provides
-    fun provideFaceDao(db: AppDatabase): com.azuratech.azuratime.data.local.BiometricFaceDao = db.faceDao()
+    fun provideBiometricFaceDao(db: AppDatabase): com.azuratech.azuratime.data.local.BiometricFaceDao = db.faceDao()
 
     @Provides
-    fun provideFaceAssignmentDao(db: AppDatabase) = db.faceAssignmentDao()
+    fun provideBiometricAssignmentDao(db: AppDatabase): com.azuratech.azuratime.data.local.FaceAssignmentDao = db.faceAssignmentDao()
 
     @Provides
     fun provideUserDao(db: AppDatabase): com.azuratech.azuratime.data.local.StaffAccountDao = db.userDao()
 
     @Provides
-    fun provideClassDao(db: AppDatabase) = db.classDao()
+    fun provideClassDao(db: AppDatabase): com.azuratech.azuratime.data.local.ClassDao = db.classDao()
 
     @Provides
-    fun provideSchoolDao(db: AppDatabase) = db.schoolDao()
+    fun provideSchoolDao(db: AppDatabase): com.azuratech.azuratime.data.local.SchoolDao = db.schoolDao()
 
     @Provides
-    fun provideUserClassAccessDao(db: AppDatabase) = db.userClassAccessDao()
+    fun provideUserClassAccessDao(db: AppDatabase): com.azuratech.azuratime.data.local.UserClassAccessDao = db.userClassAccessDao()
 
     @Provides
-    fun provideAccessRequestDao(db: AppDatabase) = db.accessRequestDao()
+    fun provideAccessRequestDao(db: AppDatabase): com.azuratech.azuratime.data.local.AccessRequestDao = db.accessRequestDao()
 
     @Provides
-    fun provideAttendanceConflictDao(db: AppDatabase) = db.attendanceConflictDao()
+    fun provideAttendanceConflictDao(db: AppDatabase): com.azuratech.azuratime.data.local.AttendanceConflictDao = db.attendanceConflictDao()
 
     // =====================================================
     // ☁️ FIREBASE CLOUD PROVIDERS
@@ -73,7 +73,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseStorage(): FirebaseStorage {
-        return FirebaseStorage.getInstance()
+    fun provideFirebaseStorage(): com.google.firebase.storage.FirebaseStorage {
+        return com.google.firebase.storage.FirebaseStorage.getInstance()
     }
 }

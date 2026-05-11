@@ -17,25 +17,25 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindStudentRepository(
+    abstract fun provideStudentRepository(
         impl: StudentRepositoryImpl
-    ): StudentRepository
+    ): com.azuratech.azuratime.domain.student.repository.StudentRepository
 
     @Binds
     @Singleton
-    abstract fun bindCheckInRepository(
+    abstract fun provideCheckInRepository(
         impl: CheckInRepositoryImpl
-    ): CheckInRepository
+    ): com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 
     @Binds
     @Singleton
-    abstract fun bindAccessRequestRepository(
+    abstract fun provideAccessRequestRepository(
         impl: AccessRequestRepositoryImpl
-    ): AccessRequestRepository
+    ): com.azuratech.azuratime.data.repo.AccessRequestRepository
 
     @Binds
     @Singleton
-    abstract fun bindFileStorage(
+    abstract fun provideFileStorage(
         impl: PhotoStorageUtils
-    ): FileStorage
+    ): com.azuratech.azuratime.domain.media.FileStorage
 }
