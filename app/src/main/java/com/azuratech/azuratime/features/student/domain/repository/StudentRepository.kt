@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.domain.student.repository
+package com.azuratech.azuratime.features.student.domain.repository
 
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus

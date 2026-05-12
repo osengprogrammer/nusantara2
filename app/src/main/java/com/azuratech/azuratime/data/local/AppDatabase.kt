@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.azuratech.azuratime.features.student.data.local.StudentDao
+import com.azuratech.azuratime.features.student.data.local.StudentEntity
 // 🔥 FIX: Correctly targeting the nested JournalMode enum
 
 @Database(

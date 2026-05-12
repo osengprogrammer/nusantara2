@@ -142,13 +142,13 @@ object PreviewMocks {
 
     // For FaceList
     val mockStudentDisplayItems = listOf(
-        com.azuratech.azuratime.ui.add.StudentDisplayItem(
+        com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem(
             faceWithDetails = com.azuratech.azuratime.data.local.FaceWithDetails(face = mockStudents[0], className = "Kelas 10A", classId = "cls_1"),
             assignedClassNames = "Kelas 10A",
             isBiometricReady = true,
             assignedClassIds = listOf("cls_1")
         ),
-        com.azuratech.azuratime.ui.add.StudentDisplayItem(
+        com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem(
             faceWithDetails = com.azuratech.azuratime.data.local.FaceWithDetails(face = mockStudents[1], className = "Kelas 10B", classId = "cls_2"),
             assignedClassNames = "Kelas 10B",
             isBiometricReady = false,
