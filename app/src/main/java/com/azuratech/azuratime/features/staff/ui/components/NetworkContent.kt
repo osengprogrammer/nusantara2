@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.user
+package com.azuratech.azuratime.features.staff.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard

@@ -52,7 +52,7 @@ object AppModule {
     fun provideBiometricAssignmentDao(db: AppDatabase): com.azuratech.azuratime.data.local.FaceAssignmentDao = db.faceAssignmentDao()
 
     @Provides
-    fun provideUserDao(db: AppDatabase): com.azuratech.azuratime.data.local.StaffAccountDao = db.userDao()
+    fun provideUserDao(db: AppDatabase): com.azuratech.azuratime.features.staff.data.local.StaffAccountDao = db.userDao()
 
     @Provides
     fun provideClassDao(db: AppDatabase): com.azuratech.azuratime.data.local.ClassDao = db.classDao()

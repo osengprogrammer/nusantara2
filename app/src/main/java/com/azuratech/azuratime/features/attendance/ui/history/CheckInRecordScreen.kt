@@ -15,14 +15,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.ui.core.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.theme.*
 import com.azuratech.azuratime.ui.classes.ClassViewModel
-import com.azuratech.azuratime.ui.user.UserManagementViewModel
+import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate

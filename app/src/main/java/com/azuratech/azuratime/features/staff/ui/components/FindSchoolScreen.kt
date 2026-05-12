@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.user
+package com.azuratech.azuratime.features.staff.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 
 // 🔥 DB & ViewModels
 import com.azuratech.azuratime.domain.model.AccessRequestProfile
-import com.azuratech.azuratime.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.domain.model.SyncStatus
 
 // 🔥 Azura Design System

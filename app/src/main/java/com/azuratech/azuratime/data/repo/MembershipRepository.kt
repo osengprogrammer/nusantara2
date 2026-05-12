@@ -2,7 +2,9 @@ package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.data.local.StaffAccountDao
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.staff.data.local.Membership
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -75,7 +77,7 @@ class MembershipRepository @Inject constructor(
 
     suspend fun createPendingUser(uid: String, email: String, displayName: String?) = withContext(Dispatchers.IO) {
         // SSOT Migration v7.1: Save to Room first, then sync
-        val user = com.azuratech.azuratime.data.local.StaffAccountEntity(
+        val user = com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity(
             userId = uid,
             email = email,
             name = displayName ?: "User",
@@ -121,7 +123,7 @@ class MembershipRepository @Inject constructor(
     // 👁️ REAL-TIME OBSERVATION & POLLING
     // =====================================================
 
-    fun observeMemberships(uid: String): Flow<List<com.azuratech.azuratime.data.local.Membership>> {
+    fun observeMemberships(uid: String): Flow<List<com.azuratech.azuratime.features.staff.data.local.Membership>> {
         // SSOT Migration v7.1: Observe Room instead of Firestore
         return userDao.observeUserById(uid).map { user ->
             user?.memberships?.values?.toList() ?: emptyList()
@@ -153,7 +155,7 @@ class MembershipRepository @Inject constructor(
         null
     }
 
-    private fun userToMap(user: com.azuratech.azuratime.data.local.StaffAccountEntity): Map<String, Any> {
+    private fun userToMap(user: com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity): Map<String, Any> {
         return mapOf(
             "userId" to user.userId,
             "email" to user.email,

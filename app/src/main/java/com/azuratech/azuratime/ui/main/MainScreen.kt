@@ -17,7 +17,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.ui.core.designsystem.ZoharChatSheet
-import com.azuratech.azuratime.ui.user.UserManagementViewModel
+import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.azuratech.azuratime.ui.core.navigation.graphs.attendanceGraph
 import com.azuratech.azuratime.ui.core.navigation.graphs.dashboardGraph

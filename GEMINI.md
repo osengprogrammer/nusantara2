@@ -2,6 +2,12 @@
 
 ## 🚀 Recent Updates (May 7, 2026)
 
+### Phase 11E: Staff Feature Move & KSP Restoration
+- **KSP Failure Resolved**: Fixed `MissingType` errors in `Converters.kt` by adding missing imports for `Membership` and `FriendConnection`.
+- **Database Refinement**: Cleaned up `AppDatabase.kt` by removing duplicate imports and qualifying `JournalMode` with `RoomDatabase.JournalMode`.
+- **Project-Wide Import Alignment**: Performed a massive import update across 16+ files to reflect the move of `StaffAccountEntity`, `Membership`, `UserManagementViewModel`, and associated UI components to the `staff` feature package.
+- **Build Restoration**: Successfully restored the project to a compiling state (`compileDebugKotlin` ✅).
+
 ### Phase 7.18: Student Domain Refinement
 - **Standardized Domain Models**: Renamed `FaceEnrollmentProfile` to `BiometricEnrollmentProfile` to better reflect its purpose in the UI.
 - **Design System Alignment**: Renamed `QuickEditFaceDialog` to `QuickEditStudentDialog` and `FaceAvatar` to `StudentAvatar`.

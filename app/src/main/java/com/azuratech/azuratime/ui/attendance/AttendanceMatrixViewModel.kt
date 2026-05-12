@@ -9,7 +9,7 @@ import com.azuratech.azuratime.features.attendance.data.local.toProfile
 import com.azuratech.azuratime.domain.model.AttendanceProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.data.repo.AttendanceRepository
-import com.azuratech.azuratime.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.domain.sync.ExportUtils
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.model.ClassModel

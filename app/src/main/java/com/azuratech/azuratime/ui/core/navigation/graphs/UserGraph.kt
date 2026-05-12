@@ -7,6 +7,9 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.navigation.NavigationRoutes
+import com.azuratech.azuratime.features.staff.ui.profile.UserProfileScreen
+import com.azuratech.azuratime.features.staff.ui.components.MyAssignedClassScreen
+import com.azuratech.azuratime.features.staff.ui.components.NetworkScreen
 
 fun NavGraphBuilder.userGraph(
     navController: androidx.navigation.NavController
@@ -18,7 +21,7 @@ fun NavGraphBuilder.userGraph(
         route = NavigationRoutes.USER_GRAPH
     ) {
         composable(NavigationRoutes.USER_PROFILE) {
-            com.azuratech.azuratime.ui.user.UserProfileScreen(
+            UserProfileScreen(
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 workspaceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() }
@@ -44,7 +47,7 @@ fun NavGraphBuilder.userGraph(
             )
         ) { backStackEntry ->
             val targetUserId = backStackEntry.arguments?.getString("targetUserId")
-            com.azuratech.azuratime.ui.user.MyAssignedClassScreen(
+            com.azuratech.azuratime.features.staff.ui.components.MyAssignedClassScreen(
                 targetUserId = targetUserId,
                 onNavigateBack = { navController.popBackStack() },
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
@@ -52,7 +55,7 @@ fun NavGraphBuilder.userGraph(
             )
         }
         composable(NavigationRoutes.NETWORK) {
-            com.azuratech.azuratime.ui.user.NetworkScreen(
+            com.azuratech.azuratime.features.staff.ui.components.NetworkScreen(
                 navController = navController,
                 networkViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel()

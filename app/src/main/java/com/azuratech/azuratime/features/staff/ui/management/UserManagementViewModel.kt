@@ -1,14 +1,14 @@
-package com.azuratech.azuratime.ui.user
+package com.azuratech.azuratime.features.staff.ui.management
 
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.local.toEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
-import com.azuratech.azuratime.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.model.User

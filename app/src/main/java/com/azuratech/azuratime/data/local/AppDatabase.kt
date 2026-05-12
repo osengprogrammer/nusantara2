@@ -9,6 +9,9 @@ import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceSummary
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
 // 🔥 FIX: Correctly targeting the nested JournalMode enum
 
 @Database(
@@ -40,7 +43,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun schoolDao(): SchoolDao // 🔥 NEW DAO
     abstract fun schoolClassDao(): SchoolClassDao
     abstract fun checkInRecordDao(): AttendanceRecordDao
-    abstract fun userDao(): com.azuratech.azuratime.data.local.StaffAccountDao
+    abstract fun userDao(): com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
     abstract fun userClassAccessDao(): UserClassAccessDao
     abstract fun studentDao(): StudentDao // 🔥 NEW DAO
     abstract fun accessRequestDao(): AccessRequestDao // 🔥 NEW DAO
@@ -61,7 +64,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "azura.db"
                 )
-                .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
+                .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
                 /**
                  * 💡 PRO TIP: Because the jump from 21 to 22 involves deleting 
                  * tables and changing primary keys, destructive migration is 

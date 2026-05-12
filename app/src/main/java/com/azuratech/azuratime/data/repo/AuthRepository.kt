@@ -4,7 +4,8 @@ import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.domain.model.SyncStatus
