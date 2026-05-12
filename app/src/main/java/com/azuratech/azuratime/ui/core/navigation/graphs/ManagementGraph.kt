@@ -52,7 +52,7 @@ fun NavGraphBuilder.managementGraph(
         }
         composable(NavigationRoutes.STUDENT_ROSTER) {
             StudentRosterScreen(
-                onEditStudentClick = { faceId -> navController.navigate(Screen.EditStudent.createRoute(faceId)) },
+                onEditStudentClick = { studentId -> navController.navigate(Screen.EditStudent.createRoute(studentId)) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -76,10 +76,10 @@ fun NavGraphBuilder.managementGraph(
         }
         composable(
             route = NavigationRoutes.EDIT_STUDENT,
-            arguments = listOf(navArgument("faceId") { type = NavType.StringType })
+            arguments = listOf(navArgument("studentId") { type = NavType.StringType })
         ) { entry ->
             EditStudentScreen(
-                faceId = entry.arguments?.getString("faceId") ?: "",
+                faceId = entry.arguments?.getString("studentId") ?: "",
                 onNavigateBack = { navController.popBackStack() }
             )
         }

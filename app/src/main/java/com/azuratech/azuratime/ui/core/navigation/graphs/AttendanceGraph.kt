@@ -10,10 +10,10 @@ fun NavGraphBuilder.attendanceGraph(
     navController: androidx.navigation.NavController
 ) {
     navigation(
-        startDestination = NavigationRoutes.CHECK_IN,
+        startDestination = NavigationRoutes.ATTENDANCE_CAPTURE,
         route = NavigationRoutes.ATTENDANCE_GRAPH
     ) {
-        composable(NavigationRoutes.CHECK_IN) {
+        composable(NavigationRoutes.ATTENDANCE_CAPTURE) {
             com.azuratech.azuratime.ui.checkin.AttendanceCaptureScreen(
                 useBackCamera = false,
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),

@@ -16,26 +16,26 @@ fun NavGraphBuilder.reportingGraph(
         composable(NavigationRoutes.ATTENDANCE_MATRIX) {
             com.azuratech.azuratime.ui.attendance.AttendanceMatrixScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onCellClick = { faceId, name, date ->
-                    navController.navigate(Screen.DailyDetail.createRoute(faceId, name, date.toString()))
+                onCellClick = { studentId, name, date ->
+                    navController.navigate(Screen.DailyDetail.createRoute(studentId, name, date.toString()))
                 }
             )
         }
         composable(
             route = NavigationRoutes.DAILY_DETAIL,
             arguments = listOf(
-                androidx.navigation.navArgument("faceId") { androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("studentId") { androidx.navigation.NavType.StringType },
                 androidx.navigation.navArgument("name") { androidx.navigation.NavType.StringType },
                 androidx.navigation.navArgument("date") { androidx.navigation.NavType.StringType }
             )
         ) { entry ->
             com.azuratech.azuratime.ui.report.DailyDetailScreen(
-                faceId = entry.arguments?.getString("faceId") ?: "",
+                faceId = entry.arguments?.getString("studentId") ?: "",
                 studentName = entry.arguments?.getString("name") ?: "",
                 dateString = entry.arguments?.getString("date") ?: "",
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToManual = { fId, dStr ->
-                    navController.navigate(Screen.ManualAttendance.createRoute(fId, dStr))
+                onNavigateToManual = { sId, dStr ->
+                    navController.navigate(Screen.ManualAttendance.createRoute(sId, dStr))
                 }
             )
         }
