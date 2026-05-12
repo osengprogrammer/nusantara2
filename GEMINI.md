@@ -2,6 +2,12 @@
 
 ## 🚀 Recent Updates (May 7, 2026)
 
+### Phase 11F: Biometric DI & NavGraph Realignment
+- **DI Restoration**: Updated `AppModule.kt` and `DataSourceModule.kt` to reference the new `biometric` feature package. Corrected package declarations and DAO provider signatures.
+- **NavGraph Alignment**: Updated `ManagementGraph.kt` to import `BiometricScreen` from its new feature-scoped location.
+- **Project-Wide Entity Realignment**: Fixed unresolved references to `BiometricFaceEntity` and `FaceWithDetails` across 10+ files, including `ProfileMappers`, `FaceAssignmentDao`, and multiple ViewModels.
+- **Build Stabilization**: Resolved KSP cache corruption through deep clean; verified build success (`compileDebugKotlin` ✅).
+
 ### Phase 11E: Staff Feature Move & KSP Restoration
 - **KSP Failure Resolved**: Fixed `MissingType` errors in `Converters.kt` by adding missing imports for `Membership` and `FriendConnection`.
 - **Database Refinement**: Cleaned up `AppDatabase.kt` by removing duplicate imports and qualifying `JournalMode` with `RoomDatabase.JournalMode`.

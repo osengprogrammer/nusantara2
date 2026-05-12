@@ -1,10 +1,10 @@
-package com.azuratech.azuratime.ui.classes
+package com.azuratech.azuratime.features.biometric.ui.assignment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.ClassEntity
-import com.azuratech.azuratime.data.repo.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +35,7 @@ class FaceAssignmentViewModel @Inject constructor(
             .flatMapLatest { schoolId: String? ->
                 faceDao.getAllFacesFlow(schoolId ?: "")
             }
-            .flatMapLatest { faces: List<com.azuratech.azuratime.data.local.BiometricFaceEntity> ->
+            .flatMapLatest { faces: List<com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity> ->
                 if (faces.isEmpty()) return@flatMapLatest flowOf(emptyMap<String, List<ClassModel>>())
                 // Simplified for brevity, logic remains similar
                 flowOf(emptyMap<String, List<ClassModel>>()) 

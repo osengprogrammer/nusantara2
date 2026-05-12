@@ -3,7 +3,7 @@ package com.azuratech.azuratime.ui.core.preview
 import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.ui.dashboard.DashboardUiState
 import com.azuratech.azuratime.ui.report.AttendanceMatrixUiState

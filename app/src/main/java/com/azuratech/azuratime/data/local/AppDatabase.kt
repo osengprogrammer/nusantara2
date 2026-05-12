@@ -10,6 +10,8 @@ import com.azuratech.azuratime.features.student.data.local.StudentEntity
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceSummary
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceDao
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
 // 🔥 FIX: Correctly targeting the nested JournalMode enum

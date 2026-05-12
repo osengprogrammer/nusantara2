@@ -2,7 +2,7 @@ package com.azuratech.azuratime.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.features.attendance.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.repo.AdminRepository
@@ -10,7 +10,7 @@ import com.azuratech.azuratime.data.repo.AuthRepository
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.repo.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
 import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuraengine.result.Result

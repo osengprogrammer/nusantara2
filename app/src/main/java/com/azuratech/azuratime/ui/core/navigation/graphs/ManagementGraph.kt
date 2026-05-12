@@ -11,7 +11,7 @@ import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.navigation.NavigationRoutes
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.ui.add.*
-import com.azuratech.azuratime.ui.biometric.BiometricScreen
+import com.azuratech.azuratime.features.biometric.ui.enroll.BiometricScreen
 import com.azuratech.azuratime.ui.classes.*
 import com.azuratech.azuratime.ui.admin.PendingSchoolsScreen
 import com.azuratech.azuratime.ui.data.DataIntegrityScreen
