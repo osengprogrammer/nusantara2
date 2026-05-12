@@ -1,10 +1,10 @@
 package com.azuratech.azuratime.ui.dashboard
 
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.features.attendance.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.data.local.StaffAccountEntity
-import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 
 data class DashboardUiState(
     val user: StaffAccountEntity? = null,

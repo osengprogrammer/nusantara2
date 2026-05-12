@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.features.attendance.data.local.CheckInRecordEntity
 import com.azuratech.azuratime.ui.theme.AzuraShapes
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import java.time.format.DateTimeFormatter

@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.ui.report
 
 import androidx.compose.ui.graphics.Color
-import com.azuratech.azuratime.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.features.attendance.data.local.CheckInRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import java.time.LocalDate
 

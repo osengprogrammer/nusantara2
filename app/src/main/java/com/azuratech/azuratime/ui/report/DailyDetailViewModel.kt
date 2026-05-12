@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.repo.StaffAccountRepository
-import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -14,7 +14,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 import com.azuratech.azuratime.data.repo.SchoolRepository
-import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
 
 @HiltViewModel
 class DailyDetailViewModel @Inject constructor(

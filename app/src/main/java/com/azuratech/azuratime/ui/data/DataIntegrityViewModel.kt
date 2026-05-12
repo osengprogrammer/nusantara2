@@ -3,8 +3,8 @@ package com.azuratech.azuratime.ui.data
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.repo.DataIntegrityRepository
-import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
-import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel

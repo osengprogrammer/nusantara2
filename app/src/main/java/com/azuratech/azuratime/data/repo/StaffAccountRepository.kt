@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.data.local.*
-import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuratime.domain.model.MembershipStatus
 import com.azuratech.azuratime.domain.model.SyncStatus
 import com.azuratech.azuratime.core.sync.SyncManager
