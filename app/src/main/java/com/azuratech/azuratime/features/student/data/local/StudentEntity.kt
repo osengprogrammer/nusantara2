@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.data.local
+package com.azuratech.azuratime.features.student.data.local
 
 import androidx.room.Entity
 import androidx.room.Index

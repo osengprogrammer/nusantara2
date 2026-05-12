@@ -15,7 +15,7 @@ class BiometricFaceRepository @Inject constructor(
     private val localDataSource: FaceLocalDataSource,
     private val remoteDataSource: FaceRemoteDataSource,
     private val sessionManager: SessionManager,
-    private val studentRepository: com.azuratech.azuratime.domain.student.repository.StudentRepository
+    private val studentRepository: com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 ) {
     private val schoolId: String
         get() = sessionManager.getActiveSchoolId() ?: ""

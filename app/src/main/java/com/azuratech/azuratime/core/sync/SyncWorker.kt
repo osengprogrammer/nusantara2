@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 
 import com.azuratech.azuratime.data.repo.SchoolRepository
 import com.azuratech.azuratime.data.repo.BiometricFaceRepository
-import com.azuratech.azuratime.domain.student.repository.StudentRepository
+import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
 import com.azuratech.azuratime.data.repo.StaffAccountRepository
 

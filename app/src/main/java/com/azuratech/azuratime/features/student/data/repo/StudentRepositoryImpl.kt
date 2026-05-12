@@ -1,13 +1,15 @@
-package com.azuratech.azuratime.data.repo
+package com.azuratech.azuratime.features.student.data.repo
 
 import androidx.room.withTransaction
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.features.student.data.local.StudentDao
+import com.azuratech.azuratime.features.student.data.local.StudentEntity
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
-import com.azuratech.azuratime.domain.student.repository.StudentRepository
+import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

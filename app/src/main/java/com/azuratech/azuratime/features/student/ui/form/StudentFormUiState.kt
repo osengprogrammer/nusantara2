@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.add
+package com.azuratech.azuratime.features.student.ui.form
 
 import android.graphics.Bitmap
 import com.azuratech.azuraengine.model.ClassModel

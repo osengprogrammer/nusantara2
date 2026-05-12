@@ -3,6 +3,7 @@ package com.azuratech.azuratime.data.local
 import androidx.room.Embedded
 import androidx.room.ColumnInfo
 import androidx.room.Relation
+import com.azuratech.azuratime.features.student.data.local.StudentEntity
 
 /**
  * 🛠️ RAW STUDENT PROFILE

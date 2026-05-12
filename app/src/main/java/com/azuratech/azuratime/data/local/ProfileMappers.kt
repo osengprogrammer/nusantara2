@@ -6,6 +6,7 @@ import com.azuratech.azuratime.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.domain.model.SchoolAnalyticsSummary
 import com.azuratech.azuratime.domain.model.StudentProfile
 import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.features.student.data.local.StudentEntity
 
 /**
  * 🗺️ PROFILE MAPPERS
