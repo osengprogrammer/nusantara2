@@ -1,15 +1,15 @@
-package com.azuratech.azuratime.di
+package com.azuratech.azuratime.core.di
 
 import com.azuratech.azuratime.data.core.AndroidImageProcessor
 import com.azuratech.azuratime.data.core.AndroidStorageProvider
 import com.azuratech.azuratime.features.attendance.data.local.CheckInLocalDataSource
 import com.azuratech.azuratime.features.attendance.data.local.CheckInLocalDataSourceImpl
-import com.azuratech.azuratime.data.local.FaceLocalDataSource
-import com.azuratech.azuratime.data.local.FaceLocalDataSourceImpl
+import com.azuratech.azuratime.features.biometric.data.local.FaceLocalDataSource
+import com.azuratech.azuratime.features.biometric.data.local.FaceLocalDataSourceImpl
 import com.azuratech.azuratime.features.attendance.data.remote.CheckInRemoteDataSource
 import com.azuratech.azuratime.features.attendance.data.remote.CheckInRemoteDataSourceImpl
-import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
-import com.azuratech.azuratime.data.remote.FaceRemoteDataSourceImpl
+import com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSource
+import com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSourceImpl
 import com.azuratech.azuraengine.core.ImageProcessor
 import com.azuratech.azuraengine.core.StorageProvider
 import dagger.Binds
@@ -47,13 +47,13 @@ abstract class DataSourceModule {
     @Singleton
     abstract fun bindFaceLocalDataSource(
         impl: FaceLocalDataSourceImpl
-    ): com.azuratech.azuratime.data.local.FaceLocalDataSource
+    ): com.azuratech.azuratime.features.biometric.data.local.FaceLocalDataSource
 
     @Binds
     @Singleton
     abstract fun bindFaceRemoteDataSource(
         impl: FaceRemoteDataSourceImpl
-    ): com.azuratech.azuratime.data.remote.FaceRemoteDataSource
+    ): com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSource
 
     @Binds
     @Singleton

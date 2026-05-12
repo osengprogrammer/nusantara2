@@ -2,7 +2,7 @@ package com.azuratech.azuratime.core.util
 
 import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
 import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
-import com.azuratech.azuratime.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime

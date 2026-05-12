@@ -6,6 +6,7 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.AuditLogRepository
 import com.azuratech.azuratime.domain.model.SystemAuditTrail
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi

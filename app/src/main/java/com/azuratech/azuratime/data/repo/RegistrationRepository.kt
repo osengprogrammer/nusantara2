@@ -2,6 +2,7 @@ package com.azuratech.azuratime.data.repo
 
 import android.app.Application
 import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow

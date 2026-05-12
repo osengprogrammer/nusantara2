@@ -1,11 +1,11 @@
-package com.azuratech.azuratime.ui.biometric
+package com.azuratech.azuratime.features.biometric.ui.enroll
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.toProfile
-import com.azuratech.azuratime.data.repo.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
 import com.azuratech.azuratime.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.ui.core.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel

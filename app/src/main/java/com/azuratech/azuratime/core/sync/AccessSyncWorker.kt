@@ -8,7 +8,7 @@ import androidx.work.WorkerParameters
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.data.repo.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
 import com.azuratech.azuratime.data.repo.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.assisted.Assisted

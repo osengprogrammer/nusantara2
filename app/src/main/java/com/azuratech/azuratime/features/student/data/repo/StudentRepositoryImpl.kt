@@ -29,7 +29,7 @@ class StudentRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
     private val firestore: com.google.firebase.firestore.FirebaseFirestore,
-    private val remoteDataSource: com.azuratech.azuratime.data.remote.FaceRemoteDataSource
+    private val remoteDataSource: com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSource
 ) : StudentRepository {
 
     private val studentDao = database.studentDao()

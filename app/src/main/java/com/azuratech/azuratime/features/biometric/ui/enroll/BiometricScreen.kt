@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.biometric
+package com.azuratech.azuratime.features.biometric.ui.enroll
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn

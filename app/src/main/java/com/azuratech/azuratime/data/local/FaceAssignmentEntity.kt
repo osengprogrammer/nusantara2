@@ -3,6 +3,7 @@ package com.azuratech.azuratime.data.local
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 
 @Entity(
     tableName = "face_assignments",

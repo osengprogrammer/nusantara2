@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.ui.theme.AzuraShapes

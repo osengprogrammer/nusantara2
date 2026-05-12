@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,7 +47,7 @@ object AppModule {
     fun provideCheckInRecordDao(db: AppDatabase): AttendanceRecordDao = db.checkInRecordDao()
 
     @Provides
-    fun provideBiometricFaceDao(db: AppDatabase): com.azuratech.azuratime.data.local.BiometricFaceDao = db.faceDao()
+    fun provideBiometricFaceDao(db: AppDatabase): BiometricFaceDao = db.faceDao()
 
     @Provides
     fun provideBiometricAssignmentDao(db: AppDatabase): com.azuratech.azuratime.data.local.FaceAssignmentDao = db.faceAssignmentDao()

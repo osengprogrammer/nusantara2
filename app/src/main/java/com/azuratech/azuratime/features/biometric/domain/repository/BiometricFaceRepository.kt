@@ -1,9 +1,10 @@
-package com.azuratech.azuratime.data.repo
+package com.azuratech.azuratime.features.biometric.domain.repository
 
 import android.app.Application
 import android.graphics.Bitmap
 import com.azuratech.azuratime.data.local.*
-import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
+import com.azuratech.azuratime.features.biometric.data.local.*
+import com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSource
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import javax.inject.Inject

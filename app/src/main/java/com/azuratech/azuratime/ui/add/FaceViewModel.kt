@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.azuratech.azuraengine.face.RegisterResult
-import com.azuratech.azuratime.data.repo.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
 import com.azuratech.azuratime.ui.core.UiEvent
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.data.local.FaceWithDetails
 
 import kotlinx.coroutines.launch
