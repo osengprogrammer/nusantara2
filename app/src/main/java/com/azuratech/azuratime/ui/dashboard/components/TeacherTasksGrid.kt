@@ -67,7 +67,7 @@ fun TeacherTasksGrid(
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
         ) {
             DashboardActionCard("Scanner Wajah", Icons.Default.CameraAlt, MaterialTheme.colorScheme.primary,
-                { navController.navigate(Screen.CheckIn.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
+                { navController.navigate(Screen.AttendanceCapture.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
 
             DashboardActionCard("Cetak Barcode", Icons.Default.QrCode, MaterialTheme.colorScheme.secondary, 
                 { navController.navigate(Screen.StudentRosterBarcode.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)

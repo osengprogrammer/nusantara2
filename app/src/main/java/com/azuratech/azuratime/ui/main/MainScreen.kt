@@ -35,7 +35,7 @@ fun MainScreen() {
 
     // Kontrol UI (BottomBar & FAB)
     val showBottomBar = currentRoute == Screen.Dashboard.route ||
-                        currentRoute == Screen.CheckIn.route ||
+                        currentRoute == Screen.AttendanceCapture.route ||
                         currentRoute == Screen.BarcodeScan.route
 
     val showFab = showBottomBar || currentRoute == Screen.AttendanceMatrix.route
@@ -84,14 +84,14 @@ fun MainScreen() {
 
 @Composable
 fun BottomNav(navController: NavHostController) {
-    val items = listOf(Screen.Dashboard to "Dashboard", Screen.CheckIn to "Scanner")
+    val items = listOf(Screen.Dashboard to "Dashboard", Screen.AttendanceCapture to "Scanner")
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar {
         items.forEach { (screen, label) ->
             NavigationBarItem(
-                selected = currentRoute == screen.route || (screen == Screen.CheckIn && currentRoute == Screen.BarcodeScan.route),
+                selected = currentRoute == screen.route || (screen == Screen.AttendanceCapture && currentRoute == Screen.BarcodeScan.route),
                 onClick = {
                     navController.navigate(screen.route) {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }

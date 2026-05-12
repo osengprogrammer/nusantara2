@@ -17,7 +17,7 @@ sealed class Screen(val route: String) {
 
     // --- 🏠 CORE FEATURES ---
     data object Dashboard : Screen(NavigationRoutes.DASHBOARD)
-    data object CheckIn : Screen(NavigationRoutes.CHECK_IN)
+    data object AttendanceCapture : Screen(NavigationRoutes.ATTENDANCE_CAPTURE)
     data object BarcodeScan : Screen(NavigationRoutes.BARCODE_SCAN) // 🔥 RUTE BARU DITAMBAHKAN DI SINI
 
     // --- 👤 REGISTRATION & FACE DATA ---
@@ -28,24 +28,24 @@ sealed class Screen(val route: String) {
     data object BiometricManagement : Screen(NavigationRoutes.BIOMETRIC_MANAGEMENT)
     data object StudentRosterBarcode : Screen(NavigationRoutes.STUDENT_ROSTER_BARCODE)
     data object EditStudent : Screen(NavigationRoutes.EDIT_STUDENT) {
-        fun createRoute(faceId: String) = "edit_student/$faceId"
+        fun createRoute(studentId: String) = "edit_student/$studentId"
     }
 
     // --- 📊 ATTENDANCE & REPORT ---
     data object AttendanceMatrix : Screen(NavigationRoutes.ATTENDANCE_MATRIX)
-    data object CheckInRecordEntity : Screen(NavigationRoutes.CHECKIN_HISTORY)
+    data object CheckInHistory : Screen(NavigationRoutes.CHECKIN_HISTORY)
     
     // 🔥 PERBAIKAN BUG: Gunakan Uri.encode() untuk nama agar tidak crash jika ada karakter "/"
     data object DailyDetail : Screen(NavigationRoutes.DAILY_DETAIL) {
-        fun createRoute(faceId: String, name: String, date: String): String {
+        fun createRoute(studentId: String, name: String, date: String): String {
             val safeName = Uri.encode(name)
-            return "daily_detail/$faceId/$safeName/$date"
+            return "daily_detail/$studentId/$safeName/$date"
         }
     }
 
     data object ManualAttendance : Screen(NavigationRoutes.MANUAL_ATTENDANCE) {
-        fun createRoute(faceId: String = "", date: String = "") = 
-            "manual_attendance?faceId=$faceId&date=$date"
+        fun createRoute(studentId: String = "", date: String = "") = 
+            "manual_attendance?studentId=$studentId&date=$date"
     }
 
     // --- 🗄️ DATA MANAGEMENT ---

@@ -21,7 +21,7 @@ fun RecentScansHeader(navController: NavController) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text("Recent Scans", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        TextButton(onClick = { navController.navigate(Screen.CheckInRecordEntity.route) }) {
+        TextButton(onClick = { navController.navigate(Screen.CheckInHistory.route) }) {
             Text("See All")
         }
     }

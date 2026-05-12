@@ -15,12 +15,12 @@ object NavigationRoutes {
     const val ADMIN_DASHBOARD = "admin_dashboard"
 
     // --- 📊 ATTENDANCE & REPORT ---
-    const val CHECK_IN = "check_in"
+    const val ATTENDANCE_CAPTURE = "attendance_capture"
     const val BARCODE_SCAN = "barcode_scan"
     const val CHECKIN_HISTORY = "checkin_history"
     const val ATTENDANCE_MATRIX = "attendance_matrix"
-    const val DAILY_DETAIL = "daily_detail/{faceId}/{name}/{date}"
-    const val MANUAL_ATTENDANCE = "manual_attendance?faceId={faceId}&date={date}"
+    const val DAILY_DETAIL = "daily_detail/{studentId}/{name}/{date}"
+    const val MANUAL_ATTENDANCE = "manual_attendance?studentId={studentId}&date={date}"
 
     // --- 👤 REGISTRATION & FACE DATA ---
     const val REGISTRATION_MENU = "registration_menu"
@@ -29,7 +29,7 @@ object NavigationRoutes {
     const val STUDENT_ROSTER = "student_roster"
     const val BIOMETRIC_MANAGEMENT = "biometric_management"
     const val STUDENT_ROSTER_BARCODE = "student_roster_barcode"
-    const val EDIT_STUDENT = "edit_student/{faceId}"
+    const val EDIT_STUDENT = "edit_student/{studentId}"
 
     // --- 🏫 CLASS MANAGEMENT ---
     const val CLASS_LIST = "class_list/{schoolId}"
