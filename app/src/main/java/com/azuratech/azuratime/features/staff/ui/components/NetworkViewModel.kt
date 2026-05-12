@@ -1,10 +1,10 @@
-package com.azuratech.azuratime.ui.user
+package com.azuratech.azuratime.features.staff.ui.components
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.data.local.StaffAccountEntity
-import com.azuratech.azuratime.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

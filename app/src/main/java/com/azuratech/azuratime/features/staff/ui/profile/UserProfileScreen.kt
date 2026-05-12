@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.user
+package com.azuratech.azuratime.features.staff.ui.profile
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,12 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
 import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
 import com.azuratech.azuratime.ui.core.designsystem.StudentAvatar
+import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
+import com.azuratech.azuratime.features.staff.ui.components.WorkspaceViewModel
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 
 @Composable

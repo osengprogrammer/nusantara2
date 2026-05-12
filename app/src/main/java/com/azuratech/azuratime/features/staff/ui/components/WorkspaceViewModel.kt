@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.user
+package com.azuratech.azuratime.features.staff.ui.components
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +9,7 @@ import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.AccessRequestRepository
 import com.azuratech.azuratime.data.repo.SchoolRepository
-import com.azuratech.azuratime.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.data.repo.WorkspaceRepository
 import com.azuratech.azuratime.domain.model.AccessRequestProfile
 import dagger.hilt.android.lifecycle.HiltViewModel

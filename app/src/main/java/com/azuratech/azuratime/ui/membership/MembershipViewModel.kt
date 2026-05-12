@@ -4,11 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.Membership
 import com.azuratech.azuratime.data.local.toProfile
 import com.azuratech.azuratime.data.repo.AccessRequestRepository
 import com.azuratech.azuratime.data.repo.MembershipRepository
-import com.azuratech.azuratime.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.domain.model.AccessRequestProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -69,7 +70,7 @@ class MembershipViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MembershipState.Loading)
 
-    val memberships: StateFlow<List<com.azuratech.azuratime.data.local.Membership>> = user.map { 
+    val memberships: StateFlow<List<com.azuratech.azuratime.features.staff.data.local.Membership>> = user.map { 
         it?.memberships?.values?.toList() ?: emptyList() 
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

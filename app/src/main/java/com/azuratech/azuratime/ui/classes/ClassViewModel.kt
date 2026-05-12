@@ -9,8 +9,8 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.ui.util.UiState
 import com.azuratech.azuratime.ui.core.UiEvent
-import com.azuratech.azuratime.data.local.StaffAccountEntity
-import com.azuratech.azuratime.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers

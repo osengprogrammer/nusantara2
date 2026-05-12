@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.room.withTransaction
 import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.features.staff.data.local.Membership
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.domain.model.SyncStatus

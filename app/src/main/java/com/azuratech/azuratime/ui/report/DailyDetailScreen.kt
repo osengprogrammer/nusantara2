@@ -22,7 +22,7 @@ import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
 import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
 import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
 import com.azuratech.azuratime.ui.classes.ClassViewModel
-import com.azuratech.azuratime.ui.user.UserManagementViewModel
+import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
 
 // 🔥 Azura Design System
 import com.azuratech.azuratime.ui.core.designsystem.AttendanceActionSheet

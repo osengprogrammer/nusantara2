@@ -1,6 +1,8 @@
 package com.azuratech.azuratime.data.local
 
 import androidx.room.TypeConverter
+import com.azuratech.azuratime.features.staff.data.local.Membership
+import com.azuratech.azuratime.features.staff.data.local.FriendConnection
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.nio.ByteBuffer

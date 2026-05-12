@@ -1,9 +1,9 @@
 package com.azuratech.azuratime.data.repo
 
 import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.local.UserClassAccessEntity
-import com.azuratech.azuratime.data.local.Membership
+import com.azuratech.azuratime.features.staff.data.local.Membership
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions

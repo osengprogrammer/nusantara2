@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.user
+package com.azuratech.azuratime.features.staff.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,6 +24,7 @@ import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
 import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
 import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
 import com.azuratech.azuratime.ui.theme.AzuraShapes
+import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import kotlinx.coroutines.launch
 
