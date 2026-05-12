@@ -1,7 +1,8 @@
 package com.azuratech.azuratime.data.local
 
 import androidx.room.*
-import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 
 /**
  * Persistence entity for Attendance Conflicts.
@@ -16,8 +17,8 @@ import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
 )
 data class AttendanceConflictEntity(
     @PrimaryKey val conflictId: String,
-    @Embedded(prefix = "local_") val local: CheckInRecordEntity,
-    @Embedded(prefix = "cloud_") val cloud: CheckInRecordEntity
+    @Embedded(prefix = "local_") val local: AttendanceRecordEntity,
+    @Embedded(prefix = "cloud_") val cloud: AttendanceRecordEntity
 ) {
     fun toDomain(): AttendanceConflict {
         return AttendanceConflict(

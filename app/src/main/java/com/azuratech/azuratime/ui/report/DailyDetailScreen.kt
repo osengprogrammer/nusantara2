@@ -18,9 +18,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // 🔥 Domain Models & ViewModels
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
-import com.azuratech.azuratime.domain.checkin.model.CheckInStatus
-import com.azuratech.azuratime.ui.checkin.CheckInViewModel
+import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
+import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
 import com.azuratech.azuratime.ui.classes.ClassViewModel
 import com.azuratech.azuratime.ui.user.UserManagementViewModel
 

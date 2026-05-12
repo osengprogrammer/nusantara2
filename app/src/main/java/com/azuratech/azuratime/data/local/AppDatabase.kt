@@ -7,6 +7,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 // 🔥 FIX: Correctly targeting the nested JournalMode enum
 
 @Database(
@@ -16,7 +18,7 @@ import com.azuratech.azuratime.features.student.data.local.StudentEntity
         SchoolClassAssignment::class, // 🔥 NEW: Join table
         BiometricFaceEntity::class,
         FaceAssignmentEntity::class,
-        CheckInRecordEntity::class,
+        AttendanceRecordEntity::class,
         StaffAccountEntity::class,
         UserClassAccessEntity::class,
         StudentEntity::class,          // 🔥 NEW: Student Identity
@@ -37,7 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun classDao(): ClassDao // 🔥 NEW DAO
     abstract fun schoolDao(): SchoolDao // 🔥 NEW DAO
     abstract fun schoolClassDao(): SchoolClassDao
-    abstract fun checkInRecordDao(): CheckInRecordDao
+    abstract fun checkInRecordDao(): AttendanceRecordDao
     abstract fun userDao(): com.azuratech.azuratime.data.local.StaffAccountDao
     abstract fun userClassAccessDao(): UserClassAccessDao
     abstract fun studentDao(): StudentDao // 🔥 NEW DAO

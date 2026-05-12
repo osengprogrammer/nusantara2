@@ -14,7 +14,7 @@ fun NavGraphBuilder.attendanceGraph(
         route = NavigationRoutes.ATTENDANCE_GRAPH
     ) {
         composable(NavigationRoutes.ATTENDANCE_CAPTURE) {
-            com.azuratech.azuratime.ui.checkin.AttendanceCaptureScreen(
+            com.azuratech.azuratime.features.attendance.ui.components.AttendanceCaptureScreen(
                 useBackCamera = false,
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 teacherEmail = "", // This will be passed via ViewModel or provided externally
@@ -22,13 +22,13 @@ fun NavGraphBuilder.attendanceGraph(
             )
         }
         composable(NavigationRoutes.BARCODE_SCAN) {
-            com.azuratech.azuratime.ui.checkin.BarcodeScreen(
+            com.azuratech.azuratime.features.attendance.ui.barcode.BarcodeScreen(
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 teacherEmail = ""
             )
         }
         composable(NavigationRoutes.CHECKIN_HISTORY) {
-            com.azuratech.azuratime.ui.checkin.CheckInRecordScreen(
+            com.azuratech.azuratime.features.attendance.ui.history.CheckInRecordScreen(
                 userEmail = "",
                 onNavigateBack = { navController.popBackStack() },
                 checkInViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
@@ -37,7 +37,7 @@ fun NavGraphBuilder.attendanceGraph(
             )
         }
         composable(NavigationRoutes.MANUAL_ATTENDANCE) {
-            com.azuratech.azuratime.ui.checkin.ManualAttendanceScreen(
+            com.azuratech.azuratime.features.attendance.ui.manual.ManualAttendanceScreen(
                 faceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 checkInViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),

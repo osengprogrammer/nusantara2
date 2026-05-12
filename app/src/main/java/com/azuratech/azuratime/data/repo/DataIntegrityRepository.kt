@@ -3,7 +3,7 @@ package com.azuratech.azuratime.data.repo
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.BiometricFaceEntity
-import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject

@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.domain.sync
 
-import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
 import com.azuratech.azuraengine.core.StorageProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

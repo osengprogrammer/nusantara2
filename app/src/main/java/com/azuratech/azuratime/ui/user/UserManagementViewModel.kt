@@ -7,9 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.data.local.StaffAccountEntity
 import com.azuratech.azuratime.data.local.toEntity
-import com.azuratech.azuratime.domain.checkin.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuratime.data.repo.StaffAccountRepository
-import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel

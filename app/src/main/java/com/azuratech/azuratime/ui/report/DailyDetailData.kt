@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.ui.report
 
-import com.azuratech.azuratime.domain.checkin.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
 import com.azuratech.azuraengine.model.ClassModel
 
 data class DailyDetailData(

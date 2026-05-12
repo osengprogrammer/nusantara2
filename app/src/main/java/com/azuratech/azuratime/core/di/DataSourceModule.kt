@@ -2,12 +2,12 @@ package com.azuratech.azuratime.di
 
 import com.azuratech.azuratime.data.core.AndroidImageProcessor
 import com.azuratech.azuratime.data.core.AndroidStorageProvider
-import com.azuratech.azuratime.data.local.CheckInLocalDataSource
-import com.azuratech.azuratime.data.local.CheckInLocalDataSourceImpl
+import com.azuratech.azuratime.features.attendance.data.local.CheckInLocalDataSource
+import com.azuratech.azuratime.features.attendance.data.local.CheckInLocalDataSourceImpl
 import com.azuratech.azuratime.data.local.FaceLocalDataSource
 import com.azuratech.azuratime.data.local.FaceLocalDataSourceImpl
-import com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
-import com.azuratech.azuratime.data.remote.CheckInRemoteDataSourceImpl
+import com.azuratech.azuratime.features.attendance.data.remote.CheckInRemoteDataSource
+import com.azuratech.azuratime.features.attendance.data.remote.CheckInRemoteDataSourceImpl
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSource
 import com.azuratech.azuratime.data.remote.FaceRemoteDataSourceImpl
 import com.azuratech.azuraengine.core.ImageProcessor
@@ -59,11 +59,11 @@ abstract class DataSourceModule {
     @Singleton
     abstract fun bindCheckInLocalDataSource(
         impl: CheckInLocalDataSourceImpl
-    ): com.azuratech.azuratime.data.local.CheckInLocalDataSource
+    ): com.azuratech.azuratime.features.attendance.data.local.CheckInLocalDataSource
 
     @Binds
     @Singleton
     abstract fun bindCheckInRemoteDataSource(
         impl: CheckInRemoteDataSourceImpl
-    ): com.azuratech.azuratime.data.remote.CheckInRemoteDataSource
+    ): com.azuratech.azuratime.features.attendance.data.remote.CheckInRemoteDataSource
 }

@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.data.repo
 
-import com.azuratech.azuratime.data.local.AttendanceSummary
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceSummary
 import com.azuratech.azuratime.data.local.AppDatabase
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuraengine.result.Result

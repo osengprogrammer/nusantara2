@@ -3,7 +3,8 @@ package com.azuratech.azuratime.core.di
 import com.azuratech.azuratime.data.repo.*
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.student.data.repo.StudentRepositoryImpl
-import com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.data.repo.CheckInRepositoryImpl
 import com.azuratech.azuratime.domain.media.FileStorage
 import com.azuratech.azuratime.domain.media.PhotoStorageUtils
 import dagger.Binds
@@ -26,7 +27,7 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun provideCheckInRepository(
         impl: CheckInRepositoryImpl
-    ): com.azuratech.azuratime.domain.checkin.repository.CheckInRepository
+    ): CheckInRepository
 
     @Binds
     @Singleton

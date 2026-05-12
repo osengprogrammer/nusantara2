@@ -26,7 +26,7 @@ import com.azuratech.azuratime.data.local.BiometricFaceEntity
 import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.checkin.CheckInViewModel
+import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
