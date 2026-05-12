@@ -212,19 +212,17 @@
 # ----------------------------------------------------------------------------
 # 13. NATIVE / JNI / C++ SECURITY GUARD (AZURA ENGINE)
 # ----------------------------------------------------------------------------
+# 🔗 Native/ML Bindings
 # Keep all classes with native methods (called from C++)
 -keepclasseswithmembernames class * {
     native <methods>;
 }
 
 # Keep specific native-binding classes
--keep class com.azuratech.azuratime.ml.matcher.NativeSecurityVault {
+-keep class com.azuratech.azuratime.ml.** {
     native <methods>;
 }
 -keep class com.azuratech.azuratime.utils.ModelGuard {
-    native <methods>;
-}
--keep class com.azuratech.azuratime.ml.** {
     native <methods>;
 }
 
@@ -258,6 +256,10 @@
 # ----------------------------------------------------------------------------
 # 15. FINAL SAFEGUARDS
 # ----------------------------------------------------------------------------
+# 🛡️ Domain & Data Models (Firestore/JSON Serialization)
+-keep class com.azuratech.azuratime.domain.model.** { *; }
+-keep class com.azuratech.azuratime.data.local.** { *; }
+
 # Keep your application class (if it has @HiltAndroidApp)
 -keep class com.azuratech.azuratime.Hilt_Application { *; }
 -keep class com.azuratech.azuratime.MainApp { *; }
