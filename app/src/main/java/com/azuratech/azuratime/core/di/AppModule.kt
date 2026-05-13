@@ -8,6 +8,9 @@ import com.google.firebase.storage.FirebaseStorage
 import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceDao
+import com.azuratech.azuratime.features.reporting.data.local.AuditLogDao
+import com.azuratech.azuratime.features.reporting.data.local.ExportJobDao
+import com.azuratech.azuratime.features.reporting.data.local.ReportDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -69,6 +72,15 @@ object AppModule {
 
     @Provides
     fun provideAttendanceConflictDao(db: AppDatabase): com.azuratech.azuratime.data.local.AttendanceConflictDao = db.attendanceConflictDao()
+
+    @Provides
+    fun provideAuditLogDao(db: AppDatabase): AuditLogDao = db.auditLogDao()
+
+    @Provides
+    fun provideExportJobDao(db: AppDatabase): ExportJobDao = db.exportJobDao()
+
+    @Provides
+    fun provideReportDao(db: AppDatabase): ReportDao = db.reportDao()
 
     // =====================================================
     // ☁️ FIREBASE CLOUD PROVIDERS

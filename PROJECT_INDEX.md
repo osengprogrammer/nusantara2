@@ -61,16 +61,16 @@
 | `AccessRequestRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `AdminRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `AttendanceRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `AuditLogRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `AuditLogRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `AuthRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `BootRepository.kt` | `repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `DataIntegrityRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `ExportRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `ExportRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `FaceRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `MainRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `MembershipRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `RegistrationRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `ReportRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `ReportRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `ScannerRepository.kt` | `data.repo` | * Handles real-time face matching and attendance stamping. | ⚠️ Legacy |
 | `SchoolRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `SecurityRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
