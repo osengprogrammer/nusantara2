@@ -33,7 +33,7 @@ class ExportUtils @Inject constructor(
      * 🔥 THE REVENUE REPORT: Export Matrix & Payroll ke CSV Excel
      */
     suspend fun exportMatrixToCsv(
-        rows: List<com.azuratech.azuratime.ui.report.MatrixRowModel>,
+        rows: List<com.azuratech.azuratime.features.reporting.ui.matrix.MatrixRowModel>,
         dateRange: List<LocalDate>,
         className: String
     ): String? = withContext(Dispatchers.IO) {

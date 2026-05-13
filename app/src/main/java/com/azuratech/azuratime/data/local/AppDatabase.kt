@@ -14,6 +14,12 @@ import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceDao
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
+import com.azuratech.azuratime.features.reporting.data.local.AuditLogDao
+import com.azuratech.azuratime.features.reporting.data.local.AuditLogEntity
+import com.azuratech.azuratime.features.reporting.data.local.ExportJobDao
+import com.azuratech.azuratime.features.reporting.data.local.ExportJobEntity
+import com.azuratech.azuratime.features.reporting.data.local.ReportDao
+import com.azuratech.azuratime.features.reporting.data.local.ReportEntity
 // 🔥 FIX: Correctly targeting the nested JournalMode enum
 
 @Database(

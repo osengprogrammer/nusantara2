@@ -6,9 +6,9 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.ui.dashboard.DashboardUiState
-import com.azuratech.azuratime.ui.report.AttendanceMatrixUiState
-import com.azuratech.azuratime.ui.report.MatrixCellModel
-import com.azuratech.azuratime.ui.report.MatrixRowModel
+import com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState
+import com.azuratech.azuratime.features.reporting.ui.matrix.MatrixCellModel
+import com.azuratech.azuratime.features.reporting.ui.matrix.MatrixRowModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -123,7 +123,7 @@ object PreviewMocks {
         )
     )
 
-    val mockMatrixData = com.azuratech.azuratime.ui.report.AttendanceMatrixData(
+    val mockMatrixData = com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixData(
         rows = mockMatrixRows,
         availableClasses = mockClasses,
         dateRange = listOf(LocalDate.now().minusDays(2), LocalDate.now().minusDays(1), LocalDate.now()),
@@ -134,11 +134,11 @@ object PreviewMocks {
         policy = "SCHOOL"
     )
 
-    val mockMatrixStateSuccess = com.azuratech.azuratime.ui.report.AttendanceMatrixUiState.Success(
+    val mockMatrixStateSuccess = com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState.Success(
         mockMatrixData
     )
     
-    val mockMatrixStateLoading = com.azuratech.azuratime.ui.report.AttendanceMatrixUiState.Loading
+    val mockMatrixStateLoading = com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState.Loading
 
     // For FaceList
     val mockStudentDisplayItems = listOf(

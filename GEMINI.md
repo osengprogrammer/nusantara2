@@ -2,6 +2,13 @@
 
 ## 🚀 Recent Updates (May 7, 2026)
 
+### Phase 11G: Reporting DI & NavGraph Realignment
+- **Reporting Feature Consolidation**: Moved all reporting-related files (Entities, DAOs, Repositories, ViewModels, and Screens) to the `com.azuratech.azuratime.features.reporting` package.
+- **Audit & Export Migration**: Consolidated `AuditLog` and `Export` functionality into the reporting feature module, ensuring a unified reporting architecture.
+- **DI & Navigation Updates**: Updated `AppModule.kt` to provide reporting DAOs and re-routed `ReportingGraph.kt` to the new feature-scoped locations for `AttendanceMatrixScreen` and `DailyDetailScreen`.
+- **Domain Package Alignment**: Fixed package declarations and added missing `SyncStatus` imports across reporting domain models and UI components.
+- **Build Stabilization**: Successfully restored the build state after the massive reporting package reorganization (`compileDebugKotlin` ✅).
+
 ### Phase 11F: Biometric DI & NavGraph Realignment
 - **DI Restoration**: Updated `AppModule.kt` and `DataSourceModule.kt` to reference the new `biometric` feature package. Corrected package declarations and DAO provider signatures.
 - **NavGraph Alignment**: Updated `ManagementGraph.kt` to import `BiometricScreen` from its new feature-scoped location.
@@ -13,6 +20,11 @@
 - **Database Refinement**: Cleaned up `AppDatabase.kt` by removing duplicate imports and qualifying `JournalMode` with `RoomDatabase.JournalMode`.
 - **Project-Wide Import Alignment**: Performed a massive import update across 16+ files to reflect the move of `StaffAccountEntity`, `Membership`, `UserManagementViewModel`, and associated UI components to the `staff` feature package.
 - **Build Restoration**: Successfully restored the project to a compiling state (`compileDebugKotlin` ✅).
+
+### Phase 7.19: Reporting Domain Refinement
+- **Feature-Scoped Repositories**: Moved `AuditLogRepository` and `ExportRepository` to `features.reporting.data.repo` for better architectural alignment.
+- **Package Standardization**: Updated package declarations and imports across the codebase to reflect the new feature-scoped locations.
+- **Project Index Alignment**: Updated `PROJECT_INDEX.md` to track the new locations of reporting repositories.
 
 ### Phase 7.18: Student Domain Refinement
 - **Standardized Domain Models**: Renamed `FaceEnrollmentProfile` to `BiometricEnrollmentProfile` to better reflect its purpose in the UI.
