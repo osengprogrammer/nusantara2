@@ -121,6 +121,8 @@ class StaffAccountRepository @Inject constructor(
                 if (remoteSchoolsResult is Result.Success) {
                     remoteSchoolsResult.data.forEach { school ->
                         schoolRepository.saveSchoolLocally(school)
+                        // 🔥 SSOT RECOVERY: Also pull classes for each school membership
+                        schoolRepository.syncClasses(userId, school.id)
                     }
                 }
             }
