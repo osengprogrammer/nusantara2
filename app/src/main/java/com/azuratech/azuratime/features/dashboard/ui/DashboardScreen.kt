@@ -282,13 +282,11 @@ fun DashboardContent(
                             accountId = user.userId,
                             isApproved = data.isApproved,
                             globalRole = data.currentRole,
-                            onSchoolClick = {
-                                if (user.userId.isNullOrEmpty()) {
-                                    println("🚫 DEBUG: userId is null/empty")
-                                    return@MySchoolsCard
+                            onSchoolClick = { clickedSchoolId ->
+                                val school = schools.find { it.id == clickedSchoolId }
+                                if (school != null) {
+                                    schoolViewModel.selectSchool(school)
                                 }
-                                println("🏫 DEBUG: userId=${user.userId}, route=${Screen.SchoolList.createRoute(user.userId)}")
-                                navController.navigate(Screen.SchoolList.createRoute(user.userId))
                             },
                             onAddSchoolClick = {
                                 println("➕ DEBUG: Add School clicked")

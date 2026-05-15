@@ -98,7 +98,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 try {
                     School(
                         id = doc.id,
-                        accountId = doc.getString("accountId") ?: "",
+                        accountId = doc.getString("accountId") ?: doc.getString("ownerId") ?: "",
                         name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
                         timezone = doc.getString("timezone") ?: "UTC",
                         status = doc.getString("status") ?: "ACTIVE",
@@ -125,7 +125,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 try {
                     School(
                         id = doc.id,
-                        accountId = doc.getString("accountId") ?: "",
+                        accountId = doc.getString("accountId") ?: doc.getString("ownerId") ?: "",
                         name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
                         timezone = doc.getString("timezone") ?: "UTC",
                         status = doc.getString("status") ?: "ACTIVE",

@@ -38,7 +38,13 @@ class SchoolViewModel @Inject constructor(
     // 🔥 v3.1: Reactive School SSOT Migration (Phase 7.7)
     val schools: StateFlow<List<School>> = _accountId
         .filter { it.isNotEmpty() }
-        .flatMapLatest { id -> schoolRepository.observeSchools(id) }
+        .flatMapLatest { id -> userRepository.observeUserEntity(id) }
+        .filterNotNull()
+        .map { user -> user.memberships.keys.toList() }
+        .flatMapLatest { schoolIds -> 
+            if (schoolIds.isEmpty()) flowOf(Result.Success(emptyList()))
+            else schoolRepository.observeSchoolsByIds(schoolIds) 
+        }
         .map { result ->
             if (result is Result.Success) {
                 // Auto-select first school if none active (Side-effect in map for SSOT transition)

@@ -162,6 +162,10 @@ class DashboardViewModel @Inject constructor(
 
         println("🔄 Dashboard combine: user=${user?.userId ?: "NULL"}, isReady=$isReady")
 
+        val activeSchoolId = sessionManager.getActiveSchoolId()
+        val membershipRole = user?.memberships?.get(activeSchoolId)?.role
+        val effectiveRole = membershipRole ?: user?.role ?: "USER"
+
         UiState.Success(
             DashboardUiState(
                 user = user,
@@ -176,7 +180,7 @@ class DashboardViewModel @Inject constructor(
                 brokenAssignments = broken,
                 unsyncedRecords = unsynced,
                 conflicts = conflicts,
-                currentRole = user?.role ?: "USER",
+                currentRole = effectiveRole,
                 isApproved = user?.status == "ACTIVE"
             )
         )
