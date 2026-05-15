@@ -8,6 +8,9 @@ interface SchoolClassDao {
     @Query("SELECT * FROM schools WHERE accountId = :accountId ORDER BY name ASC")
     fun getSchools(accountId: String): Flow<List<SchoolEntity>>
 
+    @Query("SELECT * FROM schools WHERE id IN (:schoolIds) ORDER BY name ASC")
+    fun observeSchoolsByIds(schoolIds: List<String>): Flow<List<SchoolEntity>>
+
     @Query("SELECT * FROM schools")
     suspend fun getAllSchoolsOnce(): List<SchoolEntity>
 
