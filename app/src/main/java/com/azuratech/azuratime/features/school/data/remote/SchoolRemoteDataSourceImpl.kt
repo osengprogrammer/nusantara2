@@ -38,11 +38,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 "createdAt" to school.createdAt,
                 "updatedAt" to school.updatedAt
             )
-            // Save to global collection
             getGlobalSchoolsRef().document(school.id).set(data, SetOptions.merge()).await()
-            // Backward compatibility: also save to account subcollection if needed
-            getSchoolsRef(accountId).document(school.id).set(data, SetOptions.merge()).await()
-            
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
@@ -52,7 +48,6 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
     override suspend fun deleteSchool(accountId: String, schoolId: String): Result<Unit> {
         return try {
             getGlobalSchoolsRef().document(schoolId).delete().await()
-            getSchoolsRef(accountId).document(schoolId).delete().await()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
@@ -71,14 +66,28 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             if (snapshot != null) {
                 val schools = snapshot.documents.mapNotNull { doc ->
                     try {
+                        val createdAtRaw = doc.get("createdAt")
+                        val createdAt = when (createdAtRaw) {
+                            is com.google.firebase.Timestamp -> createdAtRaw.toDate().time
+                            is Number -> createdAtRaw.toLong()
+                            else -> 0L
+                        }
+                        val updatedAtRaw = doc.get("updatedAt")
+                        val updatedAt = when (updatedAtRaw) {
+                            is com.google.firebase.Timestamp -> updatedAtRaw.toDate().time
+                            is Number -> updatedAtRaw.toLong()
+                            else -> 0L
+                        }
+
                         School(
                             id = doc.id,
                             accountId = doc.getString("accountId") ?: "",
                             name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
                             timezone = doc.getString("timezone") ?: "UTC",
                             status = doc.getString("status") ?: "ACTIVE",
-                            createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: 0L,
-                            updatedAt = doc.getTimestamp("updatedAt")?.toDate()?.time ?: doc.getLong("updatedAt") ?: 0L                        )
+                            createdAt = createdAt,
+                            updatedAt = updatedAt
+                        )
                     } catch (e: Exception) { null }
                 }
                 trySend(Result.Success(schools))
@@ -95,14 +104,27 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 
             val schools = snapshot.documents.mapNotNull { doc ->
                 try {
+                    val createdAtRaw = doc.get("createdAt")
+                    val createdAt = when (createdAtRaw) {
+                        is com.google.firebase.Timestamp -> createdAtRaw.toDate().time
+                        is Number -> createdAtRaw.toLong()
+                        else -> 0L
+                    }
+                    val updatedAtRaw = doc.get("updatedAt")
+                    val updatedAt = when (updatedAtRaw) {
+                        is com.google.firebase.Timestamp -> updatedAtRaw.toDate().time
+                        is Number -> updatedAtRaw.toLong()
+                        else -> 0L
+                    }
+
                     School(
                         id = doc.id,
                         accountId = doc.getString("accountId") ?: "",
                         name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
                         timezone = doc.getString("timezone") ?: "UTC",
                         status = doc.getString("status") ?: "ACTIVE",
-                        createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: 0L,
-                        updatedAt = doc.getTimestamp("updatedAt")?.toDate()?.time ?: doc.getLong("updatedAt") ?: 0L
+                        createdAt = createdAt,
+                        updatedAt = updatedAt
                     )
                 } catch (e: Exception) { null }
             }
@@ -122,14 +144,27 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 
             val schools = snapshot.documents.mapNotNull { doc ->
                 try {
+                    val createdAtRaw = doc.get("createdAt")
+                    val createdAt = when (createdAtRaw) {
+                        is com.google.firebase.Timestamp -> createdAtRaw.toDate().time
+                        is Number -> createdAtRaw.toLong()
+                        else -> 0L
+                    }
+                    val updatedAtRaw = doc.get("updatedAt")
+                    val updatedAt = when (updatedAtRaw) {
+                        is com.google.firebase.Timestamp -> updatedAtRaw.toDate().time
+                        is Number -> updatedAtRaw.toLong()
+                        else -> 0L
+                    }
+
                     School(
                         id = doc.id,
                         accountId = doc.getString("accountId") ?: "",
                         name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
                         timezone = doc.getString("timezone") ?: "UTC",
                         status = doc.getString("status") ?: "ACTIVE",
-                        createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: 0L,
-                        updatedAt = doc.getTimestamp("updatedAt")?.toDate()?.time ?: doc.getLong("updatedAt") ?: 0L
+                        createdAt = createdAt,
+                        updatedAt = updatedAt
                     )
                 } catch (e: Exception) { null }
             }
@@ -175,16 +210,29 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             
             val classes = snapshot.documents.mapNotNull { doc ->
                 try {
-                    ClassModel(
+                    val createdAtRaw = doc.get("createdAt")
+                    val createdAt = when (createdAtRaw) {
+                        is com.google.firebase.Timestamp -> createdAtRaw.toDate().time
+                        is Number -> createdAtRaw.toLong()
+                        else -> 0L
+                    }
+                    
+                    val classModel = ClassModel(
                         id = doc.id,
-                        schoolId = doc.getString("schoolId") ?: schoolId, // 🔥 Gunakan context schoolId jika field di doc kosong
+                        schoolId = doc.getString("schoolId") ?: schoolId, 
                         name = doc.getString("name") ?: "",
                         grade = doc.getString("grade") ?: "",
                         teacherId = doc.getString("teacherId"),
                         studentCount = doc.getLong("studentCount")?.toInt() ?: 0,
-                        createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: 0L
+                        createdAt = createdAt
                     )
-                } catch (e: Exception) { null }
+                    println("🔍 SYNC: Parsed class: ${classModel.name} (${classModel.id})")
+                    classModel
+                } catch (e: Exception) { 
+                    println("❌ SYNC: Failed to parse document ${doc.id}. Error: ${e.message}")
+                    println("❌ SYNC: Document Data: ${doc.data}")
+                    null 
+                }
             }
             Result.Success(classes)
         } catch (e: Exception) {
