@@ -84,13 +84,21 @@ class MembershipViewModel @Inject constructor(
         val uid = sessionManager.getCurrentUserId() ?: return
         
         viewModelScope.launch {
-            // Trigger background sync to refresh Room from Firestore
-            syncManager.enqueueProfileSync(uid)
+            // 🔥 CRITICAL: Pull the latest status from Firestore first to see if Admin approved
+            val syncResult = userRepository.syncUser(uid)
+            
+            // Trigger background sync to handle any local access requests
             syncManager.enqueueAccessSync(uid)
 
-            // If user doesn't exist locally, create a stub to trigger UI
-            if (userRepository.getUserDao().getUserById(uid) == null) {
-                membershipRepository.createPendingUser(uid, email, displayName)
+            if (syncResult is com.azuratech.azuraengine.result.Result.Success) {
+                // If cloud pull was successful, the local DB is already updated via syncUser.
+                // We just need to make sure the syncManager knows it's synced if needed,
+                // but syncUser handles this.
+            } else {
+                // If user doesn't exist in the cloud at all, create a pending stub to trigger UI and push to cloud
+                if (userRepository.getUserDao().getUserById(uid) == null) {
+                    membershipRepository.createPendingUser(uid, email, displayName)
+                }
             }
         }
     }
