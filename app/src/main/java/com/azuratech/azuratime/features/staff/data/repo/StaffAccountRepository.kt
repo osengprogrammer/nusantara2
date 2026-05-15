@@ -245,6 +245,8 @@ class StaffAccountRepository @Inject constructor(
             }
 
             val updateData = mapOf(
+                "email" to user.email,
+                "name" to user.name,
                 "memberships" to membershipsData,
                 "activeSchoolId" to user.activeSchoolId,
                 "status" to user.status,
@@ -254,9 +256,9 @@ class StaffAccountRepository @Inject constructor(
                 "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
             )
 
-            // Push to Firestore
+            // Push to Firestore using set with merge so it creates the document if it doesn't exist
             com.google.android.gms.tasks.Tasks.await(
-                firestore.collection("whitelisted_users").document(userId).update(updateData)
+                firestore.collection("whitelisted_users").document(userId).set(updateData, com.google.firebase.firestore.SetOptions.merge())
             )
 
             // Success: Mark as synced
