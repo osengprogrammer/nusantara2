@@ -100,6 +100,17 @@ Navigation is organized into **Feature Graphs** in `ui/core/navigation/graphs/`.
 2.  Add graph in `ui/core/navigation/graphs/`.
 3.  Link graph to `NavHost` in `MainActivity.kt`.
 
+### 🔐 Signup & Account Provisioning Flow (Firebase + Local)
+To maintain security and proper auto-generation of database seeds, the user registration flow strictly follows a **Cloud Function Driven** model:
+1. **App Side (Signup):** When a new user signs in via Google, `MembershipRepository` writes a temporary stub to local Room (`STATUS_PENDING`) and pushes a document to the **`memberships/{uid}`** collection in Firestore. It **does not** push to `whitelisted_users`.
+2. **Admin Action:** The Super Admin manually changes the status in `memberships/{uid}` to `"ACTIVE"` via the Firebase Console.
+3. **Cloud Function:** The `onregistrationapproved` Firebase Cloud Function (located in `functions/src/index.ts`) listens to `memberships/{uid}`. When changed to `ACTIVE`, the function:
+   - Generates the `dbSeed` and `secureIsoKey` using the `hardwareId`.
+   - Creates the default `School` document.
+   - Creates the user in the **`whitelisted_users`** collection.
+   - Deletes the temporary document in `memberships`.
+4. **App Side (Resolution):** `MembershipViewModel` calls `syncUser()` which pulls the newly created `whitelisted_users` document, updates the local database to `ACTIVE`, and navigates the user to the Dashboard.
+
 ---
 
 ## 🚀 How to Add a New Feature
