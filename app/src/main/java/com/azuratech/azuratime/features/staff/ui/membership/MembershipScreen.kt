@@ -34,6 +34,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 @Composable
 fun MembershipScreen(
     email: String,
+    displayName: String? = null,
     onApprovedClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
@@ -45,7 +46,7 @@ fun MembershipScreen(
     val accessRequests by membershipViewModel.accessRequests.collectAsStateWithLifecycle()
 
     LaunchedEffect(email) {
-        membershipViewModel.checkMembership(email)
+        membershipViewModel.checkMembership(email, displayName)
     }
 
     LaunchedEffect(state) {
@@ -80,7 +81,7 @@ fun MembershipScreen(
                     is MembershipState.Error -> {
                         ErrorView(
                             message = currentState.message,
-                            onRetry = { membershipViewModel.checkMembership(email) },
+                            onRetry = { membershipViewModel.checkMembership(email, displayName) },
                             onLogoutClick = onLogoutClick
                         )
                     }

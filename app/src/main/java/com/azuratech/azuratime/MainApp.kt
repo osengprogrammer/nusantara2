@@ -55,10 +55,13 @@ fun MainApp(onBootReady: () -> Unit = {}) {
 
                 BootState.NeedActivation -> {
                     val authViewModel: AuthViewModel = hiltViewModel()
-                    val email = FirebaseAuth.getInstance().currentUser?.email ?: ""
+                    val firebaseUser = FirebaseAuth.getInstance().currentUser
+                    val email = firebaseUser?.email ?: ""
+                    val displayName = firebaseUser?.displayName ?: ""
                     
                     MembershipScreen(
                         email = email,
+                        displayName = displayName,
                         onApprovedClick = { bootViewModel.recheck() },
                         onLogoutClick = { authViewModel.logout { bootViewModel.recheck() } }
                     )
