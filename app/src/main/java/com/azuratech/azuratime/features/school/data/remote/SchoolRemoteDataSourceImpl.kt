@@ -77,9 +77,8 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                             name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
                             timezone = doc.getString("timezone") ?: "UTC",
                             status = doc.getString("status") ?: "ACTIVE",
-                            createdAt = doc.getLong("createdAt") ?: 0L,
-                            updatedAt = doc.getLong("updatedAt") ?: 0L
-                        )
+                            createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: 0L,
+                            updatedAt = doc.getTimestamp("updatedAt")?.toDate()?.time ?: doc.getLong("updatedAt") ?: 0L                        )
                     } catch (e: Exception) { null }
                 }
                 trySend(Result.Success(schools))
@@ -102,8 +101,8 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
                         timezone = doc.getString("timezone") ?: "UTC",
                         status = doc.getString("status") ?: "ACTIVE",
-                        createdAt = doc.getLong("createdAt") ?: 0L,
-                        updatedAt = doc.getLong("updatedAt") ?: 0L
+                        createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: 0L,
+                        updatedAt = doc.getTimestamp("updatedAt")?.toDate()?.time ?: doc.getLong("updatedAt") ?: 0L
                     )
                 } catch (e: Exception) { null }
             }
@@ -129,8 +128,8 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
                         timezone = doc.getString("timezone") ?: "UTC",
                         status = doc.getString("status") ?: "ACTIVE",
-                        createdAt = doc.getLong("createdAt") ?: 0L,
-                        updatedAt = doc.getLong("updatedAt") ?: 0L
+                        createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: 0L,
+                        updatedAt = doc.getTimestamp("updatedAt")?.toDate()?.time ?: doc.getLong("updatedAt") ?: 0L
                     )
                 } catch (e: Exception) { null }
             }
@@ -179,7 +178,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         grade = doc.getString("grade") ?: "",
                         teacherId = doc.getString("teacherId"),
                         studentCount = doc.getLong("studentCount")?.toInt() ?: 0,
-                        createdAt = doc.getLong("createdAt") ?: 0L
+                        createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: 0L
                     )
                 } catch (e: Exception) { null }
             }
