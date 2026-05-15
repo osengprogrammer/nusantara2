@@ -106,7 +106,9 @@ class StaffAccountRepository @Inject constructor(
                 activeClassId = data["activeClassId"] as? String,
                 role = data["role"] as? String ?: "USER",
                 deviceId = data["deviceId"] as? String,
-                createdAt = data["createdAt"] as? Long ?: System.currentTimeMillis()
+                createdAt = (data["createdAt"] as? com.google.firebase.Timestamp)?.toDate()?.time 
+                    ?: data["createdAt"] as? Long 
+                    ?: System.currentTimeMillis()
             )
 
             // Save to Local

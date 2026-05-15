@@ -124,7 +124,7 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
             classId = getString("classId"),
             className = getString("className"),
             isSynced = true,
-            timestamp = getLong("createdAt") ?: System.currentTimeMillis()
+            timestamp = getTimestamp("createdAt")?.toDate()?.time ?: getLong("createdAt") ?: System.currentTimeMillis()
         )
     } catch (e: Exception) {
         null 
