@@ -92,11 +92,12 @@ class MembershipViewModel @Inject constructor(
 
             if (syncResult is com.azuratech.azuraengine.result.Result.Success) {
                 // If cloud pull was successful, the local DB is already updated via syncUser.
-                // We just need to make sure the syncManager knows it's synced if needed,
-                // but syncUser handles this.
             } else {
-                // If user doesn't exist in the cloud at all, create a pending stub to trigger UI and push to cloud
-                if (userRepository.getUserDao().getUserById(uid) == null) {
+                // Cloud pull failed. Check local state.
+                val localUser = userRepository.getUserDao().getUserById(uid)
+                
+                // If user doesn't exist locally OR they are stuck in PENDING, push to the memberships collection
+                if (localUser == null || localUser.status == "PENDING") {
                     membershipRepository.createPendingUser(uid, email, displayName)
                 }
             }
