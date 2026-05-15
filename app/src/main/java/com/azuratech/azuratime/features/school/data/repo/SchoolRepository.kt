@@ -166,11 +166,12 @@ class SchoolRepository @Inject constructor(
             val remoteResult = remoteDataSource.getClasses(accountId, schoolId)
             if (remoteResult is Result.Success) {
                 remoteResult.data.forEach { classModel ->
+                    // 🔥 SSOT RECOVERY: Ensure class exists locally
                     saveClassLocally(
                         ClassEntity(
                             id = classModel.id,
                             accountId = accountId,
-                            schoolId = classModel.schoolId,
+                            schoolId = classModel.schoolId ?: schoolId, // Ensure it's linked to the owner school
                             name = classModel.name,
                             grade = classModel.grade,
                             teacherId = classModel.teacherId,
@@ -178,6 +179,9 @@ class SchoolRepository @Inject constructor(
                             createdAt = classModel.createdAt
                         )
                     )
+                    
+                    // 🔥 JOIN TABLE RECOVERY: Ensure the assignment exists in Room after reinstall
+                    dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
                 }
             }
             Result.Success(Unit)
