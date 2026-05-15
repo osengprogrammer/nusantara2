@@ -163,9 +163,12 @@ class SchoolRepository @Inject constructor(
 
     suspend fun syncClasses(accountId: String, schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         try {
+            println("🔄 SYNC: Starting syncClasses for school: $schoolId (Account: $accountId)")
             val remoteResult = remoteDataSource.getClasses(accountId, schoolId)
             if (remoteResult is Result.Success) {
+                println("🔄 SYNC: Remote fetch success. Processing ${remoteResult.data.size} classes.")
                 remoteResult.data.forEach { classModel ->
+                    println("🔄 SYNC: Saving class locally: ${classModel.name} (${classModel.id})")
                     // 🔥 SSOT RECOVERY: Ensure class exists locally
                     saveClassLocally(
                         ClassEntity(
@@ -183,9 +186,13 @@ class SchoolRepository @Inject constructor(
                     // 🔥 JOIN TABLE RECOVERY: Ensure the assignment exists in Room after reinstall
                     dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
                 }
+                println("✅ SYNC: All ${remoteResult.data.size} classes saved and assigned.")
+            } else if (remoteResult is Result.Failure) {
+                println("❌ SYNC: Remote fetch failed: ${remoteResult.error.message}")
             }
             Result.Success(Unit)
         } catch (e: Exception) {
+            println("❌ SYNC: Unexpected error in syncClasses: ${e.message}")
             Result.Failure(AppError.Network(e.message))
         }
     }
