@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Class
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +19,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.util.UiState
+import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuraengine.model.ClassModel
 
 @Composable
@@ -29,10 +31,25 @@ fun ClassManagementScreen(
     val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
     val availableClasses by viewModel.availableClassesStateFlow.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            if (event is UiEvent.ShowSnackbar) {
+                snackbarHostState.showSnackbar(event.message)
+            }
+        }
+    }
 
     AzuraScreen(
         title = "Manajemen Kelas",
         onBack = onNavigateBack,
+        snackbarHostState = snackbarHostState,
+        actions = {
+            IconButton(onClick = { viewModel.syncClasses() }) {
+                Icon(Icons.Default.Refresh, contentDescription = "Sinkronkan Kelas")
+            }
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")

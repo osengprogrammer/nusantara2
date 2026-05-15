@@ -192,18 +192,22 @@ class DashboardViewModel @Inject constructor(
             
             println("🔄 Dashboard: Comprehensive sync starting for user $userId...")
             
-            // 1. Restoring profile & memberships (Classes are now synced inside syncUser)
+            // 1. Restore Profile & Schools
             val userResult = userRepository.syncUser(userId)
             val userEntity = if (userResult is Result.Success) userResult.data else userRepository.getUserDao().getUserById(userId)
             
-            // 2. Restoring faces & assignments (tenant-scoped)
-            // Recover schoolId from User entity if session is empty (happens after fresh login)
+            // 2. Restore Classes for all member schools
+            userEntity?.memberships?.keys?.forEach { schoolId ->
+                println("🏫 Dashboard: Syncing classes for school: $schoolId")
+                schoolRepository.syncClasses(userId, schoolId)
+            }
+
+            // 3. Restoring faces & assignments (tenant-scoped)
             val schoolId = userEntity?.activeSchoolId ?: sessionManager.getActiveSchoolId()
             
             if (schoolId != null) {
-                println("🏫 Dashboard: Syncing data for school context: $schoolId")
+                println("🎭 Dashboard: Syncing school-specific data for: $schoolId")
                 
-                // Ensure session manager is updated if we recovered from cloud profile
                 if (sessionManager.getActiveSchoolId().isNullOrBlank()) {
                     sessionManager.saveActiveSchoolId(schoolId)
                 }
@@ -215,8 +219,6 @@ class DashboardViewModel @Inject constructor(
                 if (faceSyncResult is Result.Failure) {
                     _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron data wajah: ${faceSyncResult.error.message}"))
                 }
-            } else {
-                println("⚠️ Dashboard: No active school context found for sync.")
             }
             
             sessionManager.saveLastSyncTime(System.currentTimeMillis())

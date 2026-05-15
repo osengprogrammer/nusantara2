@@ -169,4 +169,19 @@ class ClassViewModel @Inject constructor(
             schoolRepository.reassignClass(accountId, classId, newSchoolId)
         }
     }
+
+    fun syncClasses() {
+        val uid = sessionManager.getCurrentUserId() ?: return
+        val sid = sessionManager.getActiveSchoolId() ?: return
+        
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiEvent.emit(UiEvent.ShowSnackbar("Sedang menyinkronkan data kelas..."))
+            val result = schoolRepository.syncClasses(uid, sid)
+            when (result) {
+                is Result.Success -> _uiEvent.emit(UiEvent.ShowSnackbar("Data kelas berhasil diperbarui!"))
+                is Result.Failure -> _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron kelas: ${result.error.message}"))
+                else -> Unit
+            }
+        }
+    }
 }
