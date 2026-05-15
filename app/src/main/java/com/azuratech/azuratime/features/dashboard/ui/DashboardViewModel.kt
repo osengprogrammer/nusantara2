@@ -196,6 +196,7 @@ class DashboardViewModel @Inject constructor(
             // 2. Restoring faces & assignments (tenant-scoped)
             val schoolId = sessionManager.getActiveSchoolId()
             if (schoolId != null) {
+                schoolRepository.syncClasses(userId, schoolId)
                 val faceSyncResult = faceRepository.syncFaces()
                 faceRepository.syncAssignments()
                 attendanceRepository.syncRecords()
