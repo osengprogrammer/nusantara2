@@ -145,6 +145,7 @@ class WorkspaceRepository @Inject constructor(
 
             // 📥 TRIGGER BACKGROUND PULL/SYNC
             syncManager.enqueueProfileSync(userId)
+            syncManager.enqueueSync() // 🔥 RECOVERY: Pull classes and faces for the new school
             
             Log.w("AZURA_WORKSPACE", "✅ Workspace switched locally. Syncing in background...")
         }
