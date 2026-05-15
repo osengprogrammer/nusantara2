@@ -1,8 +1,12 @@
-package com.azuratech.azuratime.data.repo
+package com.azuratech.azuratime.features.attendance.data.repo
 
 import android.app.Application
 import android.util.Log
-import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.core.data.local.*
+import com.azuratech.azuratime.features.school.data.local.*
+import com.azuratech.azuratime.features.staff.data.local.*
+import com.azuratech.azuratime.features.attendance.data.local.*
+import com.azuratech.azuratime.features.biometric.data.local.*
 import com.azuratech.azuratime.core.util.AttendanceService
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore

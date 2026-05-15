@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.di
+package com.azuratech.azuratime.core.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore

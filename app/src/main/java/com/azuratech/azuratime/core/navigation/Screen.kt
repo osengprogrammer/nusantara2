@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.core.navigation
 
 import android.net.Uri
-import com.azuratech.azuratime.navigation.NavigationRoutes
+import com.azuratech.azuratime.core.navigation.NavigationRoutes
 
 /**
  * 🗺️ AZURA NAVIGATION MAP (PURE-CLASS 2.0)
@@ -34,6 +34,7 @@ sealed class Screen(val route: String) {
     // --- 📊 ATTENDANCE & REPORT ---
     data object AttendanceMatrix : Screen(NavigationRoutes.ATTENDANCE_MATRIX)
     data object CheckInHistory : Screen(NavigationRoutes.CHECKIN_HISTORY)
+    data object AuditLog : Screen(NavigationRoutes.AUDIT_LOG)
     
     // 🔥 PERBAIKAN BUG: Gunakan Uri.encode() untuk nama agar tidak crash jika ada karakter "/"
     data object DailyDetail : Screen(NavigationRoutes.DAILY_DETAIL) {

@@ -1,25 +1,24 @@
 package com.azuratech.azuratime.core.di
 
-import com.azuratech.azuratime.data.core.AndroidImageProcessor
-import com.azuratech.azuratime.data.core.AndroidStorageProvider
-import com.azuratech.azuratime.features.attendance.data.local.CheckInLocalDataSource
-import com.azuratech.azuratime.features.attendance.data.local.CheckInLocalDataSourceImpl
+import com.azuratech.azuratime.core.data.AndroidImageProcessor
+import com.azuratech.azuratime.core.data.AndroidStorageProvider
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceLocalDataSource
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceLocalDataSourceImpl
 import com.azuratech.azuratime.features.biometric.data.local.FaceLocalDataSource
 import com.azuratech.azuratime.features.biometric.data.local.FaceLocalDataSourceImpl
-import com.azuratech.azuratime.features.attendance.data.remote.CheckInRemoteDataSource
-import com.azuratech.azuratime.features.attendance.data.remote.CheckInRemoteDataSourceImpl
+import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSource
+import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSourceImpl
 import com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSource
 import com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSourceImpl
 import com.azuratech.azuraengine.core.ImageProcessor
 import com.azuratech.azuraengine.core.StorageProvider
+import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
+import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-
-import com.azuratech.azuratime.data.remote.SchoolRemoteDataSource
-import com.azuratech.azuratime.data.remote.SchoolRemoteDataSourceImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -29,41 +28,41 @@ abstract class DataSourceModule {
     @Singleton
     abstract fun bindSchoolRemoteDataSource(
         impl: SchoolRemoteDataSourceImpl
-    ): com.azuratech.azuratime.data.remote.SchoolRemoteDataSource
+    ): SchoolRemoteDataSource
 
     @Binds
     @Singleton
     abstract fun bindImageProcessor(
         impl: AndroidImageProcessor
-    ): com.azuratech.azuraengine.core.ImageProcessor
+    ): ImageProcessor
 
     @Binds
     @Singleton
     abstract fun bindStorageProvider(
         impl: AndroidStorageProvider
-    ): com.azuratech.azuraengine.core.StorageProvider
+    ): StorageProvider
 
     @Binds
     @Singleton
     abstract fun bindFaceLocalDataSource(
         impl: FaceLocalDataSourceImpl
-    ): com.azuratech.azuratime.features.biometric.data.local.FaceLocalDataSource
+    ): FaceLocalDataSource
 
     @Binds
     @Singleton
     abstract fun bindFaceRemoteDataSource(
         impl: FaceRemoteDataSourceImpl
-    ): com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSource
+    ): FaceRemoteDataSource
 
     @Binds
     @Singleton
-    abstract fun bindCheckInLocalDataSource(
-        impl: CheckInLocalDataSourceImpl
-    ): com.azuratech.azuratime.features.attendance.data.local.CheckInLocalDataSource
+    abstract fun bindAttendanceLocalDataSource(
+        impl: AttendanceLocalDataSourceImpl
+    ): AttendanceLocalDataSource
 
     @Binds
     @Singleton
-    abstract fun bindCheckInRemoteDataSource(
-        impl: CheckInRemoteDataSourceImpl
-    ): com.azuratech.azuratime.features.attendance.data.remote.CheckInRemoteDataSource
+    abstract fun bindAttendanceRemoteDataSource(
+        impl: AttendanceRemoteDataSourceImpl
+    ): AttendanceRemoteDataSource
 }

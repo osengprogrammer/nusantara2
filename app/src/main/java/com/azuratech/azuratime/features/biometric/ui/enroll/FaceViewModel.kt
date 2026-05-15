@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.add
+package com.azuratech.azuratime.features.biometric.ui.enroll
 
 import android.app.Application
 import android.graphics.Bitmap
@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 
 import com.azuratech.azuraengine.face.RegisterResult
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
-import com.azuratech.azuratime.ui.core.UiEvent
+import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -24,13 +24,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
-import com.azuratech.azuratime.data.local.FaceWithDetails
+import com.azuratech.azuratime.core.data.local.FaceWithDetails
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-import com.azuratech.azuratime.domain.model.StudentProfile
-import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 
 /**
  * 🛠️ FACE VIEW MODEL (Hilt Version)

@@ -1,5 +1,6 @@
-package com.azuratech.azuratime.domain.model
+package com.azuratech.azuratime.features.attendance.domain.model
 
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 

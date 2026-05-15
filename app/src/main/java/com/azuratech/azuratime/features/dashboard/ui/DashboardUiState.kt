@@ -1,6 +1,6 @@
-package com.azuratech.azuratime.ui.dashboard
+package com.azuratech.azuratime.features.dashboard.ui
 
-import com.azuratech.azuratime.features.attendance.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
@@ -10,7 +10,7 @@ data class DashboardUiState(
     val user: StaffAccountEntity? = null,
     val assignedClasses: List<ClassModel> = emptyList(),
     val allClasses: List<ClassModel> = emptyList(), // 🔥 Added
-    val recentRecords: List<CheckInRecordEntity> = emptyList(), // SSOT: using Entity
+    val recentRecords: List<AttendanceRecordEntity> = emptyList(), // SSOT: using Entity
     val sessionStudents: List<BiometricFaceEntity> = emptyList(),
     val isSyncing: Boolean = false,
     val isReady: Boolean = false, // 🔥 Added

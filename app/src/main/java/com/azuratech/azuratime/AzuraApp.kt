@@ -9,10 +9,10 @@ import javax.inject.Inject
 @HiltAndroidApp
 class AzuraApp : Application(), Configuration.Provider { // 🔥 Tambahkan Provider
 
-    @Inject lateinit var workerFactory: HiltWorkerFactory // 🔥 Suntikkan Factory
+    @Inject lateinit var workerFactory: HiltWorkerFactory
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory) // 🔥 Sambungkan ke Hilt
+            .setWorkerFactory(workerFactory)
             .build()
-}
+    }

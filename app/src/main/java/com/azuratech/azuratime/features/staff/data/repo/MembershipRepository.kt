@@ -1,11 +1,11 @@
-package com.azuratech.azuratime.data.repo
+package com.azuratech.azuratime.features.staff.data.repo
 
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.features.staff.data.local.Membership
-import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers

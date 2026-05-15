@@ -1,7 +1,7 @@
-package com.azuratech.azuratime.data.repo
+package com.azuratech.azuratime.features.reporting.data.repo
 
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.data.local.AppDatabase
+import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +21,7 @@ class DataIntegrityRepository @Inject constructor(
     private val sessionManager: SessionManager
 ) {
     private val faceDao = database.faceDao()
-    private val recordDao = database.checkInRecordDao()
+    private val recordDao = database.attendanceRecordDao()
     private val assignmentDao = database.faceAssignmentDao()
     private val conflictDao = database.attendanceConflictDao()
 
@@ -72,7 +72,7 @@ class DataIntegrityRepository @Inject constructor(
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val conflicts: Flow<List<com.azuratech.azuratime.data.local.AttendanceConflictEntity>> = 
+    val conflicts: Flow<List<com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity>> = 
         schoolIdFlow.flatMapLatest { id ->
             conflictDao.observeConflictsBySchool(id)
         }

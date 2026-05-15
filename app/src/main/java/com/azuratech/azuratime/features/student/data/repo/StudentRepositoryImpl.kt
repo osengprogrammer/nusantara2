@@ -4,11 +4,15 @@ import androidx.room.withTransaction
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.core.data.local.*
+import com.azuratech.azuratime.features.school.data.local.*
+import com.azuratech.azuratime.features.staff.data.local.*
+import com.azuratech.azuratime.features.attendance.data.local.*
+import com.azuratech.azuratime.features.biometric.data.local.*
 import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
-import com.azuratech.azuratime.domain.model.StudentProfile
-import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +59,9 @@ class StudentRepositoryImpl @Inject constructor(
                 faceAssignmentDao.deleteAllByFaceId(face.faceId)
                 
                 // 3. Insert new assignments
-                assignments.forEach { faceAssignmentDao.insertAssignment(it) }
+                for (assignment in assignments) {
+                    faceAssignmentDao.insertAssignment(assignment)
+                }
             }
             
             // 🔥 Phase 3 - Trigger background sync immediately
@@ -71,11 +77,22 @@ class StudentRepositoryImpl @Inject constructor(
         return try {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
             database.withTransaction {
-                // KDoc: Soft-delete cascade: deleting student marks face + assignments as isDeleted
-                studentDao.markPendingDeletion(studentId, schoolId)
-                val face = faceDao.getFaceByStudentId(studentId, schoolId)
-                if (face != null) {
-                    faceDao.markPendingDeletion(face.faceId, schoolId)
+                val student = studentDao.getById(studentId, schoolId)
+                if (student?.isSynced == true) {
+                     // Soft-delete if already synced to cloud
+                     studentDao.markPendingDeletion(studentId, schoolId)
+                     val face = faceDao.getFaceByStudentId(studentId, schoolId)
+                     if (face != null) {
+                         faceDao.markPendingDeletion(face.faceId, schoolId)
+                     }
+                } else {
+                     // Hard-delete if only local (like an accidental duplicate)
+                     val face = faceDao.getFaceByStudentId(studentId, schoolId)
+                     if (face != null) {
+                         faceAssignmentDao.deleteAllByFaceId(face.faceId)
+                         faceDao.deleteFaceById(face.faceId, schoolId)
+                     }
+                     studentDao.deleteById(studentId, schoolId)
                 }
             }
             

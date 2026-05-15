@@ -3,7 +3,7 @@ package com.azuratech.azuratime.core.di
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.azuratech.azuratime.data.local.AppDatabase
+import com.azuratech.azuratime.core.data.local.AppDatabase
 
 /**
  * ⚠️ DEPRECATED: Pindah ke Hilt (hiltViewModel())

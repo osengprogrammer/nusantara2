@@ -8,7 +8,7 @@ import org.tensorflow.lite.gpu.GpuDelegate
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.sqrt
-import com.azuratech.azuratime.utils.ModelGuard
+import com.azuratech.azuratime.core.domain.model.ModelGuard
 import java.util.concurrent.atomic.AtomicBoolean
 
 object FaceRecognizer {
@@ -35,6 +35,10 @@ object FaceRecognizer {
         try {
             Log.d("AzuraBrain", "⚙️ Menyiapkan Otak AI Azura...")
             
+            if (!ModelGuard.isNativeReady) {
+                throw Exception("Native ModelGuard library is not ready!")
+            }
+
             // 1. Baca & Decrypt via Native Guard (Super Aman!)
             val inputStream = context.assets.open(FaceNetConstants.MODEL_NAME)
             val encryptedBytes = inputStream.readBytes()

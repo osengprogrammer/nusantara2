@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.add
+package com.azuratech.azuratime.features.student.ui.bulk
 
 import android.content.Intent
 import android.net.Uri
@@ -29,9 +29,9 @@ import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuraengine.model.ProcessResult
 
 // 🔥 Azura Design System Imports
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

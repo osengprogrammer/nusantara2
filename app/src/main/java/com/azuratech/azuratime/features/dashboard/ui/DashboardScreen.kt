@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.dashboard
+package com.azuratech.azuratime.features.dashboard.ui
 
 import android.content.Intent
 import androidx.compose.foundation.layout.*
@@ -18,42 +18,43 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.azuratech.azuratime.MainActivity
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.ui.core.designsystem.ConflictResolverDialog
-import com.azuratech.azuratime.ui.core.UiEvent
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
-import com.azuratech.azuratime.ui.core.designsystem.WorkspaceSelector
-import com.azuratech.azuratime.ui.core.preview.AzuraPreviews
-import com.azuratech.azuratime.ui.core.preview.PreviewMocks
-import com.azuratech.azuratime.ui.dashboard.components.*
-import com.azuratech.azuratime.ui.school.SchoolViewModel
-import com.azuratech.azuratime.ui.school.AddSchoolDialog
-import com.azuratech.azuratime.ui.data.IntegritySummaryWidget
-import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.navigation.NavigationRoutes
+import com.azuratech.azuratime.core.ui.designsystem.ConflictResolverDialog
+import com.azuratech.azuratime.core.ui.UiEvent
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.WorkspaceSelector
+import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
+import com.azuratech.azuratime.core.ui.preview.PreviewMocks
+import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
+import com.azuratech.azuratime.features.dashboard.ui.components.*
+import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
+import com.azuratech.azuratime.features.reporting.ui.integrity.IntegritySummaryWidget
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuratime.ui.theme.AzuraTheme
-import com.azuratech.azuratime.ui.util.UiState
+import com.azuratech.azuratime.core.ui.theme.AzuraTheme
+import com.azuratech.azuratime.core.ui.util.UiState
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun DashboardScreen(
     navController: NavController,
-    viewModel: DashboardViewModel = hiltViewModel()
+    viewModel: DashboardViewModel = hiltViewModel(),
+    schoolViewModel: SchoolViewModel = hiltViewModel()
 ) {
-    val schoolViewModel: SchoolViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val availableClasses by schoolViewModel.availableClasses.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddSchoolDialog by remember { mutableStateOf(false) }
 
+    val onDismissAddSchool = { showAddSchoolDialog = false }
+
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
             when (event) {
-                is UiEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(event.message)
-                }
+                is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 is UiEvent.NavigateTo -> navController.navigate(event.route)
                 is UiEvent.NavigateUp -> navController.navigateUp()
             }
@@ -87,7 +88,7 @@ fun DashboardScreen(
                 CircularProgressIndicator()
             }
         }
-        is UiState.Success -> {
+        is UiState.Success<DashboardUiState> -> {
             val data = state.data
             
             if (!data.isReady) {
@@ -103,9 +104,10 @@ fun DashboardScreen(
                 }
 
                 if (data.conflicts.isNotEmpty()) {
+                    val firstConflict = data.conflicts.first()
                     ConflictResolverDialog(
-                        conflict = data.conflicts.first(),
-                        onResolveClick = { useCloud -> viewModel.resolveConflict(data.conflicts.first(), useCloud) }
+                        conflict = firstConflict,
+                        onResolveClick = { useCloud -> viewModel.resolveConflict(firstConflict, useCloud) }
                     )
                 }
 
@@ -341,7 +343,7 @@ fun DashboardContent(
                 AddSchoolDialog(
                     availableClasses = availableClasses,
                     onDismissRequest = onDismissAddSchool,
-                    onConfirmClick = { name, timezone, selectedClassIds ->
+                    onConfirmClick = { name: String, timezone: String, selectedClassIds: List<String> ->
                         schoolViewModel.createSchool(name, timezone, selectedClassIds)
                         onDismissAddSchool()
                     }

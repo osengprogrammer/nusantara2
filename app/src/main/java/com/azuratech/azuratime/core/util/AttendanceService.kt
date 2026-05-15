@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.core.util
 
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import java.time.Duration
@@ -17,7 +17,7 @@ import java.time.ZoneId
 object AttendanceService {
 
     /**
-     * Membuat CheckInRecord yang valid dan siap lapor.
+     * Membuat AttendanceRecord yang valid dan siap lapor.
      */
     fun createRecord(
         face: BiometricFaceEntity,
@@ -26,11 +26,11 @@ object AttendanceService {
         activeClassName: String? = null,
         status: String = "H",
         checkInTime: LocalDateTime? = LocalDateTime.now()
-    ): CheckInRecord {
+    ): AttendanceRecord {
         val dateTime = checkInTime ?: LocalDateTime.now()
         val timestamp = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-        return CheckInRecord(
+        return AttendanceRecord(
             recordId = java.util.UUID.randomUUID().toString(),
             studentId = face.faceId, 
             studentName = face.name,

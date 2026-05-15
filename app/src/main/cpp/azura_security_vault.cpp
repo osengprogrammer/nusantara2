@@ -4,7 +4,7 @@
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_azuratech_azuratime_utils_SecurityVault_checkAccessStatus(
+Java_com_azuratech_azuratime_core_security_SecurityVault_checkAccessStatus(
         JNIEnv *env, jobject thiz, 
         jlong last_sync, jlong expire_date, 
         jstring status, jstring hardware_id, jstring iso_key) {

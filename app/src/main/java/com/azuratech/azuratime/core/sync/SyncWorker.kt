@@ -14,10 +14,10 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 
 /**
@@ -33,7 +33,7 @@ class SyncWorker @AssistedInject constructor(
     private val schoolRepository: SchoolRepository,
     private val faceRepository: BiometricFaceRepository,
     private val studentRepository: StudentRepository,
-    private val checkInRepository: CheckInRepository,
+    private val attendanceRepository: AttendanceRepository,
     private val userRepository: StaffAccountRepository,
     private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
@@ -47,7 +47,7 @@ class SyncWorker @AssistedInject constructor(
         Log.d("AZURA_SYNC", "SyncWorker: Starting persistent background sync for school: $schoolId")
 
         // 1. Push & Sync Check-In Records (Local-First)
-        val checkInResult = checkInRepository.syncRecords()
+        val checkInResult = attendanceRepository.syncRecords()
         if (checkInResult is DomainResult.Failure) {
             if (handleSyncError(checkInResult.error, "CheckInSync") == Result.retry()) {
                 return@withContext Result.retry()

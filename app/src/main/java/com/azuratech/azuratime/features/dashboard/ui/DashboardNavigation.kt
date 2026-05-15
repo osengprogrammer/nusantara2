@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.dashboard
+package com.azuratech.azuratime.features.dashboard.ui
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable

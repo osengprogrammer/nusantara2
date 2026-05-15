@@ -3,6 +3,8 @@ package com.azuratech.azuratime.features.student.ui.form
 import android.graphics.Bitmap
 import com.azuratech.azuraengine.model.ClassModel
 
+import java.util.UUID
+
 /**
  * Represents the state of the student registration/edit form.
  * This is the single source of truth for the UI.
@@ -10,7 +12,7 @@ import com.azuratech.azuraengine.model.ClassModel
 data class StudentFormUiState(
     // Form Fields
     val name: String = "",
-    val studentId: String = "",
+    val studentId: String = "STU-${UUID.randomUUID().toString().take(8).uppercase()}",
     val studentCode: String? = null,
     val selectedClassId: String? = null,
     val capturedBitmap: Bitmap? = null,

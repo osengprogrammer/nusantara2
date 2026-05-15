@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.biometric.data.local
 
 import androidx.room.*
-import com.azuratech.azuratime.data.local.FaceAssignmentEntity
-import com.azuratech.azuratime.data.local.FaceWithDetails
+import com.azuratech.azuratime.features.biometric.data.local.FaceAssignmentEntity
+import com.azuratech.azuratime.core.data.local.FaceWithDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao

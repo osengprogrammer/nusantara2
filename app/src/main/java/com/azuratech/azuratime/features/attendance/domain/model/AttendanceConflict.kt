@@ -6,6 +6,6 @@ package com.azuratech.azuratime.features.attendance.domain.model
  */
 data class AttendanceConflict(
     val conflictId: String,
-    val local: CheckInRecord,
-    val cloud: CheckInRecord
+    val local: AttendanceRecord,
+    val cloud: AttendanceRecord
 )

@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.auth
+package com.azuratech.azuratime.features.auth.ui
 
 import android.app.Activity
 import android.util.Log
@@ -18,8 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.R
-import com.azuratech.azuratime.ui.core.designsystem.GoogleSignInButton
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.designsystem.GoogleSignInButton
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException

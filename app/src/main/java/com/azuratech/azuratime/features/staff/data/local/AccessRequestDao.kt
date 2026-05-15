@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.data.local
+package com.azuratech.azuratime.features.staff.data.local
 
 import androidx.room.Dao
 import androidx.room.Insert

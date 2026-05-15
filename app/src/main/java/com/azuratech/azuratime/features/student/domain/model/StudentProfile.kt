@@ -1,4 +1,6 @@
-package com.azuratech.azuratime.domain.model
+package com.azuratech.azuratime.features.student.domain.model
+
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 
 /**
  * 🎓 STUDENT PROFILE - THE SINGLE SOURCE OF TRUTH (SSOT)

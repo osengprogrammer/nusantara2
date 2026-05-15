@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.main
+package com.azuratech.azuratime.core.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -16,14 +16,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.ui.core.designsystem.ZoharChatSheet
+import com.azuratech.azuratime.core.ui.designsystem.ZoharChatSheet
 import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.azuratech.azuratime.ui.core.navigation.graphs.attendanceGraph
-import com.azuratech.azuratime.ui.core.navigation.graphs.dashboardGraph
-import com.azuratech.azuratime.ui.core.navigation.graphs.managementGraph
-import com.azuratech.azuratime.ui.core.navigation.graphs.reportingGraph
-import com.azuratech.azuratime.ui.core.navigation.graphs.userGraph
+import com.azuratech.azuratime.core.ui.navigation.graphs.attendanceGraph
+import com.azuratech.azuratime.core.ui.navigation.graphs.dashboardGraph
+import com.azuratech.azuratime.core.ui.navigation.graphs.managementGraph
+import com.azuratech.azuratime.core.ui.navigation.graphs.reportingGraph
+import com.azuratech.azuratime.core.ui.navigation.graphs.userGraph
 
 @Composable
 fun MainScreen() {

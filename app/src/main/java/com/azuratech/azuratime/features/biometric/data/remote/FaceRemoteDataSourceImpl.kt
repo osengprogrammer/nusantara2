@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.biometric.data.remote
 
 import android.util.Log
-import com.azuratech.azuratime.data.local.FaceAssignmentEntity
+import com.azuratech.azuratime.features.biometric.data.local.FaceAssignmentEntity
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result

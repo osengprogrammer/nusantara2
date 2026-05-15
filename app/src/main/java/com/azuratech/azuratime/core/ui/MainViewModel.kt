@@ -1,9 +1,9 @@
-package com.azuratech.azuratime.ui.main
+package com.azuratech.azuratime.core.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repo.MainRepository
+import com.azuratech.azuratime.core.data.repo.MainRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job

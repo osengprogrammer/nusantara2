@@ -1,45 +1,32 @@
-package com.azuratech.azuratime.data.local
+package com.azuratech.azuratime.core.data.local
 
 import android.content.Context
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
-import com.azuratech.azuratime.features.student.data.local.StudentDao
-import com.azuratech.azuratime.features.student.data.local.StudentEntity
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceSummary
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceDao
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
-import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
-import com.azuratech.azuratime.features.reporting.data.local.AuditLogDao
-import com.azuratech.azuratime.features.reporting.data.local.AuditLogEntity
-import com.azuratech.azuratime.features.reporting.data.local.ExportJobDao
-import com.azuratech.azuratime.features.reporting.data.local.ExportJobEntity
-import com.azuratech.azuratime.features.reporting.data.local.ReportDao
-import com.azuratech.azuratime.features.reporting.data.local.ReportEntity
-// 🔥 FIX: Correctly targeting the nested JournalMode enum
+import androidx.room.*
+import com.azuratech.azuratime.features.school.data.local.*
+import com.azuratech.azuratime.features.student.data.local.*
+import com.azuratech.azuratime.features.attendance.data.local.*
+import com.azuratech.azuratime.features.biometric.data.local.*
+import com.azuratech.azuratime.features.staff.data.local.*
+import com.azuratech.azuratime.features.reporting.data.local.*
 
 @Database(
     entities = [
         SchoolEntity::class,
-        ClassEntity::class,           // 🔥 NEW: Pure class table
-        SchoolClassAssignment::class, // 🔥 NEW: Join table
+        ClassEntity::class,
+        SchoolClassAssignment::class,
         BiometricFaceEntity::class,
         FaceAssignmentEntity::class,
         AttendanceRecordEntity::class,
         StaffAccountEntity::class,
         UserClassAccessEntity::class,
-        StudentEntity::class,          // 🔥 NEW: Student Identity
-        AccessRequestEntity::class,    // 🔥 NEW: Access Request SSOT
-        AttendanceConflictEntity::class, // 🔥 NEW: Conflict Resolution
-        AuditLogEntity::class,         // 🔥 NEW: Audit Log
-        ExportJobEntity::class,          // 🔥 NEW: Export Jobs
-        ReportEntity::class            // 🔥 NEW: Reports
+        StudentEntity::class,
+        AccessRequestEntity::class,
+        AttendanceConflictEntity::class,
+        AuditLogEntity::class,
+        ExportJobEntity::class,
+        ReportEntity::class
     ],
-    version = 32, // 🚀 BUMP TO 32: Adding ReportEntity
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -47,21 +34,20 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun faceDao(): BiometricFaceDao
     abstract fun faceAssignmentDao(): FaceAssignmentDao
-    abstract fun classDao(): ClassDao // 🔥 NEW DAO
-    abstract fun schoolDao(): SchoolDao // 🔥 NEW DAO
+    abstract fun classDao(): ClassDao
+    abstract fun schoolDao(): SchoolDao
     abstract fun schoolClassDao(): SchoolClassDao
-    abstract fun checkInRecordDao(): AttendanceRecordDao
-    abstract fun userDao(): com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
+    abstract fun attendanceRecordDao(): AttendanceRecordDao
+    abstract fun userDao(): StaffAccountDao
     abstract fun userClassAccessDao(): UserClassAccessDao
-    abstract fun studentDao(): StudentDao // 🔥 NEW DAO
-    abstract fun accessRequestDao(): AccessRequestDao // 🔥 NEW DAO
-    abstract fun attendanceConflictDao(): AttendanceConflictDao // 🔥 NEW DAO
-    abstract fun auditLogDao(): AuditLogDao // 🔥 NEW DAO
-    abstract fun exportJobDao(): ExportJobDao // 🔥 NEW DAO
-    abstract fun reportDao(): ReportDao // 🔥 NEW DAO
+    abstract fun studentDao(): StudentDao
+    abstract fun accessRequestDao(): AccessRequestDao
+    abstract fun attendanceConflictDao(): AttendanceConflictDao
+    abstract fun auditLogDao(): AuditLogDao
+    abstract fun exportJobDao(): ExportJobDao
+    abstract fun reportDao(): ReportDao
 
     companion object {
-
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -73,11 +59,6 @@ abstract class AppDatabase : RoomDatabase() {
                     "azura.db"
                 )
                 .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-                /**
-                 * 💡 PRO TIP: Because the jump from 21 to 22 involves deleting 
-                 * tables and changing primary keys, destructive migration is 
-                 * the safest way for you to test during this dev phase.
-                 */
                 .fallbackToDestructiveMigration() 
                 .build()
                 .also { INSTANCE = it }
@@ -85,7 +66,6 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         fun destroyInstance() {
-            INSTANCE?.close()
             INSTANCE = null
         }
     }

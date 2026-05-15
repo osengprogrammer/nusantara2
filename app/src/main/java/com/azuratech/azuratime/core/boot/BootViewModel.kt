@@ -3,7 +3,7 @@ package com.azuratech.azuratime.core.boot
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.repository.BootRepository
+import com.azuratech.azuratime.core.data.repo.BootRepository
 import dagger.hilt.android.lifecycle.HiltViewModel // 🔥 Tambahan Import
 import javax.inject.Inject // 🔥 Tambahan Import
 import kotlinx.coroutines.flow.MutableStateFlow

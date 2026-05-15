@@ -41,5 +41,3 @@ enum class CheckInStatus {
         }
     }
 }
-
-typealias CheckInRecord = AttendanceRecord

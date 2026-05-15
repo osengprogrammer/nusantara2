@@ -11,20 +11,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
-import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import java.time.format.DateTimeFormatter
 
 /**
  * 🎫 ATTENDANCE RECEIPT CARD
- * Refactored to use Domain Model CheckInRecord.
+ * Refactored to use Domain Model AttendanceRecord.
  */
 @Composable
-fun CheckInRecordCard(
-    record: CheckInRecord,
-    onEditRequested: (CheckInRecord) -> Unit = {}
+fun AttendanceRecordCard(
+    record: AttendanceRecord,
+    onEditRequested: (AttendanceRecord) -> Unit = {}
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")

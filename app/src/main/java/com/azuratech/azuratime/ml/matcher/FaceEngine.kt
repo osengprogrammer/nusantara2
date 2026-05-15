@@ -13,6 +13,11 @@ object FaceEngine {
             return MatchResult.NoMatch
         }
 
+        if (!NativeSecurityVault.isNativeReady) {
+            android.util.Log.e("FaceEngine", "NativeSecurityVault is not ready! Falling back to Kotlin math.")
+            return findBestMatchKotlin(inputEmbedding, gallery, isRegistrationMode)
+        }
+
         var bestMatchName = ""
         var minDistance = Float.MAX_VALUE
 
@@ -46,6 +51,43 @@ object FaceEngine {
             else -> {
                 MatchResult.NoMatch
             }
+        }
+    }
+
+    private fun findBestMatchKotlin(
+        inputEmbedding: FloatArray,
+        gallery: List<Pair<String, FloatArray>>,
+        isRegistrationMode: Boolean
+    ): MatchResult {
+        var bestMatchName = ""
+        var minDistance = Float.MAX_VALUE
+
+        for ((name, savedEmbedding) in gallery) {
+            // Cosine Distance = 1.0 - Dot Product (since vectors are L2 normalized)
+            var dotProduct = 0.0f
+            for (i in inputEmbedding.indices) {
+                dotProduct += inputEmbedding[i] * savedEmbedding[i]
+            }
+            val distance = 1.0f - dotProduct
+            
+            if (distance < minDistance) {
+                minDistance = distance
+                bestMatchName = name
+            }
+        }
+
+        val currentThreshold = if (isRegistrationMode) {
+            FaceNetConstants.DUPLICATE_THRESHOLD
+        } else {
+            FaceNetConstants.RECOGNITION_THRESHOLD
+        }
+
+        val isVerified = minDistance < currentThreshold
+
+        return when {
+            isVerified && isRegistrationMode -> MatchResult.DuplicateFound(bestMatchName, minDistance)
+            isVerified -> MatchResult.Success(bestMatchName, minDistance)
+            else -> MatchResult.NoMatch
         }
     }
 

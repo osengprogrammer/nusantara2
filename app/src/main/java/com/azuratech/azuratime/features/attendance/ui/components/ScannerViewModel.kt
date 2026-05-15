@@ -3,13 +3,13 @@ package com.azuratech.azuratime.features.attendance.ui.components
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repo.ScannerRepository
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInResult
+import com.azuratech.azuratime.features.attendance.data.repo.ScannerRepository
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessCheckInParams
-import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInUiState
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInSideEffect
-import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -23,15 +23,15 @@ import javax.inject.Inject
 class ScannerViewModel @Inject constructor(
     application: Application,
     private val repository: ScannerRepository,
-    private val checkInRepository: CheckInRepository,
+    private val checkInRepository: AttendanceRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow<CheckInUiState>(CheckInUiState.Idle)
-    val uiStateStateFlow: StateFlow<CheckInUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<AttendanceUiState>(AttendanceUiState.Idle)
+    val uiStateStateFlow: StateFlow<AttendanceUiState> = _uiState.asStateFlow()
 
-    private val _sideEffect = Channel<CheckInSideEffect>()
+    private val _sideEffect = Channel<AttendanceSideEffect>()
     val sideEffectFlow = _sideEffect.receiveAsFlow()
 
     private var gallery: List<Pair<String, FloatArray>> = emptyList()
@@ -57,7 +57,7 @@ class ScannerViewModel @Inject constructor(
             if (schoolId != null) {
                 gallery = repository.loadGallery(schoolId)
             } else {
-                _uiState.value = CheckInUiState.Error("Workspace Belum Dipilih")
+                _uiState.value = AttendanceUiState.Error("Workspace Belum Dipilih")
             }
         }
     }
@@ -69,12 +69,12 @@ class ScannerViewModel @Inject constructor(
 
         viewModelScope.launch {
             if (activeSchoolId == null) {
-                _uiState.value = CheckInUiState.Error("Error: Context Hilang")
+                _uiState.value = AttendanceUiState.Error("Error: Context Hilang")
                 enterCooldown()
                 return@launch
             }
 
-            _uiState.value = CheckInUiState.Processing
+            _uiState.value = AttendanceUiState.Processing
             val matchedFaceId = repository.performMatch(embedding, gallery)
 
             if (matchedFaceId != null) {
@@ -91,11 +91,11 @@ class ScannerViewModel @Inject constructor(
         }
         viewModelScope.launch {
             if (activeSchoolId == null) {
-                _uiState.value = CheckInUiState.Error("Error: Context Hilang")
+                _uiState.value = AttendanceUiState.Error("Error: Context Hilang")
                 enterCooldown()
                 return@launch
             }
-            _uiState.value = CheckInUiState.Processing
+            _uiState.value = AttendanceUiState.Processing
             processAttendanceRecord(barcode)
         }
     }
@@ -122,40 +122,42 @@ class ScannerViewModel @Inject constructor(
         val result = checkInRepository.processCheckIn(params)
 
         when (result) {
-            is Result.Success<CheckInResult> -> {
+            is Result.Success<AttendanceResult> -> {
                 when (val checkInRes = result.data) {
-                    is CheckInResult.Success -> {
-                        _uiState.value = CheckInUiState.Success(checkInRes.name, alreadyCheckedIn = false)
-                        _sideEffect.send(CheckInSideEffect.Speak(checkInRes.message))
+                    is AttendanceResult.Success -> {
+                        _uiState.value = AttendanceUiState.Success(checkInRes.name, alreadyCheckedIn = false)
+                        _sideEffect.send(AttendanceSideEffect.Speak(checkInRes.message))
                     }
-                    is CheckInResult.AlreadyCheckedIn -> {
-                        _uiState.value = CheckInUiState.Success(checkInRes.name, alreadyCheckedIn = true)
-                        _sideEffect.send(CheckInSideEffect.Speak("${checkInRes.name}, sudah absen."))
+                    is AttendanceResult.AlreadyCheckedIn -> {
+                        _uiState.value = AttendanceUiState.Success(checkInRes.name, alreadyCheckedIn = true)
+                        _sideEffect.send(AttendanceSideEffect.Speak("${checkInRes.name}, sudah absen."))
                     }
-                    is CheckInResult.Rejected -> {
-                        _uiState.value = CheckInUiState.Error("${checkInRes.name}: Bukan Kelas Ini!")
-                        _sideEffect.send(CheckInSideEffect.Speak("${checkInRes.name}: Bukan Kelas Ini!"))
+                    is AttendanceResult.Rejected -> {
+                        _uiState.value = AttendanceUiState.Error("${checkInRes.name}: Bukan Kelas Ini!")
+                        _sideEffect.send(AttendanceSideEffect.Speak("${checkInRes.name}: Bukan Kelas Ini!"))
                     }
-                    is CheckInResult.Unregistered -> handleUnregistered()
+                    AttendanceResult.Unregistered -> handleUnregistered()
                 }
             }
             is Result.Failure -> {
-                _uiState.value = CheckInUiState.Error(result.error.message ?: "Gagal Absen")
+                _uiState.value = AttendanceUiState.Error(result.error.message ?: "Gagal Absen")
             }
-            else -> {}
+            Result.Loading -> {
+                _uiState.value = AttendanceUiState.Processing
+            }
         }
         enterCooldown()
     }
 
     private suspend fun handleUnregistered() {
-        _uiState.value = CheckInUiState.Error("Wajah Tidak Dikenal")
-        _sideEffect.send(CheckInSideEffect.Speak("Wajah Tidak Dikenal"))
+        _uiState.value = AttendanceUiState.Error("Wajah Tidak Dikenal")
+        _sideEffect.send(AttendanceSideEffect.Speak("Wajah Tidak Dikenal"))
         enterCooldown()
     }
 
     private suspend fun enterCooldown(duration: Long = 2500) {
         delay(duration)
-        _uiState.value = CheckInUiState.Idle
+        _uiState.value = AttendanceUiState.Idle
         isProcessing.set(false)
     }
 }

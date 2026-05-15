@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.biometric.data.remote
 
-import com.azuratech.azuratime.data.local.FaceAssignmentEntity
+import com.azuratech.azuratime.features.biometric.data.local.FaceAssignmentEntity
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuraengine.result.Result
 

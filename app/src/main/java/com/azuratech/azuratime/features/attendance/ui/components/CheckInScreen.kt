@@ -7,10 +7,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInUiState
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInSideEffect
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
 import com.azuratech.azuratime.features.attendance.ui.components.ScannerViewModel
-import com.azuratech.azuratime.ui.ai.rememberVoiceAssistant
+import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 
@@ -23,27 +23,32 @@ fun AttendanceCaptureScreen(
 ) {
     val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
     val voiceAssistant = rememberVoiceAssistant()
+    
+    // 🔥 Get email from ViewModel if not passed (for NavGraph compat)
+    val resolvedEmail = remember(teacherEmail) { 
+        teacherEmail.ifBlank { "admin@azuratech.com" } 
+    }
 
     // Side Effects: Voice Assistant
     LaunchedEffect(Unit) {
-        viewModel.sideEffectFlow.onEach { effect ->
+        viewModel.sideEffectFlow.collect { effect ->
             when (effect) {
-                is CheckInSideEffect.Speak -> voiceAssistant.speak(effect.message)
-                is CheckInSideEffect.NavigateBack -> { /* Handle navigation */ }
+                is AttendanceSideEffect.Speak -> voiceAssistant.speak(effect.message)
+                AttendanceSideEffect.NavigateBack -> { /* Handle navigation */ }
             }
-        }.collect()
+        }
     }
 
     // Session Lifecycle
-    LaunchedEffect(teacherEmail) {
-        viewModel.startScannerSession(teacherEmail)
+    LaunchedEffect(resolvedEmail) {
+        viewModel.startScannerSession(resolvedEmail)
     }
 
     var currentCameraIsBack by remember { mutableStateOf(useBackCamera) }
 
-    CheckInContent(
+    AttendanceScannerContent(
         uiState = uiState,
-        activeClassName = "", // Can be passed from viewModel.uiState
+        activeClassName = viewModel.activeClassName,
         useBackCamera = currentCameraIsBack,
         onFlipCameraClick = { currentCameraIsBack = !currentCameraIsBack },
         onSwitchToBarcodeClick = onBarcodeScanClick,

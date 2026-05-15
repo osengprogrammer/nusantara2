@@ -13,15 +13,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.ui.core.designsystem.AttendanceActionSheet
-import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
-import com.azuratech.azuratime.ui.core.designsystem.AzuraDropdownField
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.theme.*
-import com.azuratech.azuratime.ui.classes.ClassViewModel
+import com.azuratech.azuratime.core.ui.designsystem.AttendanceActionSheet
+import com.azuratech.azuratime.core.ui.designsystem.AzuraDatePickerButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.theme.*
+import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
 import kotlinx.coroutines.launch
@@ -29,7 +29,7 @@ import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CheckInRecordScreen(
+fun AttendanceRecordScreen(
     userEmail: String,
     onNavigateBack: () -> Unit = {},
     checkInViewModel: CheckInViewModel,
@@ -43,12 +43,12 @@ fun CheckInRecordScreen(
     val filterParams by checkInViewModel.filterParams.collectAsStateWithLifecycle()
     val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
 
-    var editingRecord by remember { mutableStateOf<CheckInRecord?>(null) }
+    var editingRecord by remember { mutableStateOf<AttendanceRecord?>(null) }
     var showFilters by remember { mutableStateOf(false) }
     var startDate by remember { mutableStateOf<LocalDate?>(null) }
     var endDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedClassId by remember { mutableStateOf<String?>(null) }
-    var showClassCorrectionDialog by remember { mutableStateOf<CheckInRecord?>(null) }
+    var showClassCorrectionDialog by remember { mutableStateOf<AttendanceRecord?>(null) }
 
     // 2. Filter Sync
     LaunchedEffect(user, startDate, endDate, selectedClassId) {
@@ -133,7 +133,7 @@ fun CheckInRecordScreen(
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
                     items(records, key = { it.recordId }) { record ->
-                        CheckInRecordCard(
+                        AttendanceRecordCard(
                             record = record,
                             onEditRequested = { editingRecord = record }
                         )

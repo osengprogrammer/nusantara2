@@ -1,12 +1,13 @@
 package com.azuratech.azuratime.core.di
 
-import com.azuratech.azuratime.data.repo.*
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.student.data.repo.StudentRepositoryImpl
-import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
-import com.azuratech.azuratime.features.attendance.data.repo.CheckInRepositoryImpl
-import com.azuratech.azuratime.domain.media.FileStorage
-import com.azuratech.azuratime.domain.media.PhotoStorageUtils
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
+import com.azuratech.azuratime.features.attendance.data.repo.AttendanceRepositoryImpl
+import com.azuratech.azuratime.features.staff.domain.repository.AccessRequestRepository
+import com.azuratech.azuratime.features.staff.data.repo.AccessRequestRepositoryImpl
+import com.azuratech.azuratime.core.domain.media.FileStorage
+import com.azuratech.azuratime.core.domain.media.PhotoStorageUtils
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,19 +26,19 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun provideCheckInRepository(
-        impl: CheckInRepositoryImpl
-    ): CheckInRepository
+    abstract fun provideAttendanceRepository(
+        impl: AttendanceRepositoryImpl
+    ): AttendanceRepository
 
     @Binds
     @Singleton
     abstract fun provideAccessRequestRepository(
         impl: AccessRequestRepositoryImpl
-    ): com.azuratech.azuratime.data.repo.AccessRequestRepository
+    ): AccessRequestRepository
 
     @Binds
     @Singleton
     abstract fun provideFileStorage(
         impl: PhotoStorageUtils
-    ): com.azuratech.azuratime.domain.media.FileStorage
+    ): FileStorage
 }

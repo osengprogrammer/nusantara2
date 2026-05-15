@@ -3,10 +3,10 @@ package com.azuratech.azuratime.features.staff.ui.components
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuratime.core.data.local.AppDatabase
+import com.azuratech.azuratime.features.school.data.local.ClassEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.data.repo.AdminRepository
+import com.azuratech.azuratime.features.staff.data.repo.AdminRepository
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -77,8 +77,8 @@ android {
         abi {
             isEnable = true
             reset()
-            // Keep only modern ARM architectures (drop x86 unless needed for emulators)
-            include("arm64-v8a", "armeabi-v7a")
+            // Keep only modern architectures + x86_64 for emulators
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
             isUniversalApk = false
         }
     }
