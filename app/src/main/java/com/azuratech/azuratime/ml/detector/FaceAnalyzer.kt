@@ -29,6 +29,7 @@ class FaceAnalyzer(
     private val isFrontCamera: Boolean = true,
     private val bypassLiveness: Boolean = false,
     private val onFaceEmbedding: (Rect, FloatArray) -> Unit,
+    private val onFaceCaptured: ((Bitmap) -> Unit)? = null,
     private val onLivenessStatus: (String) -> Unit
 ) : ImageAnalysis.Analyzer {
 
@@ -148,14 +149,16 @@ class FaceAnalyzer(
                                 val buffer = FacePreprocessor.bitmapToModelInput(safeCrop)
                                 val embedding = FaceRecognizer.recognizeFace(buffer)
 
-                                // Bersihkan memori Bitmap secara manual agar tidak memory leak
-                                if (safeCrop != safeBitmap) safeCrop.recycle()
-                                safeBitmap.recycle() 
-
                                 // Kirim hasil ke Main Thread (UI/ViewModel)
                                 withContext(Dispatchers.Main) {
                                     onFaceEmbedding(bounds, embedding)
+                                    onFaceCaptured?.invoke(safeCrop)
                                 }
+
+                                // Bersihkan memori Bitmap secara manual agar tidak memory leak
+                                // SANGAT PENTING: Consumer harus meng-copy bitmap jika ingin menyimpannya!
+                                if (safeCrop != safeBitmap) safeCrop.recycle()
+                                safeBitmap.recycle() 
                             } catch (e: Exception) {
                                 Log.e("FaceAnalyzer", "Error di Coroutine: ${e.message}")
                             } finally {

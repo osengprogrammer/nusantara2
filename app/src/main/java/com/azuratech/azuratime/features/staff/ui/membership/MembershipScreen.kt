@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.membership
+package com.azuratech.azuratime.features.staff.ui.membership
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,12 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.boot.BootViewModel
-import com.azuratech.azuratime.domain.model.AccessRequestProfile
-import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.features.staff.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 
 // 🔥 Azura Design System Imports
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 
 @Composable
 fun MembershipScreen(
@@ -65,11 +65,6 @@ fun MembershipScreen(
             
             if (currentState is MembershipState.Loading) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            } else if (memberships.isEmpty() && accessRequests.isEmpty()) {
-                EmptyMembershipView(
-                    onJoinByCode = { /* Open Dialog/Bottom Sheet */ },
-                    onSearch = { /* Navigate to SchoolSearchScreen Stub */ }
-                )
             } else {
                 when (currentState) {
                     is MembershipState.Pending -> {
@@ -91,13 +86,11 @@ fun MembershipScreen(
                     }
                     else -> {
                         // For Approved or Idle state when we have data
-                        if (memberships.isNotEmpty() || accessRequests.isNotEmpty()) {
-                             PendingView(
-                                email = email, 
-                                accessRequests = accessRequests,
-                                onLogoutClick = onLogoutClick
-                            )
-                        }
+                         PendingView(
+                            email = email, 
+                            accessRequests = accessRequests,
+                            onLogoutClick = onLogoutClick
+                        )
                     }
                 }
             }
@@ -108,53 +101,6 @@ fun MembershipScreen(
 // ==========================================
 // 🎨 AZURA-STYLED COMPONENTS
 // ==========================================
-
-@Composable
-fun EmptyMembershipView(onJoinByCode: () -> Unit, onSearch: () -> Unit) {
-    Column(
-        modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            Icons.Default.School, 
-            null, 
-            modifier = Modifier.size(100.dp), 
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-        )
-        Spacer(modifier = Modifier.height(AzuraSpacing.lg))
-        Text(
-            "Anda belum bergabung ke sekolah manapun", 
-            style = MaterialTheme.typography.headlineSmall, 
-            fontWeight = FontWeight.Bold, 
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(AzuraSpacing.md))
-        Text(
-            "Minta kode undangan dari admin sekolah, atau cari sekolah yang tersedia.", 
-            style = MaterialTheme.typography.bodyMedium, 
-            textAlign = TextAlign.Center, 
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(AzuraSpacing.xl))
-
-        Button(
-            onClick = onJoinByCode, 
-            modifier = Modifier.fillMaxWidth(),
-            shape = AzuraShapes.medium
-        ) {
-            Text("Masukkan Kode Sekolah")
-        }
-        Spacer(modifier = Modifier.height(AzuraSpacing.md))
-        OutlinedButton(
-            onClick = onSearch, 
-            modifier = Modifier.fillMaxWidth(),
-            shape = AzuraShapes.medium
-        ) {
-            Text("Cari Sekolah")
-        }
-    }
-}
 
 @Composable
 fun PendingView(

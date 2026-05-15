@@ -6,12 +6,12 @@ import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.data.local.toProfile
-import com.azuratech.azuratime.data.repo.AccessRequestRepository
-import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.staff.data.local.toProfile
+import com.azuratech.azuratime.features.staff.domain.repository.AccessRequestRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
-import com.azuratech.azuratime.data.repo.WorkspaceRepository
-import com.azuratech.azuratime.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.features.staff.data.repo.WorkspaceRepository
+import com.azuratech.azuratime.features.staff.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi

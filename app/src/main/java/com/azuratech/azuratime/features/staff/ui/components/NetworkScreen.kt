@@ -19,13 +19,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
-import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
-import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
-import com.azuratech.azuratime.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import kotlinx.coroutines.launch
 
 @Composable

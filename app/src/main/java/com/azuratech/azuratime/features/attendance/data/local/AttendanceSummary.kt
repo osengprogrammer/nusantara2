@@ -3,8 +3,8 @@ package com.azuratech.azuratime.features.attendance.data.local
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.azuratech.azuratime.domain.model.AttendanceProfile
-import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceProfile
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID

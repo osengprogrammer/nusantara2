@@ -1,6 +1,10 @@
 package com.azuratech.azuratime.features.biometric.data.local
 
-import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.core.data.local.*
+import com.azuratech.azuratime.features.school.data.local.*
+import com.azuratech.azuratime.features.staff.data.local.*
+import com.azuratech.azuratime.features.attendance.data.local.*
+import com.azuratech.azuratime.features.biometric.data.local.*
 import kotlinx.coroutines.flow.Flow
 
 interface FaceLocalDataSource {

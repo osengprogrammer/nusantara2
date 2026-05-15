@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.auth
+package com.azuratech.azuratime.features.auth.ui
 
 sealed class AuthState {
     object Idle : AuthState()

@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.root
+package com.azuratech.azuratime.core.ui
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -13,11 +13,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.core.boot.BootState
 import com.azuratech.azuratime.core.boot.BootViewModel
-import com.azuratech.azuratime.ui.main.MainScreen
-import com.azuratech.azuratime.ui.auth.LoginScreen
-import com.azuratech.azuratime.ui.membership.MembershipScreen
-import com.azuratech.azuratime.ui.main.MainViewModel
-import com.azuratech.azuratime.ui.auth.AuthViewModel
+import com.azuratech.azuratime.core.ui.MainScreen
+import com.azuratech.azuratime.features.auth.ui.LoginScreen
+import com.azuratech.azuratime.features.staff.ui.membership.MembershipScreen
+import com.azuratech.azuratime.core.ui.MainViewModel
+import com.azuratech.azuratime.features.auth.ui.AuthViewModel
 
 @Composable
 fun RootScreen() {

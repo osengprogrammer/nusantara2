@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.domain.media
+package com.azuratech.azuratime.core.domain.media
 
 /**
  * Pure interface for file storage operations, removing Android dependencies from domain.

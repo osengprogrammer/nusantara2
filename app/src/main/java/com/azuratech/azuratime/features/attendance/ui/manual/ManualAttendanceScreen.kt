@@ -3,8 +3,8 @@ package com.azuratech.azuratime.features.attendance.ui.manual
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle 
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.ui.add.FaceViewModel
-import com.azuratech.azuratime.ui.classes.ClassViewModel
+import com.azuratech.azuratime.features.biometric.ui.enroll.FaceViewModel
+import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
 import com.azuratech.azuratime.core.util.AttendanceService

@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.domain.media
+package com.azuratech.azuratime.core.domain.media
 
 import com.azuratech.azuraengine.core.ImageProcessor
 import com.azuratech.azuraengine.core.StorageProvider

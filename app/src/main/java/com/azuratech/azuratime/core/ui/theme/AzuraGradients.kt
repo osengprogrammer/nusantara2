@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.theme
+package com.azuratech.azuratime.core.ui.theme
 
 import android.app.Activity
 import android.os.Build

@@ -10,19 +10,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInUiState
-import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
-import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
-import com.azuratech.azuratime.ui.core.preview.AzuraPreviews
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.ui.theme.AzuraTheme
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
+import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.features.attendance.ui.components.MatchResultLabel
 import com.azuratech.azuratime.features.attendance.ui.components.StatusLabel
 
 
 @Composable
 fun CheckInContent(
-    uiState: CheckInUiState,
+    uiState: AttendanceUiState,
     activeClassName: String,
     useBackCamera: Boolean,
     onFlipCameraClick: () -> Unit,
@@ -32,10 +32,10 @@ fun CheckInContent(
 ) {
     Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
         // Layer 1: Hardware View (Passed as a component we maintain here or provided by Screen)
-        RealtimeScannerView(
+        AttendanceScannerView(
             useBackCamera = useBackCamera,
             onFaceEmbeddingReady = onFaceEmbeddingReady,
-            showLivenessLabel = uiState is CheckInUiState.Idle
+            showLivenessLabel = uiState is AttendanceUiState.Idle
         )
 
         // Layer 2: Design System Overlays
@@ -77,7 +77,7 @@ fun CheckInContent(
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
             ) {
                 when (uiState) {
-                    is CheckInUiState.Success -> {
+                    is AttendanceUiState.Success -> {
                         AzuraCard(
                             modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
                             title = "Check-In Berhasil",
@@ -95,7 +95,7 @@ fun CheckInContent(
                             }
                         )
                     }
-                    is CheckInUiState.Error -> {
+                    is AttendanceUiState.Error -> {
                         AzuraCard(
                             modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
                             title = "Gagal Check-In",
@@ -114,7 +114,7 @@ fun CheckInContent(
                 }
             }
 
-            if (uiState is CheckInUiState.Processing) {
+            if (uiState is AttendanceUiState.Processing) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -135,7 +135,7 @@ fun CheckInContentSuccessPreview() {
     AzuraTheme {
         Surface {
             CheckInContent(
-                uiState = CheckInUiState.Success(name = "Budi Santoso", alreadyCheckedIn = false),
+                uiState = AttendanceUiState.Success(name = "Budi Santoso", alreadyCheckedIn = false),
                 activeClassName = "Kelas 10A",
                 useBackCamera = false,
                 onFlipCameraClick = {},
@@ -152,7 +152,7 @@ fun CheckInContentProcessingPreview() {
     AzuraTheme {
         Surface {
             CheckInContent(
-                uiState = CheckInUiState.Processing,
+                uiState = AttendanceUiState.Processing,
                 activeClassName = "Kelas 10A",
                 useBackCamera = false,
                 onFlipCameraClick = {},

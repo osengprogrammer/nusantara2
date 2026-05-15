@@ -4,12 +4,12 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.AppDatabase
+import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.data.local.toEntity
+import com.azuratech.azuratime.features.staff.data.local.toEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,7 +29,7 @@ class UserManagementViewModel @Inject constructor(
     application: Application,
     private val database: AppDatabase,
     private val repository: StaffAccountRepository,
-    private val checkInRepository: CheckInRepository,
+    private val checkInRepository: AttendanceRepository,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 

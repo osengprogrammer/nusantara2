@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.add
+package com.azuratech.azuratime.features.student.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,10 +21,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 // 🔥 Azura Design System Imports
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.theme.AzuraPrimaryDark
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraPrimaryDark
 
 @Composable
 fun RegistrationMenuScreen(

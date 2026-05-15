@@ -5,11 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
-import com.azuratech.azuratime.domain.model.StudentProfile
-import com.azuratech.azuratime.domain.model.SyncStatus
-import com.azuratech.azuratime.domain.media.PhotoStorageUtils
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+import com.azuratech.azuratime.core.domain.model.SyncStatus
+import com.azuratech.azuratime.core.domain.media.PhotoStorageUtils
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.ui.core.UiEvent
+import com.azuratech.azuratime.core.ui.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,7 +20,7 @@ import javax.inject.Inject
 class StudentFormViewModel @Inject constructor(
     private val faceRepository: BiometricFaceRepository,
     private val userRepository: StaffAccountRepository,
-    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
+    private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
     private val photoStorageUtils: PhotoStorageUtils
 ) : ViewModel() {
@@ -149,7 +149,12 @@ class StudentFormViewModel @Inject constructor(
             }
 
             // Determine IDs
-            val studentId = if (currentState.isEditMode) currentState.studentId else "STU-${UUID.randomUUID().toString().take(8)}"
+            val studentId = if (currentState.studentId.isNotBlank()) {
+                currentState.studentId
+            } else {
+                "STU-${UUID.randomUUID().toString().take(8)}"
+            }
+            
             val faceId = if (currentState.isEditMode) {
                 currentState.studentId 
             } else {

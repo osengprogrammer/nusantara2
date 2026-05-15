@@ -1,12 +1,12 @@
-package com.azuratech.azuratime.ui.data
+package com.azuratech.azuratime.features.reporting.ui.integrity
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.repo.DataIntegrityRepository
+import com.azuratech.azuratime.features.reporting.data.repo.DataIntegrityRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
-import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.ui.core.UiEvent
+import com.azuratech.azuratime.core.ui.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DataIntegrityViewModel @Inject constructor(
     private val repository: DataIntegrityRepository,
-    private val checkInRepository: CheckInRepository
+    private val checkInRepository: AttendanceRepository
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()

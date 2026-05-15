@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.data.local
+package com.azuratech.azuratime.features.biometric.data.local
 
 import androidx.room.*
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity

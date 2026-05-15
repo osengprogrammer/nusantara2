@@ -1,10 +1,20 @@
-package com.azuratech.azuratime.security
+package com.azuratech.azuratime.core.security
 
 class SecurityVault {
 
-    init {
-        // Make sure the parenthesis and quotes are exactly like this:
-        System.loadLibrary("azura_security_vault")
+    companion object {
+        var isNativeReady = false
+            private set
+
+        init {
+            try {
+                // Make sure the parenthesis and quotes are exactly like this:
+                System.loadLibrary("azura_security_vault")
+                isNativeReady = true
+            } catch (e: UnsatisfiedLinkError) {
+                android.util.Log.e("SecurityVault", "CRITICAL: Native library azura_security_vault not found!", e)
+            }
+        }
     }
 
     /**

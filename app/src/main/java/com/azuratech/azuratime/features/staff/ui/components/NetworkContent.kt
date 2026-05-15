@@ -14,15 +14,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
-import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
+import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 import com.azuratech.azuraengine.model.User
-import com.azuratech.azuratime.ui.core.designsystem.AzuraUserRow
+import com.azuratech.azuratime.core.ui.designsystem.AzuraUserRow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
 fun NetworkContent(

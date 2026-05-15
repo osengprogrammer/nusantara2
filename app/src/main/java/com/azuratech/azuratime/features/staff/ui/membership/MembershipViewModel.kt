@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.membership
+package com.azuratech.azuratime.features.staff.ui.membership
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,11 +6,11 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.features.staff.data.local.Membership
-import com.azuratech.azuratime.data.local.toProfile
-import com.azuratech.azuratime.data.repo.AccessRequestRepository
-import com.azuratech.azuratime.data.repo.MembershipRepository
+import com.azuratech.azuratime.features.staff.data.local.toProfile
+import com.azuratech.azuratime.features.staff.domain.repository.AccessRequestRepository
+import com.azuratech.azuratime.features.staff.data.repo.MembershipRepository
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
-import com.azuratech.azuratime.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.features.staff.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -64,6 +64,7 @@ class MembershipViewModel @Inject constructor(
     val state: StateFlow<MembershipState> = combine(user, accessRequests) { user, requests ->
         when {
             user == null -> MembershipState.Loading
+            user.status == "PENDING" -> MembershipState.Pending
             user.status == SessionManager.STATUS_ACTIVE -> MembershipState.Approved
             user.status == "REJECTED" -> MembershipState.Rejected("Akun Anda ditolak oleh administrator.")
             requests.isNotEmpty() -> MembershipState.Pending

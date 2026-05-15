@@ -3,7 +3,7 @@
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_azuratech_azuratime_utils_ModelGuard_decryptTfliteModel(
+Java_com_azuratech_azuratime_core_domain_model_ModelGuard_decryptTfliteModel(
         JNIEnv *env, jobject thiz, jbyteArray encrypted_bytes) {
 
     // 1. Ambil array byte dari Kotlin

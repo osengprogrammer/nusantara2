@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.dashboard.components
+package com.azuratech.azuratime.features.dashboard.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,8 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 
 /**
  * 🔄 CLOUD SYNC BUTTON

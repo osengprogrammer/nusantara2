@@ -40,17 +40,22 @@ class SessionManager private constructor(private val context: Context) {
     }
 
     private val sharedPreferences by lazy {
-        val masterKey = MasterKey.Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
+        try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
 
-        EncryptedSharedPreferences.create(
-            context,
-            PREF_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+            EncryptedSharedPreferences.create(
+                context,
+                PREF_NAME,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "FATAL: EncryptedSharedPreferences failed. Falling back to regular prefs.", e)
+            context.getSharedPreferences(PREF_NAME + "_fallback", Context.MODE_PRIVATE)
+        }
     }
 
     // 🔥 REACTIVE TRIGGER: SSOT flows for user and school context

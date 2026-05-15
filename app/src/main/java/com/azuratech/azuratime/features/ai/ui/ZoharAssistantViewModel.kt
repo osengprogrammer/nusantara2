@@ -1,10 +1,10 @@
-package com.azuratech.azuratime.ui.ai
+package com.azuratech.azuratime.features.ai.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.BuildConfig
-import com.azuratech.azuratime.data.local.AppDatabase
+import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 class ZoharAssistantViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val checkInRecordDao by lazy { AppDatabase.Companion.getInstance(application).checkInRecordDao() }
+    private val attendanceRecordDao by lazy { AppDatabase.Companion.getInstance(application).attendanceRecordDao() }
 
     // 🔥 Added SessionManager to get schoolId
     private val schoolId: String get() = SessionManager.Companion.getInstance(getApplication()).getActiveSchoolId() ?: ""
@@ -33,7 +33,7 @@ class ZoharAssistantViewModel(application: Application) : AndroidViewModel(appli
 
             try {
                 // 🔥 FIXED: Passed schoolId to Zohar's memory fetch!
-                val recentLogs = checkInRecordDao.getAllRecords(schoolId).first().take(10)
+                val recentLogs = attendanceRecordDao.getAllRecords(schoolId).first().take(10)
                 val contextData = if (recentLogs.isEmpty()) "Belum ada data absensi."
                                  else recentLogs.joinToString("\n") {
                                      "${it.name} status ${it.status} pada ${it.attendanceDate}"

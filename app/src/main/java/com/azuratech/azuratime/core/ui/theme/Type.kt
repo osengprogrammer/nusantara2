@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.theme
+package com.azuratech.azuratime.core.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

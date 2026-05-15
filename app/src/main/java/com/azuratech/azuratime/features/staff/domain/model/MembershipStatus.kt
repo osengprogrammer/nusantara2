@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.domain.model
+package com.azuratech.azuratime.features.staff.domain.model
 
 /**
  * 🎓 MEMBERSHIP STATUS

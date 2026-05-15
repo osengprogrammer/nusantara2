@@ -9,8 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import java.time.LocalTime
 
 @Composable

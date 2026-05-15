@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.dashboard.components
+package com.azuratech.azuratime.features.dashboard.ui.components
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
@@ -9,8 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
-import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
-import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,8 +24,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import com.azuratech.azuraengine.model.User
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 

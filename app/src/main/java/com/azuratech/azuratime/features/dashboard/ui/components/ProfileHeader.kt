@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.dashboard.components
+package com.azuratech.azuratime.features.dashboard.ui.components
 
 import android.net.Uri
 import androidx.compose.foundation.clickable
@@ -13,7 +13,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 

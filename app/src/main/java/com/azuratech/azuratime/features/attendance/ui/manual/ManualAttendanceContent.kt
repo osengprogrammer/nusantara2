@@ -8,11 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.data.local.FaceWithDetails
-import com.azuratech.azuratime.ui.core.designsystem.AzuraDatePickerButton
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.data.local.FaceWithDetails
+import com.azuratech.azuratime.core.ui.designsystem.AzuraDatePickerButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter

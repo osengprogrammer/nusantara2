@@ -1,7 +1,7 @@
-package com.azuratech.azuratime.data.repo
+package com.azuratech.azuratime.features.ai.data.repo
 
 import com.azuratech.azuratime.BuildConfig
-import com.azuratech.azuratime.data.local.AppDatabase
+import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.google.ai.client.generativeai.GenerativeModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 /**
  * 🤖 ZOHAR REPOSITORY
  * Otak AI untuk Azura Time. Mengolah data absensi lokal menjadi wawasan cerdas.
- * 🔥 UPDATE: Sinkronisasi dengan CheckInRecordEntity v2 (LocalDateTime & Long Timestamp)
+ * 🔥 UPDATE: Sinkronisasi dengan AttendanceRecordEntity v2 (LocalDateTime & Long Timestamp)
  */
 @Singleton
 class ZoharRepository @Inject constructor(
@@ -28,7 +28,7 @@ class ZoharRepository @Inject constructor(
     suspend fun generateAttendanceInsight(schoolId: String): String = withContext(Dispatchers.IO) {
         try {
             // 1. Ambil data record terbaru dari Room
-            val allRecords = database.checkInRecordDao().getAllRecords(schoolId).first() 
+            val allRecords = database.attendanceRecordDao().getAllRecords(schoolId).first() 
             
             if (allRecords.isEmpty()) {
                 return@withContext "Belum ada data absensi untuk dianalisis, brother. Semangat terus buat guru-guru di Banyuwangi!"

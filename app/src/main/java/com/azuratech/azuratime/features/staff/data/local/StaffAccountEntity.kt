@@ -4,24 +4,6 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-/**
- * 🏫 Multi-Tenant Membership: Hak akses user di dalam candinya sendiri atau candi teman.
- */
-data class Membership(
-    val schoolName: String,
-    val role: String, // "ADMIN", "TEACHER", "SUPER_USER"
-    val assignedClassIds: List<String> = emptyList() // 🔥 Daftar kelas yang diamanahi
-)
-
-/**
- * 🤝 SEDULURAN (FRIENDSHIP): Menyimpan status koneksi antar Guru.
- */
-data class FriendConnection(
-    val friendName: String,
-    val friendEmail: String,
-    val status: String // "REQUEST_SENT", "PENDING_APPROVAL", "FRIENDS"
-)
-
 @Entity(
     tableName = "users",
     indices = [Index(value = ["email"], unique = true)]
@@ -54,7 +36,7 @@ data class StaffAccountEntity(
     val createdAt: Long = System.currentTimeMillis(),
 
     // 🔥 Added for SSOT sync tracking
-    val syncStatus: String = "SYNCED" // com.azuratech.azuratime.domain.model.SyncStatus.name
+    val syncStatus: String = "SYNCED" // com.azuratech.azuratime.core.domain.model.SyncStatus.name
 ) {
     // =====================================================
     // 🔑 COMPUTED HELPERS

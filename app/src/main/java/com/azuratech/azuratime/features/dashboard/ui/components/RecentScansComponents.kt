@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.dashboard.components
+package com.azuratech.azuratime.features.dashboard.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import java.time.format.DateTimeFormatter
 
 @Composable

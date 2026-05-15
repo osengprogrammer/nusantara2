@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.dashboard.components
+package com.azuratech.azuratime.features.dashboard.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -7,7 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
 fun SessionStudentsList(students: List<BiometricFaceEntity>, modifier: Modifier = Modifier) {

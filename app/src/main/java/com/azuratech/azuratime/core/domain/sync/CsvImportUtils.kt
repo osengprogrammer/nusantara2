@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.domain.sync
+package com.azuratech.azuratime.core.domain.sync
 
 import com.azuratech.azuraengine.core.StorageProvider
 import com.azuratech.azuraengine.sync.CsvStudentData

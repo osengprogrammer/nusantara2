@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.membership
+package com.azuratech.azuratime.features.staff.ui.membership
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

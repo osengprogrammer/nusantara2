@@ -16,14 +16,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.ui.core.designsystem.AzuraButton
-import com.azuratech.azuratime.ui.core.designsystem.AzuraCard
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.core.designsystem.AzuraTextField
-import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.classes.ClassViewModel
+import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
 fun MyAssignedClassScreen(

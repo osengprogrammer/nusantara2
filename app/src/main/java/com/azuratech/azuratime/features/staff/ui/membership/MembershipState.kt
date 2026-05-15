@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.membership
+package com.azuratech.azuratime.features.staff.ui.membership
 
 sealed class MembershipState {
     object Idle : MembershipState()

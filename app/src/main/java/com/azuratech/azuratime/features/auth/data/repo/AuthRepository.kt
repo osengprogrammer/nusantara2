@@ -1,16 +1,16 @@
-package com.azuratech.azuratime.data.repo
+package com.azuratech.azuratime.features.auth.data.repo
 
 import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.R
-import com.azuratech.azuratime.data.local.AppDatabase
+import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuraengine.result.Result as DomainResult
-import com.azuratech.azuratime.data.repo.SecurityRepository
+import com.azuratech.azuratime.core.data.repo.SecurityRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth

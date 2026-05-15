@@ -1,13 +1,17 @@
 package com.azuratech.azuratime.features.staff.data.repo
-import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 
-import com.azuratech.azuratime.data.local.*
+import com.azuratech.azuratime.core.data.local.*
+import com.azuratech.azuratime.features.school.data.local.*
+import com.azuratech.azuratime.features.staff.data.local.*
+import com.azuratech.azuratime.features.attendance.data.local.*
+import com.azuratech.azuratime.features.biometric.data.local.*
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
 import com.azuratech.azuratime.features.staff.data.local.Membership
 import com.azuratech.azuratime.features.staff.data.local.FriendConnection
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
-import com.azuratech.azuratime.domain.model.MembershipStatus
-import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.features.staff.domain.model.MembershipStatus
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
@@ -19,7 +23,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
-import com.azuratech.azuratime.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
  * 🏰 USER REPOSITORY
  * Thin wrapper for User Data Sources.
  */
@@ -30,7 +34,7 @@ class StaffAccountRepository @Inject constructor(
     private val firestore: com.google.firebase.firestore.FirebaseFirestore,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
     private val schoolRepository: SchoolRepository,
-    private val schoolRemoteDataSource: com.azuratech.azuratime.data.remote.SchoolRemoteDataSource
+    private val schoolRemoteDataSource: com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 ) {
     private val userDao = database.userDao()
     private val userClassAccessDao = database.userClassAccessDao()

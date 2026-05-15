@@ -1,6 +1,6 @@
-package com.azuratech.azuratime.domain.sync
+package com.azuratech.azuratime.core.domain.sync
 
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuraengine.core.StorageProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -88,7 +88,7 @@ class ExportUtils @Inject constructor(
     /**
      * Export Log Mentah - Audit Trail untuk pengecekan per-tap
      */
-    suspend fun exportRawLogsToCsv(records: List<CheckInRecord>): String? = withContext(Dispatchers.IO) {
+    suspend fun exportRawLogsToCsv(records: List<AttendanceRecord>): String? = withContext(Dispatchers.IO) {
         val fileName = "Azura_RawLogs_${System.currentTimeMillis()}.csv"
         
         try {

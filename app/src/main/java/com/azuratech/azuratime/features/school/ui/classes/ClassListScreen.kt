@@ -1,0 +1,184 @@
+package com.azuratech.azuratime.features.school.ui.classes
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.util.showToast
+import com.azuratech.azuratime.core.ui.util.UiState
+
+@Composable
+fun ClassListScreen(
+    classViewModel: ClassViewModel, // 🔥 Changed from OptionsViewModel
+    onNavigateToDetail: (classId: String, className: String) -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    val context = LocalContext.current 
+    
+    // 🔥 Consume UiState instead of raw list
+    val uiState by classViewModel.uiStateStateFlow.collectAsStateWithLifecycle()
+    val availableClasses by classViewModel.availableClassesStateFlow.collectAsStateWithLifecycle()
+    
+    var showAddDialog by remember { mutableStateOf(false) }
+    var classToEdit by remember { mutableStateOf<ClassModel?>(null) }
+    var classToDelete by remember { mutableStateOf<ClassModel?>(null) }
+
+    AzuraScreen(
+        title = "Manajemen Kelas",
+        onBack = onNavigateBack,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                shape = AzuraShapes.medium
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
+            }
+        }
+    ) {
+        when (val state = uiState) {
+            is UiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is UiState.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = state.message ?: "Unknown Error", color = MaterialTheme.colorScheme.error)
+                }
+            }
+            is UiState.Empty -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Belum ada kelas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            is UiState.Success -> {
+                val classes: List<ClassModel> = state.data ?: emptyList()
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                    contentPadding = PaddingValues(top = AzuraSpacing.md, bottom = 100.dp)
+                ) {
+                    items(classes, key = { it.id }) { classItem ->
+                        ClassItemCard(
+                            classItem = classItem,
+                            onClick = { onNavigateToDetail(classItem.id, classItem.name) },
+                            onEditClick = { classToEdit = classItem },
+                            onDeleteClick = { classToDelete = classItem }
+                        )
+                    }
+                }
+            }
+        }
+
+        // --- ➕ DIALOG ADD ---
+        if (showAddDialog) {
+            AddClassDialog(
+                availableClasses = availableClasses,
+                onDismissRequest = { showAddDialog = false },
+                onConfirmClick = { newName ->
+                    classViewModel.addClass(newName) // 🔥 Simplified call
+                    showAddDialog = false
+                }
+            )
+        }
+
+        // --- ✏️ DIALOG EDIT ---
+        classToEdit?.let { item ->
+            AddClassDialog(
+                editingClass = item,
+                availableClasses = availableClasses,
+                onDismissRequest = { classToEdit = null },
+                onConfirmClick = { newName ->
+                    classViewModel.updateClass(item.id, newName) // 🔥 Simplified call
+                    classToEdit = null
+                }
+            )
+        }
+
+        // --- 🗑️ DIALOG DELETE ---
+        classToDelete?.let { item ->
+            AlertDialog(
+                onDismissRequest = { classToDelete = null },
+                icon = { Icon(Icons.Default.DeleteForever, null, tint = MaterialTheme.colorScheme.error) },
+                title = { Text("Hapus Kelas?") },
+                text = { Text("Menghapus '${item.name}' akan memutus hubungan dengan siswa di kelas ini.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            classViewModel.deleteClass(
+                                classId = item.id,
+                                onFailure = { msg ->
+                                    context.showToast(msg) 
+                                    classToDelete = null
+                                },
+                                onSuccess = {
+                                    classToDelete = null
+                                }
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) { Text("Hapus") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { classToDelete = null }) { Text("Batal") }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun ClassItemCard(
+    classItem: ClassModel, // 🔥 Changed from OptionEntity
+    onClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(AzuraSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Groups, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(AzuraSpacing.md))
+            
+            Text(
+                text = classItem.name, 
+                style = MaterialTheme.typography.titleMedium, 
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+
+            Row {
+                IconButton(onClick = onEditClick) {
+                    Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                }
+                IconButton(onClick = onDeleteClick) {
+                    Icon(Icons.Default.Delete, "Hapus", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    }
+}

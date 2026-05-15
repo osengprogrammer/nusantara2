@@ -17,13 +17,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // 🔥 Custom Components & Utils
 import com.azuratech.azuratime.features.attendance.ui.components.ScannerViewModel
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInUiState
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInSideEffect
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
 import com.azuratech.azuratime.features.attendance.ui.components.MatchResultLabel
 import com.azuratech.azuratime.features.attendance.ui.components.StatusLabel
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.ai.rememberVoiceAssistant
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
 import androidx.compose.foundation.layout.Column
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -41,7 +41,7 @@ fun BarcodeScreen(
     LaunchedEffect(Unit) {
         viewModel.sideEffectFlow.onEach { effect ->
             when (effect) {
-                is CheckInSideEffect.Speak -> voiceAssistant.speak(effect.message)
+                is AttendanceSideEffect.Speak -> voiceAssistant.speak(effect.message)
                 else -> {}
             }
         }.collect()
@@ -57,7 +57,7 @@ fun BarcodeScreen(
             shape = RectangleShape,
             modifier = Modifier.fillMaxSize()
         ) { barcodeValue ->
-            if (uiState !is CheckInUiState.Processing) {
+            if (uiState !is AttendanceUiState.Processing) {
                 viewModel.processScannedBarcode(barcodeValue)
             }
         }
@@ -75,21 +75,21 @@ fun BarcodeScreen(
             verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
         ) {
             when (val state = uiState) {
-                is CheckInUiState.Success -> {
+                is AttendanceUiState.Success -> {
                     MatchResultLabel(
                         name = state.name,
                         isAlreadyIn = state.alreadyCheckedIn,
                         primaryColor = MaterialTheme.colorScheme.primary
                     )
                 }
-                is CheckInUiState.Error -> {
+                is AttendanceUiState.Error -> {
                     StatusLabel(text = "⛔ ${state.message}", color = MaterialTheme.colorScheme.error)
                 }
                 else -> {}
             }
         }
 
-        if (uiState is CheckInUiState.Processing) {
+        if (uiState is AttendanceUiState.Processing) {
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f))) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             }

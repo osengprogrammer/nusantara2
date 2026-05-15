@@ -2,8 +2,8 @@ package com.azuratech.azuratime.features.biometric.ui.assignment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.data.local.AppDatabase
-import com.azuratech.azuratime.data.local.ClassEntity
+import com.azuratech.azuratime.core.data.local.AppDatabase
+import com.azuratech.azuratime.features.school.data.local.ClassEntity
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
@@ -23,7 +23,7 @@ import com.azuratech.azuraengine.model.ClassModel
 class FaceAssignmentViewModel @Inject constructor(
     database: AppDatabase,
     private val sessionManager: SessionManager,
-    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
+    private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
     private val faceRepository: BiometricFaceRepository
 ) : ViewModel() {
 

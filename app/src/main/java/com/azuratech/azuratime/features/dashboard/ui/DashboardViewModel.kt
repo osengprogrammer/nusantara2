@@ -1,23 +1,23 @@
-package com.azuratech.azuratime.ui.dashboard
+package com.azuratech.azuratime.features.dashboard.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
-import com.azuratech.azuratime.features.attendance.data.local.CheckInRecordEntity
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.data.repo.AdminRepository
-import com.azuratech.azuratime.data.repo.AuthRepository
+import com.azuratech.azuratime.features.staff.data.repo.AdminRepository
+import com.azuratech.azuratime.features.auth.data.repo.AuthRepository
 import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.CheckInRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInRecord
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.ui.core.UiEvent
+import com.azuratech.azuratime.core.ui.UiEvent
 import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.ui.util.UiState
+import com.azuratech.azuratime.core.ui.util.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -31,8 +31,8 @@ class DashboardViewModel @Inject constructor(
     private val adminRepository: AdminRepository,
     private val userRepository: StaffAccountRepository,
     private val faceRepository: BiometricFaceRepository,
-    private val checkInRepository: CheckInRepository,
-    private val schoolRepository: com.azuratech.azuratime.data.repo.SchoolRepository,
+    private val attendanceRepository: AttendanceRepository,
+    private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -59,7 +59,7 @@ class DashboardViewModel @Inject constructor(
     private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
-                checkInRepository.getCheckInRecords("", null, null, null, null, emptyList(), schoolId).map { it.take(5) }
+                attendanceRepository.getAttendanceRecords("", null, null, null, null, emptyList(), schoolId).map { it.take(5) }
             } else {
                 flowOf(emptyList())
             }
@@ -143,7 +143,7 @@ class DashboardViewModel @Inject constructor(
     ) { args ->
         val user = args[0] as StaffAccountEntity?
         @Suppress("UNCHECKED_CAST")
-        val recentRecords = args[1] as List<CheckInRecordEntity>
+        val recentRecords = args[1] as List<AttendanceRecordEntity>
         @Suppress("UNCHECKED_CAST")
         val sessionStudents = args[2] as List<BiometricFaceEntity>
         @Suppress("UNCHECKED_CAST")
@@ -194,7 +194,7 @@ class DashboardViewModel @Inject constructor(
             if (schoolId != null) {
                 val faceSyncResult = faceRepository.syncFaces()
                 faceRepository.syncAssignments()
-                checkInRepository.syncRecords()
+                attendanceRepository.syncRecords()
 
                 if (faceSyncResult is Result.Failure) {
                     _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron data wajah: ${faceSyncResult.error.message}"))
@@ -221,7 +221,7 @@ class DashboardViewModel @Inject constructor(
 
     fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
         viewModelScope.launch {
-            checkInRepository.resolveConflict(conflict.conflictId, useCloud)
+            attendanceRepository.resolveConflict(conflict.conflictId, useCloud)
         }
     }
 

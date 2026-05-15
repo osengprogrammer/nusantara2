@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.ai
+package com.azuratech.azuratime.features.ai.ui
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content

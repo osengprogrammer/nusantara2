@@ -26,14 +26,14 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 // 🔥 DB & ViewModels
-import com.azuratech.azuratime.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.features.staff.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.domain.model.SyncStatus
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 
 // 🔥 Azura Design System
-import com.azuratech.azuratime.ui.core.designsystem.AzuraScreen
-import com.azuratech.azuratime.ui.theme.AzuraShapes
-import com.azuratech.azuratime.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
 fun FindSchoolScreen(
