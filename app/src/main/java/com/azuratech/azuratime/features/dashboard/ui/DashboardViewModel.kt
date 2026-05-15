@@ -190,13 +190,24 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val userId = sessionManager.getCurrentUserId() ?: return@launch
             
-            // 1. Restoring profile & memberships
-            userRepository.syncUser(userId)
+            println("🔄 Dashboard: Comprehensive sync starting for user $userId...")
+            
+            // 1. Restoring profile & memberships (Classes are now synced inside syncUser)
+            val userResult = userRepository.syncUser(userId)
+            val userEntity = if (userResult is Result.Success) userResult.data else userRepository.getUserDao().getUserById(userId)
             
             // 2. Restoring faces & assignments (tenant-scoped)
-            val schoolId = sessionManager.getActiveSchoolId()
+            // Recover schoolId from User entity if session is empty (happens after fresh login)
+            val schoolId = userEntity?.activeSchoolId ?: sessionManager.getActiveSchoolId()
+            
             if (schoolId != null) {
-                schoolRepository.syncClasses(userId, schoolId)
+                println("🏫 Dashboard: Syncing data for school context: $schoolId")
+                
+                // Ensure session manager is updated if we recovered from cloud profile
+                if (sessionManager.getActiveSchoolId().isNullOrBlank()) {
+                    sessionManager.saveActiveSchoolId(schoolId)
+                }
+
                 val faceSyncResult = faceRepository.syncFaces()
                 faceRepository.syncAssignments()
                 attendanceRepository.syncRecords()
@@ -204,11 +215,13 @@ class DashboardViewModel @Inject constructor(
                 if (faceSyncResult is Result.Failure) {
                     _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron data wajah: ${faceSyncResult.error.message}"))
                 }
+            } else {
+                println("⚠️ Dashboard: No active school context found for sync.")
             }
             
             sessionManager.saveLastSyncTime(System.currentTimeMillis())
             _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
-            println("✅ DashboardViewModel: Comprehensive sync completed for user $userId")
+            println("✅ Dashboard: Comprehensive sync completed.")
         }
     }
 
