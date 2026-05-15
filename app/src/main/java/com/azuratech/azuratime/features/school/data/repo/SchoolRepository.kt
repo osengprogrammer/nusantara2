@@ -349,7 +349,7 @@ class SchoolRepository @Inject constructor(
 
             val schoolData = mutableMapOf(
                 "schoolId" to school.id,
-                "ownerId" to school.accountId,
+                "accountId" to school.accountId,
                 "schoolName" to school.name,
                 "timezone" to school.timezone,
                 "status" to school.status,
