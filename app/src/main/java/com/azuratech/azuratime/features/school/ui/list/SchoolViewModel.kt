@@ -10,6 +10,7 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.features.staff.data.repo.WorkspaceRepository
+import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import androidx.compose.ui.graphics.Color
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +25,8 @@ class SchoolViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val sessionManager: SessionManager,
     private val schoolRepository: SchoolRepository,
-    private val workspaceRepository: WorkspaceRepository
+    private val workspaceRepository: WorkspaceRepository,
+    private val userRepository: StaffAccountRepository
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -101,6 +103,15 @@ class SchoolViewModel @Inject constructor(
         
         println("💾 DEBUG: Creating school: $name with ${selectedClassIds.size} classes")
         viewModelScope.launch {
+            val user = userRepository.getUserById(currentId)
+            val role = user?.role ?: "USER"
+            
+            // 🔥 Business Rule: One account one school unless SUPER_ADMIN
+            if (role != "SUPER_ADMIN" && schools.value.isNotEmpty()) {
+                _uiEvent.emit(UiEvent.ShowSnackbar("❌ Gagal: Hanya Super Admin yang dapat membuat lebih dari satu sekolah."))
+                return@launch
+            }
+
             val result = schoolRepository.createSchool(currentId, name, timezone)
             if (result is Result.Success) {
                 val newSchoolId = result.data

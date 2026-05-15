@@ -281,6 +281,7 @@ fun DashboardContent(
                             viewModel = schoolViewModel,
                             accountId = user.userId,
                             isApproved = data.isApproved,
+                            globalRole = data.currentRole,
                             onSchoolClick = {
                                 if (user.userId.isNullOrEmpty()) {
                                     println("🚫 DEBUG: userId is null/empty")

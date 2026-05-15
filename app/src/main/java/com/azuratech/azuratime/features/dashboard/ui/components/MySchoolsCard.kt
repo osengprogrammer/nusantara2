@@ -28,6 +28,7 @@ fun MySchoolsCard(
     viewModel: SchoolViewModel,
     accountId: String,
     isApproved: Boolean,
+    globalRole: String,
     onSchoolClick: (String) -> Unit,
     onAddSchoolClick: () -> Unit
 ) {
@@ -77,15 +78,17 @@ fun MySchoolsCard(
                     }
                 }
                 
-                Button(
-                    onClick = onAddSchoolClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = AzuraShapes.medium
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(Modifier.width(AzuraSpacing.sm))
-                    Text("Tambah Sekolah")
-                }
+                    if (globalRole == "SUPER_ADMIN") {
+                        Button(
+                            onClick = onAddSchoolClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = AzuraShapes.medium
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(Modifier.width(AzuraSpacing.sm))
+                            Text("Tambah Sekolah")
+                        }
+                    }
             }
         }
     }
