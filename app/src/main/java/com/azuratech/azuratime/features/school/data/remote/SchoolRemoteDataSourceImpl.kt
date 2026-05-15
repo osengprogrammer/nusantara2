@@ -118,7 +118,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             if (schoolIds.isEmpty()) return Result.Success(emptyList())
             
             val snapshot = getGlobalSchoolsRef()
-                .whereIn("id", schoolIds)
+                .whereIn("schoolId", schoolIds)
                 .get().await()
                 
             val schools = snapshot.documents.mapNotNull { doc ->
