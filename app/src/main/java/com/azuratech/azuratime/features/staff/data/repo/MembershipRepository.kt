@@ -76,7 +76,7 @@ class MembershipRepository @Inject constructor(
     // =====================================================
 
     suspend fun createPendingUser(uid: String, email: String, displayName: String?) = withContext(Dispatchers.IO) {
-        // SSOT Migration v7.1: Save to Room first, then sync
+        // SSOT Migration v7.1: Save to Room first
         val user = com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity(
             userId = uid,
             email = email,
@@ -85,7 +85,23 @@ class MembershipRepository @Inject constructor(
             syncStatus = SyncStatus.PENDING_UPDATE.name
         )
         userDao.insertUser(user)
-        syncManager.enqueueProfileSync(uid)
+
+        // 🔥 Push to 'memberships' collection for Firebase Cloud Function
+        try {
+            val hardwareId = sessionManager.getHardwareId()
+            val pendingData = mapOf(
+                "userId" to uid,
+                "email" to email,
+                "name" to (displayName ?: "User"),
+                "hardwareId" to hardwareId,
+                "status" to "PENDING",
+                "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+            )
+            firestore.collection("memberships").document(uid).set(pendingData, com.google.firebase.firestore.SetOptions.merge()).await()
+        } catch (e: Exception) {
+            android.util.Log.e("MembershipRepo", "Failed to push to memberships collection: ${e.message}")
+        }
+        
         sessionManager.saveUserStatus(SessionManager.STATUS_PENDING)
     }
 
