@@ -173,7 +173,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 try {
                     ClassModel(
                         id = doc.id,
-                        schoolId = doc.getString("schoolId") ?: "",
+                        schoolId = doc.getString("schoolId") ?: schoolId, // 🔥 Gunakan context schoolId jika field di doc kosong
                         name = doc.getString("name") ?: "",
                         grade = doc.getString("grade") ?: "",
                         teacherId = doc.getString("teacherId"),
