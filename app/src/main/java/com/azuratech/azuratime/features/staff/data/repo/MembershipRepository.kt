@@ -111,7 +111,7 @@ class MembershipRepository @Inject constructor(
 
     fun activateSession(data: Map<String, Any>?): Boolean {
         val isoKey = data?.get("secureIsoKey")?.toString() ?: ""
-        val schoolId = data?.get("schoolId")?.toString() ?: ""
+        val schoolId = data?.get("activeSchoolId")?.toString() ?: data?.get("schoolId")?.toString() ?: ""
         
         val expireDate = (data?.get("expireDate") as? Number)?.toLong() 
             ?: (System.currentTimeMillis() + 31536000000L) // +1 Year fallback

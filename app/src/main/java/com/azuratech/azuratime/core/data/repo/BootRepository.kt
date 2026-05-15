@@ -20,9 +20,7 @@ class BootRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
 
     // 🔥 Pengecekan sesi sekarang berjalan di jalur IO
     suspend fun isSessionActive(): Boolean = withContext(Dispatchers.IO) {
-        val isActiveStatus = sessionManager.getUserStatus() == SessionManager.STATUS_ACTIVE
-        val hasActiveSchool = !sessionManager.getActiveSchoolId().isNullOrBlank()
-        isActiveStatus && hasActiveSchool
+        sessionManager.getUserStatus() == SessionManager.STATUS_ACTIVE
     }
 
     fun getActiveSchoolId(): String? = sessionManager.getActiveSchoolId()
