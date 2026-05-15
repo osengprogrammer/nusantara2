@@ -50,7 +50,7 @@ export const onregistrationapproved = onDocumentUpdated(
 
         const orgRef = db.collection("schools").doc(schoolId);
         batch.set(orgRef, {
-            schoolId: schoolId, schoolName: schoolName, ownerId: uid,           
+            schoolId: schoolId, schoolName: schoolName, accountId: uid,           
             ownerEmail: email, db_seed: dbSeed,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
