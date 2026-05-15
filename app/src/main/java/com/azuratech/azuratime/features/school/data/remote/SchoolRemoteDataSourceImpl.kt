@@ -168,7 +168,11 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getClasses(_accountId: String, schoolId: String): Result<List<ClassModel>> {
         return try {
-            val snapshot = getClassesRef(_accountId, schoolId).get().await()
+            val ref = getClassesRef(_accountId, schoolId)
+            println("🔍 SYNC: Fetching classes from: ${ref.path}")
+            val snapshot = ref.get().await()
+            println("🔍 SYNC: Found ${snapshot.size()} documents in Firestore classes.")
+            
             val classes = snapshot.documents.mapNotNull { doc ->
                 try {
                     ClassModel(
