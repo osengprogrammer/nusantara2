@@ -235,6 +235,12 @@ class StaffAccountRepository @Inject constructor(
                 return@withContext Result.Success(Unit)
             }
 
+            // 🔥 Prevent pushing PENDING users to whitelisted_users. 
+            // They belong in the 'memberships' collection until approved by Admin.
+            if (user.status == "PENDING") {
+                return@withContext Result.Success(Unit)
+            }
+
             // Map memberships to Firestore format
             val membershipsData = user.memberships.mapValues { (_, membership) ->
                 mapOf(
