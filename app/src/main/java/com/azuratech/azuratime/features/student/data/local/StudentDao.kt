@@ -30,7 +30,7 @@ interface StudentDao {
     @Transaction
     @Query("""
         SELECT students.*, 
-               faces.faceId as faceId,
+               faces.studentId as faceId,
                faces.embedding as embedding,
                faces.photoUrl as photoUrl,
                faces.lastUpdated as faceLastUpdated,

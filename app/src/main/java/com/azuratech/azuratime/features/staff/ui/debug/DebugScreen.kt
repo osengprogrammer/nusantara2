@@ -47,7 +47,7 @@ fun DebugScreen(
             try {
                 // 1. Load from database (Filtered by active school)
                 val dbFaces = withContext(Dispatchers.IO) {
-                    AppDatabase.getInstance(context).faceDao().getAllFacesForScanningList(schoolId)
+                    AppDatabase.getInstance(context).faceDao().getAllStudentsForScanningList(schoolId)
                 }
                 faces = dbFaces
 
@@ -59,14 +59,14 @@ fun DebugScreen(
                 val info = buildString {
                     appendLine("=== SYSTEM STATUS ===")
                     appendLine("Active School ID: $schoolId")
-                    appendLine("Total faces in DB (this school): ${dbFaces.size}")
+                    appendLine("Total students in DB (this school): ${dbFaces.size}")
                     appendLine("Total faces in Cache: ${cacheList.size}")
                     appendLine()
 
                     appendLine("=== BIOMETRIC SAMPLES ===")
                     dbFaces.take(5).forEachIndexed { index, face ->
                         appendLine("${index + 1}. ${face.name}")
-                        appendLine("   ID: ${face.faceId}")
+                        appendLine("   ID: ${face.studentId}")
                         appendLine("   Embedding: ${face.embedding?.size ?: "MISSING"}")
                         appendLine("   Synced: ${face.isSynced}")
                         appendLine()

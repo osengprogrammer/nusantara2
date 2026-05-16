@@ -65,7 +65,8 @@ data class AttendanceRecordEntity(
         return mapOf(
             "id" to id,
             "schoolId" to schoolId,
-            "faceId" to studentId,
+            "studentId" to studentId, // 🔥 Unified Identity
+            "faceId" to studentId,    // 🗝️ Legacy compatibility
             "name" to name,
             "teacherEmail" to userId,
             "status" to status,

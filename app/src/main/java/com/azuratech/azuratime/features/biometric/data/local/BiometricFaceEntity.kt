@@ -1,5 +1,6 @@
 package com.azuratech.azuratime.features.biometric.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -13,8 +14,7 @@ import java.util.UUID
     ]
 )
 data class BiometricFaceEntity(
-    @PrimaryKey val faceId: String = UUID.randomUUID().toString(),
-    val studentId: String? = null,
+    @PrimaryKey val studentId: String = UUID.randomUUID().toString(),
     val schoolId: String = "",
     val name: String,
     val photoUrl: String? = null,

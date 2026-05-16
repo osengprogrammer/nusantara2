@@ -29,9 +29,9 @@ class RegistrationRepository @Inject constructor(
     private val classDao = database.classDao()
 
     // Delegation methods
-    suspend fun getAllFaces(schoolId: String) = faceDao.getAllFacesForScanningList(schoolId)
-    suspend fun upsertFace(face: BiometricFaceEntity) = faceDao.upsertFace(face)
-    suspend fun upsertAllFaces(faces: List<BiometricFaceEntity>) = faceDao.upsertAll(faces)
+    suspend fun getAllFaces(schoolId: String) = faceDao.getAllStudentsForScanningList(schoolId)
+    suspend fun upsertFace(face: BiometricFaceEntity) = faceDao.upsertStudentFace(face)
+    suspend fun upsertAllFaces(faces: List<BiometricFaceEntity>) = faceDao.upsertAllStudentFaces(faces)
     
     suspend fun getClassByName(name: String) = classDao.getClassByName(name)
     suspend fun insertClass(classEntity: ClassEntity) = classDao.insert(classEntity)

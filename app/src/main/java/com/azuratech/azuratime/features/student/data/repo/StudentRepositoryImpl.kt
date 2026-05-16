@@ -54,12 +54,12 @@ class StudentRepositoryImpl @Inject constructor(
                 studentDao.upsert(student)
                 
                 // 🔥 AI Friendly: Clear legacy faces with different faceId but same studentId
-                faceDao.deleteOtherFacesForStudent(student.studentId, face.faceId, student.schoolId)
-                faceDao.upsertFace(face)
+                faceDao.deleteOtherFacesForStudent(student.studentId, face.studentId, student.schoolId)
+                faceDao.upsertStudentFace(face)
                 
                 // 2. Clear existing assignments for this face (prevent orphans)
-                // We use the faceId from the generated entity for consistency
-                faceAssignmentDao.deleteAllByFaceId(face.faceId)
+                // We use the studentId from the generated entity for consistency
+                faceAssignmentDao.deleteAllByStudentId(face.studentId)
                 
                 // 3. Insert new assignments
                 for (assignment in assignments) {
@@ -84,16 +84,16 @@ class StudentRepositoryImpl @Inject constructor(
                 if (student?.isSynced == true) {
                      // Soft-delete if already synced to cloud
                      studentDao.markPendingDeletion(studentId, schoolId)
-                     val face = faceDao.getFaceByStudentId(studentId, schoolId)
+                     val face = faceDao.getStudentFaceByIdentity(studentId, schoolId)
                      if (face != null) {
-                         faceDao.markPendingDeletion(face.faceId, schoolId)
+                         faceDao.markPendingDeletion(face.studentId, schoolId)
                      }
                 } else {
                      // Hard-delete if only local (like an accidental duplicate)
-                     val face = faceDao.getFaceByStudentId(studentId, schoolId)
+                     val face = faceDao.getStudentFaceByIdentity(studentId, schoolId)
                      if (face != null) {
-                         faceAssignmentDao.deleteAllByFaceId(face.faceId)
-                         faceDao.deleteFaceById(face.faceId, schoolId)
+                         faceAssignmentDao.deleteAllByStudentId(face.studentId)
+                         faceDao.deleteStudentFaceById(face.studentId, schoolId)
                      }
                      studentDao.deleteById(studentId, schoolId)
                 }
@@ -122,14 +122,14 @@ class StudentRepositoryImpl @Inject constructor(
                     studentDao.upsert(updatedStudent)
                 }
                 
-                val face = faceDao.getFaceByStudentId(studentId, schoolId)
+                val face = faceDao.getStudentFaceByIdentity(studentId, schoolId)
                 if (face != null) {
                     val updatedFace = when(status) {
                         SyncStatus.SYNCED -> face.copy(isSynced = true, isDeleted = false)
                         SyncStatus.PENDING_DELETE -> face.copy(isSynced = false, isDeleted = true)
                         else -> face.copy(isSynced = false)
                     }
-                    faceDao.upsertFace(updatedFace)
+                    faceDao.upsertStudentFace(updatedFace)
                 }
             }
             Result.Success(Unit)
@@ -164,12 +164,12 @@ class StudentRepositoryImpl @Inject constructor(
                 studentDao.upsert(student.copy(isSynced = true))
             }
 
-            val unsyncedFaces = faceDao.getUnsyncedFaces(schoolId)
+            val unsyncedFaces: List<BiometricFaceEntity> = faceDao.getUnsyncedStudents(schoolId)
             if (unsyncedFaces.isNotEmpty()) {
                 val syncResult = remoteDataSource.bulkSyncFaces(schoolId, unsyncedFaces)
                 if (syncResult is Result.Success) {
                     unsyncedFaces.forEach { face ->
-                        faceDao.upsertFace(face.copy(isSynced = true))
+                        faceDao.upsertStudentFace(face.copy(isSynced = true))
                     }
                 }
             }
@@ -178,7 +178,7 @@ class StudentRepositoryImpl @Inject constructor(
             for (assignment in unsyncedAssignments) {
                 val syncResult = remoteDataSource.syncFaceAssignment(assignment)
                 if (syncResult is Result.Success) {
-                    faceAssignmentDao.updateSyncStatus(assignment.faceId, assignment.classId, schoolId, true)
+                    faceAssignmentDao.updateSyncStatus(assignment.studentId, assignment.classId, schoolId, true)
                 }
             }
             Result.Success(Unit)
@@ -189,11 +189,11 @@ class StudentRepositoryImpl @Inject constructor(
 
     override suspend fun autoHealStudentIdentities(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         try {
-            val faces = faceDao.getAllFacesForScanningList(schoolId)
+            val faces = faceDao.getAllStudentsForScanningList(schoolId)
             val studentsToCreate = mutableListOf<StudentEntity>()
             
             for (face in faces) {
-                val targetStudentId = face.studentId ?: face.faceId
+                val targetStudentId = face.studentId
                 val existing = studentDao.getById(targetStudentId, schoolId)
                 
                 if (existing == null) {

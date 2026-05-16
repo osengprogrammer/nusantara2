@@ -33,7 +33,7 @@ class FaceAssignmentViewModel @Inject constructor(
     val allAssignedClassesMap: StateFlow<Map<String, List<ClassModel>>> =
         sessionManager.activeSchoolIdFlow
             .flatMapLatest { schoolId: String? ->
-                faceDao.getAllFacesFlow(schoolId ?: "")
+                faceDao.getAllStudentsFlow(schoolId ?: "")
             }
             .flatMapLatest { faces: List<com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity> ->
                 if (faces.isEmpty()) return@flatMapLatest flowOf(emptyMap<String, List<ClassModel>>())
@@ -68,7 +68,7 @@ class FaceAssignmentViewModel @Inject constructor(
 
     fun removeAllAssignmentsForFace(faceId: String) {
         viewModelScope.launch {
-            faceRepository.removeAllAssignmentsForFace(faceId)
+            faceRepository.removeAllAssignmentsForStudent(faceId)
         }
     }
 }

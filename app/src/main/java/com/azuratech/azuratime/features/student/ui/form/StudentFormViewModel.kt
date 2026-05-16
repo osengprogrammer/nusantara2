@@ -60,14 +60,14 @@ class StudentFormViewModel @Inject constructor(
     fun loadStudentForEdit(faceId: String) {
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            val faceWithDetails = faceRepository.getFaceWithDetails(faceId, schoolId)
+            val faceWithDetails = faceRepository.getStudentWithDetails(faceId, schoolId)
             
             if (faceWithDetails != null) {
                 selectedClassId = faceWithDetails.classId
                 updateState {
                     it.copy(
                         name = faceWithDetails.face.name,
-                        studentId = faceWithDetails.face.faceId,
+                        studentId = faceWithDetails.face.studentId,
                         selectedClassId = faceWithDetails.classId,
                         embedding = faceWithDetails.face.embedding,
                         photoUrl = faceWithDetails.face.photoUrl,

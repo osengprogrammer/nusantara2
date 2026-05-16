@@ -100,7 +100,7 @@ class DashboardViewModel @Inject constructor(
             val activeClassId = user?.activeClassId
             val schoolId = user?.activeSchoolId
             if (activeClassId != null && schoolId != null) {
-                faceRepository.getFacesInClassFlow(activeClassId, schoolId)
+                faceRepository.getStudentsInClassFlow(activeClassId, schoolId)
             } else {
                 flowOf(emptyList())
             }

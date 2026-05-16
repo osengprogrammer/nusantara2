@@ -6,8 +6,8 @@ import com.azuratech.azuraengine.result.Result
 
 interface FaceRemoteDataSource {
     suspend fun getFaceUpdates(schoolId: String, lastSync: Long): Result<List<Pair<BiometricFaceEntity, Boolean>>>
-    suspend fun uploadFacePhoto(schoolId: String, faceId: String, imageBytes: ByteArray): Result<String?>
-    suspend fun bulkSyncFaces(schoolId: String, faces: List<BiometricFaceEntity>): Result<Unit>
+    suspend fun uploadFacePhoto(schoolId: String, studentId: String, imageBytes: ByteArray): Result<String?>
+    suspend fun bulkSyncFaces(schoolId: String, students: List<BiometricFaceEntity>): Result<Unit>
     suspend fun syncFaceAssignment(assignment: FaceAssignmentEntity): Result<Unit>
-    suspend fun deleteFace(faceId: String, schoolId: String, classIds: List<String>): Result<Unit>
+    suspend fun deleteStudent(studentId: String, schoolId: String, classIds: List<String>): Result<Unit>
 }
