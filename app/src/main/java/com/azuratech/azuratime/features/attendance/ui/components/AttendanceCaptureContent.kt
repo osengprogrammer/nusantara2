@@ -3,8 +3,6 @@ package com.azuratech.azuratime.features.attendance.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,12 +14,9 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
-import com.azuratech.azuratime.features.attendance.ui.components.MatchResultLabel
-import com.azuratech.azuratime.features.attendance.ui.components.StatusLabel
-
 
 @Composable
-fun CheckInContent(
+fun AttendanceCaptureContent(
     uiState: AttendanceUiState,
     activeClassName: String,
     useBackCamera: Boolean,
@@ -31,14 +26,14 @@ fun CheckInContent(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
-        // Layer 1: Hardware View (Passed as a component we maintain here or provided by Screen)
+        // Layer 1: Hardware View
         AttendanceScannerView(
             useBackCamera = useBackCamera,
             onFaceEmbeddingReady = onFaceEmbeddingReady,
             showLivenessLabel = uiState is AttendanceUiState.Idle
         )
 
-        // Layer 2: Design System Overlays
+        // Layer 2: Overlays
         Box(modifier = Modifier.fillMaxSize()) {
             // Top Controls
             Row(
@@ -51,24 +46,16 @@ fun CheckInContent(
                 Text(
                     text = if (activeClassName.isEmpty()) "Scan Bebas" else "Kelas: $activeClassName",
                     color = Color.White,
-                    style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
-                    AzuraButton(
-                        text = "Flip",
-                        onClick = onFlipCameraClick,
-                        modifier = Modifier.height(40.dp)
-                    )
-                    AzuraButton(
-                        text = "Barcode",
-                        onClick = onSwitchToBarcodeClick,
-                        modifier = Modifier.height(40.dp)
-                    )
+                    AzuraButton(text = "Flip", onClick = onFlipCameraClick, modifier = Modifier.height(40.dp))
+                    AzuraButton(text = "Barcode", onClick = onSwitchToBarcodeClick, modifier = Modifier.height(40.dp))
                 }
             }
 
-            // Bottom Status Messaging
+            // Bottom Messaging
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -80,17 +67,11 @@ fun CheckInContent(
                     is AttendanceUiState.Success -> {
                         AzuraCard(
                             modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
-                            title = "Check-In Berhasil",
+                            title = "Presensi Berhasil",
                             content = {
-                                Text(
-                                    text = "Halo, ${uiState.name}!",
-                                    style = androidx.compose.material3.MaterialTheme.typography.bodyLarge
-                                )
+                                Text(text = "Halo, ${uiState.name}!", style = MaterialTheme.typography.bodyLarge)
                                 if (uiState.alreadyCheckedIn) {
-                                    Text(
-                                        text = "Anda sudah melakukan presensi sebelumnya.",
-                                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall
-                                    )
+                                    Text(text = "Anda sudah melakukan presensi sebelumnya.", style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         )
@@ -98,15 +79,10 @@ fun CheckInContent(
                     is AttendanceUiState.Error -> {
                         AzuraCard(
                             modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
-                            title = "Gagal Check-In",
-                            colors = androidx.compose.material3.CardDefaults.cardColors(
-                                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.errorContainer
-                            ),
+                            title = "Presensi Gagal",
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                             content = {
-                                Text(
-                                    text = uiState.message,
-                                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                                )
+                                Text(text = uiState.message, style = MaterialTheme.typography.bodyMedium)
                             }
                         )
                     }
@@ -116,43 +92,23 @@ fun CheckInContent(
 
             if (uiState is AttendanceUiState.Processing) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = androidx.compose.material3.MaterialTheme.colorScheme.primary)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
     }
 }
 
-
 @AzuraPreviews
 @Composable
-fun CheckInContentSuccessPreview() {
+fun AttendanceCaptureContentSuccessPreview() {
     AzuraTheme {
         Surface {
-            CheckInContent(
+            AttendanceCaptureContent(
                 uiState = AttendanceUiState.Success(name = "Budi Santoso", alreadyCheckedIn = false),
-                activeClassName = "Kelas 10A",
-                useBackCamera = false,
-                onFlipCameraClick = {},
-                onSwitchToBarcodeClick = {},
-                onFaceEmbeddingReady = {}
-            )
-        }
-    }
-}
-
-@AzuraPreviews
-@Composable
-fun CheckInContentProcessingPreview() {
-    AzuraTheme {
-        Surface {
-            CheckInContent(
-                uiState = AttendanceUiState.Processing,
                 activeClassName = "Kelas 10A",
                 useBackCamera = false,
                 onFlipCameraClick = {},

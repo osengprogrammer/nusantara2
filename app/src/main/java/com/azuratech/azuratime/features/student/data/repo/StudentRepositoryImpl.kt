@@ -52,6 +52,9 @@ class StudentRepositoryImpl @Inject constructor(
             database.withTransaction {
                 // 1. Save Core Entities
                 studentDao.upsert(student)
+                
+                // 🔥 AI Friendly: Clear legacy faces with different faceId but same studentId
+                faceDao.deleteOtherFacesForStudent(student.studentId, face.faceId, student.schoolId)
                 faceDao.upsertFace(face)
                 
                 // 2. Clear existing assignments for this face (prevent orphans)
@@ -187,21 +190,58 @@ class StudentRepositoryImpl @Inject constructor(
     override suspend fun autoHealStudentIdentities(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         try {
             val faces = faceDao.getAllFacesForScanningList(schoolId)
-            val studentsToCreate = faces.map { face ->
-                StudentEntity(
-                    studentId = face.studentId ?: face.faceId,
-                    schoolId = schoolId,
-                    name = face.name,
-                    createdAt = face.createdAt,
-                    isSynced = true
-                )
+            val studentsToCreate = mutableListOf<StudentEntity>()
+            
+            for (face in faces) {
+                val targetStudentId = face.studentId ?: face.faceId
+                val existing = studentDao.getById(targetStudentId, schoolId)
+                
+                if (existing == null) {
+                    studentsToCreate.add(
+                        StudentEntity(
+                            studentId = targetStudentId,
+                            schoolId = schoolId,
+                            name = face.name,
+                            createdAt = face.createdAt,
+                            isSynced = true
+                        )
+                    )
+                }
             }
+            
             if (studentsToCreate.isNotEmpty()) {
                 studentDao.upsertAll(studentsToCreate)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun pullStudents(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            val snapshot = firestore.collection("schools").document(schoolId)
+                .collection("students").get().let { com.google.android.gms.tasks.Tasks.await(it) }
+            
+            val students = snapshot.documents.mapNotNull { doc ->
+                val id = doc.getString("studentId") ?: return@mapNotNull null
+                StudentEntity(
+                    studentId = id,
+                    schoolId = schoolId,
+                    name = doc.getString("name") ?: "",
+                    studentCode = doc.getString("studentCode"),
+                    classId = doc.getString("classId"),
+                    createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
+                    isSynced = true
+                )
+            }
+            
+            if (students.isNotEmpty()) {
+                studentDao.upsertAll(students)
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
         }
     }
 }

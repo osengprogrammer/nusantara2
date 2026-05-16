@@ -46,7 +46,7 @@ object PhotoProcessingUtils {
             }
 
             // Detect faces in the bitmap using ML Kit
-            val faces = detectFacesInBitmap(processedBitmap!!)
+            val faces = detectFacesInBitmap(processedBitmap)
 
             if (faces.isEmpty()) {
                 Log.w(TAG, "No faces detected in the image")

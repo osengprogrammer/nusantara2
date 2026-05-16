@@ -125,7 +125,7 @@ class WorkspaceViewModel @Inject constructor(
     // 🏗️ CREATION & SETUP
     // =====================================================
 
-    fun createNewSchool(userId: String, userEmail: String, schoolName: String) {
+    fun createNewSchool(userId: String, @Suppress("UNUSED_PARAMETER") userEmail: String, schoolName: String) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
             schoolRepository.createSchool(userId, schoolName, "Asia/Jakarta")
@@ -140,7 +140,7 @@ class WorkspaceViewModel @Inject constructor(
         }
     }
 
-    fun updateSchoolName(schoolId: String, userId: String, newName: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun updateSchoolName(schoolId: String, @Suppress("UNUSED_PARAMETER") userId: String, newName: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             _uiState.value = WorkspaceState.Switching
             schoolRepository.updateSchoolDetails(schoolId, name = newName.trim(), timezone = null)

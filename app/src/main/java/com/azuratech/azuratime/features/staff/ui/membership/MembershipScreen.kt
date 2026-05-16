@@ -42,7 +42,7 @@ fun MembershipScreen(
     val bootViewModel: BootViewModel = hiltViewModel()
 
     val state by membershipViewModel.state.collectAsStateWithLifecycle()
-    val memberships by membershipViewModel.memberships.collectAsStateWithLifecycle()
+    @Suppress("UNUSED_VARIABLE") val memberships by membershipViewModel.memberships.collectAsStateWithLifecycle()
     val accessRequests by membershipViewModel.accessRequests.collectAsStateWithLifecycle()
 
     LaunchedEffect(email) {

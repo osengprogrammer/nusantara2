@@ -111,7 +111,7 @@ class ClassViewModel @Inject constructor(
             val classModel = ClassModel(
                 id = "cls_${System.currentTimeMillis()}",
                 name = name,
-                schoolId = targetSchoolId ?: "",
+                schoolId = targetSchoolId,
                 grade = _grade,
                 teacherId = null,
                 studentCount = 0,

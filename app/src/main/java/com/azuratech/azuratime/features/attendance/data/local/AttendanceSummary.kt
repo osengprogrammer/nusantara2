@@ -20,7 +20,7 @@ data class AttendanceSummary(
     val name: String,
     val status: String,
     val attendanceDate: LocalDate,
-    val checkInTime: LocalDateTime? = null,
+    val attendanceTime: LocalDateTime? = null,
     val classId: String? = null,
     val className: String? = null,
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
@@ -34,7 +34,7 @@ fun AttendanceSummary.toProfile() = AttendanceProfile(
     classId = classId ?: "",
     className = className ?: "",
     date = attendanceDate,
-    checkInTime = checkInTime,
+    attendanceTime = attendanceTime,
     status = status,
     syncStatus = syncStatus,
     timestamp = timestamp

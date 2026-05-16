@@ -17,7 +17,7 @@ fun NavGraphBuilder.attendanceGraph(
             com.azuratech.azuratime.features.attendance.ui.components.AttendanceCaptureScreen(
                 useBackCamera = false,
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                teacherEmail = "", // This will be passed via ViewModel or provided externally
+                teacherEmail = "", 
                 onBarcodeScanClick = { navController.navigate(NavigationRoutes.BARCODE_SCAN) }
             )
         }
@@ -27,11 +27,11 @@ fun NavGraphBuilder.attendanceGraph(
                 teacherEmail = ""
             )
         }
-        composable(NavigationRoutes.CHECKIN_HISTORY) {
-            com.azuratech.azuratime.features.attendance.ui.history.AttendanceRecordScreen(
+        composable(NavigationRoutes.ATTENDANCE_HISTORY) {
+            com.azuratech.azuratime.features.attendance.ui.history.AttendanceHistoryScreen(
                 userEmail = "",
                 onNavigateBack = { navController.popBackStack() },
-                checkInViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                attendanceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel()
             )
@@ -39,7 +39,7 @@ fun NavGraphBuilder.attendanceGraph(
         composable(NavigationRoutes.MANUAL_ATTENDANCE) {
             com.azuratech.azuratime.features.attendance.ui.manual.ManualAttendanceScreen(
                 faceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                checkInViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                attendanceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() }

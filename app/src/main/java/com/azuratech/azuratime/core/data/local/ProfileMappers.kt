@@ -180,7 +180,7 @@ fun FaceAssignmentEntity.toDomain(
 fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List<FaceAssignmentEntity>> {
     val isSynced = syncStatus == SyncStatus.SYNCED
     val isDeleted = syncStatus == SyncStatus.PENDING_DELETE
-    
+
     val studentEntity = StudentEntity(
         studentId = studentId,
         schoolId = schoolId,
@@ -193,7 +193,7 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List
     )
 
     val faceEntity = BiometricFaceEntity(
-        faceId = faceId ?: "FACE-$studentId", // Stable deterministic ID fallback
+        faceId = faceId ?: studentId, // 🔥 AI Friendly: Default to studentId
         studentId = studentId,
         schoolId = schoolId,
         name = name,
@@ -204,7 +204,6 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List
         isSynced = isSynced,
         isDeleted = isDeleted
     )
-
     val assignments = classIds.map { classId ->
         FaceAssignmentEntity(
             faceId = faceEntity.faceId,

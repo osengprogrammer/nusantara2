@@ -21,14 +21,14 @@ fun RecentScansHeader(navController: NavController) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text("Recent Scans", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        TextButton(onClick = { navController.navigate(Screen.CheckInHistory.route) }) {
+        TextButton(onClick = { navController.navigate(Screen.AttendanceHistory.route) }) {
             Text("See All")
         }
     }
 }
 
 @Composable
-fun DashboardCheckInItem(record: AttendanceRecordEntity) {
+fun DashboardAttendanceItem(record: AttendanceRecordEntity) {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val dateTime = java.time.LocalDateTime.ofInstant(
         java.time.Instant.ofEpochMilli(record.timestamp),

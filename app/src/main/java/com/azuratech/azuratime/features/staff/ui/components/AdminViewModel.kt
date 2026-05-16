@@ -96,8 +96,6 @@ class AdminViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AdminUiState.Loading
             try {
-                val schoolId = currentAdmin.activeSchoolId ?: return@launch
-                val schoolName = currentAdmin.memberships[schoolId]?.schoolName ?: ""
                 userRepository.sendFriendRequest(currentAdmin.userId, currentAdmin.name, currentAdmin.email, teacherEmail)
                 _uiState.value = AdminUiState.Success("Undangan dikirim ke $teacherEmail")
             } catch (e: Exception) {

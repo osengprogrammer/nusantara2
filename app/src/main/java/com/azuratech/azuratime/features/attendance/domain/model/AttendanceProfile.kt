@@ -16,7 +16,7 @@ data class AttendanceProfile(
     val classId: String,
     val className: String,
     val date: LocalDate,
-    val checkInTime: LocalDateTime?,
+    val attendanceTime: LocalDateTime?,
     val status: String,
     val syncStatus: SyncStatus,
     val timestamp: Long

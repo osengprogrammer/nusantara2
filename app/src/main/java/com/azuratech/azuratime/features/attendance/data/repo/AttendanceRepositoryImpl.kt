@@ -5,9 +5,9 @@ import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEn
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSource
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.ProcessCheckInParams
+import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
 import kotlinx.coroutines.Dispatchers
@@ -65,10 +65,39 @@ class AttendanceRepositoryImpl @Inject constructor(
             val updated = record.copy(
                 classId = classId,
                 className = className,
+                isSynced = false,
+                timestamp = System.currentTimeMillis() // Update modification time
+            )
+            attendanceRecordDao.update(updated)
+            syncManager.enqueueSync() 
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    /**
+     * 🔥 AI Native: Update Status with Audit Logging
+     */
+    override suspend fun updateRecordStatus(recordId: String, status: AttendanceStatus, schoolId: String): Result<Unit> {
+        return try {
+            val record = attendanceRecordDao.getRecordById(recordId, schoolId)
+                ?: return Result.Failure(AppError.BusinessRule("Record not found"))
+
+            val updated = record.copy(
+                status = status.toCode(),
                 isSynced = false
             )
             attendanceRecordDao.update(updated)
-            syncManager.enqueueSync() // Background sync
+            
+            auditLogRepository.logAction(
+                schoolId = schoolId,
+                userId = sessionManager.getUserEmail(),
+                action = "UPDATE_ATTENDANCE",
+                details = "Changed status for ${record.name} to ${status.name}"
+            )
+            
+            syncManager.enqueueSync()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -206,11 +235,11 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun processCheckIn(params: ProcessCheckInParams): Result<com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult> = withContext(Dispatchers.IO) {
+    override suspend fun processAttendance(params: ProcessAttendanceParams): Result<com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult> = withContext(Dispatchers.IO) {
         try {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Failure(AppError.BusinessRule("School not selected"))
             
-            // 1. Check duplicate check-in today
+            // 1. Check duplicate attendance today
             val today = LocalDate.now()
             val existing = localDataSource.getRecordByFaceAndDate(params.faceId, today, schoolId)
             if (existing != null) {
@@ -231,7 +260,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                 classId = params.activeClassId ?: params.studentClassIds.firstOrNull() ?: "UNASSIGNED",
                 className = "Auto", 
                 timestamp = System.currentTimeMillis(),
-                status = CheckInStatus.PRESENT,
+                status = AttendanceStatus.PRESENT,
                 teacherEmail = params.teacherEmail
             )
             

@@ -5,11 +5,11 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 
 @Composable
 fun DailyDetailScreen(
-    faceId: String,
-    studentName: String,
-    dateString: String,
+    @Suppress("UNUSED_PARAMETER") faceId: String,
+    @Suppress("UNUSED_PARAMETER") studentName: String,
+    @Suppress("UNUSED_PARAMETER") dateString: String,
     onNavigateBack: () -> Unit,
-    onNavigateToManual: (String, String) -> Unit
+    @Suppress("UNUSED_PARAMETER") onNavigateToManual: (String, String) -> Unit
 ) {
     AzuraScreen(
         title = "Detail Harian",

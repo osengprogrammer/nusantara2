@@ -13,10 +13,10 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 @Composable
 fun SchoolListScreen(
     viewModel: SchoolViewModel = hiltViewModel(),
-    onSchoolClick: (String) -> Unit,
+    @Suppress("UNUSED_PARAMETER") onSchoolClick: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    val schools by viewModel.schools.collectAsStateWithLifecycle()
+    @Suppress("UNUSED_VARIABLE") val schools by viewModel.schools.collectAsStateWithLifecycle()
     val availableClasses by viewModel.availableClasses.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 

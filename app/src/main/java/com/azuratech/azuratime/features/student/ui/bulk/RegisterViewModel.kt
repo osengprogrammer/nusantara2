@@ -18,7 +18,7 @@ class RegisterViewModel @Inject constructor() : ViewModel() {
         _state.value = RegisterUiState()
     }
 
-    fun processCsvFile(uri: Uri, mode: String) {
+    fun processCsvFile(@Suppress("UNUSED_PARAMETER") uri: Uri, @Suppress("UNUSED_PARAMETER") mode: String) {
         // Placeholder
     }
 }

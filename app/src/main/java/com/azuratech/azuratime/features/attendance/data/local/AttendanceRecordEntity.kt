@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -27,7 +27,7 @@ data class AttendanceRecordEntity(
     val userId: String, 
     val status: String, 
     val attendanceDate: LocalDate,
-    val checkInTime: LocalDateTime? = null,
+    val attendanceTime: LocalDateTime? = null,
     val classId: String? = null,
     val className: String? = null,
     val isSynced: Boolean = false,
@@ -53,7 +53,7 @@ data class AttendanceRecordEntity(
             className = className ?: "",
             schoolId = schoolId,
             timestamp = timestamp,
-            status = CheckInStatus.fromCode(status),
+            status = AttendanceStatus.fromCode(status),
             isSynced = isSynced,
             teacherEmail = userId
         )
@@ -70,7 +70,7 @@ data class AttendanceRecordEntity(
             "teacherEmail" to userId,
             "status" to status,
             "attendanceDate" to attendanceDate.toString(),
-            "checkInTime" to checkInTime?.toString(),
+            "attendanceTime" to attendanceTime?.toString(),
             "classId" to classId,
             "className" to className,
             "timestamp" to FieldValue.serverTimestamp(), 
@@ -93,7 +93,7 @@ data class AttendanceRecordEntity(
                 userId = domain.teacherEmail,
                 status = domain.status.toCode(),
                 attendanceDate = dateTime.toLocalDate(),
-                checkInTime = dateTime,
+                attendanceTime = dateTime,
                 classId = domain.classId,
                 className = domain.className,
                 isSynced = domain.isSynced,
@@ -110,7 +110,7 @@ data class AttendanceRecordEntity(
 fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(schoolId: String): AttendanceRecordEntity? {
     return try {
         val dateStr = getString("attendanceDate") ?: java.time.LocalDate.now().toString()
-        val timeStr = getString("checkInTime")
+        val timeStr = getString("attendanceTime") ?: getString("checkInTime")
         
         AttendanceRecordEntity(
             id = id, 
@@ -120,7 +120,7 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
             userId = getString("teacherEmail") ?: "",
             status = getString("status") ?: "Hadir",
             attendanceDate = java.time.LocalDate.parse(dateStr),
-            checkInTime = timeStr?.let { java.time.LocalDateTime.parse(it) },
+            attendanceTime = timeStr?.let { java.time.LocalDateTime.parse(it) },
             classId = getString("classId"),
             className = getString("className"),
             isSynced = true,

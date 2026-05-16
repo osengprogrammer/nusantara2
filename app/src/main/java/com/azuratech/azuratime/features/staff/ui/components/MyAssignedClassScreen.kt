@@ -72,7 +72,8 @@ fun MyAssignedClassScreen(
             userViewModel.selectActiveClass(classId, targetUserId) 
         },
         onAssignClass = { classId -> userViewModel.assignClassToUser(classId, targetUserId) },
-        user = user
+        user = user,
+        onBack = onNavigateBack
     )
 }
 
@@ -86,10 +87,12 @@ fun MyAssignedClassContent(
     onRemoveClass: (String) -> Unit,
     onSelectActiveClass: (String) -> Unit,
     onAssignClass: (String) -> Unit,
-    user: StaffAccountEntity?
+    user: StaffAccountEntity?,
+    onBack: () -> Unit
 ) {
     AzuraScreen(
         title = title,
+        onBack = onBack,
         content = {
             Column(modifier = Modifier.fillMaxSize().padding(top = AzuraSpacing.md)) {
                 AzuraTextField(

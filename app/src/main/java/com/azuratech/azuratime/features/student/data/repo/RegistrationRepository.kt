@@ -38,7 +38,7 @@ class RegistrationRepository @Inject constructor(
     
     suspend fun insertAssignment(assignment: FaceAssignmentEntity) = faceAssignmentDao.insertAssignment(assignment)
 
-    fun processCsv(uri: String, dataType: String): Flow<com.azuratech.azuraengine.model.ProcessResult> = flow {
+    fun processCsv(@Suppress("UNUSED_PARAMETER") uri: String, dataType: String): Flow<com.azuratech.azuraengine.model.ProcessResult> = flow {
         // Mock implementation to fix compilation
         emit(com.azuratech.azuraengine.model.ProcessResult("CSV", "Import", "Started", dataType, "Importing..."))
         emit(com.azuratech.azuraengine.model.ProcessResult("CSV", "Import", "Success", dataType, "Import complete"))
