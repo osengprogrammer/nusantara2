@@ -61,7 +61,7 @@ class StudentRosterViewModel @Inject constructor(
                 StudentDisplayItem(
                     profile = profile,
                     assignedClassNames = assignedClassNames.ifEmpty { "Tanpa Kelas" },
-                    isBiometricReady = profile.faceExists
+                    isBiometricReady = profile.biometricExists
                 )
             }
 

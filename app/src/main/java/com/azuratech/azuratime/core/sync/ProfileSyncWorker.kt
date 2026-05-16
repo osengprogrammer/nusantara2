@@ -8,23 +8,23 @@ import androidx.work.WorkerParameters
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
-import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
 /**
  * 🔄 PROFILE SYNC WORKER
- * Synchronizes user profile and associated student data from local Room to Firestore.
+ * Synchronizes account profile and associated student data from local Room to Firestore.
  * Follows SSOT pattern by delegating to Repositories.
  */
 @HiltWorker
 class ProfileSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val userRepository: StaffAccountRepository,
-    private val faceRepository: BiometricFaceRepository,
+    private val accountRepository: AccountRepository,
+    private val biometricRepository: StudentBiometricRepository,
     private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
@@ -34,34 +34,32 @@ class ProfileSyncWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        val userId = inputData.getString("userId") ?: return Result.failure()
+        val accountId = inputData.getString("userId") ?: return Result.failure()
 
-        Log.d(TAG, "Starting sync for profile: $userId")
+        Log.d(TAG, "Starting sync for account: $accountId")
 
         return try {
-            // 1. Push User Profile updates
-            val userResult = userRepository.pushUser(userId)
-            if (userResult is DomainResult.Failure) {
-                Log.e(TAG, "User profile sync failed: ${userResult.error.message}")
-                return handleSyncError(userResult.error)
+            // 1. Push Account Profile updates
+            val accountResult = accountRepository.pushAccount(accountId)
+            if (accountResult is DomainResult.Failure) {
+                Log.e(TAG, "Account profile sync failed: ${accountResult.error.message}")
+                return handleSyncError(accountResult.error)
             }
 
-            // 2. Push Student Profiles (Faces + Assignments) for the active school
+            // 2. Push Student Profiles (Biometrics + Assignments) for the active school
             val studentResult = studentRepository.pushPendingProfiles()
             if (studentResult is DomainResult.Failure) {
                 Log.e(TAG, "Student profiles sync failed: ${studentResult.error.message}")
-                // We don't necessarily want to fail the whole worker if students fail, 
-                // but for consistency we'll retry if it's a network error.
                 return handleSyncError(studentResult.error)
             }
 
-            // 3. Sync Faces (Pull updates)
-            val faceResult = faceRepository.syncFaces()
-            if (faceResult is DomainResult.Failure) {
-                Log.w(TAG, "Face sync (pull) failed: ${faceResult.error.message}")
+            // 3. Sync Biometrics (Pull updates)
+            val biometricResult = biometricRepository.syncBiometrics()
+            if (biometricResult is DomainResult.Failure) {
+                Log.w(TAG, "Biometric sync (pull) failed: ${biometricResult.error.message}")
             }
 
-            Log.i(TAG, "Successfully synced profile and student data for user $userId")
+            Log.i(TAG, "Successfully synced profile and student data for account $accountId")
             Result.success()
 
         } catch (e: Exception) {

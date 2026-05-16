@@ -124,7 +124,7 @@ fun NavGraphBuilder.managementGraph(
                 classId = entry.arguments?.getString("classId") ?: "",
                 className = entry.arguments?.getString("className") ?: "",
                 classViewModel = hiltViewModel(),
-                faceViewModel = hiltViewModel(),
+                biometricViewModel = hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() },
                 onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) }
             )

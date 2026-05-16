@@ -6,7 +6,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.staff.data.local.*
+import com.azuratech.azuratime.features.account.data.local.*
 import com.azuratech.azuratime.features.attendance.data.local.*
 import com.azuratech.azuratime.features.biometric.data.local.*
 import com.azuratech.azuratime.features.student.data.local.StudentDao
@@ -21,6 +21,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 import com.azuratech.azuratime.core.sync.SyncManager
+import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDataSource
 
 /**
  * 🏛️ STUDENT REPOSITORY IMPLEMENTATION
@@ -33,12 +34,12 @@ class StudentRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
     private val firestore: com.google.firebase.firestore.FirebaseFirestore,
-    private val remoteDataSource: com.azuratech.azuratime.features.biometric.data.remote.FaceRemoteDataSource
+    private val remoteDataSource: BiometricRemoteDataSource
 ) : StudentRepository {
 
     private val studentDao = database.studentDao()
-    private val faceDao = database.faceDao()
-    private val faceAssignmentDao = database.faceAssignmentDao()
+    private val biometricDao = database.biometricDao()
+    private val assignmentDao = database.studentClassAssignmentDao()
 
     override fun getStudentProfiles(): Flow<List<StudentProfile>> {
         val schoolId = sessionManager.getActiveSchoolId() ?: ""
@@ -48,22 +49,21 @@ class StudentRepositoryImpl @Inject constructor(
 
     override suspend fun saveProfile(profile: StudentProfile): Result<Unit> {
         return try {
-            val (student, face, assignments) = profile.toEntities()
+            val (student, biometric, assignments) = profile.toEntities()
             database.withTransaction {
                 // 1. Save Core Entities
                 studentDao.upsert(student)
                 
-                // 🔥 AI Friendly: Clear legacy faces with different faceId but same studentId
-                faceDao.deleteOtherFacesForStudent(student.studentId, face.studentId, student.schoolId)
-                faceDao.upsertStudentFace(face)
+                // 🔥 AI Friendly: Clear legacy biometrics with different studentId but same studentId (unified)
+                biometricDao.deleteOtherBiometricsForStudent(student.studentId, biometric.studentId, student.schoolId)
+                biometricDao.upsertStudentBiometric(biometric)
                 
-                // 2. Clear existing assignments for this face (prevent orphans)
-                // We use the studentId from the generated entity for consistency
-                faceAssignmentDao.deleteAllByStudentId(face.studentId)
+                // 2. Clear existing assignments for this student (prevent orphans)
+                assignmentDao.deleteAllByStudentId(biometric.studentId)
                 
                 // 3. Insert new assignments
                 for (assignment in assignments) {
-                    faceAssignmentDao.insertAssignment(assignment)
+                    assignmentDao.insertAssignment(assignment)
                 }
             }
             
@@ -84,16 +84,16 @@ class StudentRepositoryImpl @Inject constructor(
                 if (student?.isSynced == true) {
                      // Soft-delete if already synced to cloud
                      studentDao.markPendingDeletion(studentId, schoolId)
-                     val face = faceDao.getStudentFaceByIdentity(studentId, schoolId)
-                     if (face != null) {
-                         faceDao.markPendingDeletion(face.studentId, schoolId)
+                     val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
+                     if (biometric != null) {
+                         biometricDao.markPendingDeletion(biometric.studentId, schoolId)
                      }
                 } else {
-                     // Hard-delete if only local (like an accidental duplicate)
-                     val face = faceDao.getStudentFaceByIdentity(studentId, schoolId)
-                     if (face != null) {
-                         faceAssignmentDao.deleteAllByStudentId(face.studentId)
-                         faceDao.deleteStudentFaceById(face.studentId, schoolId)
+                     // Hard-delete if only local
+                     val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
+                     if (biometric != null) {
+                         assignmentDao.deleteAllByStudentId(biometric.studentId)
+                         biometricDao.deleteStudentBiometricById(biometric.studentId, schoolId)
                      }
                      studentDao.deleteById(studentId, schoolId)
                 }
@@ -122,14 +122,14 @@ class StudentRepositoryImpl @Inject constructor(
                     studentDao.upsert(updatedStudent)
                 }
                 
-                val face = faceDao.getStudentFaceByIdentity(studentId, schoolId)
-                if (face != null) {
-                    val updatedFace = when(status) {
-                        SyncStatus.SYNCED -> face.copy(isSynced = true, isDeleted = false)
-                        SyncStatus.PENDING_DELETE -> face.copy(isSynced = false, isDeleted = true)
-                        else -> face.copy(isSynced = false)
+                val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
+                if (biometric != null) {
+                    val updatedBiometric = when(status) {
+                        SyncStatus.SYNCED -> biometric.copy(isSynced = true, isDeleted = false)
+                        SyncStatus.PENDING_DELETE -> biometric.copy(isSynced = false, isDeleted = true)
+                        else -> biometric.copy(isSynced = false)
                     }
-                    faceDao.upsertStudentFace(updatedFace)
+                    biometricDao.upsertStudentBiometric(updatedBiometric)
                 }
             }
             Result.Success(Unit)
@@ -164,21 +164,21 @@ class StudentRepositoryImpl @Inject constructor(
                 studentDao.upsert(student.copy(isSynced = true))
             }
 
-            val unsyncedFaces: List<BiometricFaceEntity> = faceDao.getUnsyncedStudents(schoolId)
-            if (unsyncedFaces.isNotEmpty()) {
-                val syncResult = remoteDataSource.bulkSyncFaces(schoolId, unsyncedFaces)
+            val unsyncedBiometrics = biometricDao.getUnsyncedBiometrics(schoolId)
+            if (unsyncedBiometrics.isNotEmpty()) {
+                val syncResult = remoteDataSource.bulkSyncBiometrics(schoolId, unsyncedBiometrics)
                 if (syncResult is Result.Success) {
-                    unsyncedFaces.forEach { face ->
-                        faceDao.upsertStudentFace(face.copy(isSynced = true))
+                    unsyncedBiometrics.forEach { biometric ->
+                        biometricDao.upsertStudentBiometric(biometric.copy(isSynced = true))
                     }
                 }
             }
 
-            val unsyncedAssignments = faceAssignmentDao.getUnsyncedAssignments(schoolId)
+            val unsyncedAssignments = assignmentDao.getUnsyncedAssignments(schoolId)
             for (assignment in unsyncedAssignments) {
-                val syncResult = remoteDataSource.syncFaceAssignment(assignment)
+                val syncResult = remoteDataSource.syncStudentAssignment(assignment)
                 if (syncResult is Result.Success) {
-                    faceAssignmentDao.updateSyncStatus(assignment.studentId, assignment.classId, schoolId, true)
+                    assignmentDao.updateSyncStatus(assignment.studentId, assignment.classId, schoolId, true)
                 }
             }
             Result.Success(Unit)
@@ -189,11 +189,11 @@ class StudentRepositoryImpl @Inject constructor(
 
     override suspend fun autoHealStudentIdentities(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         try {
-            val faces = faceDao.getAllStudentsForScanningList(schoolId)
+            val biometrics = biometricDao.getAllStudentsForScanningList(schoolId)
             val studentsToCreate = mutableListOf<StudentEntity>()
             
-            for (face in faces) {
-                val targetStudentId = face.studentId
+            for (biometric in biometrics) {
+                val targetStudentId = biometric.studentId
                 val existing = studentDao.getById(targetStudentId, schoolId)
                 
                 if (existing == null) {
@@ -201,8 +201,8 @@ class StudentRepositoryImpl @Inject constructor(
                         StudentEntity(
                             studentId = targetStudentId,
                             schoolId = schoolId,
-                            name = face.name,
-                            createdAt = face.createdAt,
+                            name = biometric.name,
+                            createdAt = biometric.createdAt,
                             isSynced = true
                         )
                     )

@@ -3,8 +3,8 @@ package com.azuratech.azuratime.core.ui.preview
 import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
-import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.dashboard.ui.DashboardUiState
 import com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState
 import com.azuratech.azuratime.features.reporting.ui.matrix.MatrixCellModel
@@ -19,8 +19,8 @@ import java.time.LocalDateTime
  */
 object PreviewMocks {
     
-    val mockUser = StaffAccountEntity(
-        userId = "usr_123",
+    val mockUser = AccountEntity(
+        accountId = "usr_123",
         email = "admin@azuratech.com",
         name = "Azura Admin",
         activeSchoolId = "sch_1",
@@ -34,9 +34,9 @@ object PreviewMocks {
     )
 
     val mockStudents = listOf(
-        BiometricFaceEntity(studentId = "face_1", name = "Budi Santoso", embedding = null),
-        BiometricFaceEntity(studentId = "face_2", name = "Siti Aminah", embedding = null),
-        BiometricFaceEntity(studentId = "face_3", name = "Agus Setiawan", embedding = null)
+        StudentBiometricEntity(studentId = "face_1", name = "Budi Santoso", embedding = null),
+        StudentBiometricEntity(studentId = "face_2", name = "Siti Aminah", embedding = null),
+        StudentBiometricEntity(studentId = "face_3", name = "Agus Setiawan", embedding = null)
     )
 
     val mockRecentRecords = listOf(
@@ -49,7 +49,7 @@ object PreviewMocks {
             status = "H",
             attendanceDate = LocalDate.now(),
             attendanceTime = LocalDateTime.now(),
-            userId = "admin@azuratech.com",
+            accountEmail = "admin@azuratech.com",
             schoolId = "sch_1",
             isSynced = true,
             timestamp = System.currentTimeMillis() - 300000
@@ -63,7 +63,7 @@ object PreviewMocks {
             status = "H",
             attendanceDate = LocalDate.now(),
             attendanceTime = LocalDateTime.now(),
-            userId = "admin@azuratech.com",
+            accountEmail = "admin@azuratech.com",
             schoolId = "sch_1",
             isSynced = true,
             timestamp = System.currentTimeMillis() - 720000
@@ -80,7 +80,7 @@ object PreviewMocks {
         isReady = true,
         currentRole = "ADMIN",
         isApproved = true,
-        totalFaces = 145,
+        totalStudents = 145,
         unassignedStudents = 3,
         brokenAssignments = 0,
         unsyncedRecords = 12

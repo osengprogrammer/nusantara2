@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.core.data.local.FaceWithDetails
+import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
@@ -19,9 +19,9 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun ManualAttendanceContent(
-    selectedFace: FaceWithDetails?,
-    onFaceSelected: (FaceWithDetails?) -> Unit,
-    faces: List<FaceWithDetails>,
+    selectedFace: StudentBiometricDetails?,
+    onFaceSelected: (StudentBiometricDetails?) -> Unit,
+    faces: List<StudentBiometricDetails>,
     selectedStatus: String,
     onStatusSelected: (String) -> Unit,
     selectedDate: LocalDate,
@@ -56,7 +56,7 @@ fun ManualAttendanceContent(
                     options = faces,
                     selectedOption = selectedFace,
                     onOptionSelected = onFaceSelected,
-                    getLabel = { it.face.name },
+                    getLabel = { it.biometric.name },
                     enabled = !isLocked
                 )
 

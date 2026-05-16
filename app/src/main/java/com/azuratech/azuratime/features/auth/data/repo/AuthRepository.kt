@@ -4,8 +4,8 @@ import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.domain.model.SyncStatus
@@ -33,12 +33,12 @@ class AuthRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
-    private val userRepository: StaffAccountRepository,
+    private val accountRepository: AccountRepository,
     private val securityRepository: SecurityRepository
 ) {
-    private val userDao = database.userDao()
+    private val accountDao = database.accountDao()
 
-    suspend fun signInWithGoogle(idToken: String): Pair<StaffAccountEntity?, Boolean> = withContext(Dispatchers.IO) {
+    suspend fun signInWithGoogle(idToken: String): Pair<AccountEntity?, Boolean> = withContext(Dispatchers.IO) {
         try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
@@ -47,22 +47,22 @@ class AuthRepository @Inject constructor(
             val uid = firebaseUser.uid
 
             // SSOT Migration v7.1: Check Room first
-            var userEntity = userDao.getUserById(uid)
+            var accountEntity = accountDao.getAccountById(uid)
             
-            if (userEntity == null) {
+            if (accountEntity == null) {
                 // Not in Room, attempt to pull from Cloud
-                println("🔍 AuthRepository: User not in Room, pulling from Cloud...")
-                val syncResult = userRepository.syncUser(uid)
+                println("🔍 AuthRepository: Account not in Room, pulling from Cloud...")
+                val syncResult = accountRepository.syncAccount(uid)
                 if (syncResult is DomainResult.Success) {
-                    userEntity = syncResult.data
+                    accountEntity = syncResult.data
                 }
             }
 
-            if (userEntity == null) {
-                // Truly a new user
-                println("🔍 AuthRepository: New user detected.")
-                val newUser = StaffAccountEntity(
-                    userId = uid,
+            if (accountEntity == null) {
+                // Truly a new user (Account)
+                println("🔍 AuthRepository: New account detected.")
+                val newAccount = AccountEntity(
+                    accountId = uid,
                     email = email,
                     name = firebaseUser.displayName ?: "User Baru",
                     memberships = emptyMap(),
@@ -70,27 +70,27 @@ class AuthRepository @Inject constructor(
                     status = SessionManager.STATUS_PENDING,
                     syncStatus = SyncStatus.PENDING_UPDATE.name
                 )
-                userDao.insertUser(newUser)
+                accountDao.upsertAccount(newAccount)
                 syncManager.enqueueProfileSync(uid)
                 
                 sessionManager.saveCurrentUserId(uid)
                 sessionManager.saveUserEmail(email)
-                sessionManager.saveUserStatus(newUser.status)
+                sessionManager.saveUserStatus(newAccount.status)
                 
-                return@withContext Pair(newUser, true) 
+                return@withContext Pair(newAccount, true) 
             }
 
-            // Existing user: Save to session and Room (already saved if pulled via UseCase)
+            // Existing account: Save to session and Room (already saved if pulled via UseCase)
             sessionManager.saveCurrentUserId(uid)
             sessionManager.saveUserEmail(email)
-            sessionManager.saveUserStatus(userEntity.status)
-            userEntity.activeSchoolId?.let { sessionManager.saveActiveSchoolId(it) }
+            sessionManager.saveUserStatus(accountEntity.status)
+            accountEntity.activeSchoolId?.let { sessionManager.saveActiveSchoolId(it) }
 
-            if (userEntity.status == SessionManager.STATUS_ACTIVE) {
+            if (accountEntity.status == SessionManager.STATUS_ACTIVE) {
                 securityRepository.refreshIsoKeyFromServer()
             }
 
-            return@withContext Pair(userEntity, false)
+            return@withContext Pair(accountEntity, false)
 
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error: ${e.message}")
@@ -100,19 +100,19 @@ class AuthRepository @Inject constructor(
 
     suspend fun registerMembership(uid: String, data: Map<String, Any>) = withContext(Dispatchers.IO) {
         // SSOT Migration v7.1: Update Room first, then trigger push worker
-        val user = userDao.getUserById(uid)
-        if (user != null) {
-            val updatedUser = user.copy(
-                status = data["status"]?.toString() ?: user.status,
-                name = data["name"]?.toString() ?: user.name,
+        val account = accountDao.getAccountById(uid)
+        if (account != null) {
+            val updatedAccount = account.copy(
+                status = data["status"]?.toString() ?: account.status,
+                name = data["name"]?.toString() ?: account.name,
                 syncStatus = SyncStatus.PENDING_UPDATE.name
             )
-            userDao.updateUser(updatedUser)
+            accountDao.updateAccount(updatedAccount)
             syncManager.enqueueProfileSync(uid)
-            println("💾 Room: Updated user for membership registration. Sync enqueued.")
+            println("💾 Room: Updated account for membership registration. Sync enqueued.")
         } else {
-            // If user doesn't exist, we can't update. This shouldn't happen in the normal flow.
-            Log.e("AuthRepository", "Cannot register membership: User $uid not found in Room.")
+            // If account doesn't exist, we can't update. This shouldn't happen in the normal flow.
+            Log.e("AuthRepository", "Cannot register membership: Account $uid not found in Room.")
         }
     }
 

@@ -4,52 +4,51 @@
 ## 💾 Room Entities
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `AccessRequestEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `AttendanceConflictEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `AttendanceEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `AuditLogEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `CheckInRecordEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `ClassEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `ExportJobEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `FaceAssignmentEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `FaceEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `ReportEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `SchoolEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `StudentEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `UserClassAccessEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `UserEntity.kt` | `data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `AccountClassAccessEntity.kt` | `core.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `AccessRequestEntity.kt` | `features.account.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `AccountEntity.kt` | `features.account.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `AttendanceConflictEntity.kt` | `features.attendance.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `AttendanceRecordEntity.kt` | `features.attendance.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `StudentBiometricEntity.kt` | `features.biometric.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `StudentClassAssignmentEntity.kt` | `features.biometric.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `AuditLogEntity.kt` | `features.reporting.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `ExportJobEntity.kt` | `features.reporting.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `ReportEntity.kt` | `features.reporting.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `ClassEntity.kt` | `features.school.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `SchoolEntity.kt` | `features.school.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `StudentEntity.kt` | `features.student.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 
 ## 🧠 ViewModels
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
 | `BootViewModel.kt` | `core.boot` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `StudentRosterViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `FaceViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `RegisterViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `StudentFormViewModel.kt` | `ui.add` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `PendingSchoolsViewModel.kt` | `ui.admin` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `ZoharAssistantViewModel.kt` | `ui.ai` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `AttendanceMatrixViewModel.kt` | `ui.attendance` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `AuditLogViewModel.kt` | `ui.audit` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `AuthViewModel.kt` | `ui.auth` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `BiometricViewModel.kt` | `ui.biometric` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `CheckInViewModel.kt` | `ui.checkin` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `ScannerViewModel.kt` | `ui.checkin` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `ClassViewModel.kt` | `ui.classes` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `FaceAssignmentViewModel.kt` | `ui.classes` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `DashboardViewModel.kt` | `ui.dashboard` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `DataIntegrityViewModel.kt` | `ui.data` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `ExportViewModel.kt` | `ui.export` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `MainViewModel.kt` | `ui.main` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `MembershipViewModel.kt` | `ui.membership` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `DailyDetailViewModel.kt` | `ui.report` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `ReportViewModel.kt` | `ui.report` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `SchoolViewModel.kt` | `ui.school` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `SyncViewModel.kt` | `ui.sync` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `AdminViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `NetworkViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `UserManagementViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `WorkspaceViewModel.kt` | `ui.user` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `MainViewModel.kt` | `core.ui` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `SyncViewModel.kt` | `core.ui.sync` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `AdminViewModel.kt` | `features.account.ui.components` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `NetworkViewModel.kt` | `features.account.ui.components` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `WorkspaceViewModel.kt` | `features.account.ui.components` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `AccountManagementViewModel.kt` | `features.account.ui.management` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `MembershipViewModel.kt` | `features.account.ui.membership` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `ZoharAssistantViewModel.kt` | `features.ai.ui` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `AttendanceViewModel.kt` | `features.attendance.ui.capture` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `ScannerViewModel.kt` | `features.attendance.ui.components` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `AuthViewModel.kt` | `features.auth.ui` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `StudentAssignmentViewModel.kt` | `features.biometric.ui.assignment` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `BiometricViewModel.kt` | `features.biometric.ui.enroll` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `StudentBiometricViewModel.kt` | `features.biometric.ui.enroll` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `DashboardViewModel.kt` | `features.dashboard.ui` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `AuditLogViewModel.kt` | `features.reporting.ui.audit` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `DailyDetailViewModel.kt` | `features.reporting.ui.daily` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `ExportViewModel.kt` | `features.reporting.ui.export` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `DataIntegrityViewModel.kt` | `features.reporting.ui.integrity` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `AttendanceMatrixViewModel.kt` | `features.reporting.ui.matrix` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `ReportViewModel.kt` | `features.reporting.ui` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `PendingSchoolsViewModel.kt` | `features.school.ui.admin` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `ClassViewModel.kt` | `features.school.ui.classes` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `SchoolViewModel.kt` | `features.school.ui.list` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `RegisterViewModel.kt` | `features.student.ui.bulk` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `StudentFormViewModel.kt` | `features.student.ui.form` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `StudentRosterViewModel.kt` | `features.student.ui.roster` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 
 ## 🔗 UseCases (Legacy/Active)
 | File | Package | Responsibility | SSOT Status |
@@ -58,47 +57,45 @@
 ## 🏰 Repositories
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `AccessRequestRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `AdminRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `AttendanceRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `BootRepository.kt` | `core.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `MainRepository.kt` | `core.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `SecurityRepository.kt` | `core.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `SyncRepository.kt` | `core.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `AccountRepository.kt` | `features.account.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `AdminRepository.kt` | `features.account.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `MembershipRepository.kt` | `features.account.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `SchoolWorkspaceRepository.kt` | `features.account.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `AccessRequestRepository.kt` | `features.account.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `ZoharRepository.kt` | `features.ai.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `BiometricScannerRepository.kt` | `features.attendance.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `AttendanceRepository.kt` | `features.attendance.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `AuthRepository.kt` | `features.auth.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `StudentBiometricRepository.kt` | `features.biometric.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `AuditLogRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `AuthRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `BootRepository.kt` | `repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `DataIntegrityRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `DataIntegrityRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `ExportRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `FaceRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `MainRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `MembershipRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `RegistrationRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
 | `ReportRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `ScannerRepository.kt` | `data.repo` | * Handles real-time face matching and attendance stamping. | ⚠️ Legacy |
-| `SchoolRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `SecurityRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `SyncRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `UserRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `WorkspaceRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `ZoharRepository.kt` | `data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `CheckInRepository.kt` | `domain.checkin.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `StudentRepository.kt` | `domain.student.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `SchoolRepository.kt` | `features.school.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `StudentRegistrationRepository.kt` | `features.student.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `StudentRepository.kt` | `features.student.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 
 ## 🧩 Managers
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
+| `PhotoManager.kt` | `core.domain.media` | Cross-cutting concern: session, sync orchestration, media handling | ✅ Migrated |
 | `SessionManager.kt` | `core.session` | Cross-cutting concern: session, sync orchestration, media handling | ✅ Migrated |
 | `SyncManager.kt` | `core.sync` | Cross-cutting concern: session, sync orchestration, media handling | ✅ Migrated |
-| `PhotoManager.kt` | `domain.media` | Cross-cutting concern: session, sync orchestration, media handling | ✅ Migrated |
 
 ## 📦 Domain Models
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `RawStudentProfile.kt` | `data.local` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `AccessRequestProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `AttendanceProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `AuditLogProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `ExportJobProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `BiometricEnrollmentProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `ReportSummaryProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `StudentProfile.kt` | `domain.model` | Domain model for UI; decouples presentation from persistence | ⚠️ Legacy |
+| `RawStudentProfile.kt` | `core.data.local` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
+| `AccessRequestProfile.kt` | `features.account.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
+| `AttendanceProfile.kt` | `features.attendance.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
+| `AuthProfile.kt` | `features.auth.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
+| `BiometricEnrollmentProfile.kt` | `features.biometric.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
+| `ExportJobProfile.kt` | `features.reporting.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
+| `StudentProfile.kt` | `features.student.domain.model` | Domain model for UI; decouples presentation from persistence | ⚠️ Legacy |
 
 ## ⚙️ Workers
 | File | Package | Responsibility | SSOT Status |
@@ -111,56 +108,57 @@
 ## 🖥️ Screens
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `AddStudentScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `BulkRegistrationScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `EditStudentScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `BiometricCaptureScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `StudentRosterBarcodeScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `StudentRosterScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `RegistrationMenuScreen.kt` | `ui.add` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `PendingSchoolsScreen.kt` | `ui.admin` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `AttendanceMatrixScreen.kt` | `ui.attendance` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `AuditLogScreen.kt` | `ui.audit` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `LoginScreen.kt` | `ui.auth` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `BiometricScreen.kt` | `ui.biometric` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `BarcodeScreen.kt` | `ui.checkin` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `CheckInRecordScreen.kt` | `ui.checkin` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `CheckInScreen.kt` | `ui.checkin` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `ManualAttendanceScreen.kt` | `ui.checkin` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `ClassDetailScreen.kt` | `ui.classes` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `ClassListScreen.kt` | `ui.classes` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `ClassManagementScreen.kt` | `ui.classes` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `AzuraScreen.kt` | `ui.core.designsystem` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `DashboardScreen.kt` | `ui.dashboard` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `DataIntegrityScreen.kt` | `ui.data` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `DataManagementScreen.kt` | `ui.data` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `DebugScreen.kt` | `ui.debug` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `ExportScreen.kt` | `ui.export` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `MainScreen.kt` | `ui.main` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `MembershipScreen.kt` | `ui.membership` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `DailyDetailScreen.kt` | `ui.report` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `ReportScreen.kt` | `ui.report` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `RootScreen.kt` | `ui.root` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `SchoolListScreen.kt` | `ui.school` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `FindSchoolScreen.kt` | `ui.user` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `MyAssignedClassScreen.kt` | `ui.user` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `NetworkScreen.kt` | `ui.user` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `UserProfileScreen.kt` | `ui.user` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `Screen.kt` | `core.navigation` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `AzuraScreen.kt` | `core.ui.designsystem` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `MainScreen.kt` | `core.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `RootScreen.kt` | `core.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `FindSchoolScreen.kt` | `features.account.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `MyAssignedClassScreen.kt` | `features.account.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `NetworkScreen.kt` | `features.account.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `DebugScreen.kt` | `features.account.ui.debug` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `MembershipScreen.kt` | `features.account.ui.membership` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `AccountProfileScreen.kt` | `features.account.ui.profile` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `BarcodeScreen.kt` | `features.attendance.ui.barcode` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `AttendanceCaptureScreen.kt` | `features.attendance.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `AttendanceHistoryScreen.kt` | `features.attendance.ui.history` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `ManualAttendanceScreen.kt` | `features.attendance.ui.manual` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `LoginScreen.kt` | `features.auth.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `BiometricScreen.kt` | `features.biometric.ui.enroll` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `DashboardScreen.kt` | `features.dashboard.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `AuditLogScreen.kt` | `features.reporting.ui.audit` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `DailyDetailScreen.kt` | `features.reporting.ui.daily` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `ExportScreen.kt` | `features.reporting.ui.export` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `DataIntegrityScreen.kt` | `features.reporting.ui.integrity` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `DataManagementScreen.kt` | `features.reporting.ui.integrity` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `AttendanceMatrixScreen.kt` | `features.reporting.ui.matrix` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `ReportScreen.kt` | `features.reporting.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `PendingSchoolsScreen.kt` | `features.school.ui.admin` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `ClassDetailScreen.kt` | `features.school.ui.classes` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `ClassListScreen.kt` | `features.school.ui.classes` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `ClassManagementScreen.kt` | `features.school.ui.classes` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `SchoolListScreen.kt` | `features.school.ui.list` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `BulkRegistrationScreen.kt` | `features.student.ui.bulk` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `AddStudentScreen.kt` | `features.student.ui.form` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `EditStudentScreen.kt` | `features.student.ui.form` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `RegistrationMenuScreen.kt` | `features.student.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `StudentRosterBarcodeScreen.kt` | `features.student.ui.roster` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `StudentRosterScreen.kt` | `features.student.ui.roster` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 
 ## 🗄️ DAOs
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `AccessRequestDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `AuditLogDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `CheckInRecordDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `ClassDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `ExportJobDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `FaceAssignmentDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `FaceDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `ReportDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `SchoolClassDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `SchoolDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `StudentDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `UserClassAccessDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-| `UserDao.kt` | `data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `AccountClassAccessDao.kt` | `core.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `AccessRequestDao.kt` | `features.account.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `AccountDao.kt` | `features.account.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `AttendanceConflictDao.kt` | `features.attendance.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `AttendanceRecordDao.kt` | `features.attendance.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `StudentBiometricDao.kt` | `features.biometric.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `StudentClassAssignmentDao.kt` | `features.biometric.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `AuditLogDao.kt` | `features.reporting.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `ExportJobDao.kt` | `features.reporting.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `ReportDao.kt` | `features.reporting.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `ClassDao.kt` | `features.school.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `SchoolClassDao.kt` | `features.school.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `SchoolDao.kt` | `features.school.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
+| `StudentDao.kt` | `features.student.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
 

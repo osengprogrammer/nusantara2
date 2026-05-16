@@ -30,14 +30,14 @@ interface StudentDao {
     @Transaction
     @Query("""
         SELECT students.*, 
-               faces.studentId as faceId,
-               faces.embedding as embedding,
-               faces.photoUrl as photoUrl,
-               faces.lastUpdated as faceLastUpdated,
-               faces.isSynced as faceIsSynced,
-               faces.isDeleted as faceIsDeleted
+               student_biometrics.studentId as faceId,
+               student_biometrics.embedding as embedding,
+               student_biometrics.photoUrl as photoUrl,
+               student_biometrics.lastUpdated as faceLastUpdated,
+               student_biometrics.isSynced as faceIsSynced,
+               student_biometrics.isDeleted as faceIsDeleted
         FROM students
-        LEFT JOIN faces ON students.studentId = faces.studentId AND faces.schoolId = :schoolId
+        LEFT JOIN student_biometrics ON students.studentId = student_biometrics.studentId AND student_biometrics.schoolId = :schoolId
         WHERE students.schoolId = :schoolId AND students.isDeleted = 0
     """)
     fun getStudentProfilesFlow(schoolId: String): Flow<List<RawStudentProfile>>

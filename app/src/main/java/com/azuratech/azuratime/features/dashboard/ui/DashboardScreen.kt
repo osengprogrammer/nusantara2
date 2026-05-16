@@ -95,9 +95,9 @@ fun DashboardScreen(
                 }
             } else {
                 // Sync schoolViewModel accountId
-                data.user?.userId?.let { userId ->
-                    LaunchedEffect(userId) {
-                        schoolViewModel.setAccountId(userId)
+                data.user?.accountId?.let { accountId ->
+                    LaunchedEffect(accountId) {
+                        schoolViewModel.setAccountId(accountId)
                     }
                 }
 
@@ -121,8 +121,6 @@ fun DashboardScreen(
                     onSyncClick = { viewModel.sync() },
                     onRegisterStudentClick = { viewModel.onRegisterStudentClick() },
                     onSelectClass = { classId -> 
-                        println("🖱 DASHBOARD: Ganti Kelas clicked for $classId")
-                        println("💾 DASHBOARD: Updating activeClassId in ViewModel")
                         viewModel.selectActiveClass(classId) 
                     },
                     onLogoutClick = {
@@ -180,7 +178,7 @@ fun DashboardContent(
             )
         }
     ) {
-        val user = data.user ?: return@AzuraScreen
+        val account = data.user ?: return@AzuraScreen
         val photoUrl = FirebaseAuth.getInstance().currentUser?.photoUrl
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -206,9 +204,9 @@ fun DashboardContent(
 
                 item {
                     ProfileHeader(
-                        name = user.name,
-                        email = user.email,
-                        schoolName = activeSchool?.name ?: user.schoolName ?: "",
+                        name = account.name,
+                        email = account.email,
+                        schoolName = activeSchool?.name ?: account.schoolName ?: "",
                         photoUrl = photoUrl,
                         onLogout = onLogoutClick,
                         onProfileClick = { navController.navigate(Screen.Profile.route) }
@@ -230,7 +228,7 @@ fun DashboardContent(
                             shape = AzuraShapes.medium
                         ) {
                             IntegritySummaryWidget(
-                                totalFaces = data.totalFaces,
+                                totalStudents = data.totalStudents,
                                 unassignedCount = data.unassignedStudents,
                                 brokenLinks = data.brokenAssignments,
                                 unsyncedCount = data.unsyncedRecords
@@ -274,10 +272,9 @@ fun DashboardContent(
                 val showSchoolCard = schools.isEmpty() || data.isApproved || data.currentRole == "ADMIN"
                 if (showSchoolCard) {
                     item {
-                        println("🔓 DEBUG: School card access (count=${schools.size}, approved=${data.isApproved})")
                         MySchoolsCard(
                             viewModel = schoolViewModel,
-                            accountId = user.userId,
+                            accountId = account.accountId,
                             isApproved = data.isApproved,
                             globalRole = data.currentRole,
                             onSchoolClick = { clickedSchoolId ->
@@ -287,7 +284,6 @@ fun DashboardContent(
                                 }
                             },
                             onAddSchoolClick = {
-                                println("➕ DEBUG: Add School clicked")
                                 onAddSchoolClick()
                             }
                         )
@@ -297,8 +293,8 @@ fun DashboardContent(
                 if (data.isApproved) {
                     item {
                         ActiveSessionCard(
-                            allClasses = data.allClasses, // 🔥 Use all available classes
-                            activeClassId = user.activeClassId,
+                            allClasses = data.allClasses, 
+                            activeClassId = account.activeClassId,
                             onSelectClass = onSelectClass
                         )
                     }
@@ -321,8 +317,8 @@ fun DashboardContent(
                         isAdmin = data.currentRole == "ADMIN" || data.currentRole == "SUPER_ADMIN",
                         currentRole = data.currentRole,
                         onRegisterStudentClick = onRegisterStudentClick,
-                        accountId = user.userId,
-                        isEnabled = activeSchool?.status == "ACTIVE" // 🔥 Added
+                        accountId = account.accountId,
+                        isEnabled = activeSchool?.status == "ACTIVE" 
                     )
                 }
 
@@ -346,52 +342,6 @@ fun DashboardContent(
                     }
                 )
             }
-        }
-    }
-}
-
-@AzuraPreviews
-@Composable
-fun DashboardContentSuccessPreview() {
-    AzuraTheme {
-        Surface {
-            DashboardContent(
-                navController = rememberNavController(),
-                data = PreviewMocks.mockDashboardStateSuccess,
-                schoolViewModel = hiltViewModel(),
-                availableClasses = emptyList(),
-                snackbarHostState = remember { SnackbarHostState() },
-                showAddSchoolDialog = false,
-                onAddSchoolClick = {},
-                onDismissAddSchool = {},
-                onSyncClick = {},
-                onRegisterStudentClick = {}, // 👈 Added
-                onSelectClass = {},
-                onLogoutClick = {}
-            )
-        }
-    }
-}
-
-@AzuraPreviews
-@Composable
-fun DashboardContentLoadingPreview() {
-    AzuraTheme {
-        Surface {
-            DashboardContent(
-                navController = rememberNavController(),
-                data = PreviewMocks.mockDashboardStateLoading,
-                schoolViewModel = hiltViewModel(),
-                availableClasses = emptyList(),
-                snackbarHostState = remember { SnackbarHostState() },
-                showAddSchoolDialog = false,
-                onAddSchoolClick = {},
-                onDismissAddSchool = {},
-                onSyncClick = {},
-                onRegisterStudentClick = {}, // 👈 Added
-                onSelectClass = {},
-                onLogoutClick = {}
-            )
         }
     }
 }

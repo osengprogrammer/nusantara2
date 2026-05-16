@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun BarcodeScreen(
-    teacherEmail: String,
+    accountEmail: String,
     viewModel: ScannerViewModel = hiltViewModel()
 ) {
     val voiceAssistant = rememberVoiceAssistant()
@@ -47,8 +47,8 @@ fun BarcodeScreen(
         }.collect()
     }
 
-    LaunchedEffect(teacherEmail) {
-        viewModel.startScannerSession(teacherEmail)
+    LaunchedEffect(accountEmail) {
+        viewModel.startScannerSession(accountEmail)
     }
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {

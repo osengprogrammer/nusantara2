@@ -6,7 +6,7 @@ import com.azuratech.azuratime.features.school.data.local.*
 import com.azuratech.azuratime.features.student.data.local.*
 import com.azuratech.azuratime.features.attendance.data.local.*
 import com.azuratech.azuratime.features.biometric.data.local.*
-import com.azuratech.azuratime.features.staff.data.local.*
+import com.azuratech.azuratime.features.account.data.local.*
 import com.azuratech.azuratime.features.reporting.data.local.*
 
 @Database(
@@ -14,11 +14,11 @@ import com.azuratech.azuratime.features.reporting.data.local.*
         SchoolEntity::class,
         ClassEntity::class,
         SchoolClassAssignment::class,
-        BiometricFaceEntity::class,
-        FaceAssignmentEntity::class,
+        StudentBiometricEntity::class,
+        StudentClassAssignmentEntity::class,
         AttendanceRecordEntity::class,
-        StaffAccountEntity::class,
-        UserClassAccessEntity::class,
+        AccountEntity::class,
+        AccountClassAccessEntity::class,
         StudentEntity::class,
         AccessRequestEntity::class,
         AttendanceConflictEntity::class,
@@ -26,21 +26,21 @@ import com.azuratech.azuratime.features.reporting.data.local.*
         ExportJobEntity::class,
         ReportEntity::class
     ],
-    version = 12,
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun faceDao(): BiometricFaceDao
-    abstract fun faceAssignmentDao(): FaceAssignmentDao
-    abstract fun classDao(): ClassDao
-    abstract fun schoolDao(): SchoolDao
-    abstract fun schoolClassDao(): SchoolClassDao
-    abstract fun attendanceRecordDao(): AttendanceRecordDao
-    abstract fun userDao(): StaffAccountDao
-    abstract fun userClassAccessDao(): UserClassAccessDao
     abstract fun studentDao(): StudentDao
+    abstract fun attendanceRecordDao(): AttendanceRecordDao
+    abstract fun biometricDao(): StudentBiometricDao
+    abstract fun studentClassAssignmentDao(): StudentClassAssignmentDao
+    abstract fun accountDao(): AccountDao
+    abstract fun schoolDao(): SchoolDao
+    abstract fun classDao(): ClassDao
+    abstract fun schoolClassDao(): SchoolClassDao
+    abstract fun accountClassAccessDao(): AccountClassAccessDao
     abstract fun accessRequestDao(): AccessRequestDao
     abstract fun attendanceConflictDao(): AttendanceConflictDao
     abstract fun auditLogDao(): AuditLogDao
@@ -56,7 +56,7 @@ abstract class AppDatabase : RoomDatabase() {
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "azura.db"
+                    "local_db2.sqlite"
                 )
                 .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
                 .fallbackToDestructiveMigration() 

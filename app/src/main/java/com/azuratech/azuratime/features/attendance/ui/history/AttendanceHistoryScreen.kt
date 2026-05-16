@@ -15,14 +15,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.core.ui.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.*
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
-import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
+import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -33,7 +33,7 @@ fun AttendanceHistoryScreen(
     userEmail: String,
     onNavigateBack: () -> Unit = {},
     attendanceViewModel: AttendanceViewModel,
-    userViewModel: UserManagementViewModel,
+    userViewModel: AccountManagementViewModel,
     classViewModel: ClassViewModel
 ) {
     // 1. Observation
@@ -50,17 +50,21 @@ fun AttendanceHistoryScreen(
     var selectedClassId by remember { mutableStateOf<String?>(null) }
     var showClassCorrectionDialog by remember { mutableStateOf<AttendanceRecord?>(null) }
 
+    // Role helper
+    val activeSchoolId = user?.activeSchoolId ?: ""
+    val userRole = user?.memberships?.get(activeSchoolId)?.role ?: user?.role ?: "USER"
+    val isAdmin = userRole == "ADMIN" || userRole == "SUPER_ADMIN"
+
     // 2. Filter Sync
     LaunchedEffect(user, startDate, endDate, selectedClassId) {
-        @Suppress("UNUSED_VARIABLE") val filterUserId = if (user?.role == "SUPER_ADMIN" || user?.membershipRole == "ADMIN") null else userEmail
         attendanceViewModel.updateFilters(
             start = startDate,
             end = endDate
         )
     }
 
-    val availableClasses = remember(globalClasses, assignedIds) {
-        if (user?.role == "SUPER_ADMIN" || user?.membershipRole == "ADMIN") globalClasses else globalClasses.filter { it.id in assignedIds }
+    val availableClasses = remember(globalClasses, assignedIds, isAdmin) {
+        if (isAdmin) globalClasses else globalClasses.filter { it.id in assignedIds }
     }
 
     AzuraScreen(

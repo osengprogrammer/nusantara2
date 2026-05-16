@@ -17,13 +17,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.ZoharChatSheet
-import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
+import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.azuratech.azuratime.core.ui.navigation.graphs.attendanceGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.dashboardGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.managementGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.reportingGraph
-import com.azuratech.azuratime.core.ui.navigation.graphs.userGraph
+import com.azuratech.azuratime.core.ui.navigation.graphs.accountGraph
 
 @Composable
 fun MainScreen() {
@@ -69,7 +69,7 @@ fun MainScreen() {
                 attendanceGraph(navController)
                 managementGraph(navController)
                 reportingGraph(navController)
-                userGraph(navController)
+                accountGraph(navController)
             }
 
             if (showZoharChat) {

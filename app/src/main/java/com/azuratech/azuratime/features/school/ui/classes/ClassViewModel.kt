@@ -9,8 +9,8 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.ui.util.UiState
 import com.azuratech.azuratime.core.ui.UiEvent
-import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -26,8 +26,8 @@ import android.net.Uri
 class ClassViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
-    private val registrationRepository: com.azuratech.azuratime.features.student.data.repo.RegistrationRepository,
-    private val userRepository: StaffAccountRepository,
+    private val registrationRepository: com.azuratech.azuratime.features.student.data.repo.StudentRegistrationRepository,
+    private val userRepository: AccountRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -49,10 +49,10 @@ class ClassViewModel @Inject constructor(
     private val accountId: String = savedStateHandle.get<String>("accountId")
         ?: sessionManager.getCurrentUserId() ?: ""
 
-    // 🔥 User Flow for UI - Using StaffAccountEntity for SSOT
-    val user: StateFlow<StaffAccountEntity?> = sessionManager.currentUserIdFlow
+    // 🔥 User Flow for UI - Using AccountEntity for SSOT
+    val user: StateFlow<AccountEntity?> = sessionManager.currentUserIdFlow
         .filterNotNull()
-        .flatMapLatest { userRepository.observeUserEntity(it) }
+        .flatMapLatest { userRepository.observeAccountEntity(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // =====================================================

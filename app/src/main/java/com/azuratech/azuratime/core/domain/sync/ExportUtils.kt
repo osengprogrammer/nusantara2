@@ -109,7 +109,7 @@ class ExportUtils @Inject constructor(
                     dateTime.format(dateFormatter),
                     dateTime.format(timeFormatter),
                     record.status.toCode(),
-                    record.teacherEmail
+                    record.accountEmail
                 ).joinToString(",") { escapeCsv(it) }
 
                 stringBuilder.appendLine(row)

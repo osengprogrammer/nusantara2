@@ -34,21 +34,21 @@ class AuthViewModel @Inject constructor(
             _authState.value = AuthState.Loading 
             
             try {
-                val (user, isNewUser) = repository.signInWithGoogle(idToken)
+                val (account, isNewAccount) = repository.signInWithGoogle(idToken)
 
-                if (user == null) {
-                    _authState.value = AuthState.Error("Login gagal: Data pengguna tidak ditemukan.")
+                if (account == null) {
+                    _authState.value = AuthState.Error("Login gagal: Data akun tidak ditemukan.")
                     return@launch
                 }
 
-                if (isNewUser) {
+                if (isNewAccount) {
                     val hardwareId = Settings.Secure.getString(
                         getApplication<Application>().contentResolver,
                         Settings.Secure.ANDROID_ID
                     )
                     val autoRegData = mapOf(
-                        "email" to user.email,
-                        "name" to user.name.ifBlank { "User Baru" },
+                        "email" to account.email,
+                        "name" to account.name.ifBlank { "User Baru" },
                         "status" to "PENDING",
                         "role" to "PENDING",
                         "hardwareId" to hardwareId,
@@ -56,19 +56,19 @@ class AuthViewModel @Inject constructor(
                     )
                     
                     try {
-                        repository.registerMembership(user.userId, autoRegData)
+                        repository.registerMembership(account.accountId, autoRegData)
                     } catch (e: Exception) {
                         Log.e("AuthViewModel", "Auto-register Firestore failed: ${e.message}")
                     }
                     
                     // Gunakan state sesuai file AuthState.kt kamu
-                    _authState.value = AuthState.Success(user.email, "PENDING")
+                    _authState.value = AuthState.Success(account.email, "PENDING")
                     
                 } else {
-                    val schoolId = user.activeSchoolId ?: ""
-                    val currentRole = user.memberships[schoolId]?.role ?: "USER"
+                    val schoolId = account.activeSchoolId ?: ""
+                    val currentRole = account.memberships[schoolId]?.role ?: "USER"
                     
-                    _authState.value = AuthState.Success(user.email, currentRole)
+                    _authState.value = AuthState.Success(account.email, currentRole)
                 }
                 
             } catch (e: Exception) {
@@ -82,7 +82,7 @@ class AuthViewModel @Inject constructor(
         val randomNumber = (1..5000).random()
         val defaultName = "Azura Candi $randomNumber"
         val finalData = data.toMutableMap().apply {
-            this["userId"] = uid
+            this["accountId"] = uid
             if (this["schoolName"]?.toString().isNullOrBlank()) {
                 this["schoolName"] = defaultName
             }

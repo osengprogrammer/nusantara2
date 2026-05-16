@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.attendance.ui.components
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.features.attendance.data.repo.ScannerRepository
+import com.azuratech.azuratime.features.attendance.data.repo.BiometricScannerRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
@@ -22,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ScannerViewModel @Inject constructor(
     application: Application,
-    private val repository: ScannerRepository,
+    private val repository: BiometricScannerRepository,
     private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
@@ -67,7 +67,7 @@ class ScannerViewModel @Inject constructor(
         }
     }
 
-    fun processScannedFace(embedding: FloatArray) {
+    fun processScannedBiometric(embedding: FloatArray) {
         if (isProcessing.getAndSet(true)) {
             return
         }
@@ -80,10 +80,10 @@ class ScannerViewModel @Inject constructor(
             }
 
             _uiState.value = AttendanceUiState.Processing
-            val matchedFaceId = repository.performMatch(embedding, gallery)
+            val matchedStudentId = repository.performMatch(embedding, gallery)
 
-            if (matchedFaceId != null) {
-                processAttendanceRecord(matchedFaceId)
+            if (matchedStudentId != null) {
+                processAttendanceRecord(matchedStudentId)
             } else {
                 handleUnregistered()
             }
@@ -116,19 +116,19 @@ class ScannerViewModel @Inject constructor(
             return
         }
 
-        val face = attendanceRepository.getFaceById(scannedId, schoolId)
+        val studentBiometric = attendanceRepository.getStudentBiometricById(scannedId, schoolId)
         
-        if (face == null) {
+        if (studentBiometric == null) {
             handleUnregistered()
             return
         }
 
-        val studentClassIds = attendanceRepository.getClassIdsForFace(scannedId, schoolId).firstOrNull() ?: emptyList()
+        val studentClassIds = attendanceRepository.getClassIdsForStudent(scannedId, schoolId).firstOrNull() ?: emptyList()
 
         val params = ProcessAttendanceParams(
             studentId = scannedId,
-            studentName = face.name,
-            teacherEmail = currentTeacherEmail,
+            studentName = studentBiometric.name,
+            accountEmail = currentTeacherEmail,
             activeClassId = activeClassId,
             studentClassIds = studentClassIds
         )

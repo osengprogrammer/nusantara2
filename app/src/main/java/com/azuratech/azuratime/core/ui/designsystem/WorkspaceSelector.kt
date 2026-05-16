@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
-import com.azuratech.azuratime.features.staff.ui.components.WorkspaceViewModel
+import com.azuratech.azuratime.features.account.ui.components.WorkspaceViewModel
 
 @Composable
 fun WorkspaceSelector(

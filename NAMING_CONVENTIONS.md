@@ -20,8 +20,8 @@
 
 ## 🔹 STRICT AI RULES
 1. NEVER use `snake_case` in Kotlin identifiers
-2. NEVER start functions with uppercase (`SaveUser` ❌ → `saveUser` ✅)
-3. ALWAYS suffix reactive streams with `Flow` or `State`
+2. NEVER start functions with uppercase (`SaveUser` ❌ → `saveUser` ✅). **EXCEPTION:** `@Composable` functions MUST use `PascalCase` (`fun MainScreen()`).
+3. ALWAYS suffix reactive stream **properties/variables** with `Flow` or `State`. Functions returning a stream do not need the suffix (e.g., `observeUsers()`).
 4. ALWAYS use verb-first for functions, noun-first for variables
 5. If unsure → check this file first. When in doubt, match existing layer pattern.
 

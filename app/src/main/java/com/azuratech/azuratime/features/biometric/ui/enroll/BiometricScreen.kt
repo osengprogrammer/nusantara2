@@ -35,7 +35,7 @@ fun BiometricScreen(
             items(enrollmentList) { profile ->
                 BiometricEnrollmentItem(
                     profile = profile,
-                    onDelete = { viewModel.deleteEnrollment(profile.faceId) }
+                    onDelete = { viewModel.deleteEnrollment(profile.studentId) }
                 )
             }
         }

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.toProfile
-import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
 import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.core.ui.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +20,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class BiometricViewModel @Inject constructor(
-    private val faceRepository: BiometricFaceRepository,
+    private val biometricRepository: StudentBiometricRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -34,7 +34,7 @@ class BiometricViewModel @Inject constructor(
     val enrollmentList: StateFlow<List<BiometricEnrollmentProfile>> = 
         sessionManager.activeSchoolIdFlow.filterNotNull()
             .flatMapLatest { schoolId -> 
-                faceRepository.observeEnrollmentsBySchool(schoolId)
+                biometricRepository.observeEnrollmentsBySchool(schoolId)
                     .map { entities -> entities.map { it.toProfile() } }
             }
             .combine(_searchQuery.debounce(300)) { list, query ->
@@ -47,9 +47,9 @@ class BiometricViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
-    fun enrollFace(studentId: String, photoUri: String) {
+    fun enrollStudentBiometric(studentId: String, photoUri: String) {
         viewModelScope.launch {
-            val result = faceRepository.submitEnrollment(studentId, photoUri)
+            val result = biometricRepository.submitEnrollment(studentId, photoUri)
             if (result is Result.Success) {
                 _uiEvent.emit(UiEvent.ShowSnackbar("Enrollment queued"))
             } else if (result is Result.Failure) {
@@ -58,9 +58,9 @@ class BiometricViewModel @Inject constructor(
         }
     }
     
-    fun deleteEnrollment(faceId: String) {
+    fun deleteEnrollment(studentId: String) {
         viewModelScope.launch {
-            val result = faceRepository.deleteEnrollment(faceId)
+            val result = biometricRepository.deleteEnrollment(studentId)
             if (result is Result.Success) {
                 _uiEvent.emit(UiEvent.ShowSnackbar("Deleted"))
             }

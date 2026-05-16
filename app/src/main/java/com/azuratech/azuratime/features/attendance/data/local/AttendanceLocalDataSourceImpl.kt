@@ -17,13 +17,17 @@ class AttendanceLocalDataSourceImpl @Inject constructor(
         nameFilter: String,
         startDate: LocalDate?,
         endDate: LocalDate?,
-        userId: String?,
+        accountId: String?,
         classId: String?,
         assignedIds: List<String>,
         schoolId: String
     ): Flow<List<AttendanceRecordEntity>> {
-        // Simplified version for now
-        return attendanceRecordDao.getFilteredRecords(schoolId, nameFilter.ifBlank { null }, classId)
+        return attendanceRecordDao.getFilteredRecords(
+            schoolId = schoolId, 
+            nameFilter = nameFilter.ifBlank { null }, 
+            accountId = accountId, 
+            classId = classId
+        )
     }
 
     override suspend fun insert(record: AttendanceRecordEntity) = attendanceRecordDao.insert(record)
@@ -33,11 +37,11 @@ class AttendanceLocalDataSourceImpl @Inject constructor(
     override suspend fun getRecordById(recordId: String, schoolId: String): AttendanceRecordEntity? =
         attendanceRecordDao.getRecordById(recordId, schoolId)
 
-    override suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity? =
-        attendanceRecordDao.getRecordByFaceAndDate(faceId, date, schoolId)
+    override suspend fun getRecordByStudentAndDate(studentId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity? =
+        attendanceRecordDao.getRecordByStudentAndDate(studentId, date, schoolId)
 
-    override suspend fun getLatestRecordForStudent(faceId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity? =
-        attendanceRecordDao.getLatestRecordForStudent(faceId, classId, date, schoolId)
+    override suspend fun getLatestRecordForStudent(studentId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity? =
+        attendanceRecordDao.getLatestRecordForStudent(studentId, classId, date, schoolId)
 
     override suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecordEntity> =
         attendanceRecordDao.getUnsyncedRecords(schoolId)

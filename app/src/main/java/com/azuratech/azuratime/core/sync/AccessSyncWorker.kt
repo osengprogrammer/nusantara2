@@ -8,7 +8,7 @@ import androidx.work.WorkerParameters
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.assisted.Assisted
@@ -23,7 +23,7 @@ import dagger.assisted.AssistedInject
 class AccessSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val faceRepository: BiometricFaceRepository,
+    private val biometricRepository: StudentBiometricRepository,
     private val schoolRepository: SchoolRepository,
     private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager
@@ -47,12 +47,12 @@ class AccessSyncWorker @AssistedInject constructor(
             }
 
             // 2. SSOT Integrity: Sync Assignments for the active school
-            val assignmentResult = faceRepository.syncAssignments()
+            val assignmentResult = biometricRepository.syncAssignments()
             if (assignmentResult is DomainResult.Failure) {
                 Log.w(TAG, "Assignments sync failed: ${assignmentResult.error.message}")
             }
 
-            // 3. Ensure Student identities exist for synced faces (Auto-Heal)
+            // 3. Ensure Student identities exist for synced biometrics (Auto-Heal)
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
             if (schoolId.isNotEmpty()) {
                 studentRepository.autoHealStudentIdentities(schoolId)

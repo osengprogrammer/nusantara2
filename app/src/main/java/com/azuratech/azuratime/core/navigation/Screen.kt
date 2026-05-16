@@ -57,7 +57,7 @@ sealed class Screen(val route: String) {
 
     // --- 🏫 USER & CLASS MANAGEMENT ---
     data object AdminDashboard : Screen(NavigationRoutes.ADMIN_DASHBOARD)
-    data object Profile : Screen(NavigationRoutes.USER_PROFILE)
+    data object Profile : Screen(NavigationRoutes.ACCOUNT_PROFILE)
     data object SchoolList : Screen(NavigationRoutes.SCHOOL_LIST) {
         fun createRoute(accountId: String) = "school_list/$accountId"
     }
