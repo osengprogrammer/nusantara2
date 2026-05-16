@@ -93,15 +93,28 @@ fun TeacherTasksGrid(
         }
 
         // ======================================================
-        // 🔥 Row 4: Analytics
+        // 🔥 Row 4: Attendance & Analytics
         // ======================================================
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
         ) {
-            DashboardActionCard("Laporan Matriks", Icons.Default.GridOn, MaterialTheme.colorScheme.primaryContainer, {
-                navController.navigate(Screen.AttendanceMatrix.route)
-            }, modifier = Modifier.weight(1f), enabled = isEnabled)
+            DashboardActionCard(
+                title = "Manajemen Presensi", 
+                icon = Icons.Default.History, 
+                color = MaterialTheme.colorScheme.primary,
+                onClick = { navController.navigate(Screen.AttendanceHistory.route) }, 
+                modifier = Modifier.weight(1f), 
+                enabled = isEnabled
+            )
+            DashboardActionCard(
+                title = "Laporan Matriks", 
+                icon = Icons.Default.GridOn, 
+                color = MaterialTheme.colorScheme.secondary, 
+                onClick = { navController.navigate(Screen.AttendanceMatrix.route) }, 
+                modifier = Modifier.weight(1f), 
+                enabled = isEnabled
+            )
         }
 
         // ======================================================

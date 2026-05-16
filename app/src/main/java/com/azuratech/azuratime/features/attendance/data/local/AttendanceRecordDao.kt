@@ -27,10 +27,17 @@ interface AttendanceRecordDao {
     @Query("SELECT * FROM check_in_records WHERE faceId = :faceId AND attendanceDate = :date AND schoolId = :schoolId")
     suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
 
+    @Query("""
+        SELECT * FROM check_in_records 
+        WHERE faceId = :faceId AND classId = :classId AND attendanceDate = :date AND schoolId = :schoolId 
+        ORDER BY timestamp DESC LIMIT 1
+    """)
+    suspend fun getLatestRecordForStudent(faceId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
+
     @Query("SELECT * FROM check_in_records WHERE schoolId = :schoolId AND isSynced = 0")
     suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecordEntity>
 
-    @Query("SELECT COUNT(*) FROM check_in_records WHERE attendanceDate = :date AND schoolId = :schoolId AND status = 'H'")
+    @Query("SELECT COUNT(DISTINCT faceId) FROM check_in_records WHERE attendanceDate = :date AND schoolId = :schoolId AND status = 'H'")
     fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Int>
 
     @Query("DELETE FROM check_in_records WHERE schoolId = :schoolId")

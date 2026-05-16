@@ -239,11 +239,21 @@ class AttendanceRepositoryImpl @Inject constructor(
         try {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Failure(AppError.BusinessRule("School not selected"))
             
-            // 1. Check duplicate attendance today
+            // 1. 🔥 AI Native: Time-based Duplicate Check
+            // We allow re-recording after 10 minutes (600,000 ms)
             val today = LocalDate.now()
-            val existing = localDataSource.getRecordByFaceAndDate(params.faceId, today, schoolId)
-            if (existing != null) {
-                return@withContext Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.AlreadyCheckedIn(params.studentName))
+            val latest = localDataSource.getLatestRecordForStudent(
+                faceId = params.studentId,
+                classId = params.activeClassId ?: "",
+                date = today,
+                schoolId = schoolId
+            )
+
+            if (latest != null) {
+                val timeDiff = System.currentTimeMillis() - latest.timestamp
+                if (timeDiff < 600_000L) { // 10 minute lockout window
+                    return@withContext Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.AlreadyCheckedIn(params.studentName))
+                }
             }
 
             // 2. Class validation
@@ -254,7 +264,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             // 3. Save Record
             val record = AttendanceRecord(
                 recordId = "rec_${System.currentTimeMillis()}",
-                studentId = params.faceId,
+                studentId = params.studentId,
                 studentName = params.studentName,
                 schoolId = schoolId,
                 classId = params.activeClassId ?: params.studentClassIds.firstOrNull() ?: "UNASSIGNED",
@@ -271,7 +281,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                 schoolId = schoolId,
                 userId = params.teacherEmail,
                 action = "CHECK_IN",
-                details = "Student: ${params.studentName} (${params.faceId})"
+                details = "Student: ${params.studentName} (${params.studentId})"
             )
             
             Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.Success(params.studentName, "Berhasil Absen"))
