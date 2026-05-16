@@ -155,11 +155,8 @@ class StudentFormViewModel @Inject constructor(
                 "STU-${UUID.randomUUID().toString().take(8)}"
             }
             
-            val faceId = if (currentState.isEditMode) {
-                currentState.studentId 
-            } else {
-                "FACE-${studentId}-${System.currentTimeMillis()}"
-            }
+            // 🔥 AI Friendly: Face ID must match Student ID to ensure unified identity
+            val faceId = studentId 
 
             // 1. Construct StudentProfile
             val profile = StudentProfile(
@@ -168,7 +165,7 @@ class StudentFormViewModel @Inject constructor(
                 name = currentState.name,
                 schoolId = resolvedSchoolId,
                 classIds = listOfNotNull(selectedClassId),
-                faceId = faceId,
+                faceId = faceId, // Explicitly unified
                 embedding = currentState.embedding,
                 photoUrl = currentState.photoUrl,
                 syncStatus = SyncStatus.PENDING_UPDATE

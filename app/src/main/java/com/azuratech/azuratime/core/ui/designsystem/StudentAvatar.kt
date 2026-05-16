@@ -7,10 +7,10 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun StudentAvatar(
-    photoUrl: String? = null,
-    photoPath: String? = null,
-    size: Dp = 40.dp,
-    modifier: Modifier = Modifier
+    @Suppress("UNUSED_PARAMETER") photoUrl: String? = null,
+    @Suppress("UNUSED_PARAMETER") photoPath: String? = null,
+    @Suppress("UNUSED_PARAMETER") size: Dp = 40.dp,
+    @Suppress("UNUSED_PARAMETER") modifier: Modifier = Modifier
 ) {
     // Placeholder implementation
 }

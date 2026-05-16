@@ -67,7 +67,7 @@ class BiometricFaceRepository @Inject constructor(
         Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
     }
 
-    suspend fun removeStudentFromClass(faceId: String, classId: String): Result<Unit> = try {
+    suspend fun removeStudentFromClass(faceId: String, @Suppress("UNUSED_PARAMETER") classId: String): Result<Unit> = try {
         localDataSource.deleteAssignmentsByFace(faceId, schoolId) // Simple version: remove all then re-add if needed, or specific delete
         Result.Success(Unit)
     } catch (e: Exception) {
@@ -93,7 +93,7 @@ class BiometricFaceRepository @Inject constructor(
         Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
     }
 
-    suspend fun saveStudentProfile(profile: com.azuratech.azuratime.features.student.domain.model.StudentProfile, photoBytes: ByteArray? = null): Result<Unit> {
+    suspend fun saveStudentProfile(profile: com.azuratech.azuratime.features.student.domain.model.StudentProfile, @Suppress("UNUSED_PARAMETER") photoBytes: ByteArray? = null): Result<Unit> {
         // Simple delegation to StudentRepository
         return studentRepository.saveProfile(profile)
     }
@@ -109,10 +109,21 @@ class BiometricFaceRepository @Inject constructor(
             if (syncResult is Result.Success) {
                 val updatedData = syncResult.data
                 if (updatedData.isNotEmpty()) {
-                    val toUpsert = updatedData.filter { it.second }.map { it.first }
+                    // 🔥 AI Friendly: Deduplicate by studentId to prevent duplicates in Roster
+                    // If multiple faces point to the same student, we pick the most recent or the one where faceId == studentId
+                    val uniqueFaces = updatedData.filter { it.second }.map { it.first }
+                        .groupBy { it.studentId ?: it.faceId }
+                        .map { entry ->
+                            val facesForStudent = entry.value
+                            // Preference: 1. faceId == studentId, 2. most recently updated
+                            facesForStudent.find { it.faceId == it.studentId } 
+                                ?: facesForStudent.maxByOrNull { it.lastUpdated } 
+                                ?: facesForStudent.first()
+                        }
+
                     val toDelete = updatedData.filter { !it.second }.map { it.first }
 
-                    if (toUpsert.isNotEmpty()) localDataSource.upsertAll(toUpsert)
+                    if (uniqueFaces.isNotEmpty()) localDataSource.upsertAll(uniqueFaces)
                     if (toDelete.isNotEmpty()) {
                         toDelete.forEach { localDataSource.deleteFaceById(it.faceId, schoolId) }
                     }

@@ -24,6 +24,7 @@ class StudentRosterViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
     private val _selectedClassId = MutableStateFlow<String?>(null)
+    private val _isSyncing = MutableStateFlow(false)
 
     private val _allClasses = sessionManager.activeSchoolIdFlow
         .filterNotNull()
@@ -40,8 +41,9 @@ class StudentRosterViewModel @Inject constructor(
         _studentProfiles,
         _allClasses,
         _searchQuery,
-        _selectedClassId
-    ) { profiles, classes, query, classId ->
+        _selectedClassId,
+        _isSyncing
+    ) { profiles, classes, query, classId, syncing ->
         val classMap = classes.associateBy { it.id }
         
         val displayItems = profiles
@@ -70,7 +72,8 @@ class StudentRosterViewModel @Inject constructor(
                 searchQuery = query,
                 selectedClassName = selectedClassName,
                 students = displayItems,
-                allClasses = classes
+                allClasses = classes,
+                isSyncing = syncing
             )
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StudentRosterUiState.Loading)
@@ -81,6 +84,15 @@ class StudentRosterViewModel @Inject constructor(
 
     fun onClassSelected(classId: String?) {
         _selectedClassId.value = classId
+    }
+
+    fun syncStudents() {
+        viewModelScope.launch {
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
+            _isSyncing.value = true
+            studentRepository.pullStudents(schoolId)
+            _isSyncing.value = false
+        }
     }
 
     fun deleteStudent(studentId: String) {

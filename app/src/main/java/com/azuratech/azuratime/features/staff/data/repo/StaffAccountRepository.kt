@@ -337,21 +337,26 @@ class StaffAccountRepository @Inject constructor(
         }
     }
 
-    suspend fun searchByEmail(email: String): StaffAccountEntity? {
+    suspend fun searchByEmail(@Suppress("UNUSED_PARAMETER") email: String): StaffAccountEntity? {
         // Simple mock/local search for now, or cloud pull if needed
         return null 
     }
 
-    suspend fun sendFriendRequest(myId: String, myName: String, myEmail: String, targetEmail: String): Boolean {
+    suspend fun sendFriendRequest(
+        @Suppress("UNUSED_PARAMETER") myId: String, 
+        @Suppress("UNUSED_PARAMETER") myName: String, 
+        @Suppress("UNUSED_PARAMETER") myEmail: String, 
+        @Suppress("UNUSED_PARAMETER") targetEmail: String
+    ): Boolean {
         // Logic to send friend request
         return true
     }
 
-    suspend fun acceptFriendRequest(myId: String, friendId: String) {
+    suspend fun acceptFriendRequest(@Suppress("UNUSED_PARAMETER") myId: String, @Suppress("UNUSED_PARAMETER") friendId: String) {
         // Logic to accept
     }
 
-    suspend fun rejectFriendRequest(myId: String, friendId: String) {
+    suspend fun rejectFriendRequest(@Suppress("UNUSED_PARAMETER") myId: String, @Suppress("UNUSED_PARAMETER") friendId: String) {
         // Logic to reject
     }
 

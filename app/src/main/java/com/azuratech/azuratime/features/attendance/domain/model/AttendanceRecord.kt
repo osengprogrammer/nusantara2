@@ -12,13 +12,13 @@ data class AttendanceRecord(
     val className: String,
     val schoolId: String,
     val timestamp: Long,
-    val status: CheckInStatus,
+    val status: AttendanceStatus,
     val photoUrl: String? = null,
     val isSynced: Boolean = false,
     val teacherEmail: String = ""
 )
 
-enum class CheckInStatus {
+enum class AttendanceStatus {
     PRESENT,
     LATE,
     ABSENT,
@@ -32,7 +32,7 @@ enum class CheckInStatus {
     }
 
     companion object {
-        fun fromCode(code: String): CheckInStatus = when (code) {
+        fun fromCode(code: String): AttendanceStatus = when (code) {
             "H" -> PRESENT
             "T" -> LATE
             "A" -> ABSENT

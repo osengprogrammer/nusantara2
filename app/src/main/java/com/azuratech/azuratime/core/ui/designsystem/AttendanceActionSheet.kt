@@ -11,7 +11,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
@@ -21,7 +21,7 @@ fun AttendanceActionSheet(
     record: AttendanceRecord,
     onDismiss: () -> Unit,
     onDelete: (AttendanceRecord) -> Unit,
-    onUpdateStatus: (AttendanceRecord) -> Unit,
+    onUpdateStatus: (AttendanceRecord, AttendanceStatus) -> Unit,
     onShowClassCorrection: () -> Unit 
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -59,31 +59,17 @@ fun AttendanceActionSheet(
             Spacer(Modifier.height(AzuraSpacing.sm))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
-                val statuses = listOf(
-                    CheckInStatus.PRESENT to "Hadir",
-                    CheckInStatus.LATE to "Sakit", // Wait, label logic might be different in original
-                    CheckInStatus.EXCUSED to "Izin",
-                    CheckInStatus.ABSENT to "Alpa"
-                )
-                // Let's check the original label mapping
-                // statuses = listOf("H" to "Hadir", "S" to "Sakit", "I" to "Izin", "A" to "Alpa")
-                // CheckInStatus.PRESENT -> "H"
-                // CheckInStatus.LATE -> "T" (Late)
-                // CheckInStatus.ABSENT -> "A" (Alpa)
-                // CheckInStatus.EXCUSED -> "S" (Sakit) or "I" (Izin)
-                
-                // Let's use the actual enum status for logic
-                CheckInStatus.values().forEach { status ->
+                AttendanceStatus.values().forEach { status ->
                     val label = when(status) {
-                        CheckInStatus.PRESENT -> "Hadir"
-                        CheckInStatus.LATE -> "Terlambat"
-                        CheckInStatus.EXCUSED -> "Izin"
-                        CheckInStatus.ABSENT -> "Alpa"
+                        AttendanceStatus.PRESENT -> "Hadir"
+                        AttendanceStatus.LATE -> "Terlambat"
+                        AttendanceStatus.EXCUSED -> "Izin"
+                        AttendanceStatus.ABSENT -> "Alpa"
                     }
                     FilterChip(
                         selected = record.status == status,
                         onClick = { 
-                            onUpdateStatus(record.copy(status = status))
+                            onUpdateStatus(record, status)
                             onDismiss()
                         },
                         label = { Text(label, modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center) },

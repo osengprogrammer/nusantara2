@@ -29,7 +29,7 @@ class UserManagementViewModel @Inject constructor(
     application: Application,
     private val database: AppDatabase,
     private val repository: StaffAccountRepository,
-    private val checkInRepository: AttendanceRepository,
+    private val attendanceRepository: AttendanceRepository,
     private val sessionManager: SessionManager
 ) : AndroidViewModel(application) {
 
@@ -122,7 +122,7 @@ class UserManagementViewModel @Inject constructor(
         }
     }
 
-    fun removeClassAccess(classId: String, targetUserId: String? = null) {
+    fun removeClassAccess(@Suppress("UNUSED_PARAMETER") classId: String, targetUserId: String? = null) {
         val targetId = targetUserId ?: currentUser.value?.userId ?: return
         val schoolId = currentUser.value?.activeSchoolId ?: return
         viewModelScope.launch {
@@ -137,7 +137,7 @@ class UserManagementViewModel @Inject constructor(
 
     fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
         viewModelScope.launch {
-            checkInRepository.resolveConflict(conflict.conflictId, useCloud)
+            attendanceRepository.resolveConflict(conflict.conflictId, useCloud)
         }
     }
 

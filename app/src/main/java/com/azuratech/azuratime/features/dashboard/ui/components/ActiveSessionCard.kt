@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.dashboard.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +36,7 @@ fun ActiveSessionCard(
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,

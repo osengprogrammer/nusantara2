@@ -33,7 +33,7 @@ sealed class Screen(val route: String) {
 
     // --- 📊 ATTENDANCE & REPORT ---
     data object AttendanceMatrix : Screen(NavigationRoutes.ATTENDANCE_MATRIX)
-    data object CheckInHistory : Screen(NavigationRoutes.CHECKIN_HISTORY)
+    data object AttendanceHistory : Screen(NavigationRoutes.ATTENDANCE_HISTORY)
     data object AuditLog : Screen(NavigationRoutes.AUDIT_LOG)
     
     // 🔥 PERBAIKAN BUG: Gunakan Uri.encode() untuk nama agar tidak crash jika ada karakter "/"

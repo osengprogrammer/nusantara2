@@ -6,7 +6,7 @@ import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
-data class ProcessCheckInParams(
+data class ProcessAttendanceParams(
     val faceId: String,
     val studentName: String,
     val teacherEmail: String,
@@ -31,6 +31,7 @@ interface AttendanceRepository {
 
     suspend fun saveRecord(record: AttendanceRecord): Result<Unit>
     suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit>
+    suspend fun updateRecordStatus(recordId: String, status: com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus, schoolId: String): Result<Unit>
     suspend fun deleteRecord(recordId: String, schoolId: String): Result<Unit>
     
     //  SYNC & MISC
@@ -45,5 +46,5 @@ interface AttendanceRepository {
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecord>>
     suspend fun syncRecords(): Result<Unit>
     suspend fun resolveConflict(conflictId: String, useCloud: Boolean): Result<Unit>
-    suspend fun processCheckIn(params: ProcessCheckInParams): Result<com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult>
+    suspend fun processAttendance(params: ProcessAttendanceParams): Result<com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult>
 }

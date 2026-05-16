@@ -49,8 +49,6 @@ fun DashboardScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddSchoolDialog by remember { mutableStateOf(false) }
 
-    val onDismissAddSchool = { showAddSchoolDialog = false }
-
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
             when (event) {
@@ -334,7 +332,7 @@ fun DashboardContent(
                 }
 
                 items(data.recentRecords) { record ->
-                    DashboardCheckInItem(record)
+                    DashboardAttendanceItem(record)
                 }
             }
 

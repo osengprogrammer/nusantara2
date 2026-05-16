@@ -24,7 +24,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
     // 🔥 Top-level collection for school discovery
     private fun getGlobalSchoolsRef() = db.collection("schools")
 
-    private fun getClassesRef(accountId: String, schoolId: String) = 
+    private fun getClassesRef(schoolId: String) = 
         getGlobalSchoolsRef().document(schoolId).collection("classes")
 
     override suspend fun saveSchool(accountId: String, school: School): Result<Unit> {
@@ -185,7 +185,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 "studentCount" to classModel.studentCount,
                 "createdAt" to classModel.createdAt
             )
-            getClassesRef(_accountId, schoolId).document(classModel.id).set(data, SetOptions.merge()).await()
+            getClassesRef(schoolId).document(classModel.id).set(data, SetOptions.merge()).await()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
@@ -194,7 +194,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun deleteClass(_accountId: String, schoolId: String, classId: String): Result<Unit> {
         return try {
-            getClassesRef(_accountId, schoolId).document(classId).delete().await()
+            getClassesRef(schoolId).document(classId).delete().await()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
@@ -203,7 +203,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getClasses(_accountId: String, schoolId: String): Result<List<ClassModel>> {
         return try {
-            val ref = getClassesRef(_accountId, schoolId)
+            val ref = getClassesRef(schoolId)
             println("🔍 SYNC: Fetching classes from: ${ref.path}")
             val snapshot = ref.get().await()
             println("🔍 SYNC: Found ${snapshot.size()} documents in Firestore classes.")

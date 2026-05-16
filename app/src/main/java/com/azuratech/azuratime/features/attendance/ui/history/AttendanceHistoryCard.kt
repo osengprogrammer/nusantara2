@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.attendance.ui.components
+package com.azuratech.azuratime.features.attendance.ui.history
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -12,17 +12,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import java.time.format.DateTimeFormatter
 
 /**
- * 🎫 ATTENDANCE RECEIPT CARD
+ * 🎫 ATTENDANCE HISTORY CARD
  * Refactored to use Domain Model AttendanceRecord.
  */
 @Composable
-fun AttendanceRecordCard(
+fun AttendanceHistoryCard(
     record: AttendanceRecord,
     onEditRequested: (AttendanceRecord) -> Unit = {}
 ) {
@@ -36,10 +36,10 @@ fun AttendanceRecordCard(
 
     // 🔥 DYNAMIC COLOR LOGIC
     val statusColor = when (record.status) {
-        CheckInStatus.PRESENT -> MaterialTheme.colorScheme.primary
-        CheckInStatus.LATE -> MaterialTheme.colorScheme.tertiary
-        CheckInStatus.EXCUSED -> MaterialTheme.colorScheme.secondary
-        CheckInStatus.ABSENT -> MaterialTheme.colorScheme.error
+        AttendanceStatus.PRESENT -> MaterialTheme.colorScheme.primary
+        AttendanceStatus.LATE -> MaterialTheme.colorScheme.tertiary
+        AttendanceStatus.EXCUSED -> MaterialTheme.colorScheme.secondary
+        AttendanceStatus.ABSENT -> MaterialTheme.colorScheme.error
     }
 
     Card(

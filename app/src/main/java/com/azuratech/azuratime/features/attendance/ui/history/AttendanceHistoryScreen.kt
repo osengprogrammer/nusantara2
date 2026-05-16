@@ -23,24 +23,24 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.*
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AttendanceRecordScreen(
+fun AttendanceHistoryScreen(
     userEmail: String,
     onNavigateBack: () -> Unit = {},
-    checkInViewModel: CheckInViewModel,
+    attendanceViewModel: AttendanceViewModel,
     userViewModel: UserManagementViewModel,
     classViewModel: ClassViewModel
 ) {
     // 1. Observation
     val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()
-    val records by checkInViewModel.checkInRecords.collectAsStateWithLifecycle()
-    val filterParams by checkInViewModel.filterParams.collectAsStateWithLifecycle()
+    val records by attendanceViewModel.attendanceRecords.collectAsStateWithLifecycle()
+    val filterParams by attendanceViewModel.filterParams.collectAsStateWithLifecycle()
     val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
 
     var editingRecord by remember { mutableStateOf<AttendanceRecord?>(null) }
@@ -53,7 +53,7 @@ fun AttendanceRecordScreen(
     // 2. Filter Sync
     LaunchedEffect(user, startDate, endDate, selectedClassId) {
         @Suppress("UNUSED_VARIABLE") val filterUserId = if (user?.role == "SUPER_ADMIN" || user?.membershipRole == "ADMIN") null else userEmail
-        checkInViewModel.updateFilters(
+        attendanceViewModel.updateFilters(
             start = startDate,
             end = endDate
         )
@@ -81,7 +81,7 @@ fun AttendanceRecordScreen(
                 )
 
                 Button(
-                    onClick = { checkInViewModel.exportRecords(records) },
+                    onClick = { attendanceViewModel.exportRecords(records) },
                     shape = AzuraShapes.medium,
                     enabled = records.isNotEmpty()
                 ) {
@@ -94,14 +94,14 @@ fun AttendanceRecordScreen(
             // --- SEARCH BAR ---
             OutlinedTextField(
                 value = filterParams.name,
-                onValueChange = { checkInViewModel.updateNameFilter(it) },
+                onValueChange = { attendanceViewModel.updateNameFilter(it) },
                 placeholder = { Text("Cari nama siswa...") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = AzuraShapes.medium,
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 trailingIcon = {
                     if (filterParams.name.isNotEmpty()) {
-                        IconButton(onClick = { checkInViewModel.updateNameFilter("") }) {
+                        IconButton(onClick = { attendanceViewModel.updateNameFilter("") }) {
                             Icon(Icons.Default.Close, null)
                         }
                     }
@@ -133,7 +133,7 @@ fun AttendanceRecordScreen(
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
                     items(records, key = { it.recordId }) { record ->
-                        AttendanceRecordCard(
+                        AttendanceHistoryCard(
                             record = record,
                             onEditRequested = { editingRecord = record }
                         )
@@ -148,11 +148,11 @@ fun AttendanceRecordScreen(
                 record = selectedRecord,
                 onDismiss = { editingRecord = null },
                 onDelete = { record -> 
-                    checkInViewModel.deleteRecord(record)
+                    attendanceViewModel.deleteRecord(record)
                     editingRecord = null 
                 },
-                onUpdateStatus = { record -> 
-                    checkInViewModel.updateRecord(record)
+                onUpdateStatus = { record, status -> 
+                    attendanceViewModel.updateRecordStatus(record, status)
                     editingRecord = null 
                 },
                 onShowClassCorrection = { 
@@ -168,7 +168,7 @@ fun AttendanceRecordScreen(
                 userClasses = availableClasses,
                 onDismiss = { showClassCorrectionDialog = null },
                 onClassSelected = { classItem ->
-                    checkInViewModel.updateRecordClass(recordToCorrect, classItem)
+                    attendanceViewModel.updateRecordClass(recordToCorrect, classItem)
                     showClassCorrectionDialog = null
                 }
             )

@@ -9,7 +9,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 
 @Composable
 fun AddSchoolDialog(
-    availableClasses: List<com.azuratech.azuraengine.model.ClassModel> = emptyList(),
+    @Suppress("UNUSED_PARAMETER") availableClasses: List<com.azuratech.azuraengine.model.ClassModel> = emptyList(),
     onDismissRequest: () -> Unit,
     onConfirmClick: (String, String, List<String>) -> Unit
 ) {

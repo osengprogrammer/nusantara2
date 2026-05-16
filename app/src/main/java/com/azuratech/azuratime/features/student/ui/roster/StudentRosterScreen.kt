@@ -5,11 +5,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -17,6 +19,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
+import androidx.compose.animation.core.*
 
 @Composable
 fun StudentRosterScreen(
@@ -26,9 +29,31 @@ fun StudentRosterScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val rotation = rememberInfiniteTransition().animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
     AzuraScreen(
         title = "Roster Siswa",
-        onBack = onNavigateBack
+        onBack = onNavigateBack,
+        actions = {
+            val data = (uiState as? StudentRosterUiState.Success)?.data
+            IconButton(
+                onClick = { viewModel.syncStudents() },
+                enabled = data?.isSyncing == false
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = "Sync",
+                    modifier = if (data?.isSyncing == true) Modifier.rotate(rotation.value) else Modifier
+                )
+            }
+        }
     ) {
         when (val state = uiState) {
             is StudentRosterUiState.Loading -> {

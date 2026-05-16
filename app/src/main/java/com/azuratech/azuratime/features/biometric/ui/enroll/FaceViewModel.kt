@@ -83,16 +83,17 @@ class FaceViewModel @Inject constructor(
             val photoBytes = photoBitmap?.let { bitmapToByteArray(it) }
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
             
-            // Generate IDs
-            val studentId = if (inputId.contains("--")) inputId.split("--").last() else inputId
-            val faceId = if (inputId.contains("--")) inputId else "${classId}--${inputId}"
+            // 🔥 AI Friendly: Unified Identity
+            // Use inputId (Barcode/Manual ID) directly as both student and face identity
+            val studentId = inputId
+            val faceId = inputId
 
             val profile = StudentProfile(
                 studentId = studentId,
                 name = name,
                 schoolId = schoolId,
                 classIds = listOf(classId),
-                faceId = faceId,
+                faceId = faceId, // Explicitly unified
                 embedding = embedding,
                 syncStatus = SyncStatus.PENDING_UPDATE
             )

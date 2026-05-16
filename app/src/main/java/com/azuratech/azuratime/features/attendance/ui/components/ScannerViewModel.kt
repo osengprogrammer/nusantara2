@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.features.attendance.data.repo.ScannerRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
-import com.azuratech.azuratime.features.attendance.domain.repository.ProcessCheckInParams
+import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
@@ -23,7 +23,7 @@ import javax.inject.Inject
 class ScannerViewModel @Inject constructor(
     application: Application,
     private val repository: ScannerRepository,
-    private val checkInRepository: AttendanceRepository,
+    private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager
 ) : AndroidViewModel(application) {
@@ -102,16 +102,16 @@ class ScannerViewModel @Inject constructor(
 
     private suspend fun processAttendanceRecord(scannedId: String) {
         val schoolId = activeSchoolId ?: return enterCooldown()
-        val face = checkInRepository.getFaceById(scannedId, schoolId)
+        val face = attendanceRepository.getFaceById(scannedId, schoolId)
         
         if (face == null) {
             handleUnregistered()
             return
         }
 
-        val studentClassIds = checkInRepository.getClassIdsForFace(scannedId, schoolId).firstOrNull() ?: emptyList()
+        val studentClassIds = attendanceRepository.getClassIdsForFace(scannedId, schoolId).firstOrNull() ?: emptyList()
 
-        val params = ProcessCheckInParams(
+        val params = ProcessAttendanceParams(
             faceId = scannedId,
             studentName = face.name,
             teacherEmail = currentTeacherEmail,
@@ -119,22 +119,22 @@ class ScannerViewModel @Inject constructor(
             studentClassIds = studentClassIds
         )
 
-        val result = checkInRepository.processCheckIn(params)
+        val result = attendanceRepository.processAttendance(params)
 
         when (result) {
             is Result.Success<AttendanceResult> -> {
-                when (val checkInRes = result.data) {
+                when (val attendanceRes = result.data) {
                     is AttendanceResult.Success -> {
-                        _uiState.value = AttendanceUiState.Success(checkInRes.name, alreadyCheckedIn = false)
-                        _sideEffect.send(AttendanceSideEffect.Speak(checkInRes.message))
+                        _uiState.value = AttendanceUiState.Success(attendanceRes.name, alreadyCheckedIn = false)
+                        _sideEffect.send(AttendanceSideEffect.Speak(attendanceRes.message))
                     }
                     is AttendanceResult.AlreadyCheckedIn -> {
-                        _uiState.value = AttendanceUiState.Success(checkInRes.name, alreadyCheckedIn = true)
-                        _sideEffect.send(AttendanceSideEffect.Speak("${checkInRes.name}, sudah absen."))
+                        _uiState.value = AttendanceUiState.Success(attendanceRes.name, alreadyCheckedIn = true)
+                        _sideEffect.send(AttendanceSideEffect.Speak("${attendanceRes.name}, sudah absen."))
                     }
                     is AttendanceResult.Rejected -> {
-                        _uiState.value = AttendanceUiState.Error("${checkInRes.name}: Bukan Kelas Ini!")
-                        _sideEffect.send(AttendanceSideEffect.Speak("${checkInRes.name}: Bukan Kelas Ini!"))
+                        _uiState.value = AttendanceUiState.Error("${attendanceRes.name}: Bukan Kelas Ini!")
+                        _sideEffect.send(AttendanceSideEffect.Speak("${attendanceRes.name}: Bukan Kelas Ini!"))
                     }
                     AttendanceResult.Unregistered -> handleUnregistered()
                 }

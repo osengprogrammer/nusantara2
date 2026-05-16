@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.core.util
 
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.CheckInStatus
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
 import java.time.Duration
 import java.time.LocalDate
@@ -25,9 +25,9 @@ object AttendanceService {
         activeClassId: String? = null,
         activeClassName: String? = null,
         status: String = "H",
-        checkInTime: LocalDateTime? = LocalDateTime.now()
+        attendanceTime: LocalDateTime? = LocalDateTime.now()
     ): AttendanceRecord {
-        val dateTime = checkInTime ?: LocalDateTime.now()
+        val dateTime = attendanceTime ?: LocalDateTime.now()
         val timestamp = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
         return AttendanceRecord(
@@ -38,7 +38,7 @@ object AttendanceService {
             classId = activeClassId ?: "",
             className = activeClassName ?: "",
             schoolId = face.schoolId,
-            status = CheckInStatus.fromCode(status),
+            status = AttendanceStatus.fromCode(status),
             timestamp = timestamp,
             isSynced = false
         )
@@ -49,13 +49,13 @@ object AttendanceService {
      * Menggunakan threshold (batas waktu) yang bisa dikonfigurasi.
      */
     fun isLate(
-        checkInTime: LocalDateTime?,
+        attendanceTime: LocalDateTime?,
         thresholdHour: Int = 7,
         thresholdMinute: Int = 30
     ): Boolean {
-        if (checkInTime == null) return false
+        if (attendanceTime == null) return false
 
-        val scanTime = checkInTime.toLocalTime()
+        val scanTime = attendanceTime.toLocalTime()
         val limitTime = LocalTime.of(thresholdHour, thresholdMinute)
 
         return scanTime.isAfter(limitTime)

@@ -67,7 +67,7 @@ fun ClassListScreen(
                 }
             }
             is UiState.Success -> {
-                val classes: List<ClassModel> = state.data ?: emptyList()
+                val classes: List<ClassModel> = state.data
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),

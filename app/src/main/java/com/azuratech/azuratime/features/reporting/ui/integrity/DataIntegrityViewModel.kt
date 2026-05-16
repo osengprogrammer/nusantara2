@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DataIntegrityViewModel @Inject constructor(
     private val repository: DataIntegrityRepository,
-    private val checkInRepository: AttendanceRepository
+    private val attendanceRepository: AttendanceRepository
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -32,7 +32,7 @@ class DataIntegrityViewModel @Inject constructor(
 
     fun resolveConflict(conflictId: String, useCloud: Boolean) {
         viewModelScope.launch {
-            val result = checkInRepository.resolveConflict(conflictId, useCloud)
+            val result = attendanceRepository.resolveConflict(conflictId, useCloud)
             when (result) {
                 is Result.Success -> _uiEvent.emit(UiEvent.ShowSnackbar("Konflik berhasil diselesaikan"))
                 is Result.Failure -> _uiEvent.emit(UiEvent.ShowSnackbar("Gagal: ${result.error.message}"))

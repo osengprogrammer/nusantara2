@@ -17,7 +17,7 @@ object NavigationRoutes {
     // --- 📊 ATTENDANCE & REPORT ---
     const val ATTENDANCE_CAPTURE = "attendance_capture"
     const val BARCODE_SCAN = "barcode_scan"
-    const val CHECKIN_HISTORY = "checkin_history"
+    const val ATTENDANCE_HISTORY = "attendance_history"
     const val ATTENDANCE_MATRIX = "attendance_matrix"
     const val DAILY_DETAIL = "daily_detail/{studentId}/{name}/{date}"
     const val MANUAL_ATTENDANCE = "manual_attendance?studentId={studentId}&date={date}"

@@ -18,7 +18,7 @@ import com.azuratech.azuratime.features.staff.ui.components.WorkspaceViewModel
 @Composable
 fun UserProfileScreen(
     userViewModel: UserManagementViewModel,
-    workspaceViewModel: WorkspaceViewModel,
+    @Suppress("UNUSED_PARAMETER") workspaceViewModel: WorkspaceViewModel,
     onNavigateBack: () -> Unit
 ) {
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()

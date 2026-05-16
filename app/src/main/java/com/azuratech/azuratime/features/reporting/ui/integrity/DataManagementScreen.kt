@@ -6,10 +6,10 @@ import com.azuratech.azuratime.features.student.ui.bulk.RegisterViewModel
 
 @Composable
 fun DataManagementScreen(
-    initialDataType: String,
+    @Suppress("UNUSED_PARAMETER") initialDataType: String,
     onNavigateBack: () -> Unit,
-    onNavigateToClassList: () -> Unit,
-    registerViewModel: RegisterViewModel
+    @Suppress("UNUSED_PARAMETER") onNavigateToClassList: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") registerViewModel: RegisterViewModel
 ) {
     AzuraScreen(title = "Manajemen Data", onBack = onNavigateBack) {
         // Placeholder

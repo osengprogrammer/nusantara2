@@ -41,7 +41,7 @@ class ZoharRepository @Inject constructor(
             val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
             val dataContext = recentRecords.joinToString("\n") { record ->
-                val timeStr = record.checkInTime?.format(timeFormatter) ?: "Jam tidak tercatat"
+                val timeStr = record.attendanceTime?.format(timeFormatter) ?: "Jam tidak tercatat"
                 "- Siswa: ${record.name}, Kelas: ${record.className}, Jam: $timeStr, Status: ${record.status}"
             }
 

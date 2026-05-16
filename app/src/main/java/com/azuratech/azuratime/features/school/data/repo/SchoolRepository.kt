@@ -197,7 +197,7 @@ class SchoolRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteSchool(id: String, accountId: String): Result<Unit> = try {
+    suspend fun deleteSchool(id: String, @Suppress("UNUSED_PARAMETER") accountId: String): Result<Unit> = try {
         database.withTransaction {
             val existing = dao.getSchoolById(id)
             if (existing != null) {
@@ -309,7 +309,7 @@ class SchoolRepository @Inject constructor(
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
-    suspend fun reassignClass(accountId: String, classId: String, newSchoolId: String): Result<Unit> = try {
+    suspend fun reassignClass(@Suppress("UNUSED_PARAMETER") accountId: String, classId: String, newSchoolId: String): Result<Unit> = try {
         dao.reassignClass(SchoolClassAssignment(newSchoolId, classId))
         Result.Success(Unit)
     } catch (e: Exception) {
@@ -337,7 +337,7 @@ class SchoolRepository @Inject constructor(
         Result.Failure(AppError.LocalDB(e.message))
     }
 
-    suspend fun rejectSchool(schoolId: String, reason: String): Result<Unit> = try {
+    suspend fun rejectSchool(schoolId: String, @Suppress("UNUSED_PARAMETER") reason: String): Result<Unit> = try {
         database.withTransaction {
             val school = dao.getSchoolById(schoolId)
             if (school != null) {
@@ -386,7 +386,7 @@ class SchoolRepository @Inject constructor(
         }
     }
 
-    suspend fun pushAccessRequests(userId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+    suspend fun pushAccessRequests(@Suppress("UNUSED_PARAMETER") userId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         try {
             val unsynced = accessRequestDao.getUnsyncedRequestsByUser(userId)
             if (unsynced.isEmpty()) return@withContext Result.Success(Unit)

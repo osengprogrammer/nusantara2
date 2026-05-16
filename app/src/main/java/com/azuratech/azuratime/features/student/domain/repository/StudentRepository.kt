@@ -39,4 +39,9 @@ interface StudentRepository {
      * 🔥 SSOT Auto-Heal: Ensure every face has a student identity.
      */
     suspend fun autoHealStudentIdentities(schoolId: String): Result<Unit>
+
+    /**
+     * 🔥 SSOT Pull: Fetch all students from cloud to local Room.
+     */
+    suspend fun pullStudents(schoolId: String): Result<Unit>
 }

@@ -5,9 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.ProcessCheckInParams
+import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
@@ -23,7 +24,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
-class AttendanceCaptureViewModel @Inject constructor(
+class AttendanceViewModel @Inject constructor(
     application: Application,
     private val repository: AttendanceRepository,
     private val schoolRepository: SchoolRepository,
@@ -66,9 +67,6 @@ class AttendanceCaptureViewModel @Inject constructor(
         ).map { entities -> entities.map { it.toDomain() } }
     }.flattenMerge().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Backward compatibility for existing screens
-    val checkInRecords = attendanceRecords
-
     fun updateNameFilter(name: String) {
         _filterParams.update { it.copy(name = name) }
     }
@@ -81,14 +79,14 @@ class AttendanceCaptureViewModel @Inject constructor(
         _filterParams.update { it.copy(startDate = start, endDate = end) }
     }
 
-    fun processManualCheckIn(scannedFaceId: String, studentName: String, studentClasses: List<String>, onResult: (Boolean, String) -> Unit) {
+    fun processManualAttendance(scannedFaceId: String, studentName: String, studentClasses: List<String>, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
                 val teacherEmail = sessionManager.getUserEmail() ?: "unknown@azuratech.com"
                 val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
                 val currentSessionId = _filterParams.value.classId
 
-                val params = ProcessCheckInParams(
+                val params = ProcessAttendanceParams(
                     faceId = scannedFaceId,
                     studentName = studentName,
                     teacherEmail = teacherEmail,
@@ -96,7 +94,7 @@ class AttendanceCaptureViewModel @Inject constructor(
                     studentClassIds = studentClasses
                 )
 
-                val result = repository.processCheckIn(params)
+                val result = repository.processAttendance(params)
                 
                 withContext(Dispatchers.Main) {
                     when (result) {
@@ -131,8 +129,15 @@ class AttendanceCaptureViewModel @Inject constructor(
         }
     }
 
-    fun updateRecord(record: AttendanceRecord) {
-        // Placeholder for updating status if needed
+    fun updateRecord() {
+        // This is a generic update, but usually we update status or class
+    }
+
+    fun updateRecordStatus(record: AttendanceRecord, newStatus: AttendanceStatus) {
+        viewModelScope.launch {
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
+            repository.updateRecordStatus(record.recordId, newStatus, schoolId)
+        }
     }
 
     fun updateRecordClass(record: AttendanceRecord, classModel: ClassModel) {
@@ -145,5 +150,3 @@ class AttendanceCaptureViewModel @Inject constructor(
         viewModelScope.launch { exportUtils.exportRawLogsToCsv(records) }
     }
 }
-
-typealias CheckInViewModel = AttendanceCaptureViewModel

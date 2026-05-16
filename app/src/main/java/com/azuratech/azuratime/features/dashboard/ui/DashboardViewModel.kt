@@ -113,12 +113,12 @@ class DashboardViewModel @Inject constructor(
             .filterNotNull()
             .onEach { userId -> 
                 println("🔍 Dashboard: ID detected ($userId), triggering sync...")
-                triggerAutoSyncIfNeeded(userId) 
+                triggerAutoSyncIfNeeded() 
             }
             .launchIn(viewModelScope)
     }
 
-    private suspend fun triggerAutoSyncIfNeeded(userId: String) {
+    private suspend fun triggerAutoSyncIfNeeded() {
         val lastSync = sessionManager.getLastSyncTime()
         val isStale = System.currentTimeMillis() - lastSync > 24 * 60 * 60 * 1000 // 24h stale logic
         

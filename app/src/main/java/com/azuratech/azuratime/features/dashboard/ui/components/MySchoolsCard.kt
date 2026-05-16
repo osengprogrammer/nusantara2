@@ -26,9 +26,9 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 @Composable
 fun MySchoolsCard(
     viewModel: SchoolViewModel,
-    accountId: String,
-    isApproved: Boolean,
-    globalRole: String,
+    @Suppress("UNUSED_PARAMETER") accountId: String,
+    @Suppress("UNUSED_PARAMETER") isApproved: Boolean,
+    @Suppress("UNUSED_PARAMETER") globalRole: String,
     onSchoolClick: (String) -> Unit,
     onAddSchoolClick: () -> Unit
 ) {

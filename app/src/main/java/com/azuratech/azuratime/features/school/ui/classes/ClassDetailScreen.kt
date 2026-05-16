@@ -6,12 +6,12 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 
 @Composable
 fun ClassDetailScreen(
-    classId: String,
+    @Suppress("UNUSED_PARAMETER") classId: String,
     className: String,
-    classViewModel: ViewModel,
-    faceViewModel: ViewModel,
+    @Suppress("UNUSED_PARAMETER") classViewModel: ViewModel,
+    @Suppress("UNUSED_PARAMETER") faceViewModel: ViewModel,
     onNavigateBack: () -> Unit,
-    onAddStudent: () -> Unit
+    @Suppress("UNUSED_PARAMETER") onAddStudent: () -> Unit
 ) {
     AzuraScreen(title = "Detail Kelas: $className", onBack = onNavigateBack) {
         // Placeholder

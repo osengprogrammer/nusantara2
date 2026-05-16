@@ -46,7 +46,7 @@ fun AttendanceCaptureScreen(
 
     var currentCameraIsBack by remember { mutableStateOf(useBackCamera) }
 
-    AttendanceScannerContent(
+    AttendanceCaptureContent(
         uiState = uiState,
         activeClassName = viewModel.activeClassName,
         useBackCamera = currentCameraIsBack,

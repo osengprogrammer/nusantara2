@@ -6,7 +6,7 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.biometric.ui.enroll.FaceViewModel
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
-import com.azuratech.azuratime.features.attendance.ui.capture.CheckInViewModel
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
 import com.azuratech.azuratime.core.util.AttendanceService
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -15,7 +15,7 @@ import java.time.LocalTime
 @Composable
 fun ManualAttendanceScreen(
     faceViewModel: FaceViewModel,
-    checkInViewModel: CheckInViewModel,
+    attendanceViewModel: AttendanceViewModel,
     userViewModel: UserManagementViewModel,
     classViewModel: ClassViewModel, 
     initialFaceId: String = "",
@@ -79,9 +79,9 @@ fun ManualAttendanceScreen(
                     activeClassId = selectedClass?.id,
                     activeClassName = selectedClass?.name ?: "Umum / Tanpa Kelas",
                     status = selectedStatus,
-                    checkInTime = finalDateTime
+                    attendanceTime = finalDateTime
                 )
-                checkInViewModel.addRecord(newRecord)
+                attendanceViewModel.addRecord(newRecord)
                 onNavigateBack()
             }
         },

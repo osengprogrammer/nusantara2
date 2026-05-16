@@ -83,6 +83,12 @@ interface BiometricFaceDao {
     @Query("SELECT * FROM faces WHERE schoolId = :schoolId")
     fun getAllFacesFlow(schoolId: String): Flow<List<BiometricFaceEntity>>
 
+    @Query("DELETE FROM faces WHERE studentId = :studentId AND schoolId = :schoolId")
+    suspend fun deleteFacesByStudentId(studentId: String, schoolId: String)
+
+    @Query("DELETE FROM faces WHERE studentId = :studentId AND schoolId = :schoolId AND faceId != :keepFaceId")
+    suspend fun deleteOtherFacesForStudent(studentId: String, keepFaceId: String, schoolId: String)
+
     @Query("SELECT * FROM faces WHERE isSynced = 0 AND schoolId = :schoolId")
     suspend fun getUnsyncedFaces(schoolId: String): List<BiometricFaceEntity>
 }

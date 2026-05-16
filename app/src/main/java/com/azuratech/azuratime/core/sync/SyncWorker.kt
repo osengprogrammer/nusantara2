@@ -46,10 +46,10 @@ class SyncWorker @AssistedInject constructor(
 
         Log.d("AZURA_SYNC", "SyncWorker: Starting persistent background sync for school: $schoolId")
 
-        // 1. Push & Sync Check-In Records (Local-First)
-        val checkInResult = attendanceRepository.syncRecords()
-        if (checkInResult is DomainResult.Failure) {
-            if (handleSyncError(checkInResult.error, "CheckInSync") == Result.retry()) {
+        // 1. Push & Sync Attendance Records (Local-First)
+        val attendanceResult = attendanceRepository.syncRecords()
+        if (attendanceResult is DomainResult.Failure) {
+            if (handleSyncError(attendanceResult.error, "AttendanceSync") == Result.retry()) {
                 return@withContext Result.retry()
             }
         }
@@ -62,7 +62,10 @@ class SyncWorker @AssistedInject constructor(
             }
         }
 
-        // 3. Sync Faces (Pull Delta + Process Soft-Deletes)
+        // 3. Pull Student Profiles (Ensure SSOT exists locally)
+        studentRepository.pullStudents(schoolId)
+
+        // 4. Sync Faces (Pull Delta + Process Soft-Deletes)
         val faceResult = faceRepository.syncFaces()
         if (faceResult is DomainResult.Failure) {
             if (handleSyncError(faceResult.error, "FaceSync") == Result.retry()) {
@@ -73,7 +76,7 @@ class SyncWorker @AssistedInject constructor(
             studentRepository.autoHealStudentIdentities(schoolId)
         }
 
-        // 4. Modernized Sync (Classes, Users, Assignments)
+        // 5. Modernized Sync (Classes, Users, Assignments)
         try {
             val currentUserId = sessionManager.getCurrentUserId() ?: ""
             if (currentUserId.isNotEmpty()) {

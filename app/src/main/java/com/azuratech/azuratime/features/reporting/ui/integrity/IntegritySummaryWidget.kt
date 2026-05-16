@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun IntegritySummaryWidget(
-    totalFaces: Int,
-    unassignedCount: Int,
-    brokenLinks: Int,
-    unsyncedCount: Int
+    @Suppress("UNUSED_PARAMETER") totalFaces: Int,
+    @Suppress("UNUSED_PARAMETER") unassignedCount: Int,
+    @Suppress("UNUSED_PARAMETER") brokenLinks: Int,
+    @Suppress("UNUSED_PARAMETER") unsyncedCount: Int
 ) {
     // Placeholder
 }
