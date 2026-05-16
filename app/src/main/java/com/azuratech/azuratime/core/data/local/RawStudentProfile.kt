@@ -38,7 +38,7 @@ data class RawStudentProfile(
      */
     @Relation(
         parentColumn = "faceId",
-        entityColumn = "faceId"
+        entityColumn = "studentId"
     )
     val assignments: List<FaceAssignmentEntity> = emptyList()
 ) {

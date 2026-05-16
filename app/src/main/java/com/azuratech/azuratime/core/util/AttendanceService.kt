@@ -32,7 +32,7 @@ object AttendanceService {
 
         return AttendanceRecord(
             recordId = java.util.UUID.randomUUID().toString(),
-            studentId = face.faceId, 
+            studentId = face.studentId, 
             studentName = face.name,
             teacherEmail = teacherEmail,
             classId = activeClassId ?: "",

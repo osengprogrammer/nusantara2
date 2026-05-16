@@ -8,19 +8,19 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
 
 @Entity(
     tableName = "face_assignments",
-    primaryKeys = ["faceId", "classId"],
+    primaryKeys = ["studentId", "classId"],
     indices = [
-        Index(value = ["faceId"]),
+        Index(value = ["studentId"]),
         Index(value = ["classId"]),
-        Index(value = ["schoolId"]) // 🔥 Index for fast tenant filtering
+        Index(value = ["schoolId"])
     ],
     foreignKeys = [
         // 1. Link to the Face (Student)
         ForeignKey(
             entity = BiometricFaceEntity::class,
-            parentColumns = ["faceId"],
-            childColumns = ["faceId"],
-            onDelete = ForeignKey.CASCADE, // Auto-delete if Face is deleted
+            parentColumns = ["studentId"],
+            childColumns = ["studentId"],
+            onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         ),
         // 2. Link to the Class 
@@ -28,14 +28,14 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
             entity = ClassEntity::class,
             parentColumns = ["id"],
             childColumns = ["classId"],
-            onDelete = ForeignKey.CASCADE, // Auto-delete if Class is deleted
+            onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         )
     ]
 )
 data class FaceAssignmentEntity(
-    val faceId: String,   
+    val studentId: String,   
     val classId: String,  
-    val schoolId: String = "", // 🔥 Added tenant scoping to isolate data
+    val schoolId: String = "",
     val isSynced: Boolean = false
 )

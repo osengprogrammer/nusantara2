@@ -32,7 +32,7 @@ class FaceRemoteDataSourceImpl @Inject constructor(
                 try {
                     val embedding = (doc.get("embedding") as? List<*>)?.map { (it as Number).toFloat() }?.toFloatArray()
                     val entity = BiometricFaceEntity(
-                        faceId = doc.id,
+                        studentId = doc.id,
                         schoolId = schoolId,
                         name = doc.getString("name") ?: "",
                         embedding = embedding,
@@ -43,16 +43,15 @@ class FaceRemoteDataSourceImpl @Inject constructor(
                 } catch (e: Exception) { null }
             }.toMutableList()
 
-            // 🔥 Path Standardized: Legacy root-level fallbacks removed
             Result.Success(updatedData)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
         }
     }
 
-    override suspend fun uploadFacePhoto(schoolId: String, faceId: String, imageBytes: ByteArray): Result<String?> {
+    override suspend fun uploadFacePhoto(schoolId: String, studentId: String, imageBytes: ByteArray): Result<String?> {
         return try {
-            val ref = storage.reference.child("schools/$schoolId/faces/$faceId.jpg")
+            val ref = storage.reference.child("schools/$schoolId/faces/$studentId.jpg")
             ref.putBytes(imageBytes).await()
             val downloadUrl = ref.downloadUrl.await().toString()
             Result.Success(downloadUrl)
@@ -61,22 +60,22 @@ class FaceRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun bulkSyncFaces(schoolId: String, faces: List<BiometricFaceEntity>): Result<Unit> {
+    override suspend fun bulkSyncFaces(schoolId: String, students: List<BiometricFaceEntity>): Result<Unit> {
         return try {
-            if (faces.isEmpty()) return Result.Success(Unit)
-            faces.chunked(500).forEach { chunk ->
+            if (students.isEmpty()) return Result.Success(Unit)
+            students.chunked(500).forEach { chunk ->
                 val batch = db.batch()
-                chunk.forEach { face ->
-                    val safePhotoUrl = if (face.photoUrl?.startsWith("http") == true) face.photoUrl else null
+                chunk.forEach { student ->
+                    val safePhotoUrl = if (student.photoUrl?.startsWith("http") == true) student.photoUrl else null
                     val data = hashMapOf(
-                        "faceId" to face.faceId,
-                        "name" to face.name,
+                        "faceId" to student.studentId,
+                        "name" to student.name,
                         "photoUrl" to safePhotoUrl,
-                        "embedding" to face.embedding?.toList(),
+                        "embedding" to student.embedding?.toList(),
                         "isActive" to true,
                         "lastUpdated" to FieldValue.serverTimestamp()
                     )
-                    batch.set(getTenantRef(schoolId).collection("master_faces").document(face.faceId), data, SetOptions.merge())
+                    batch.set(getTenantRef(schoolId).collection("master_faces").document(student.studentId), data, SetOptions.merge())
                 }
                 batch.commit().await()
             }
@@ -88,13 +87,12 @@ class FaceRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun syncFaceAssignment(assignment: FaceAssignmentEntity): Result<Unit> {
         return try {
-            val docId = "${assignment.faceId}_${assignment.classId}"
+            val docId = "${assignment.studentId}_${assignment.classId}"
             val data = hashMapOf(
-                "faceId" to assignment.faceId,
+                "faceId" to assignment.studentId,
                 "classId" to assignment.classId,
                 "lastUpdated" to FieldValue.serverTimestamp()
             )
-            println("🔥 Path Standardized: assignments → schools/${assignment.schoolId}/face_assignments/$docId")
             getTenantRef(assignment.schoolId).collection("face_assignments").document(docId).set(data, SetOptions.merge()).await()
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -102,34 +100,32 @@ class FaceRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteFace(faceId: String, schoolId: String, classIds: List<String>): Result<Unit> {
+    override suspend fun deleteStudent(studentId: String, schoolId: String, classIds: List<String>): Result<Unit> {
         return try {
             val softDeleteData = mapOf(
                 "isActive" to false,
                 "lastUpdated" to FieldValue.serverTimestamp()
             )
-            getTenantRef(schoolId).collection("master_faces").document(faceId)
+            getTenantRef(schoolId).collection("master_faces").document(studentId)
                 .set(softDeleteData, SetOptions.merge()).await()
             
             val tenantCollections = listOf("master_faces", "faces")
             for (coll in tenantCollections) {
                 try {
-                    getTenantRef(schoolId).collection(coll).document(faceId).delete().await()
+                    getTenantRef(schoolId).collection(coll).document(studentId).delete().await()
                 } catch (e: Exception) {
                     Log.e("FaceRemoteDataSource", "Gagal hapus di Cloud (Tenant $coll): ${e.message}")
                 }
             }
 
-            // 🔥 Removed legacy root-level deletions (master_faces, faces)
-
             try {
                 classIds.forEach { classId ->
-                    val docId = "${faceId}_$classId"
+                    val docId = "${studentId}_$classId"
                     getTenantRef(schoolId).collection("face_assignments").document(docId).delete().await()
                 }
                 
                 val assignmentSnapshot = getTenantRef(schoolId).collection("face_assignments")
-                    .whereEqualTo("faceId", faceId).get().await()
+                    .whereEqualTo("faceId", studentId).get().await()
                 for (doc in assignmentSnapshot.documents) {
                     doc.reference.delete().await()
                 }

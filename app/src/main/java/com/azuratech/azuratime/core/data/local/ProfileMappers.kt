@@ -64,8 +64,8 @@ fun ReportEntity.toProfile(): SchoolAnalyticsSummary {
  */
 fun BiometricFaceEntity.toProfile(): BiometricEnrollmentProfile {
     return BiometricEnrollmentProfile(
-        faceId = faceId,
-        studentId = studentId ?: faceId,
+        faceId = studentId,
+        studentId = studentId,
         studentName = name,
         photoUri = photoUrl,
         enrollmentDate = lastUpdated,
@@ -121,7 +121,7 @@ fun StudentEntity.toDomain(
         name = name,
         schoolId = schoolId,
         classIds = finalClassIds,
-        faceId = face?.faceId,
+        faceId = face?.studentId,
         embedding = face?.embedding, // Handled by Converters.kt in Room
         photoUrl = face?.photoUrl,
         syncStatus = status,
@@ -148,12 +148,12 @@ fun BiometricFaceEntity.toDomain(
     val finalClassIds = (classIds + listOfNotNull(student?.classId)).distinct()
 
     return StudentProfile(
-        studentId = studentId ?: faceId,
+        studentId = studentId,
         studentCode = student?.studentCode,
         name = name,
         schoolId = schoolId,
         classIds = finalClassIds,
-        faceId = faceId,
+        faceId = studentId,
         embedding = embedding,
         photoUrl = photoUrl,
         syncStatus = status,
@@ -193,8 +193,7 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List
     )
 
     val faceEntity = BiometricFaceEntity(
-        faceId = faceId ?: studentId, // 🔥 AI Friendly: Default to studentId
-        studentId = studentId,
+        studentId = faceId ?: studentId, // 🔥 AI Friendly: Default to studentId
         schoolId = schoolId,
         name = name,
         photoUrl = photoUrl,
@@ -206,7 +205,7 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List
     )
     val assignments = classIds.map { classId ->
         FaceAssignmentEntity(
-            faceId = faceEntity.faceId,
+            studentId = faceEntity.studentId,
             classId = classId,
             schoolId = schoolId,
             isSynced = isSynced

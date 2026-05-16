@@ -48,8 +48,7 @@ class FaceViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val studentRosterFlow: StateFlow<List<FaceWithDetails>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
-        .flatMapLatest { schoolId -> faceRepository.getFacesWithDetailsFlow(schoolId) }
-        .map { it }
+        .flatMapLatest { schoolId -> faceRepository.getStudentsWithDetailsFlow(schoolId) }
         .stateIn(
             scope = viewModelScope, 
             started = SharingStarted.WhileSubscribed(5000), 
@@ -59,8 +58,7 @@ class FaceViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val enrolledStudentFlow: StateFlow<List<BiometricFaceEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
-        .flatMapLatest { schoolId -> faceRepository.getEnrolledFacesFlow(schoolId) }
-        .map { it }
+        .flatMapLatest { schoolId -> faceRepository.getEnrolledStudentsFlow(schoolId) }
         .stateIn(
             scope = viewModelScope, 
             started = SharingStarted.WhileSubscribed(5000), 
@@ -68,7 +66,7 @@ class FaceViewModel @Inject constructor(
         )
 
     fun getFacesInClassFlow(classId: String): Flow<List<BiometricFaceEntity>> = 
-        faceRepository.getFacesInClassFlow(classId, sessionManager.getActiveSchoolId() ?: "").map { it }
+        faceRepository.getStudentsInClassFlow(classId, sessionManager.getActiveSchoolId() ?: "")
 
     fun registerFace(
         inputId: String, 
@@ -117,7 +115,7 @@ class FaceViewModel @Inject constructor(
 
     fun deleteFace(face: BiometricFaceEntity) { 
         viewModelScope.launch { 
-            val result = faceRepository.deleteFace(face.faceId)
+            val result = faceRepository.deleteStudent(face.studentId)
             if (result is Result.Failure) {
                 android.util.Log.e("FaceViewModel", "Gagal hapus: ${result.error.message}")
             }
@@ -126,7 +124,7 @@ class FaceViewModel @Inject constructor(
 
     fun updateEmployeeClass(faceId: String, classId: String?) {
         viewModelScope.launch { 
-            val result = faceRepository.updateFaceClass(faceId, classId)
+            val result = faceRepository.updateStudentClass(faceId, classId)
             if (result is Result.Failure) {
                 android.util.Log.e("FaceViewModel", "Gagal update kelas: ${result.error.message}")
             }
@@ -136,11 +134,11 @@ class FaceViewModel @Inject constructor(
     fun updateFace(face: BiometricFaceEntity, onComplete: () -> Unit) {
         viewModelScope.launch {
             val profile = StudentProfile(
-                studentId = face.studentId ?: face.faceId,
+                studentId = face.studentId,
                 name = face.name,
                 schoolId = face.schoolId,
                 classIds = emptyList(), // Class info not available here, repository will handle it or keep existing
-                faceId = face.faceId,
+                faceId = face.studentId,
                 embedding = face.embedding,
                 photoUrl = face.photoUrl,
                 syncStatus = SyncStatus.PENDING_UPDATE

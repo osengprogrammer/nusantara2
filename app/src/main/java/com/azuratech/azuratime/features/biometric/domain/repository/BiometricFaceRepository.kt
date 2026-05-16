@@ -26,13 +26,13 @@ class BiometricFaceRepository @Inject constructor(
         get() = sessionManager.getActiveSchoolId() ?: ""
 
     // Delegation methods for DAOs / DataSources
-    fun observeEnrollmentsBySchool(schoolId: String) = localDataSource.getAllFacesFlow(schoolId)
+    fun observeEnrollmentsBySchool(schoolId: String) = localDataSource.getAllStudentsFlow(schoolId)
 
     suspend fun submitEnrollment(studentId: String, photoUri: String): Result<Unit> {
         return try {
-            val face = localDataSource.getFaceByStudentId(studentId, schoolId)
+            val face = localDataSource.getStudentFaceByIdentity(studentId, schoolId)
             if (face != null) {
-                localDataSource.upsertFace(face.copy(photoUrl = photoUri, isSynced = false))
+                localDataSource.upsertStudentFace(face.copy(photoUrl = photoUri, isSynced = false))
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -49,44 +49,44 @@ class BiometricFaceRepository @Inject constructor(
         }
     }
 
-    fun getAllFacesFlow(schoolId: String) = localDataSource.getAllFacesFlow(schoolId)
-    fun getFacesWithDetailsFlow(schoolId: String) = localDataSource.getAllFacesWithDetailsFlow(schoolId)
-    fun getEnrolledFacesFlow(schoolId: String) = localDataSource.getAllFacesForScanningFlow(schoolId)
-    fun getAllFacesForScanningFlow(schoolId: String) = localDataSource.getAllFacesForScanningFlow(schoolId)
-    fun getFacesInClassFlow(classId: String, schoolId: String) = localDataSource.getFacesInClassFlow(classId, schoolId)
-    suspend fun getFaceWithDetails(faceId: String, schoolId: String) = localDataSource.getFaceWithDetails(faceId, schoolId)
-    suspend fun getClassIdsForFace(faceId: String, schoolId: String) = localDataSource.getClassIdsForFace(faceId, schoolId)
-    suspend fun deleteAssignmentsByFace(faceId: String, schoolId: String) = localDataSource.deleteAssignmentsByFace(faceId, schoolId)
+    fun getAllStudentsFlow(schoolId: String) = localDataSource.getAllStudentsFlow(schoolId)
+    fun getStudentsWithDetailsFlow(schoolId: String) = localDataSource.getAllStudentsWithDetailsFlow(schoolId)
+    fun getEnrolledStudentsFlow(schoolId: String) = localDataSource.getAllStudentsForScanningFlow(schoolId)
+    fun getAllStudentsForScanningFlow(schoolId: String) = localDataSource.getAllStudentsForScanningFlow(schoolId)
+    fun getStudentsInClassFlow(classId: String, schoolId: String) = localDataSource.getStudentsInClassFlow(classId, schoolId)
+    suspend fun getStudentWithDetails(studentId: String, schoolId: String) = localDataSource.getStudentWithDetails(studentId, schoolId)
+    suspend fun getClassIdsForStudent(studentId: String, schoolId: String) = localDataSource.getClassIdsForStudent(studentId, schoolId)
+    suspend fun deleteAssignmentsByStudent(studentId: String, schoolId: String) = localDataSource.deleteAssignmentsByStudent(studentId, schoolId)
     suspend fun insertAssignment(assignment: FaceAssignmentEntity) = localDataSource.insertAssignment(assignment)
-    suspend fun upsertFace(face: BiometricFaceEntity) = localDataSource.upsertFace(face)
+    suspend fun upsertStudentFace(studentFace: BiometricFaceEntity) = localDataSource.upsertStudentFace(studentFace)
 
-    suspend fun assignStudentToClass(faceId: String, classId: String): Result<Unit> = try {
-        localDataSource.insertAssignment(FaceAssignmentEntity(faceId, classId, schoolId))
+    suspend fun assignStudentToClass(studentId: String, classId: String): Result<Unit> = try {
+        localDataSource.insertAssignment(FaceAssignmentEntity(studentId, classId, schoolId))
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
     }
 
-    suspend fun removeStudentFromClass(faceId: String, @Suppress("UNUSED_PARAMETER") classId: String): Result<Unit> = try {
-        localDataSource.deleteAssignmentsByFace(faceId, schoolId) // Simple version: remove all then re-add if needed, or specific delete
+    suspend fun removeStudentFromClass(studentId: String, @Suppress("UNUSED_PARAMETER") classId: String): Result<Unit> = try {
+        localDataSource.deleteAssignmentsByStudent(studentId, schoolId) // Simple version: remove all then re-add if needed, or specific delete
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
     }
 
-    suspend fun removeAllAssignmentsForFace(faceId: String): Result<Unit> = try {
-        localDataSource.deleteAssignmentsByFace(faceId, schoolId)
+    suspend fun removeAllAssignmentsForStudent(studentId: String): Result<Unit> = try {
+        localDataSource.deleteAssignmentsByStudent(studentId, schoolId)
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
     }
 
-    suspend fun deleteFace(faceId: String) = deleteEnrollment(faceId)
+    suspend fun deleteStudent(studentId: String) = deleteEnrollment(studentId)
 
-    suspend fun updateFaceClass(faceId: String, classId: String?): Result<Unit> = try {
-        localDataSource.deleteAssignmentsByFace(faceId, schoolId)
+    suspend fun updateStudentClass(studentId: String, classId: String?): Result<Unit> = try {
+        localDataSource.deleteAssignmentsByStudent(studentId, schoolId)
         if (classId != null) {
-            localDataSource.insertAssignment(FaceAssignmentEntity(faceId, classId, schoolId))
+            localDataSource.insertAssignment(FaceAssignmentEntity(studentId, classId, schoolId))
         }
         Result.Success(Unit)
     } catch (e: Exception) {
@@ -112,20 +112,19 @@ class BiometricFaceRepository @Inject constructor(
                     // 🔥 AI Friendly: Deduplicate by studentId to prevent duplicates in Roster
                     // If multiple faces point to the same student, we pick the most recent or the one where faceId == studentId
                     val uniqueFaces = updatedData.filter { it.second }.map { it.first }
-                        .groupBy { it.studentId ?: it.faceId }
+                        .groupBy { it.studentId }
                         .map { entry ->
                             val facesForStudent = entry.value
-                            // Preference: 1. faceId == studentId, 2. most recently updated
-                            facesForStudent.find { it.faceId == it.studentId } 
-                                ?: facesForStudent.maxByOrNull { it.lastUpdated } 
+                            // Preference: most recently updated
+                            facesForStudent.maxByOrNull { it.lastUpdated } 
                                 ?: facesForStudent.first()
                         }
 
                     val toDelete = updatedData.filter { !it.second }.map { it.first }
 
-                    if (uniqueFaces.isNotEmpty()) localDataSource.upsertAll(uniqueFaces)
+                    if (uniqueFaces.isNotEmpty()) localDataSource.upsertAllStudentFaces(uniqueFaces)
                     if (toDelete.isNotEmpty()) {
-                        toDelete.forEach { localDataSource.deleteFaceById(it.faceId, schoolId) }
+                        toDelete.forEach { localDataSource.deleteStudentFaceById(it.studentId, schoolId) }
                     }
 
                     FaceCache.refresh(application, schoolId)

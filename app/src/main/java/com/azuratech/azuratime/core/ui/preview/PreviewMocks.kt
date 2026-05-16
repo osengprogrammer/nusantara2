@@ -34,9 +34,9 @@ object PreviewMocks {
     )
 
     val mockStudents = listOf(
-        BiometricFaceEntity(faceId = "face_1", name = "Budi Santoso", embedding = null),
-        BiometricFaceEntity(faceId = "face_2", name = "Siti Aminah", embedding = null),
-        BiometricFaceEntity(faceId = "face_3", name = "Agus Setiawan", embedding = null)
+        BiometricFaceEntity(studentId = "face_1", name = "Budi Santoso", embedding = null),
+        BiometricFaceEntity(studentId = "face_2", name = "Siti Aminah", embedding = null),
+        BiometricFaceEntity(studentId = "face_3", name = "Agus Setiawan", embedding = null)
     )
 
     val mockRecentRecords = listOf(

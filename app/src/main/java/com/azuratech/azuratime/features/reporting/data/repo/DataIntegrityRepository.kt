@@ -34,7 +34,7 @@ class DataIntegrityRepository @Inject constructor(
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val totalFaces: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
-        faceDao.getTotalFacesFlow(id)
+        faceDao.getTotalStudentsCountFlow(id)
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -63,7 +63,7 @@ class DataIntegrityRepository @Inject constructor(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val globalUnsyncedCount: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
         combine(
-            faceDao.getUnsyncedFacesCountFlow(id),
+            faceDao.getUnsyncedStudentsCountFlow(id),
             recordDao.getUnsyncedRecordsCountFlow(id),
             assignmentDao.getUnsyncedAssignmentsCountFlow(id)
         ) { face, record, assignment ->
@@ -84,7 +84,7 @@ class DataIntegrityRepository @Inject constructor(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun getIncompleteProfiles(type: String): Flow<List<BiometricFaceEntity>> = schoolIdFlow.flatMapLatest { id ->
         when (type) {
-            "CLASS"  -> faceDao.getFacesMissingAssignment(id)
+            "CLASS"  -> faceDao.getStudentsMissingAssignment(id)
             else     -> flowOf(emptyList())
         }
     }

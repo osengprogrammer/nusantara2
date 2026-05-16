@@ -139,7 +139,7 @@ class AttendanceRepositoryImpl @Inject constructor(
     }
 
     override fun getFacesByClass(classId: String, schoolId: String): Flow<List<com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity>> {
-        return faceAssignmentDao.getFacesByClass(classId, schoolId)
+        return faceAssignmentDao.getStudentsByClass(classId, schoolId)
     }
 
     override fun getStudentCountInClass(classId: String, schoolId: String): Flow<Int> {
@@ -147,11 +147,11 @@ class AttendanceRepositoryImpl @Inject constructor(
     }
 
     override fun getClassIdsForFace(faceId: String, schoolId: String): Flow<List<String>> {
-        return faceAssignmentDao.getClassIdsForFace(faceId, schoolId)
+        return faceAssignmentDao.getClassIdsForStudent(faceId, schoolId)
     }
 
     override suspend fun getFaceById(faceId: String, schoolId: String): com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity? {
-        return faceDao.getFaceById(faceId, schoolId)
+        return faceDao.getStudentFaceById(faceId, schoolId)
     }
 
     override suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecord> {

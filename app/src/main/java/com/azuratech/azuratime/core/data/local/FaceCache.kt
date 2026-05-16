@@ -33,13 +33,13 @@ object FaceCache {
                 val faces = AppDatabase
                     .getInstance(context)
                     .faceDao()
-                    .getAllFacesForScanningList(schoolId)
+                    .getAllStudentsForScanningList(schoolId)
 
                 println("[FaceCache] Loaded ${faces.size} enrolled faces from database")
 
                 // Map faceId to embedding
                 val pairs = faces.mapNotNull { faceEntity ->
-                    faceEntity.embedding?.let { faceEntity.faceId to it }
+                    faceEntity.embedding?.let { faceEntity.studentId to it }
                 }
 
                 cache.addAll(pairs)
@@ -60,11 +60,11 @@ object FaceCache {
             val faces = AppDatabase
                 .getInstance(context)
                 .faceDao()
-                .getAllFacesForScanningList(schoolId)
+                .getAllStudentsForScanningList(schoolId)
 
             // Map entities to faceId-name-embedding triples
             faces.mapNotNull { faceEntity ->
-                faceEntity.embedding?.let { Triple(faceEntity.faceId, faceEntity.name, it) }
+                faceEntity.embedding?.let { Triple(faceEntity.studentId, faceEntity.name, it) }
             }
         }
 

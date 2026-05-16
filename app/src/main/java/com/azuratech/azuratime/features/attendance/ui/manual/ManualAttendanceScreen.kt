@@ -40,7 +40,7 @@ fun ManualAttendanceScreen(
 
     // --- State Management ---
     var selectedFace by remember(faces, initialFaceId) {
-        mutableStateOf(faces.find { it.face.faceId == initialFaceId })
+        mutableStateOf(faces.find { it.face.studentId == initialFaceId })
     }
     var selectedStatus by remember { mutableStateOf("H") }
     var selectedDate by remember {
