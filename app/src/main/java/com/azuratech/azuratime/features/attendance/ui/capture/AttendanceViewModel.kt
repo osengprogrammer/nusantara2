@@ -87,7 +87,7 @@ class AttendanceViewModel @Inject constructor(
                 val currentSessionId = _filterParams.value.classId
 
                 val params = ProcessAttendanceParams(
-                    faceId = scannedFaceId,
+                    studentId = scannedFaceId,
                     studentName = studentName,
                     teacherEmail = teacherEmail,
                     activeClassId = currentSessionId,

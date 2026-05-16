@@ -43,6 +43,11 @@ class ScannerViewModel @Inject constructor(
     // Gatekeeper: Prevents multiple concurrent processing
     private val isProcessing = AtomicBoolean(false)
 
+    // Tracking for deduplication to prevent "double output"
+    private var lastProcessedStudentId: String? = null
+    private var lastProcessedTime: Long = 0L
+    private val REPEAT_SCAN_SUPPRESSION_MS = 600_000L // 10 minutes (60s * 10)
+
     fun startScannerSession(email: String) {
         currentTeacherEmail = email
         viewModelScope.launch {
@@ -102,6 +107,15 @@ class ScannerViewModel @Inject constructor(
 
     private suspend fun processAttendanceRecord(scannedId: String) {
         val schoolId = activeSchoolId ?: return enterCooldown()
+
+        // 🔥 Deduplication logic to prevent "double output"
+        val currentTime = System.currentTimeMillis()
+        if (scannedId == lastProcessedStudentId && (currentTime - lastProcessedTime < REPEAT_SCAN_SUPPRESSION_MS)) {
+            // Student just scanned successfully, ignore this frame to prevent repeat sound/UI
+            isProcessing.set(false)
+            return
+        }
+
         val face = attendanceRepository.getFaceById(scannedId, schoolId)
         
         if (face == null) {
@@ -112,7 +126,7 @@ class ScannerViewModel @Inject constructor(
         val studentClassIds = attendanceRepository.getClassIdsForFace(scannedId, schoolId).firstOrNull() ?: emptyList()
 
         val params = ProcessAttendanceParams(
-            faceId = scannedId,
+            studentId = scannedId,
             studentName = face.name,
             teacherEmail = currentTeacherEmail,
             activeClassId = activeClassId,
@@ -125,10 +139,17 @@ class ScannerViewModel @Inject constructor(
             is Result.Success<AttendanceResult> -> {
                 when (val attendanceRes = result.data) {
                     is AttendanceResult.Success -> {
+                        lastProcessedStudentId = scannedId
+                        lastProcessedTime = System.currentTimeMillis()
                         _uiState.value = AttendanceUiState.Success(attendanceRes.name, alreadyCheckedIn = false)
                         _sideEffect.send(AttendanceSideEffect.Speak(attendanceRes.message))
                     }
                     is AttendanceResult.AlreadyCheckedIn -> {
+                        // Even if already checked in, we update the timestamp to prevent 
+                        // "Already checked in" from firing repeatedly every 4s if they stand there
+                        lastProcessedStudentId = scannedId
+                        lastProcessedTime = System.currentTimeMillis()
+
                         _uiState.value = AttendanceUiState.Success(attendanceRes.name, alreadyCheckedIn = true)
                         _sideEffect.send(AttendanceSideEffect.Speak("${attendanceRes.name}, sudah absen."))
                     }
@@ -155,7 +176,7 @@ class ScannerViewModel @Inject constructor(
         enterCooldown()
     }
 
-    private suspend fun enterCooldown(duration: Long = 2500) {
+    private suspend fun enterCooldown(duration: Long = 4000) {
         delay(duration)
         _uiState.value = AttendanceUiState.Idle
         isProcessing.set(false)

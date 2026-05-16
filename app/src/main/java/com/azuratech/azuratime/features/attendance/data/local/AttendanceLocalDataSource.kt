@@ -19,5 +19,6 @@ interface AttendanceLocalDataSource {
     suspend fun delete(record: AttendanceRecordEntity)
     suspend fun getRecordById(recordId: String, schoolId: String): AttendanceRecordEntity?
     suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
+    suspend fun getLatestRecordForStudent(faceId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
     suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecordEntity>
 }

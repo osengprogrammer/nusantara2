@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 data class ProcessAttendanceParams(
-    val faceId: String,
+    val studentId: String,
     val studentName: String,
     val teacherEmail: String,
     val activeClassId: String?,

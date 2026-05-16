@@ -36,6 +36,9 @@ class AttendanceLocalDataSourceImpl @Inject constructor(
     override suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity? =
         attendanceRecordDao.getRecordByFaceAndDate(faceId, date, schoolId)
 
+    override suspend fun getLatestRecordForStudent(faceId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity? =
+        attendanceRecordDao.getLatestRecordForStudent(faceId, classId, date, schoolId)
+
     override suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecordEntity> =
         attendanceRecordDao.getUnsyncedRecords(schoolId)
 }
