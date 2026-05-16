@@ -24,20 +24,20 @@ interface AttendanceRecordDao {
     @Query("SELECT * FROM check_in_records WHERE id = :id")
     suspend fun getRecordByIdNoSchool(id: String): AttendanceRecordEntity?
 
-    @Query("SELECT * FROM check_in_records WHERE faceId = :faceId AND attendanceDate = :date AND schoolId = :schoolId")
-    suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
+    @Query("SELECT * FROM check_in_records WHERE studentId = :studentId AND attendanceDate = :date AND schoolId = :schoolId")
+    suspend fun getRecordByStudentAndDate(studentId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
 
     @Query("""
         SELECT * FROM check_in_records 
-        WHERE faceId = :faceId AND classId = :classId AND attendanceDate = :date AND schoolId = :schoolId 
+        WHERE studentId = :studentId AND classId = :classId AND attendanceDate = :date AND schoolId = :schoolId 
         ORDER BY timestamp DESC LIMIT 1
     """)
-    suspend fun getLatestRecordForStudent(faceId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
+    suspend fun getLatestRecordForStudent(studentId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
 
     @Query("SELECT * FROM check_in_records WHERE schoolId = :schoolId AND isSynced = 0")
     suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecordEntity>
 
-    @Query("SELECT COUNT(DISTINCT faceId) FROM check_in_records WHERE attendanceDate = :date AND schoolId = :schoolId AND status = 'H'")
+    @Query("SELECT COUNT(DISTINCT studentId) FROM check_in_records WHERE attendanceDate = :date AND schoolId = :schoolId AND status = 'H'")
     fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Int>
 
     @Query("DELETE FROM check_in_records WHERE schoolId = :schoolId")
@@ -53,12 +53,14 @@ interface AttendanceRecordDao {
         SELECT * FROM check_in_records 
         WHERE schoolId = :schoolId 
         AND (:nameFilter IS NULL OR name LIKE '%' || :nameFilter || '%')
+        AND (:accountId IS NULL OR accountEmail = :accountId)
         AND (:classId IS NULL OR classId = :classId)
         ORDER BY timestamp DESC
     """)
     fun getFilteredRecords(
         schoolId: String,
         nameFilter: String?,
+        accountId: String?,
         classId: String?
     ): Flow<List<AttendanceRecordEntity>>
 }

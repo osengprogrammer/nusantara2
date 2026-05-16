@@ -9,8 +9,8 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuratime.features.staff.data.repo.WorkspaceRepository
-import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.account.data.repo.SchoolWorkspaceRepository
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import androidx.compose.ui.graphics.Color
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,8 +25,8 @@ class SchoolViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val sessionManager: SessionManager,
     private val schoolRepository: SchoolRepository,
-    private val workspaceRepository: WorkspaceRepository,
-    private val userRepository: StaffAccountRepository
+    private val workspaceRepository: SchoolWorkspaceRepository,
+    private val accountRepository: AccountRepository
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -38,9 +38,9 @@ class SchoolViewModel @Inject constructor(
     // 🔥 v3.1: Reactive School SSOT Migration (Phase 7.7)
     val schools: StateFlow<List<School>> = _accountId
         .filter { it.isNotEmpty() }
-        .flatMapLatest { id -> userRepository.observeUserEntity(id) }
+        .flatMapLatest { id -> accountRepository.observeAccountEntity(id) }
         .filterNotNull()
-        .map { user -> user.memberships.keys.toList() }
+        .map { account -> account.memberships.keys.toList() }
         .flatMapLatest { schoolIds -> 
             if (schoolIds.isEmpty()) flowOf(Result.Success(emptyList()))
             else schoolRepository.observeSchoolsByIds(schoolIds) 
@@ -86,17 +86,17 @@ class SchoolViewModel @Inject constructor(
 
     /**
      * 🔥 SELECT SCHOOL & PERSIST
-     * Updates local session and cloud context through WorkspaceRepository.
+     * Updates local session and cloud context through SchoolWorkspaceRepository.
      */
     fun selectSchool(school: School) {
         viewModelScope.launch {
-            val userId = _accountId.value
-            if (userId.isEmpty()) return@launch
+            val currentAccountId = _accountId.value
+            if (currentAccountId.isEmpty()) return@launch
             
             println("🔄 Switching school to: ${school.name} (${school.id})")
             sessionManager.saveActiveSchoolId(school.id)
             try {
-                workspaceRepository.switchWorkspace(userId, school.id)
+                workspaceRepository.switchWorkspace(currentAccountId, school.id)
             } catch (e: Exception) {
                 println("⚠️ Error switching workspace: ${e.message}")
             }
@@ -104,13 +104,13 @@ class SchoolViewModel @Inject constructor(
     }
 
     fun createSchool(name: String, timezone: String, selectedClassIds: List<String> = emptyList()) {
-        val currentId = _accountId.value
-        if (currentId.isEmpty()) return
+        val currentAccountId = _accountId.value
+        if (currentAccountId.isEmpty()) return
         
         println("💾 DEBUG: Creating school: $name with ${selectedClassIds.size} classes")
         viewModelScope.launch {
-            val user = userRepository.getUserById(currentId)
-            val role = user?.role ?: "USER"
+            val account = accountRepository.getAccountById(currentAccountId)
+            val role = account?.role ?: "USER"
             
             // 🔥 Business Rule: One account one school unless SUPER_ADMIN
             if (role != "SUPER_ADMIN" && schools.value.isNotEmpty()) {
@@ -118,7 +118,7 @@ class SchoolViewModel @Inject constructor(
                 return@launch
             }
 
-            val result = schoolRepository.createSchool(currentId, name, timezone)
+            val result = schoolRepository.createSchool(currentAccountId, name, timezone)
             if (result is Result.Success) {
                 val newSchoolId = result.data
                 selectedClassIds.forEach { classId ->
@@ -146,11 +146,11 @@ class SchoolViewModel @Inject constructor(
     }
 
     fun deleteSchool(id: String) {
-        val currentId = _accountId.value
-        if (currentId.isEmpty()) return
+        val currentAccountId = _accountId.value
+        if (currentAccountId.isEmpty()) return
         
         viewModelScope.launch {
-            schoolRepository.deleteSchool(id, currentId)
+            schoolRepository.deleteSchool(id, currentAccountId)
         }
     }
 

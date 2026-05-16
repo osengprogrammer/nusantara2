@@ -1,9 +1,8 @@
 package com.azuratech.azuratime.core.data.local
 
 import androidx.room.TypeConverter
-import com.azuratech.azuratime.features.staff.data.local.Membership
-import com.azuratech.azuratime.features.staff.data.local.FriendConnection
-import com.azuratech.azuratime.features.staff.domain.model.AccessRequestStatus
+import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -78,20 +77,6 @@ class Converters {
     fun toMembershipsMap(value: String?): Map<String, Membership>? {
         if (value.isNullOrEmpty()) return emptyMap()
         val type = object : TypeToken<Map<String, Membership>>() {}.type
-        return try { gson.fromJson(value, type) } catch (e: Exception) { emptyMap() }
-    }
-
-    @TypeConverter
-    fun fromFriendsMap(map: Map<String, FriendConnection>?): String? {
-        if (map == null) return null
-        val type = object : TypeToken<Map<String, FriendConnection>>() {}.type
-        return gson.toJson(map, type)
-    }
-
-    @TypeConverter
-    fun toFriendsMap(value: String?): Map<String, FriendConnection>? {
-        if (value.isNullOrEmpty()) return emptyMap()
-        val type = object : TypeToken<Map<String, FriendConnection>>() {}.type
         return try { gson.fromJson(value, type) } catch (e: Exception) { emptyMap() }
     }
 

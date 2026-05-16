@@ -1,6 +1,12 @@
 # 🛡️ Azura Time - Project Status
 
-## 🚀 Recent Updates (May 7, 2026)
+### Phase 12: Account Terminology Refactor
+- **Project-Wide Naming Optimization**: Fully migrated all legacy "Staff", "Teacher", and "User" terminology to **"Account"** across the UI, ViewModels, and package structures.
+- **Feature Package Consolidation**: Renamed the `features.staff` package to `features.account`, moving `AccountManagementViewModel`, `AccountProfileScreen`, and all related components.
+- **Navigation Updates**: Refactored `UserGraph.kt` to `AccountGraph.kt` and updated `NavigationRoutes` to use `ACCOUNT_GRAPH` and `ACCOUNT_PROFILE`.
+- **Compilation & SSOT Enforcement**: Resolved dependency mapping and import errors in `SchoolRepository` and `ClassViewModel` to strictly depend on `AccountDao` and `AccountEntity` as the single source of truth.
+
+## 🚀 Recent Updates (May 16, 2026)
 
 ### Phase 11G: Reporting DI & NavGraph Realignment
 - **Reporting Feature Consolidation**: Moved all reporting-related files (Entities, DAOs, Repositories, ViewModels, and Screens) to the `com.azuratech.azuratime.features.reporting` package.
@@ -18,7 +24,7 @@
 ### Phase 11E: Staff Feature Move & KSP Restoration
 - **KSP Failure Resolved**: Fixed `MissingType` errors in `Converters.kt` by adding missing imports for `Membership` and `FriendConnection`.
 - **Database Refinement**: Cleaned up `AppDatabase.kt` by removing duplicate imports and qualifying `JournalMode` with `RoomDatabase.JournalMode`.
-- **Project-Wide Import Alignment**: Performed a massive import update across 16+ files to reflect the move of `StaffAccountEntity`, `Membership`, `UserManagementViewModel`, and associated UI components to the `staff` feature package.
+- **Project-Wide Import Alignment**: Performed a massive import update across 16+ files to reflect the move of `StaffAccountEntity`, `Membership`, `AccountManagementViewModel`, and associated UI components to the `staff` feature package.
 - **Build Restoration**: Successfully restored the project to a compiling state (`compileDebugKotlin` ✅).
 
 ### Phase 7.19: Reporting Domain Refinement
@@ -79,10 +85,16 @@
 - **Codebase Cleanup**: Deleted deprecated UseCase files and their associated tests. Fixed several Kotlin warnings (unused variables, deprecated icons, unnecessary safe calls).
 - **Phase 3 Sync Integration**: Implemented `PushStudentsUseCase` and integrated `SyncManager` into `StudentRepositoryImpl`. Every local change now triggers an immediate background sync push.
 
+### Phase 11H: Student Biometric Realignment
+- **Terminology Refactor**: Successfully migrated all "Face" related terms to **"Student"** or **"Biometric"** across the entire project (Entities, DAOs, Repositories, ViewModels, and UI).
+- **Canonical Models**: Established `StudentBiometricEntity` and `StudentBiometricDao` as the single sources of truth for biometric data.
+- **Unified Identity**: Aligned `studentId` across `StudentEntity`, `StudentBiometricEntity`, and `AttendanceRecordEntity` to ensure a consistent person-centric data model.
+- **Build Restoration**: Resolved all compilation errors and verified a successful build (`compileDebugKotlin` ✅).
+
 ## 🏗️ Architecture Compliance
 - Follows the **Local-First** pattern. Remote sync is treated as a side-effect (managed by `SyncWorker` and `ProfileSyncWorker`).
 - UI components now interact with the domain layer using `StudentProfile` and `AccessRequestProfile`.
-- Repository handles atomic updates to `StudentEntity`, `FaceEntity`, `FaceAssignmentEntity`, `SchoolEntity`, and `AccessRequestEntity` within transactions.
+- Repository handles atomic updates to `StudentEntity`, `StudentBiometricEntity`, `StudentClassAssignmentEntity`, `SchoolEntity`, and `AccessRequestEntity` within transactions.
 
 ## 🛠️ Build Status
 - Kotlin compilation: ✅ **SUCCESSFUL**

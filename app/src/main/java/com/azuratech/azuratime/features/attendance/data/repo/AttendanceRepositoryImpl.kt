@@ -10,6 +10,7 @@ import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceR
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -29,21 +30,21 @@ class AttendanceRepositoryImpl @Inject constructor(
 ) : AttendanceRepository {
 
     private val attendanceRecordDao = database.attendanceRecordDao()
-    private val faceAssignmentDao = database.faceAssignmentDao()
-    private val faceDao = database.faceDao()
+    private val assignmentDao = database.studentClassAssignmentDao()
+    private val biometricDao = database.biometricDao()
     private val conflictDao = database.attendanceConflictDao()
 
     override fun getAttendanceRecords(
         name: String,
         startDate: LocalDate?,
         endDate: LocalDate?,
-        userId: String?,
+        accountId: String?,
         classId: String?,
         assignedIds: List<String>,
         schoolId: String
     ): Flow<List<AttendanceRecordEntity>> {
         return localDataSource.getFilteredRecords(
-            name, startDate, endDate, userId, classId, assignedIds, schoolId
+            name, startDate, endDate, accountId, classId, assignedIds, schoolId
         )
     }
 
@@ -92,7 +93,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             
             auditLogRepository.logAction(
                 schoolId = schoolId,
-                userId = sessionManager.getUserEmail(),
+                userId = sessionManager.getUserEmail(), // This might need renaming to getAccountEmail() later
                 action = "UPDATE_ATTENDANCE",
                 details = "Changed status for ${record.name} to ${status.name}"
             )
@@ -135,23 +136,23 @@ class AttendanceRepositoryImpl @Inject constructor(
     }
 
     override fun getUnassignedStudentCount(schoolId: String): Flow<Int> {
-        return faceAssignmentDao.getUnassignedStudentCount(schoolId)
+        return assignmentDao.getUnassignedStudentCount(schoolId)
     }
 
-    override fun getFacesByClass(classId: String, schoolId: String): Flow<List<com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity>> {
-        return faceAssignmentDao.getStudentsByClass(classId, schoolId)
+    override fun getStudentsByClass(classId: String, schoolId: String): Flow<List<StudentBiometricEntity>> {
+        return assignmentDao.getStudentsByClass(classId, schoolId)
     }
 
     override fun getStudentCountInClass(classId: String, schoolId: String): Flow<Int> {
-        return faceAssignmentDao.getStudentCountInClass(classId, schoolId)
+        return assignmentDao.getStudentCountInClass(classId, schoolId)
     }
 
-    override fun getClassIdsForFace(faceId: String, schoolId: String): Flow<List<String>> {
-        return faceAssignmentDao.getClassIdsForStudent(faceId, schoolId)
+    override fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<List<String>> {
+        return assignmentDao.getClassIdsForStudent(studentId, schoolId)
     }
 
-    override suspend fun getFaceById(faceId: String, schoolId: String): com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity? {
-        return faceDao.getStudentFaceById(faceId, schoolId)
+    override suspend fun getStudentBiometricById(studentId: String, schoolId: String): StudentBiometricEntity? {
+        return biometricDao.getStudentBiometricById(studentId, schoolId)
     }
 
     override suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecord> {
@@ -243,7 +244,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             // We allow re-recording after 10 minutes (600,000 ms)
             val today = LocalDate.now()
             val latest = localDataSource.getLatestRecordForStudent(
-                faceId = params.studentId,
+                studentId = params.studentId,
                 classId = params.activeClassId ?: "",
                 date = today,
                 schoolId = schoolId
@@ -271,7 +272,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                 className = "Auto", 
                 timestamp = System.currentTimeMillis(),
                 status = AttendanceStatus.PRESENT,
-                teacherEmail = params.teacherEmail
+                accountEmail = params.accountEmail
             )
             
             saveRecord(record)
@@ -279,7 +280,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             // 🔥 Log to Audit Trail
             auditLogRepository.logAction(
                 schoolId = schoolId,
-                userId = params.teacherEmail,
+                userId = params.accountEmail,
                 action = "CHECK_IN",
                 details = "Student: ${params.studentName} (${params.studentId})"
             )

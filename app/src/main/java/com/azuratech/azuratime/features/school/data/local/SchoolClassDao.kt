@@ -55,7 +55,7 @@ interface SchoolClassDao {
     @Query("DELETE FROM schools WHERE id = :id")
     suspend fun deleteSchoolById(id: String)
 
-    @Query("SELECT COUNT(*) FROM face_assignments WHERE schoolId = :schoolId AND classId = :classId")
+    @Query("SELECT COUNT(*) FROM student_class_assignments WHERE schoolId = :schoolId AND classId = :classId")
     suspend fun getStudentCountForClass(schoolId: String, classId: String): Int
 
     @Query("DELETE FROM classes WHERE id = :id")

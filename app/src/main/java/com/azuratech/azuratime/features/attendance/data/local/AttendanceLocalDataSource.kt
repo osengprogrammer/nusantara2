@@ -8,7 +8,7 @@ interface AttendanceLocalDataSource {
         nameFilter: String,
         startDate: LocalDate?,
         endDate: LocalDate?,
-        userId: String?,
+        accountId: String?,
         classId: String?,
         assignedIds: List<String>,
         schoolId: String
@@ -17,8 +17,9 @@ interface AttendanceLocalDataSource {
     suspend fun insert(record: AttendanceRecordEntity)
     suspend fun update(record: AttendanceRecordEntity)
     suspend fun delete(record: AttendanceRecordEntity)
+
     suspend fun getRecordById(recordId: String, schoolId: String): AttendanceRecordEntity?
-    suspend fun getRecordByFaceAndDate(faceId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
-    suspend fun getLatestRecordForStudent(faceId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
+    suspend fun getRecordByStudentAndDate(studentId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
+    suspend fun getLatestRecordForStudent(studentId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
     suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecordEntity>
 }

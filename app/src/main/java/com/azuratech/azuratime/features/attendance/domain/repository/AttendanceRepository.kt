@@ -3,13 +3,14 @@ package com.azuratech.azuratime.features.attendance.domain.repository
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 data class ProcessAttendanceParams(
     val studentId: String,
     val studentName: String,
-    val teacherEmail: String,
+    val accountEmail: String,
     val activeClassId: String?,
     val studentClassIds: List<String>
 )
@@ -23,7 +24,7 @@ interface AttendanceRepository {
         name: String,
         startDate: LocalDate?,
         endDate: LocalDate?,
-        userId: String?,
+        accountId: String?,
         classId: String?,
         assignedIds: List<String>,
         schoolId: String
@@ -38,10 +39,10 @@ interface AttendanceRepository {
     suspend fun syncRecord(record: AttendanceRecord): Result<Unit>
     fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Int>
     fun getUnassignedStudentCount(schoolId: String): Flow<Int>
-    fun getFacesByClass(classId: String, schoolId: String): Flow<List<com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity>>
+    fun getStudentsByClass(classId: String, schoolId: String): Flow<List<StudentBiometricEntity>>
     fun getStudentCountInClass(classId: String, schoolId: String): Flow<Int>
-    fun getClassIdsForFace(faceId: String, schoolId: String): Flow<List<String>>
-    suspend fun getFaceById(faceId: String, schoolId: String): com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity?
+    fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<List<String>>
+    suspend fun getStudentBiometricById(studentId: String, schoolId: String): StudentBiometricEntity?
     suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecord>
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecord>>
     suspend fun syncRecords(): Result<Unit>

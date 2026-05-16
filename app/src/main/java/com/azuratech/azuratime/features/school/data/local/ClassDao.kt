@@ -52,7 +52,7 @@ interface ClassDao {
     suspend fun getClassesBySchoolOnce(schoolId: String): List<ClassEntity>
 
     /** Safety guard: count faces assigned to a class before allowing delete. */
-    @Query("SELECT COUNT(*) FROM face_assignments WHERE schoolId = :schoolId AND classId = :classId")
+    @Query("SELECT COUNT(*) FROM student_class_assignments WHERE schoolId = :schoolId AND classId = :classId")
     suspend fun getStudentCountForClass(schoolId: String, classId: String): Int
 
     // =====================================================

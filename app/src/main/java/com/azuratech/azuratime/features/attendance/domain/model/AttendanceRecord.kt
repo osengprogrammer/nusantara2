@@ -15,7 +15,7 @@ data class AttendanceRecord(
     val status: AttendanceStatus,
     val photoUrl: String? = null,
     val isSynced: Boolean = false,
-    val teacherEmail: String = ""
+    val accountEmail: String = ""
 )
 
 enum class AttendanceStatus {

@@ -12,36 +12,31 @@ import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffe
 import com.azuratech.azuratime.features.attendance.ui.components.ScannerViewModel
 import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun AttendanceCaptureScreen(
-    useBackCamera: Boolean,
-    teacherEmail: String,
     onBarcodeScanClick: () -> Unit,
+    onNavigateBack: () -> Unit,
+    useBackCamera: Boolean = false,
+    accountEmail: String = "admin@azuratech.com",
     viewModel: ScannerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
     val voiceAssistant = rememberVoiceAssistant()
     
-    // 🔥 Get email from ViewModel if not passed (for NavGraph compat)
-    val resolvedEmail = remember(teacherEmail) { 
-        teacherEmail.ifBlank { "admin@azuratech.com" } 
-    }
-
     // Side Effects: Voice Assistant
     LaunchedEffect(Unit) {
         viewModel.sideEffectFlow.collect { effect ->
             when (effect) {
                 is AttendanceSideEffect.Speak -> voiceAssistant.speak(effect.message)
-                AttendanceSideEffect.NavigateBack -> { /* Handle navigation */ }
+                AttendanceSideEffect.NavigateBack -> onNavigateBack()
             }
         }
     }
 
     // Session Lifecycle
-    LaunchedEffect(resolvedEmail) {
-        viewModel.startScannerSession(resolvedEmail)
+    LaunchedEffect(accountEmail) {
+        viewModel.startScannerSession(accountEmail)
     }
 
     var currentCameraIsBack by remember { mutableStateOf(useBackCamera) }
@@ -53,7 +48,7 @@ fun AttendanceCaptureScreen(
         onFlipCameraClick = { currentCameraIsBack = !currentCameraIsBack },
         onSwitchToBarcodeClick = onBarcodeScanClick,
         onFaceEmbeddingReady = { embedding ->
-            viewModel.processScannedFace(embedding)
+            viewModel.processScannedBiometric(embedding)
         }
     )
 }

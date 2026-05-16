@@ -6,8 +6,8 @@ import com.azuratech.azuratime.core.domain.model.SyncStatus
  * 🎓 STUDENT PROFILE - THE SINGLE SOURCE OF TRUTH (SSOT)
  *
  * This domain model represents a complete person within the system, combining
- * their identity (StudentEntity), biometric data (BiometricFaceEntity), and class 
- * assignments (FaceAssignmentEntity).
+ * their identity (StudentEntity), biometric data (StudentBiometricEntity), and class 
+ * assignments (StudentClassAssignmentEntity).
  *
  * All UI components and business logic UseCases should use this model to 
  * maintain consistency across the application layers.
@@ -18,7 +18,7 @@ data class StudentProfile(
     val name: String,
     val schoolId: String,
     val classIds: List<String> = emptyList(), // Multi-class support
-    val faceId: String? = null,
+    val faceId: String? = null, // 🔥 Unified Identity: matches studentId
     val embedding: FloatArray? = null, // Handled by Converters.kt in Room
     val photoUrl: String? = null,
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
@@ -33,7 +33,7 @@ data class StudentProfile(
     /**
      * Computed property to check if biometric data is associated with this student.
      */
-    val faceExists: Boolean get() = faceId != null && (embedding != null || photoUrl != null)
+    val biometricExists: Boolean get() = faceId != null && (embedding != null || photoUrl != null)
 
     /**
      * Helper to check if student is assigned to a specific class.

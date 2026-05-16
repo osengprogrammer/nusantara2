@@ -15,7 +15,7 @@ import com.azuratech.azuratime.core.boot.BootState
 import com.azuratech.azuratime.core.boot.BootViewModel
 import com.azuratech.azuratime.core.ui.MainScreen
 import com.azuratech.azuratime.features.auth.ui.LoginScreen
-import com.azuratech.azuratime.features.staff.ui.membership.MembershipScreen
+import com.azuratech.azuratime.features.account.ui.membership.MembershipScreen
 import com.azuratech.azuratime.core.ui.MainViewModel
 import com.azuratech.azuratime.features.auth.ui.AuthViewModel
 import androidx.compose.material.icons.Icons

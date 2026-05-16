@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.reporting.data.repo
 
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -20,9 +20,9 @@ class DataIntegrityRepository @Inject constructor(
     private val database: AppDatabase,
     private val sessionManager: SessionManager
 ) {
-    private val faceDao = database.faceDao()
+    private val biometricDao = database.biometricDao()
     private val recordDao = database.attendanceRecordDao()
-    private val assignmentDao = database.faceAssignmentDao()
+    private val assignmentDao = database.studentClassAssignmentDao()
     private val conflictDao = database.attendanceConflictDao()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -33,12 +33,12 @@ class DataIntegrityRepository @Inject constructor(
     // =====================================================
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val totalFaces: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
-        faceDao.getTotalStudentsCountFlow(id)
+    val totalStudentsFlow: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+        biometricDao.getTotalStudentsCountFlow(id)
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val totalRecords: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+    val totalRecordsFlow: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
         recordDao.getTotalCountFlow(id)
     }
 
@@ -47,12 +47,12 @@ class DataIntegrityRepository @Inject constructor(
     // =====================================================
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val missingAssignment: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+    val missingAssignmentFlow: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
         assignmentDao.getUnassignedStudentCount(id)
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val brokenAssignments: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+    val brokenAssignmentsFlow: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
         assignmentDao.getBrokenAssignmentsCount(id)
     }
 
@@ -61,18 +61,18 @@ class DataIntegrityRepository @Inject constructor(
     // =====================================================
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val globalUnsyncedCount: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
+    val globalUnsyncedCountFlow: Flow<Int> = schoolIdFlow.flatMapLatest { id ->
         combine(
-            faceDao.getUnsyncedStudentsCountFlow(id),
+            biometricDao.getUnsyncedStudentsCountFlow(id),
             recordDao.getUnsyncedRecordsCountFlow(id),
             assignmentDao.getUnsyncedAssignmentsCountFlow(id)
-        ) { face, record, assignment ->
-            face + record + assignment
+        ) { biometric, record, assignment ->
+            biometric + record + assignment
         }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val conflicts: Flow<List<com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity>> = 
+    val conflictsFlow: Flow<List<com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity>> = 
         schoolIdFlow.flatMapLatest { id ->
             conflictDao.observeConflictsBySchool(id)
         }
@@ -82,9 +82,9 @@ class DataIntegrityRepository @Inject constructor(
     // =====================================================
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    fun getIncompleteProfiles(type: String): Flow<List<BiometricFaceEntity>> = schoolIdFlow.flatMapLatest { id ->
+    fun getIncompleteProfiles(type: String): Flow<List<StudentBiometricEntity>> = schoolIdFlow.flatMapLatest { id ->
         when (type) {
-            "CLASS"  -> faceDao.getStudentsMissingAssignment(id)
+            "CLASS"  -> biometricDao.getStudentsMissingAssignment(id)
             else     -> flowOf(emptyList())
         }
     }

@@ -3,26 +3,27 @@ package com.azuratech.azuratime.features.attendance.ui.manual
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle 
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.ui.enroll.FaceViewModel
+import com.azuratech.azuratime.features.biometric.ui.enroll.StudentBiometricViewModel
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
-import com.azuratech.azuratime.features.staff.ui.management.UserManagementViewModel
+import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
 import com.azuratech.azuratime.core.util.AttendanceService
+import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
 @Composable
 fun ManualAttendanceScreen(
-    faceViewModel: FaceViewModel,
+    biometricViewModel: StudentBiometricViewModel,
     attendanceViewModel: AttendanceViewModel,
-    userViewModel: UserManagementViewModel,
+    userViewModel: AccountManagementViewModel,
     classViewModel: ClassViewModel, 
     initialFaceId: String = "",
     initialDate: String = "",
     onNavigateBack: () -> Unit
 ) {
-    val faces by faceViewModel.studentRosterFlow.collectAsStateWithLifecycle()
+    val faces by biometricViewModel.studentRosterFlow.collectAsStateWithLifecycle()
     val currentUser by userViewModel.currentUser.collectAsStateWithLifecycle()
     val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
     val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
@@ -39,8 +40,8 @@ fun ManualAttendanceScreen(
     }
 
     // --- State Management ---
-    var selectedFace by remember(faces, initialFaceId) {
-        mutableStateOf(faces.find { it.face.studentId == initialFaceId })
+    var selectedStudent by remember(faces, initialFaceId) {
+        mutableStateOf(faces.find { it.biometric.studentId == initialFaceId })
     }
     var selectedStatus by remember { mutableStateOf("H") }
     var selectedDate by remember {
@@ -57,8 +58,8 @@ fun ManualAttendanceScreen(
     val isLocked = initialFaceId.isNotEmpty()
 
     ManualAttendanceContent(
-        selectedFace = selectedFace,
-        onFaceSelected = { selectedFace = it },
+        selectedFace = selectedStudent,
+        onFaceSelected = { selectedStudent = it },
         faces = faces,
         selectedStatus = selectedStatus,
         onStatusSelected = { selectedStatus = it },
@@ -71,11 +72,11 @@ fun ManualAttendanceScreen(
         availableClasses = classOptions,
         isLocked = isLocked,
         onSave = {
-            selectedFace?.let { faceWithDetails ->
+            selectedStudent?.let { biometricDetails ->
                 val finalDateTime = LocalDateTime.of(selectedDate, selectedTime)
                 val newRecord = AttendanceService.createRecord(
-                    face = faceWithDetails.face,
-                    teacherEmail = currentUser?.email ?: "admin@azuratech.com",
+                    biometric = biometricDetails.biometric,
+                    accountEmail = currentUser?.email ?: "admin@azuratech.com",
                     activeClassId = selectedClass?.id,
                     activeClassName = selectedClass?.name ?: "Umum / Tanpa Kelas",
                     status = selectedStatus,

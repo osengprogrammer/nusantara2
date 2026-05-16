@@ -15,10 +15,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
-import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 
 /**
  * 🛡️ THE INVISIBLE GUARDRAIL: Persistent Background Sync
@@ -31,10 +31,10 @@ class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val schoolRepository: SchoolRepository,
-    private val faceRepository: BiometricFaceRepository,
+    private val biometricRepository: StudentBiometricRepository,
     private val studentRepository: StudentRepository,
     private val attendanceRepository: AttendanceRepository,
-    private val userRepository: StaffAccountRepository,
+    private val accountRepository: AccountRepository,
     private val sessionManager: SessionManager
 ) : CoroutineWorker(context, workerParams) {
 
@@ -54,7 +54,7 @@ class SyncWorker @AssistedInject constructor(
             }
         }
 
-        // 2. Push Student Profiles (Faces + Assignments)
+        // 2. Push Student Profiles (Biometrics + Assignments)
         val pushResult = studentRepository.pushPendingProfiles()
         if (pushResult is DomainResult.Failure) {
             if (handleSyncError(pushResult.error, "PushStudents") == Result.retry()) {
@@ -65,25 +65,25 @@ class SyncWorker @AssistedInject constructor(
         // 3. Pull Student Profiles (Ensure SSOT exists locally)
         studentRepository.pullStudents(schoolId)
 
-        // 4. Sync Faces (Pull Delta + Process Soft-Deletes)
-        val faceResult = faceRepository.syncFaces()
-        if (faceResult is DomainResult.Failure) {
-            if (handleSyncError(faceResult.error, "FaceSync") == Result.retry()) {
+        // 4. Sync Biometrics (Pull Delta + Process Soft-Deletes)
+        val biometricResult = biometricRepository.syncBiometrics()
+        if (biometricResult is DomainResult.Failure) {
+            if (handleSyncError(biometricResult.error, "BiometricSync") == Result.retry()) {
                 return@withContext Result.retry()
             }
         } else {
-            // 🔥 SSOT Auto-Healing: Ensure Student identities exist for all synced faces
+            // 🔥 SSOT Auto-Healing: Ensure Student identities exist for all synced biometrics
             studentRepository.autoHealStudentIdentities(schoolId)
         }
 
-        // 5. Modernized Sync (Classes, Users, Assignments)
+        // 5. Modernized Sync (Classes, Accounts, Assignments)
         try {
-            val currentUserId = sessionManager.getCurrentUserId() ?: ""
-            if (currentUserId.isNotEmpty()) {
-                userRepository.syncUser(currentUserId)
+            val currentAccountId = sessionManager.getCurrentUserId() ?: ""
+            if (currentAccountId.isNotEmpty()) {
+                accountRepository.syncAccount(currentAccountId)
             }
-            schoolRepository.syncClasses(currentUserId, schoolId)
-            faceRepository.syncAssignments()
+            schoolRepository.syncClasses(currentAccountId, schoolId)
+            biometricRepository.syncAssignments()
         } catch (e: Exception) {
             Log.w("AZURA_SYNC", "Repository sync failed: ${e.message}")
         }

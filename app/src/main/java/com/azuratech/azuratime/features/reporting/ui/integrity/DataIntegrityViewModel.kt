@@ -21,12 +21,12 @@ class DataIntegrityViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    val totalFaces: Flow<Int> = repository.totalFaces
-    val missingAssignment: Flow<Int> = repository.missingAssignment
-    val brokenAssignments: Flow<Int> = repository.brokenAssignments
-    val unsyncedCount: Flow<Int> = repository.globalUnsyncedCount
+    val totalStudentsFlow: Flow<Int> = repository.totalStudentsFlow
+    val missingAssignmentFlow: Flow<Int> = repository.missingAssignmentFlow
+    val brokenAssignmentsFlow: Flow<Int> = repository.brokenAssignmentsFlow
+    val unsyncedCountFlow: Flow<Int> = repository.globalUnsyncedCountFlow
 
-    val conflicts: StateFlow<List<AttendanceConflict>> = repository.conflicts
+    val conflictsState: StateFlow<List<AttendanceConflict>> = repository.conflictsFlow
         .map { entities -> entities.map { it.toDomain() } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

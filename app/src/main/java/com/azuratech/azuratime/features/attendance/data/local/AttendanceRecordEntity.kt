@@ -22,9 +22,9 @@ import java.util.UUID
 data class AttendanceRecordEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val schoolId: String = "",
-    @ColumnInfo(name = "faceId") val studentId: String,
+    @ColumnInfo(name = "studentId") val studentId: String,
     val name: String,
-    val userId: String, 
+    val accountEmail: String, // 🔥 Unified Identity: Email of the account that recorded this
     val status: String, 
     val attendanceDate: LocalDate,
     val attendanceTime: LocalDateTime? = null,
@@ -55,7 +55,7 @@ data class AttendanceRecordEntity(
             timestamp = timestamp,
             status = AttendanceStatus.fromCode(status),
             isSynced = isSynced,
-            teacherEmail = userId
+            accountEmail = accountEmail
         )
     }
 
@@ -66,9 +66,8 @@ data class AttendanceRecordEntity(
             "id" to id,
             "schoolId" to schoolId,
             "studentId" to studentId, // 🔥 Unified Identity
-            "faceId" to studentId,    // 🗝️ Legacy compatibility
             "name" to name,
-            "teacherEmail" to userId,
+            "accountEmail" to accountEmail,
             "status" to status,
             "attendanceDate" to attendanceDate.toString(),
             "attendanceTime" to attendanceTime?.toString(),
@@ -91,7 +90,7 @@ data class AttendanceRecordEntity(
                 schoolId = domain.schoolId,
                 studentId = domain.studentId,
                 name = domain.studentName,
-                userId = domain.teacherEmail,
+                accountEmail = domain.accountEmail,
                 status = domain.status.toCode(),
                 attendanceDate = dateTime.toLocalDate(),
                 attendanceTime = dateTime,
@@ -116,9 +115,9 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
         AttendanceRecordEntity(
             id = id, 
             schoolId = schoolId,
-            studentId = getString("faceId") ?: "",
+            studentId = getString("studentId") ?: getString("faceId") ?: "",
             name = getString("name") ?: "Siswa",
-            userId = getString("teacherEmail") ?: "",
+            accountEmail = getString("accountEmail") ?: getString("teacherEmail") ?: getString("userId") ?: "",
             status = getString("status") ?: "Hadir",
             attendanceDate = java.time.LocalDate.parse(dateStr),
             attendanceTime = timeStr?.let { java.time.LocalDateTime.parse(it) },

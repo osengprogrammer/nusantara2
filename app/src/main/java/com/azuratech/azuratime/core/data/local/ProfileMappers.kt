@@ -7,16 +7,18 @@ import com.azuratech.azuratime.features.reporting.domain.model.SchoolAnalyticsSu
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.reporting.data.local.AuditLogEntity
 import com.azuratech.azuratime.features.reporting.data.local.ExportJobEntity
 import com.azuratech.azuratime.features.reporting.data.local.ReportEntity
+import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
+import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 
-import com.azuratech.azuratime.features.biometric.data.local.FaceAssignmentEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
 
 /**
  *  PROFILE MAPPERS
- * Pure functions to bridge between Room Entities and the StudentProfile Domain Model.
+ * Pure functions to bridge between Room Entities and Domain Models.
  */
 
 /**
@@ -54,17 +56,32 @@ fun ReportEntity.toProfile(): SchoolAnalyticsSummary {
         reportId = reportId,
         reportName = name,
         dateRange = "${java.time.Instant.ofEpochMilli(startDate)} - ${java.time.Instant.ofEpochMilli(endDate)}",
-        metrics = emptyMap(), // Logic to parse metricsJson can be added here
+        metrics = emptyMap(), 
         syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE
     )
 }
 
 /**
- * Extension to convert BiometricFaceEntity to BiometricEnrollmentProfile.
+ * Extension to convert AccessRequestEntity to AccessRequestProfile.
  */
-fun BiometricFaceEntity.toProfile(): BiometricEnrollmentProfile {
+fun AccessRequestEntity.toProfile(): AccessRequestProfile {
+    return AccessRequestProfile(
+        requestId = requestId,
+        requesterId = requesterId,
+        schoolId = schoolId,
+        schoolName = schoolName,
+        status = status,
+        syncStatus = syncStatus,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+}
+
+/**
+ * Extension to convert StudentBiometricEntity to BiometricEnrollmentProfile.
+ */
+fun StudentBiometricEntity.toProfile(): BiometricEnrollmentProfile {
     return BiometricEnrollmentProfile(
-        faceId = studentId,
         studentId = studentId,
         studentName = name,
         photoUri = photoUrl,
@@ -100,15 +117,15 @@ fun RawStudentProfile.toDomain(): StudentProfile {
 
 /**
  * Extension to convert StudentEntity to Domain Profile.
- * Joins with optional BiometricFaceEntity and class list.
+ * Joins with optional StudentBiometricEntity and class list.
  */
 fun StudentEntity.toDomain(
-    face: BiometricFaceEntity? = null, 
+    biometric: StudentBiometricEntity? = null, 
     classIds: List<String> = emptyList()
 ): StudentProfile {
     val status = when {
-        isSynced && (face?.isSynced ?: true) -> SyncStatus.SYNCED
-        isDeleted || (face?.isDeleted ?: false) -> SyncStatus.PENDING_DELETE
+        isSynced && (biometric?.isSynced ?: true) -> SyncStatus.SYNCED
+        isDeleted || (biometric?.isDeleted ?: false) -> SyncStatus.PENDING_DELETE
         else -> SyncStatus.PENDING_UPDATE
     }
 
@@ -121,20 +138,19 @@ fun StudentEntity.toDomain(
         name = name,
         schoolId = schoolId,
         classIds = finalClassIds,
-        faceId = face?.studentId,
-        embedding = face?.embedding, // Handled by Converters.kt in Room
-        photoUrl = face?.photoUrl,
+        faceId = biometric?.studentId,
+        embedding = biometric?.embedding, 
+        photoUrl = biometric?.photoUrl,
         syncStatus = status,
         createdAt = createdAt,
-        updatedAt = face?.lastUpdated ?: createdAt
+        updatedAt = biometric?.lastUpdated ?: createdAt
     )
 }
 
 /**
- * Extension to convert BiometricFaceEntity to Domain Profile.
- * Fallback for cases where BiometricFaceEntity exists but StudentEntity is missing.
+ * Extension to convert StudentBiometricEntity to Domain Profile.
  */
-fun BiometricFaceEntity.toDomain(
+fun StudentBiometricEntity.toDomain(
     student: StudentEntity? = null, 
     classIds: List<String> = emptyList()
 ): StudentProfile {
@@ -163,21 +179,19 @@ fun BiometricFaceEntity.toDomain(
 }
 
 /**
- * Extension to convert FaceAssignmentEntity to Domain Profile.
- * requires associated Face and optional Student.
+ * Extension to convert StudentClassAssignmentEntity to Domain Profile.
  */
-fun FaceAssignmentEntity.toDomain(
-    face: BiometricFaceEntity, 
+fun StudentClassAssignmentEntity.toDomain(
+    biometric: StudentBiometricEntity, 
     student: StudentEntity? = null
 ): StudentProfile {
-    return face.toDomain(student, listOf(classId))
+    return biometric.toDomain(student, listOf(classId))
 }
 
 /**
  * Convert a Domain StudentProfile back to its constituent Room Entities.
- * Returns a Triple of (StudentEntity, BiometricFaceEntity, List<FaceAssignmentEntity>).
  */
-fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List<FaceAssignmentEntity>> {
+fun StudentProfile.toEntities(): Triple<StudentEntity, StudentBiometricEntity, List<StudentClassAssignmentEntity>> {
     val isSynced = syncStatus == SyncStatus.SYNCED
     val isDeleted = syncStatus == SyncStatus.PENDING_DELETE
 
@@ -186,14 +200,14 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List
         schoolId = schoolId,
         name = name,
         studentCode = studentCode,
-        classId = classIds.firstOrNull(), // Store first as primary for legacy compat
+        classId = classIds.firstOrNull(), 
         createdAt = createdAt,
         isSynced = isSynced,
         isDeleted = isDeleted
     )
 
-    val faceEntity = BiometricFaceEntity(
-        studentId = faceId ?: studentId, // 🔥 AI Friendly: Default to studentId
+    val biometricEntity = StudentBiometricEntity(
+        studentId = faceId ?: studentId, 
         schoolId = schoolId,
         name = name,
         photoUrl = photoUrl,
@@ -204,13 +218,13 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, BiometricFaceEntity, List
         isDeleted = isDeleted
     )
     val assignments = classIds.map { classId ->
-        FaceAssignmentEntity(
-            studentId = faceEntity.studentId,
+        StudentClassAssignmentEntity(
+            studentId = biometricEntity.studentId,
             classId = classId,
             schoolId = schoolId,
             isSynced = isSynced
         )
     }
 
-    return Triple(studentEntity, faceEntity, assignments)
+    return Triple(studentEntity, biometricEntity, assignments)
 }

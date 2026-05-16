@@ -9,7 +9,7 @@ fun ClassDetailScreen(
     @Suppress("UNUSED_PARAMETER") classId: String,
     className: String,
     @Suppress("UNUSED_PARAMETER") classViewModel: ViewModel,
-    @Suppress("UNUSED_PARAMETER") faceViewModel: ViewModel,
+    @Suppress("UNUSED_PARAMETER") biometricViewModel: ViewModel,
     onNavigateBack: () -> Unit,
     @Suppress("UNUSED_PARAMETER") onAddStudent: () -> Unit
 ) {

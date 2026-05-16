@@ -6,16 +6,16 @@ import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictDao
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceDao
-import com.azuratech.azuratime.features.biometric.data.local.FaceAssignmentDao
-import com.azuratech.azuratime.features.staff.data.local.StaffAccountDao
-import com.azuratech.azuratime.features.staff.data.local.AccessRequestDao
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricDao
+import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentDao
+import com.azuratech.azuratime.features.account.data.local.AccountDao
+import com.azuratech.azuratime.features.account.data.local.AccessRequestDao
 import com.azuratech.azuratime.features.reporting.data.local.AuditLogDao
 import com.azuratech.azuratime.features.reporting.data.local.ExportJobDao
 import com.azuratech.azuratime.features.reporting.data.local.ReportDao
 import com.azuratech.azuratime.features.school.data.local.ClassDao
 import com.azuratech.azuratime.features.school.data.local.SchoolDao
-import com.azuratech.azuratime.core.data.local.UserClassAccessDao
+import com.azuratech.azuratime.core.data.local.AccountClassAccessDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -55,13 +55,13 @@ object AppModule {
     fun provideAttendanceRecordDao(db: AppDatabase): AttendanceRecordDao = db.attendanceRecordDao()
 
     @Provides
-    fun provideBiometricFaceDao(db: AppDatabase): BiometricFaceDao = db.faceDao()
+    fun provideBiometricDao(db: AppDatabase): StudentBiometricDao = db.biometricDao()
 
     @Provides
-    fun provideBiometricAssignmentDao(db: AppDatabase): FaceAssignmentDao = db.faceAssignmentDao()
+    fun provideStudentClassAssignmentDao(db: AppDatabase): StudentClassAssignmentDao = db.studentClassAssignmentDao()
 
     @Provides
-    fun provideUserDao(db: AppDatabase): StaffAccountDao = db.userDao()
+    fun provideAccountDao(db: AppDatabase): AccountDao = db.accountDao()
 
     @Provides
     fun provideClassDao(db: AppDatabase): ClassDao = db.classDao()
@@ -70,7 +70,7 @@ object AppModule {
     fun provideSchoolDao(db: AppDatabase): SchoolDao = db.schoolDao()
 
     @Provides
-    fun provideUserClassAccessDao(db: AppDatabase): UserClassAccessDao = db.userClassAccessDao()
+    fun provideAccountClassAccessDao(db: AppDatabase): AccountClassAccessDao = db.accountClassAccessDao()
 
     @Provides
     fun provideAccessRequestDao(db: AppDatabase): AccessRequestDao = db.accessRequestDao()

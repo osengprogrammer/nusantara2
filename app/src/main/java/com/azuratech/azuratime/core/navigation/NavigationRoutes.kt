@@ -42,7 +42,7 @@ object NavigationRoutes {
     const val DATA_DASHBOARD = "data_dashboard"
     const val DATA_MANAGEMENT = "data_management/{dataType}"
     const val PENDING_SCHOOLS = "pending_schools"
-    const val USER_PROFILE = "user_profile"
+    const val ACCOUNT_PROFILE = "account_profile"
     const val SCHOOL_LIST = "school_list/{accountId}"
     const val NETWORK = "network"
     const val DEBUG = "debug"
@@ -52,5 +52,5 @@ object NavigationRoutes {
     const val ATTENDANCE_GRAPH = "attendance_graph"
     const val MANAGEMENT_GRAPH = "management_graph"
     const val REPORTING_GRAPH = "reporting_graph"
-    const val USER_GRAPH = "user_graph"
+    const val ACCOUNT_GRAPH = "account_graph"
 }

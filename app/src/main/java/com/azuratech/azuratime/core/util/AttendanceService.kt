@@ -2,7 +2,7 @@ package com.azuratech.azuratime.core.util
 
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -20,8 +20,8 @@ object AttendanceService {
      * Membuat AttendanceRecord yang valid dan siap lapor.
      */
     fun createRecord(
-        face: BiometricFaceEntity,
-        teacherEmail: String = "",
+        biometric: StudentBiometricEntity,
+        accountEmail: String = "",
         activeClassId: String? = null,
         activeClassName: String? = null,
         status: String = "H",
@@ -32,12 +32,12 @@ object AttendanceService {
 
         return AttendanceRecord(
             recordId = java.util.UUID.randomUUID().toString(),
-            studentId = face.studentId, 
-            studentName = face.name,
-            teacherEmail = teacherEmail,
+            studentId = biometric.studentId, 
+            studentName = biometric.name,
+            accountEmail = accountEmail,
             classId = activeClassId ?: "",
             className = activeClassName ?: "",
-            schoolId = face.schoolId,
+            schoolId = biometric.schoolId,
             status = AttendanceStatus.fromCode(status),
             timestamp = timestamp,
             isSynced = false

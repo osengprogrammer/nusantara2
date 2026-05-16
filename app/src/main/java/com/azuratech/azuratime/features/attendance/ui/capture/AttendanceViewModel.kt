@@ -60,7 +60,7 @@ class AttendanceViewModel @Inject constructor(
             name = params.name,
             startDate = params.startDate,
             endDate = params.endDate,
-            userId = null,
+            accountId = null,
             classId = params.classId,
             assignedIds = emptyList(),
             schoolId = schoolId
@@ -79,17 +79,17 @@ class AttendanceViewModel @Inject constructor(
         _filterParams.update { it.copy(startDate = start, endDate = end) }
     }
 
-    fun processManualAttendance(scannedFaceId: String, studentName: String, studentClasses: List<String>, onResult: (Boolean, String) -> Unit) {
+    fun processManualAttendance(scannedStudentId: String, studentName: String, studentClasses: List<String>, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
-                val teacherEmail = sessionManager.getUserEmail() ?: "unknown@azuratech.com"
+                val accountEmail = sessionManager.getUserEmail() ?: "unknown@azuratech.com"
                 val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
                 val currentSessionId = _filterParams.value.classId
 
                 val params = ProcessAttendanceParams(
-                    studentId = scannedFaceId,
+                    studentId = scannedStudentId,
                     studentName = studentName,
-                    teacherEmail = teacherEmail,
+                    accountEmail = accountEmail,
                     activeClassId = currentSessionId,
                     studentClassIds = studentClasses
                 )
@@ -103,7 +103,7 @@ class AttendanceViewModel @Inject constructor(
                                 is AttendanceResult.Success -> onResult(true, res.message)
                                 is AttendanceResult.Rejected -> onResult(false, res.reason)
                                 is AttendanceResult.AlreadyCheckedIn -> onResult(true, "${res.name} sudah absen.")
-                                AttendanceResult.Unregistered -> onResult(false, "Wajah tidak dikenal")
+                                AttendanceResult.Unregistered -> onResult(false, "Siswa tidak dikenal")
                             }
                         }
                         is Result.Failure -> onResult(false, "❌ Error: ${result.error.message}")

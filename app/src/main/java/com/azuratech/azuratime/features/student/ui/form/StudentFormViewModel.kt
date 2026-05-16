@@ -3,8 +3,8 @@ package com.azuratech.azuratime.features.student.ui.form
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
-import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.domain.media.PhotoStorageUtils
@@ -18,8 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
-    private val faceRepository: BiometricFaceRepository,
-    private val userRepository: StaffAccountRepository,
+    private val biometricRepository: StudentBiometricRepository,
+    private val accountRepository: AccountRepository,
     private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
     private val photoStorageUtils: PhotoStorageUtils
@@ -57,20 +57,20 @@ class StudentFormViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    fun loadStudentForEdit(faceId: String) {
+    fun loadStudentForEdit(studentId: String) {
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            val faceWithDetails = faceRepository.getStudentWithDetails(faceId, schoolId)
+            val studentBiometricDetails = biometricRepository.getStudentWithDetails(studentId, schoolId)
             
-            if (faceWithDetails != null) {
-                selectedClassId = faceWithDetails.classId
+            if (studentBiometricDetails != null) {
+                selectedClassId = studentBiometricDetails.classId
                 updateState {
                     it.copy(
-                        name = faceWithDetails.face.name,
-                        studentId = faceWithDetails.face.studentId,
-                        selectedClassId = faceWithDetails.classId,
-                        embedding = faceWithDetails.face.embedding,
-                        photoUrl = faceWithDetails.face.photoUrl,
+                        name = studentBiometricDetails.biometric.name,
+                        studentId = studentBiometricDetails.biometric.studentId,
+                        selectedClassId = studentBiometricDetails.classId,
+                        embedding = studentBiometricDetails.biometric.embedding,
+                        photoUrl = studentBiometricDetails.biometric.photoUrl,
                         isEditMode = true,
                         pageTitle = "Edit Profil Siswa"
                     )
@@ -130,12 +130,12 @@ class StudentFormViewModel @Inject constructor(
         viewModelScope.launch {
             val photoBytes = currentState.capturedBitmap?.let { bitmapToByteArray(it) }
             val activeSchoolId = sessionManager.getActiveSchoolId()
-            val currentUserId = sessionManager.getCurrentUserId()
-            val user = currentUserId?.let { userRepository.getUserById(it) }
+            val currentAccountId = sessionManager.getCurrentUserId()
+            val account = currentAccountId?.let { accountRepository.getAccountById(it) }
 
-            user?.let { println("🔍 StudentForm: Fetched user ${it.userId} for save") }
+            account?.let { println("🔍 StudentForm: Fetched account ${it.accountId} for save") }
 
-            if (activeSchoolId == null && user?.role == "SUPER_ADMIN") {
+            if (activeSchoolId == null && account?.role == "SUPER_ADMIN") {
                 updateState { it.copy(isSubmitting = false) }
                 _uiEvent.emit(UiEvent.ShowSnackbar("Please select a school first"))
                 return@launch
@@ -172,7 +172,7 @@ class StudentFormViewModel @Inject constructor(
             )
 
             // 2. Save via Repository
-            when (val result = faceRepository.saveStudentProfile(profile, photoBytes)) {
+            when (val result = biometricRepository.saveStudentProfile(profile, photoBytes)) {
                 is Result.Success<Unit> -> {
                     val message = if (currentState.isEditMode) "Berhasil diperbarui" else "Siswa berhasil didaftarkan"
                     _uiEvent.emit(UiEvent.ShowSnackbar(message))

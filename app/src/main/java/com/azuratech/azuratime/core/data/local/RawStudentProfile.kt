@@ -4,7 +4,7 @@ import androidx.room.Embedded
 import androidx.room.ColumnInfo
 import androidx.room.Relation
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
-import com.azuratech.azuratime.features.biometric.data.local.FaceAssignmentEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
 
 /**
  * 🛠️ RAW STUDENT PROFILE
@@ -40,7 +40,7 @@ data class RawStudentProfile(
         parentColumn = "faceId",
         entityColumn = "studentId"
     )
-    val assignments: List<FaceAssignmentEntity> = emptyList()
+    val assignments: List<StudentClassAssignmentEntity> = emptyList()
 ) {
     /**
      * Extracts all unique class IDs from the assignments and the primary student entity.

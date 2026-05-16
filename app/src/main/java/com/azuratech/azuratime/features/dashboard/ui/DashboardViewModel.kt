@@ -2,15 +2,15 @@ package com.azuratech.azuratime.features.dashboard.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
-import com.azuratech.azuratime.features.staff.data.local.StaffAccountEntity
-import com.azuratech.azuratime.features.staff.data.repo.AdminRepository
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.repo.AdminRepository
 import com.azuratech.azuratime.features.auth.data.repo.AuthRepository
-import com.azuratech.azuratime.features.staff.data.repo.StaffAccountRepository
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.domain.repository.BiometricFaceRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuraengine.result.Result
@@ -29,8 +29,8 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel @Inject constructor(
     private val adminRepository: AdminRepository,
-    private val userRepository: StaffAccountRepository,
-    private val faceRepository: BiometricFaceRepository,
+    private val accountRepository: AccountRepository,
+    private val biometricRepository: StudentBiometricRepository,
     private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
     private val authRepository: AuthRepository,
@@ -47,10 +47,10 @@ class DashboardViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _userFlow = sessionManager.currentUserIdFlow
-        .flatMapLatest { userId -> 
-            if (userId != null) {
-                userRepository.observeUserEntity(userId)
+    private val _accountFlow = sessionManager.currentUserIdFlow
+        .flatMapLatest { accountId -> 
+            if (accountId != null) {
+                accountRepository.observeAccountEntity(accountId)
             } else {
                 flowOf(null)
             }
@@ -75,14 +75,14 @@ class DashboardViewModel @Inject constructor(
 
     private val _assignedClassesFlow = combine(
         sessionManager.activeSchoolIdFlow,
-        _userFlow
-    ) { schoolId, user ->
-        schoolId to user
-    }.flatMapLatest { (schoolId, user) ->
-        if (schoolId != null && user != null) {
+        _accountFlow
+    ) { schoolId, account ->
+        schoolId to account
+    }.flatMapLatest { (schoolId, account) ->
+        if (schoolId != null && account != null) {
             schoolRepository.observeClasses(schoolId).map { result ->
                 val allClasses = if (result is Result.Success) result.data else emptyList()
-                val membership = user.memberships[schoolId]
+                val membership = account.memberships[schoolId]
                 if (membership?.role == "ADMIN") {
                     allClasses
                 } else {
@@ -95,12 +95,12 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private val _sessionStudentsFlow = _userFlow
-        .flatMapLatest { user ->
-            val activeClassId = user?.activeClassId
-            val schoolId = user?.activeSchoolId
+    private val _sessionStudentsFlow = _accountFlow
+        .flatMapLatest { account ->
+            val activeClassId = account?.activeClassId
+            val schoolId = account?.activeSchoolId
             if (activeClassId != null && schoolId != null) {
-                faceRepository.getStudentsInClassFlow(activeClassId, schoolId)
+                biometricRepository.getStudentsInClassFlow(activeClassId, schoolId)
             } else {
                 flowOf(emptyList())
             }
@@ -111,8 +111,8 @@ class DashboardViewModel @Inject constructor(
         // 🔥 FIX: React to ID changes instead of one-shot check
         sessionManager.currentUserIdFlow
             .filterNotNull()
-            .onEach { userId -> 
-                println("🔍 Dashboard: ID detected ($userId), triggering sync...")
+            .onEach { accountId -> 
+                println("🔍 Dashboard: ID detected ($accountId), triggering sync...")
                 triggerAutoSyncIfNeeded() 
             }
             .launchIn(viewModelScope)
@@ -129,7 +129,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     val state: StateFlow<UiState<DashboardUiState>> = combine(
-        _userFlow,
+        _accountFlow,
         _recentRecordsFlow,
         _sessionStudentsFlow,
         _assignedClassesFlow,
@@ -141,69 +141,69 @@ class DashboardViewModel @Inject constructor(
         flowOf(0),
         flowOf(emptyList<AttendanceConflict>())
     ) { args ->
-        val user = args[0] as StaffAccountEntity?
+        val account = args[0] as AccountEntity?
         @Suppress("UNCHECKED_CAST")
         val recentRecords = args[1] as List<AttendanceRecordEntity>
         @Suppress("UNCHECKED_CAST")
-        val sessionStudents = args[2] as List<BiometricFaceEntity>
+        val sessionStudents = args[2] as List<StudentBiometricEntity>
         @Suppress("UNCHECKED_CAST")
         val assignedClasses = args[3] as List<ClassModel>
         @Suppress("UNCHECKED_CAST")
         val allClasses = args[4] as List<ClassModel>
         val isSyncing = args[5] as Boolean
-        val totalFaces = args[6] as Int
+        val totalStudents = args[6] as Int
         val unassigned = args[7] as Int
         val broken = args[8] as Int
         val unsynced = args[9] as Int
         @Suppress("UNCHECKED_CAST")
         val conflicts = args[10] as List<AttendanceConflict>
 
-        val isReady = (user != null) && (isSyncing == false)
+        val isReady = (account != null) && (isSyncing == false)
 
-        println("🔄 Dashboard combine: user=${user?.userId ?: "NULL"}, isReady=$isReady")
+        println("🔄 Dashboard combine: account=${account?.accountId ?: "NULL"}, isReady=$isReady")
 
         val activeSchoolId = sessionManager.getActiveSchoolId()
-        val membershipRole = user?.memberships?.get(activeSchoolId)?.role
-        val effectiveRole = membershipRole ?: user?.role ?: "USER"
+        val membershipRole = account?.memberships?.get(activeSchoolId)?.role
+        val effectiveRole = membershipRole ?: account?.role ?: "USER"
 
         UiState.Success(
             DashboardUiState(
-                user = user,
+                user = account,
                 recentRecords = recentRecords,
                 sessionStudents = sessionStudents,
                 assignedClasses = assignedClasses,
                 allClasses = allClasses,
                 isSyncing = isSyncing,
                 isReady = isReady,
-                totalFaces = totalFaces,
+                totalStudents = totalStudents,
                 unassignedStudents = unassigned,
                 brokenAssignments = broken,
                 unsyncedRecords = unsynced,
                 conflicts = conflicts,
                 currentRole = effectiveRole,
-                isApproved = user?.status == "ACTIVE"
+                isApproved = account?.status == "ACTIVE"
             )
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun sync() {
         viewModelScope.launch(Dispatchers.IO) {
-            val userId = sessionManager.getCurrentUserId() ?: return@launch
+            val accountId = sessionManager.getCurrentUserId() ?: return@launch
             
-            println("🔄 Dashboard: Comprehensive sync starting for user $userId...")
+            println("🔄 Dashboard: Comprehensive sync starting for account $accountId...")
             
             // 1. Restore Profile & Schools
-            val userResult = userRepository.syncUser(userId)
-            val userEntity = if (userResult is Result.Success) userResult.data else userRepository.getUserDao().getUserById(userId)
+            val accountResult = accountRepository.syncAccount(accountId)
+            val accountEntity = if (accountResult is Result.Success) accountResult.data else accountRepository.getAccountDao().getAccountById(accountId)
             
             // 2. Restore Classes for all member schools
-            userEntity?.memberships?.keys?.forEach { schoolId ->
+            accountEntity?.memberships?.keys?.forEach { schoolId ->
                 println("🏫 Dashboard: Syncing classes for school: $schoolId")
-                schoolRepository.syncClasses(userId, schoolId)
+                schoolRepository.syncClasses(accountId, schoolId)
             }
 
-            // 3. Restoring faces & assignments (tenant-scoped)
-            val schoolId = userEntity?.activeSchoolId ?: sessionManager.getActiveSchoolId()
+            // 3. Restoring biometrics & assignments (tenant-scoped)
+            val schoolId = accountEntity?.activeSchoolId ?: sessionManager.getActiveSchoolId()
             
             if (schoolId != null) {
                 println("🎭 Dashboard: Syncing school-specific data for: $schoolId")
@@ -212,12 +212,12 @@ class DashboardViewModel @Inject constructor(
                     sessionManager.saveActiveSchoolId(schoolId)
                 }
 
-                val faceSyncResult = faceRepository.syncFaces()
-                faceRepository.syncAssignments()
+                val biometricSyncResult = biometricRepository.syncBiometrics()
+                biometricRepository.syncAssignments()
                 attendanceRepository.syncRecords()
 
-                if (faceSyncResult is Result.Failure) {
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron data wajah: ${faceSyncResult.error.message}"))
+                if (biometricSyncResult is Result.Failure) {
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron data biometrik: ${biometricSyncResult.error.message}"))
                 }
             }
             
@@ -231,9 +231,9 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val currentState = state.value
             if (currentState is UiState.Success) {
-                val user = currentState.data.user ?: return@launch
-                userRepository.getUserDao().getUserById(user.userId)?.let {
-                    userRepository.getUserDao().updateUser(it.copy(activeClassId = classId))
+                val account = currentState.data.user ?: return@launch
+                accountRepository.getAccountDao().getAccountById(account.accountId)?.let {
+                    accountRepository.getAccountDao().updateAccount(it.copy(activeClassId = classId))
                 }
             }
         }

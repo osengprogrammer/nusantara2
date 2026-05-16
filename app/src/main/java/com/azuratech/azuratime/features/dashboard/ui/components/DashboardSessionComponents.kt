@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.data.local.BiometricFaceEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuraengine.model.User
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
  * Shows horizontal chips of students expected in this session.
  */
 @Composable
-fun SessionStudentsList(students: List<BiometricFaceEntity>) {
+fun SessionStudentsList(students: List<StudentBiometricEntity>) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = AzuraSpacing.md)) {
         Text(
             text = "Daftar Siswa Sesi Ini (${students.size})",
