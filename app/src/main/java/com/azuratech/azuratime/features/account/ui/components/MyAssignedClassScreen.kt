@@ -14,13 +14,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
+import com.azuratech.azuratime.features.account.ui.management.AccountUiEvent
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
@@ -73,12 +73,12 @@ fun MyAssignedClassScreen(
         availableClasses = availableClasses,
         searchQuery = searchQuery,
         onSearchQueryChanged = { searchQuery = it },
-        onRemoveClass = { classId -> userViewModel.removeClassAccess(classId, targetUserId) },
+        onRemoveClass = { classId -> userViewModel.onEvent(AccountUiEvent.RemoveClassAccess(classId, targetUserId)) },
         onSelectActiveClass = { classId ->
             println("🖱 DEBUG: Pilih Sesi clicked for classId=$classId")
-            userViewModel.selectActiveClass(classId, targetUserId)
+            userViewModel.onEvent(AccountUiEvent.SelectActiveClass(classId, targetUserId))
         },
-        onAssignClass = { classId -> userViewModel.assignClassToUser(classId, targetUserId) },
+        onAssignClass = { classId -> userViewModel.onEvent(AccountUiEvent.AssignClassToUser(classId, targetUserId)) },
         user = user,
         onBack = onNavigateBack,
     )
@@ -94,7 +94,7 @@ fun MyAssignedClassContent(
     onRemoveClass: (String) -> Unit,
     onSelectActiveClass: (String) -> Unit,
     onAssignClass: (String) -> Unit,
-    user: AccountEntity?,
+    user: com.azuratech.azuratime.features.account.domain.model.UserProfile?,
     onBack: () -> Unit,
 ) {
     AzuraScreen(
