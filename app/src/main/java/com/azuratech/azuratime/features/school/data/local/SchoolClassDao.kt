@@ -32,12 +32,14 @@ interface SchoolClassDao {
     @Query("SELECT COUNT(*) FROM classes WHERE accountId = :accountId")
     suspend fun getClassCountByAccount(accountId: String): Int
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM classes 
         WHERE schoolId = :schoolId 
         OR id IN (SELECT classId FROM school_class_assignments WHERE schoolId = :schoolId)
         ORDER BY grade, name ASC
-    """)
+    """,
+    )
     fun getClasses(schoolId: String): Flow<List<ClassEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -64,13 +66,15 @@ interface SchoolClassDao {
     @Query("SELECT * FROM classes WHERE accountId = :accountId ORDER BY name ASC")
     fun getAllClasses(accountId: String): Flow<List<ClassEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT classes.* FROM classes 
         INNER JOIN school_class_assignments ON classes.id = school_class_assignments.classId
         INNER JOIN schools ON school_class_assignments.schoolId = schools.id 
         WHERE schools.accountId = :accountId 
         ORDER BY schools.name, classes.name ASC
-    """)
+    """,
+    )
     fun getAllClassesForAccount(accountId: String): Flow<List<ClassEntity>>
 
     @Query("SELECT * FROM classes WHERE schoolId IS NULL OR schoolId = ''")

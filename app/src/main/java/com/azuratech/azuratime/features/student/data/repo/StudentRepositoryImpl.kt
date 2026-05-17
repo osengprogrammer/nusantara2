@@ -9,7 +9,6 @@ import com.azuratech.azuratime.features.school.data.local.*
 import com.azuratech.azuratime.features.account.data.local.*
 import com.azuratech.azuratime.features.attendance.data.local.*
 import com.azuratech.azuratime.features.biometric.data.local.*
-import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
@@ -25,7 +24,7 @@ import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDat
 
 /**
  * 🏛️ STUDENT REPOSITORY IMPLEMENTATION
- * 
+ *
  * Repository is SSOT guardian. Room is primary source. Remote sync is side-effect.
  */
 @Singleton
@@ -34,7 +33,7 @@ class StudentRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
     private val firestore: com.google.firebase.firestore.FirebaseFirestore,
-    private val remoteDataSource: BiometricRemoteDataSource
+    private val remoteDataSource: BiometricRemoteDataSource,
 ) : StudentRepository {
 
     private val studentDao = database.studentDao()
@@ -53,23 +52,23 @@ class StudentRepositoryImpl @Inject constructor(
             database.withTransaction {
                 // 1. Save Core Entities
                 studentDao.upsert(student)
-                
+
                 // 🔥 AI Friendly: Clear legacy biometrics with different studentId but same studentId (unified)
                 biometricDao.deleteOtherBiometricsForStudent(student.studentId, biometric.studentId, student.schoolId)
                 biometricDao.upsertStudentBiometric(biometric)
-                
+
                 // 2. Clear existing assignments for this student (prevent orphans)
                 assignmentDao.deleteAllByStudentId(biometric.studentId)
-                
+
                 // 3. Insert new assignments
                 for (assignment in assignments) {
                     assignmentDao.insertAssignment(assignment)
                 }
             }
-            
+
             // 🔥 Phase 3 - Trigger background sync immediately
             syncManager.enqueueSync()
-            
+
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -82,26 +81,26 @@ class StudentRepositoryImpl @Inject constructor(
             database.withTransaction {
                 val student = studentDao.getById(studentId, schoolId)
                 if (student?.isSynced == true) {
-                     // Soft-delete if already synced to cloud
-                     studentDao.markPendingDeletion(studentId, schoolId)
-                     val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
-                     if (biometric != null) {
-                         biometricDao.markPendingDeletion(biometric.studentId, schoolId)
-                     }
+                    // Soft-delete if already synced to cloud
+                    studentDao.markPendingDeletion(studentId, schoolId)
+                    val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
+                    if (biometric != null) {
+                        biometricDao.markPendingDeletion(biometric.studentId, schoolId)
+                    }
                 } else {
-                     // Hard-delete if only local
-                     val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
-                     if (biometric != null) {
-                         assignmentDao.deleteAllByStudentId(biometric.studentId)
-                         biometricDao.deleteStudentBiometricById(biometric.studentId, schoolId)
-                     }
-                     studentDao.deleteById(studentId, schoolId)
+                    // Hard-delete if only local
+                    val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
+                    if (biometric != null) {
+                        assignmentDao.deleteAllByStudentId(biometric.studentId)
+                        biometricDao.deleteStudentBiometricById(biometric.studentId, schoolId)
+                    }
+                    studentDao.deleteById(studentId, schoolId)
                 }
             }
-            
+
             // 🔥 Phase 3 - Trigger background sync immediately
             syncManager.enqueueSync()
-            
+
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -114,17 +113,17 @@ class StudentRepositoryImpl @Inject constructor(
             database.withTransaction {
                 val student = studentDao.getById(studentId, schoolId)
                 if (student != null) {
-                    val updatedStudent = when(status) {
+                    val updatedStudent = when (status) {
                         SyncStatus.SYNCED -> student.copy(isSynced = true, isDeleted = false)
                         SyncStatus.PENDING_DELETE -> student.copy(isSynced = false, isDeleted = true)
                         else -> student.copy(isSynced = false)
                     }
                     studentDao.upsert(updatedStudent)
                 }
-                
+
                 val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
                 if (biometric != null) {
-                    val updatedBiometric = when(status) {
+                    val updatedBiometric = when (status) {
                         SyncStatus.SYNCED -> biometric.copy(isSynced = true, isDeleted = false)
                         SyncStatus.PENDING_DELETE -> biometric.copy(isSynced = false, isDeleted = true)
                         else -> biometric.copy(isSynced = false)
@@ -146,7 +145,7 @@ class StudentRepositoryImpl @Inject constructor(
             for (student in unsyncedStudents) {
                 val docRef = firestore.collection("schools").document(schoolId)
                     .collection("students").document(student.studentId)
-                
+
                 if (student.isDeleted) {
                     com.google.android.gms.tasks.Tasks.await(docRef.delete())
                 } else {
@@ -157,7 +156,7 @@ class StudentRepositoryImpl @Inject constructor(
                         "studentCode" to student.studentCode,
                         "classId" to student.classId,
                         "createdAt" to student.createdAt,
-                        "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                        "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
                     )
                     com.google.android.gms.tasks.Tasks.await(docRef.set(data))
                 }
@@ -191,11 +190,11 @@ class StudentRepositoryImpl @Inject constructor(
         try {
             val biometrics = biometricDao.getAllStudentsForScanningList(schoolId)
             val studentsToCreate = mutableListOf<StudentEntity>()
-            
+
             for (biometric in biometrics) {
                 val targetStudentId = biometric.studentId
                 val existing = studentDao.getById(targetStudentId, schoolId)
-                
+
                 if (existing == null) {
                     studentsToCreate.add(
                         StudentEntity(
@@ -203,12 +202,12 @@ class StudentRepositoryImpl @Inject constructor(
                             schoolId = schoolId,
                             name = biometric.name,
                             createdAt = biometric.createdAt,
-                            isSynced = true
-                        )
+                            isSynced = true,
+                        ),
                     )
                 }
             }
-            
+
             if (studentsToCreate.isNotEmpty()) {
                 studentDao.upsertAll(studentsToCreate)
             }
@@ -222,7 +221,7 @@ class StudentRepositoryImpl @Inject constructor(
         try {
             val snapshot = firestore.collection("schools").document(schoolId)
                 .collection("students").get().let { com.google.android.gms.tasks.Tasks.await(it) }
-            
+
             val students = snapshot.documents.mapNotNull { doc ->
                 val id = doc.getString("studentId") ?: return@mapNotNull null
                 StudentEntity(
@@ -232,10 +231,10 @@ class StudentRepositoryImpl @Inject constructor(
                     studentCode = doc.getString("studentCode"),
                     classId = doc.getString("classId"),
                     createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
-                    isSynced = true
+                    isSynced = true,
                 )
             }
-            
+
             if (students.isNotEmpty()) {
                 studentDao.upsertAll(students)
             }

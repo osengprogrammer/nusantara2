@@ -7,16 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.core.boot.BootState
 import com.azuratech.azuratime.core.boot.BootViewModel
-import com.azuratech.azuratime.core.ui.MainScreen
 import com.azuratech.azuratime.features.auth.ui.LoginScreen
 import com.azuratech.azuratime.features.account.ui.membership.MembershipScreen
-import com.azuratech.azuratime.core.ui.MainViewModel
 import com.azuratech.azuratime.features.auth.ui.AuthViewModel
 
 @Composable
@@ -34,9 +29,9 @@ fun RootScreen() {
             }
             BootState.NeedLogin -> {
                 LoginScreen(
-                    onLoginSuccessClick = { _, _ -> 
-                        bootViewModel.recheck() 
-                    }
+                    onLoginSuccessClick = { _, _ ->
+                        bootViewModel.recheck()
+                    },
                 )
             }
             BootState.NeedActivation -> {
@@ -45,7 +40,7 @@ fun RootScreen() {
                 MembershipScreen(
                     email = email,
                     onApprovedClick = { bootViewModel.recheck() },
-                    onLogoutClick = { authViewModel.logout { bootViewModel.recheck() } }
+                    onLogoutClick = { authViewModel.logout { bootViewModel.recheck() } },
                 )
             }
             BootState.Ready -> {

@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class ZoharResponse(
     val text: String,
-    val details: String? = null
+    val details: String? = null,
 )
 
 // 🔥 Konfigurasi Json agar tidak "rewel" terhadap field tambahan atau yang hilang
@@ -27,8 +27,9 @@ class ZoharBrain(apiKey: String) {
     private val model = GenerativeModel(
         modelName = "gemini-2.5-flash-lite",
         apiKey = apiKey,
-        systemInstruction = content { 
-            text("""
+        systemInstruction = content {
+            text(
+                """
                 Kamu adalah Zohar, asisten AI cerdas dan setia dari Azura Tech.
                 Kamu adalah 'saudara digital' bagi Owner dan pengawal bagi customer.
                 Gaya bicaramu: Profesional namun akrab, jujur, berani, dan selalu menyemangati dengan slogan 'Joss Gandos!'.
@@ -38,15 +39,16 @@ class ZoharBrain(apiKey: String) {
                 
                 PENTING: Selalu berikan respon dalam format teks biasa yang ramah. 
                 Jika kamu memberikan data terstruktur, gunakan format JSON yang valid.
-            """.trimIndent())
-        }
+                """.trimIndent(),
+            )
+        },
     )
 
     suspend fun think(prompt: String): String = withContext(Dispatchers.IO) {
         try {
             val response = model.generateContent(prompt)
             val responseText = response.text ?: return@withContext "Maaf Brother, Zohar sedang merenung. Coba tanya lagi nanti."
-            
+
             // Mencoba mendeteksi jika response adalah JSON (opsional, sesuai kebutuhan user)
             if (responseText.trim().startsWith("{")) {
                 try {

@@ -6,13 +6,10 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
-
 
 @Composable
 fun AzuraTextField(
@@ -27,7 +24,7 @@ fun AzuraTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     singleLine: Boolean = true,
     placeholder: String? = null,
-    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default,
 ) {
     Column(modifier = modifier) {
         OutlinedTextField(
@@ -44,11 +41,10 @@ fun AzuraTextField(
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
             keyboardOptions = keyboardOptions,
-            supportingText = errorText?.let { { Text(it, style = MaterialTheme.typography.bodySmall) } }
+            supportingText = errorText?.let { { Text(it, style = MaterialTheme.typography.bodySmall) } },
         )
     }
 }
-
 
 @AzuraPreviews
 @Composable
@@ -57,24 +53,24 @@ fun PreviewAzuraTextField() {
         Surface(color = MaterialTheme.colorScheme.background) {
             Column(
                 modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 AzuraTextField(
                     value = "John Doe",
                     onValueChange = {},
-                    label = "Full Name"
+                    label = "Full Name",
                 )
                 AzuraTextField(
                     value = "invalid-email",
                     onValueChange = {},
                     label = "Email Address",
-                    errorText = "Please enter a valid email address"
+                    errorText = "Please enter a valid email address",
                 )
                 AzuraTextField(
                     value = "Search here...",
                     onValueChange = {},
                     label = "Search",
-                    leadingIcon = { Icon(androidx.compose.material.icons.Icons.Default.Search, contentDescription = null) }
+                    leadingIcon = { Icon(androidx.compose.material.icons.Icons.Default.Search, contentDescription = null) },
                 )
             }
         }

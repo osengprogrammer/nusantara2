@@ -10,13 +10,13 @@ class ResultTest {
     @Test
     fun `test Result exhaustiveness`() {
         val result: Result<String> = Result.Success("test")
-        
+
         val message = when (result) {
             is Result.Success -> "Success"
             is Result.Failure -> "Failure"
             is Result.Loading -> "Loading"
         }
-        
+
         assertTrue(message == "Success")
     }
 
@@ -24,7 +24,7 @@ class ResultTest {
     fun `test Result failure subtypes`() {
         val networkError: Result<Nothing> = Result.Failure(AppError.Network("No internet"))
         val dbError: Result<Nothing> = Result.Failure(AppError.LocalDB("Disk full"))
-        
+
         assertTrue(networkError is Result.Failure && networkError.error is AppError.Network)
         assertTrue(dbError is Result.Failure && dbError.error is AppError.LocalDB)
     }
@@ -36,13 +36,13 @@ class ResultTest {
 
         val successValue = success.fold(
             onSuccess = { it },
-            onFailure = { it.message ?: "" }
+            onFailure = { it.message ?: "" },
         )
         assertTrue(successValue == "data")
 
         val failureValue = failure.fold(
             onSuccess = { it },
-            onFailure = { it.message ?: "" }
+            onFailure = { it.message ?: "" },
         )
         assertTrue(failureValue == "error")
     }

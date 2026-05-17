@@ -10,16 +10,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers 
-import kotlinx.coroutines.withContext 
-import kotlinx.coroutines.delay       
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 
 @HiltViewModel // 🔥 1. Tandai sebagai ViewModel Hilt
 class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
     application: Application,
-    private val repository: BootRepository // 🔥 Disuplai otomatis oleh Hilt
+    private val repository: BootRepository, // 🔥 Disuplai otomatis oleh Hilt
 ) : AndroidViewModel(application) {
-    
+
     // ❌ HAPUS inisialisasi manual repository lama
 
     private val _state = MutableStateFlow<BootState>(BootState.Loading)
@@ -30,21 +30,21 @@ class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
     }
 
     fun checkAuthStatus() {
-        viewModelScope.launch { 
+        viewModelScope.launch {
             _state.value = BootState.Loading
-            
+
             withContext(Dispatchers.IO) {
                 try {
                     delay(600) // Jeda untuk stabilitas pembacaan enkripsi
                     val currentUser = repository.getCurrentUser()
-                    
+
                     withContext(Dispatchers.Main) {
                         val isLoggedIn = currentUser != null
-                        
+
                         if (!isLoggedIn) {
                             _state.value = BootState.NeedLogin
                         } else {
-                            val isActive = repository.isSessionActive() 
+                            val isActive = repository.isSessionActive()
                             _state.value = if (isActive) BootState.Ready else BootState.NeedActivation
                         }
                     }

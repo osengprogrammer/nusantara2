@@ -10,5 +10,5 @@ data class ExportJobProfile(
     val fileType: String,
     val status: String,
     val filePath: String?,
-    val syncStatus: SyncStatus
+    val syncStatus: SyncStatus,
 )

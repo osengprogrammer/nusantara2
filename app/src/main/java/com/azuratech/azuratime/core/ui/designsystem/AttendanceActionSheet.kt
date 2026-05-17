@@ -7,7 +7,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
@@ -22,7 +21,7 @@ fun AttendanceActionSheet(
     onDismiss: () -> Unit,
     onDelete: (AttendanceRecord) -> Unit,
     onUpdateStatus: (AttendanceRecord, AttendanceStatus) -> Unit,
-    onShowClassCorrection: () -> Unit 
+    onShowClassCorrection: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -31,13 +30,13 @@ fun AttendanceActionSheet(
         sheetState = sheetState,
         shape = AzuraShapes.large,
         containerColor = MaterialTheme.colorScheme.surface,
-        dragHandle = { BottomSheetDefaults.DragHandle() }
+        dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(AzuraSpacing.md)
-                .padding(bottom = AzuraSpacing.xl)
+                .padding(bottom = AzuraSpacing.xl),
         ) {
             // Header Info
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -45,11 +44,11 @@ fun AttendanceActionSheet(
                 Spacer(Modifier.width(AzuraSpacing.sm))
                 Text("Kelola Absensi", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
-            
+
             Text(
                 text = "Personil: ${record.studentName}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Spacer(Modifier.height(AzuraSpacing.lg))
@@ -57,10 +56,10 @@ fun AttendanceActionSheet(
             // 1. Quick Status Switch
             Text("Ubah Status:", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(AzuraSpacing.sm))
-            
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
                 AttendanceStatus.values().forEach { status ->
-                    val label = when(status) {
+                    val label = when (status) {
                         AttendanceStatus.PRESENT -> "Hadir"
                         AttendanceStatus.LATE -> "Terlambat"
                         AttendanceStatus.EXCUSED -> "Izin"
@@ -68,13 +67,13 @@ fun AttendanceActionSheet(
                     }
                     FilterChip(
                         selected = record.status == status,
-                        onClick = { 
+                        onClick = {
                             onUpdateStatus(record, status)
                             onDismiss()
                         },
                         label = { Text(label, modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
                         modifier = Modifier.weight(1f),
-                        shape = AzuraShapes.small
+                        shape = AzuraShapes.small,
                     )
                 }
             }
@@ -84,14 +83,14 @@ fun AttendanceActionSheet(
             // 2. 🔥 THE SAVIOR BUTTON: Koreksi Kelas
             Text("Salah Sesi/Kelas?", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(AzuraSpacing.sm))
-            
+
             OutlinedButton(
                 onClick = {
                     onDismiss()
-                    onShowClassCorrection() 
+                    onShowClassCorrection()
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = AzuraShapes.medium
+                shape = AzuraShapes.medium,
             ) {
                 Icon(Icons.Default.SwapHoriz, null)
                 Spacer(Modifier.width(AzuraSpacing.sm))
@@ -106,10 +105,13 @@ fun AttendanceActionSheet(
 
             // 3. Delete Action
             Button(
-                onClick = { onDelete(record); onDismiss() },
+                onClick = {
+                    onDelete(record)
+                    onDismiss()
+                },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-                shape = AzuraShapes.medium
+                shape = AzuraShapes.medium,
             ) {
                 Icon(Icons.Default.DeleteForever, null)
                 Spacer(Modifier.width(AzuraSpacing.sm))

@@ -18,7 +18,7 @@ import com.azuratech.azuratime.features.ai.ui.ZoharAssistantViewModel
 @Composable
 fun ZoharChatSheet(
     viewModel: ZoharAssistantViewModel,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val zoharResponse by viewModel.zoharResponse.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -29,13 +29,13 @@ fun ZoharChatSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = AzuraShapes.large,
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(AzuraSpacing.md)
-                .navigationBarsPadding() // Agar tidak tertutup tombol navigasi HP
+                .navigationBarsPadding(), // Agar tidak tertutup tombol navigasi HP
         ) {
             // Header Zohar
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -49,7 +49,7 @@ fun ZoharChatSheet(
             // Box Respon Zohar (Scrollable)
             Card(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp, max = 300.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)),
             ) {
                 LazyColumn(modifier = Modifier.padding(AzuraSpacing.md)) {
                     item {
@@ -74,17 +74,17 @@ fun ZoharChatSheet(
                 shape = AzuraShapes.medium,
                 trailingIcon = {
                     IconButton(
-                        onClick = { 
+                        onClick = {
                             if (userQuery.isNotBlank()) {
                                 viewModel.askZohar(userQuery)
-                                userQuery = "" 
+                                userQuery = ""
                             }
                         },
-                        enabled = !isLoading
+                        enabled = !isLoading,
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = MaterialTheme.colorScheme.primary)
                     }
-                }
+                },
             )
             Spacer(Modifier.height(AzuraSpacing.lg))
         }

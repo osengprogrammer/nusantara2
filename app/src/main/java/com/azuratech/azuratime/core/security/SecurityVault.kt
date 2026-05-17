@@ -26,6 +26,6 @@ class SecurityVault {
         expireDate: Long,
         status: String,
         hardwareId: String,
-        isoKey: String
+        isoKey: String,
     ): Int
 }

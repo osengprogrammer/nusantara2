@@ -11,14 +11,14 @@ import androidx.compose.runtime.Composable
 fun AppTopBar(
     title: String,
     onBack: (() -> Unit)? = null,
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
         title = {
             Text(
                 text = title,
                 maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
         },
         navigationIcon = {
@@ -26,11 +26,11 @@ fun AppTopBar(
                 IconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+                        contentDescription = "Back",
                     )
                 }
             }
         },
-        actions = actions
+        actions = actions,
     )
 }

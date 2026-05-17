@@ -15,7 +15,7 @@ import com.google.accompanist.permissions.PermissionStatus
 @Composable
 fun PermissionsHandler(
     permissionState: PermissionState,
-    onGranted: @Composable () -> Unit
+    onGranted: @Composable () -> Unit,
 ) {
     when (permissionState.status) {
         is PermissionStatus.Granted -> onGranted()
@@ -27,11 +27,11 @@ fun PermissionsHandler(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = "Camera permission is required",
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
                 )
             }
         }

@@ -3,7 +3,7 @@ package com.azuratech.azuratime.core.domain.media
 import javax.inject.Inject
 
 class PhotoManager @Inject constructor(
-    private val photoStorageUtils: PhotoStorageUtils
+    private val photoStorageUtils: PhotoStorageUtils,
 ) {
 
     /**

@@ -22,7 +22,7 @@ class StudentFormViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
-    private val photoStorageUtils: PhotoStorageUtils
+    private val photoStorageUtils: PhotoStorageUtils,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
@@ -44,7 +44,7 @@ class StudentFormViewModel @Inject constructor(
             }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-    
+
     val classesStateFlow: StateFlow<List<com.azuratech.azuraengine.model.ClassModel>> = _classesFlow
 
     private var selectedClassId: String? = null
@@ -61,7 +61,7 @@ class StudentFormViewModel @Inject constructor(
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
             val studentBiometricDetails = biometricRepository.getStudentWithDetails(studentId, schoolId)
-            
+
             if (studentBiometricDetails != null) {
                 selectedClassId = studentBiometricDetails.classId
                 updateState {
@@ -72,7 +72,7 @@ class StudentFormViewModel @Inject constructor(
                         embedding = studentBiometricDetails.biometric.embedding,
                         photoUrl = studentBiometricDetails.biometric.photoUrl,
                         isEditMode = true,
-                        pageTitle = "Edit Profil Siswa"
+                        pageTitle = "Edit Profil Siswa",
                     )
                 }
             } else {
@@ -154,9 +154,9 @@ class StudentFormViewModel @Inject constructor(
             } else {
                 "STU-${UUID.randomUUID().toString().take(8)}"
             }
-            
+
             // 🔥 AI Friendly: Face ID must match Student ID to ensure unified identity
-            val faceId = studentId 
+            val faceId = studentId
 
             // 1. Construct StudentProfile
             val profile = StudentProfile(
@@ -168,7 +168,7 @@ class StudentFormViewModel @Inject constructor(
                 faceId = faceId, // Explicitly unified
                 embedding = currentState.embedding,
                 photoUrl = currentState.photoUrl,
-                syncStatus = SyncStatus.PENDING_UPDATE
+                syncStatus = SyncStatus.PENDING_UPDATE,
             )
 
             // 2. Save via Repository
@@ -203,8 +203,8 @@ class StudentFormViewModel @Inject constructor(
 
     private fun validateForm(state: StudentFormUiState): Boolean {
         return state.name.isNotBlank() &&
-                state.studentId.isNotBlank() &&
-                state.selectedClassId != null &&
-                state.embedding != null
+            state.studentId.isNotBlank() &&
+            state.selectedClassId != null &&
+            state.embedding != null
     }
 }

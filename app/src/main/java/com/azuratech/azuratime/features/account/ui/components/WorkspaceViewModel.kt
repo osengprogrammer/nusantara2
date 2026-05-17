@@ -40,7 +40,7 @@ class WorkspaceViewModel @Inject constructor(
     private val schoolRepository: SchoolRepository,
     private val accessRequestRepository: AccessRequestRepository,
     private val sessionManager: SessionManager,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
 ) : ViewModel() {
 
     sealed class WorkspaceState {
@@ -89,8 +89,11 @@ class WorkspaceViewModel @Inject constructor(
         .debounce(300)
         .distinctUntilChanged()
         .map { query ->
-            if (query.length < 3) emptyList()
-            else repository.searchSchools(query)
+            if (query.length < 3) {
+                emptyList()
+            } else {
+                repository.searchSchools(query)
+            }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

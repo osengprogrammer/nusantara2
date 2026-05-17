@@ -35,21 +35,21 @@ fun MainApp(onBootReady: () -> Unit = {}) {
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = MaterialTheme.colorScheme.background,
     ) {
         Crossfade(
             targetState = bootState,
             animationSpec = tween(durationMillis = 400),
-            label = "BootStateTransition"
+            label = "BootStateTransition",
         ) { state ->
             when (state) {
                 BootState.Loading -> LoadingScreen(onRetry = { bootViewModel.recheck() })
 
                 BootState.NeedLogin -> {
                     LoginScreen(
-                        onLoginSuccessClick = { _, _ -> 
-                            bootViewModel.recheck() 
-                        }
+                        onLoginSuccessClick = { _, _ ->
+                            bootViewModel.recheck()
+                        },
                     )
                 }
 
@@ -58,12 +58,12 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                     val firebaseUser = FirebaseAuth.getInstance().currentUser
                     val email = firebaseUser?.email ?: ""
                     val displayName = firebaseUser?.displayName ?: ""
-                    
+
                     MembershipScreen(
                         email = email,
                         displayName = displayName,
                         onApprovedClick = { bootViewModel.recheck() },
-                        onLogoutClick = { authViewModel.logout { bootViewModel.recheck() } }
+                        onLogoutClick = { authViewModel.logout { bootViewModel.recheck() } },
                     )
                 }
 
@@ -82,7 +82,7 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                             onReLogin = {
                                 authViewModel.logout()
                                 bootViewModel.recheck()
-                            }
+                            },
                         )
                     } else {
                         MainScreen()
@@ -96,7 +96,7 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                         onReLogin = {
                             authViewModel.logout()
                             bootViewModel.recheck()
-                        }
+                        },
                     )
                 }
 
@@ -107,7 +107,7 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                         onReLogin = {
                             authViewModel.logout()
                             bootViewModel.recheck()
-                        }
+                        },
                     )
                 }
             }
@@ -140,10 +140,10 @@ fun LoadingScreen(onRetry: () -> Unit) {
 @Composable
 fun SecurityAlertDialog(message: String, onReLogin: () -> Unit) {
     AlertDialog(
-        onDismissRequest = {}, 
+        onDismissRequest = {},
         title = { Text("Keamanan Sistem", fontWeight = FontWeight.Bold) },
         text = { Text(message) },
         confirmButton = { TextButton(onClick = onReLogin) { Text("Login Ulang") } },
-        dismissButton = { TextButton(onClick = { android.os.Process.killProcess(android.os.Process.myPid()) }) { Text("Tutup") } }
+        dismissButton = { TextButton(onClick = { android.os.Process.killProcess(android.os.Process.myPid()) }) { Text("Tutup") } },
     )
 }

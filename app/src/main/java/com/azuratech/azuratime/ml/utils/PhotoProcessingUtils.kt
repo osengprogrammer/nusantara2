@@ -14,7 +14,6 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
 import com.azuratech.azuratime.ml.recognizer.FacePreprocessor
-import com.azuratech.azuratime.ml.utils.FaceGeometryUtils
 
 object PhotoProcessingUtils {
     private const val TAG = "PhotoProcessingUtils"
@@ -27,13 +26,13 @@ object PhotoProcessingUtils {
                 .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
                 .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
                 .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
-                .build()
+                .build(),
         )
     }
 
     suspend fun processBitmapForFaceEmbedding(
         @Suppress("UNUSED_PARAMETER") context: Context,
-        bitmap: Bitmap
+        bitmap: Bitmap,
     ): Pair<Bitmap, FloatArray>? = withContext(Dispatchers.IO) {
         var processedBitmap: Bitmap? = null
         try {
@@ -61,17 +60,16 @@ object PhotoProcessingUtils {
 
             // 1) Crop using our new ML geometry foundation
             val faceBitmap = FaceGeometryUtils.cropAndPadFace(processedBitmap, largestFace)
-            
+
             // 2) Preprocess into ByteBuffer using our cemented math
             val buffer = FacePreprocessor.bitmapToModelInput(faceBitmap)
-            
+
             // 3) Generate the embedding
             val embedding = FaceRecognizer.recognizeFace(buffer)
 
             Log.d(TAG, "Successfully generated embedding with ${embedding.size} dimensions")
 
             Pair(faceBitmap, embedding)
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to process bitmap for face embedding", e)
             null
@@ -86,7 +84,7 @@ object PhotoProcessingUtils {
     private suspend fun detectFacesInBitmap(bitmap: Bitmap): List<Rect> =
         suspendCancellableCoroutine { continuation ->
             val image = InputImage.fromBitmap(bitmap, 0)
-            
+
             // Using the warm, reusable faceDetector!
             faceDetector.process(image)
                 .addOnSuccessListener { faces ->

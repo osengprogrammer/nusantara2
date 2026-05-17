@@ -3,16 +3,13 @@ package com.azuratech.azuratime.features.account.data.repo
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.account.data.local.AccountDao
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.features.account.data.local.Membership
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -36,7 +33,7 @@ class MembershipRepository @Inject constructor(
     private val sessionManager: SessionManager,
     private val accountDao: AccountDao,
     private val syncManager: SyncManager,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
 ) {
     fun getCurrentUid(): String? = firebaseAuth.currentUser?.uid
 
@@ -53,19 +50,21 @@ class MembershipRepository @Inject constructor(
 
         // Trigger sync as a refresh
         accountRepository.syncAccount(uid)
-        
+
         // Re-read after sync attempt
         val refreshedAccount = accountDao.getAccountById(uid)
         return@withContext if (refreshedAccount != null && refreshedAccount.status == SessionManager.STATUS_ACTIVE) {
             accountToMap(refreshedAccount)
-        } else null
+        } else {
+            null
+        }
     }
 
     suspend fun checkMembershipExists(uid: String): Boolean = withContext(Dispatchers.IO) {
         // SSOT Migration v7.1: Read from Room first
         val account = accountDao.getAccountById(uid)
         if (account != null) return@withContext true
-        
+
         // Refresh from cloud
         accountRepository.syncAccount(uid)
         return@withContext accountDao.getAccountById(uid) != null
@@ -82,7 +81,7 @@ class MembershipRepository @Inject constructor(
             email = email,
             name = displayName ?: "User",
             status = SessionManager.STATUS_PENDING,
-            syncStatus = SyncStatus.PENDING_UPDATE.name
+            syncStatus = SyncStatus.PENDING_UPDATE.name,
         )
         accountDao.upsertAccount(account)
 
@@ -95,13 +94,13 @@ class MembershipRepository @Inject constructor(
                 "name" to (displayName ?: "User"),
                 "hardwareId" to hardwareId,
                 "status" to "PENDING",
-                "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
             )
             firestore.collection("memberships").document(uid).set(pendingData, com.google.firebase.firestore.SetOptions.merge()).await()
         } catch (e: Exception) {
             android.util.Log.e("MembershipRepo", "Failed to push to memberships collection: ${e.message}")
         }
-        
+
         sessionManager.saveUserStatus(SessionManager.STATUS_PENDING)
     }
 
@@ -112,8 +111,8 @@ class MembershipRepository @Inject constructor(
     fun activateSession(data: Map<String, Any>?): Boolean {
         val isoKey = data?.get("secureIsoKey")?.toString() ?: ""
         val schoolId = data?.get("activeSchoolId")?.toString() ?: data?.get("schoolId")?.toString() ?: ""
-        
-        val expireDate = (data?.get("expireDate") as? Number)?.toLong() 
+
+        val expireDate = (data?.get("expireDate") as? Number)?.toLong()
             ?: (System.currentTimeMillis() + 31536000000L) // +1 Year fallback
 
         // 🔥 Save active school ID if present
@@ -130,7 +129,7 @@ class MembershipRepository @Inject constructor(
             // SSOT v7.1: If isoKey is missing in map, attempt to refresh from server
             android.util.Log.w("MembershipRepo", "⚠️ Activation record missing secureIsoKey. Security features may be limited.")
         }
-        
+
         return true
     }
 
@@ -148,8 +147,9 @@ class MembershipRepository @Inject constructor(
     fun observeMembershipFlow(uid: String): Flow<MembershipDocUpdate> {
         // SSOT Migration v7.1: Observe Room instead of Firestore
         return accountDao.observeAccountById(uid).map { account ->
-            if (account == null) MembershipDocUpdate.DocumentMissing
-            else {
+            if (account == null) {
+                MembershipDocUpdate.DocumentMissing
+            } else {
                 MembershipDocUpdate.StatusChanged(account.status, accountToMap(account), null)
             }
         }
@@ -178,7 +178,7 @@ class MembershipRepository @Inject constructor(
             "status" to account.status,
             "activeSchoolId" to (account.activeSchoolId ?: ""),
             "role" to account.role,
-            "memberships" to account.memberships
+            "memberships" to account.memberships,
         )
     }
 }

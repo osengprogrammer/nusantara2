@@ -11,12 +11,12 @@ object FaceDistanceUtils {
      */
     fun calculateDistance(a: FloatArray, b: FloatArray): Float {
         if (a.size != b.size) return Float.MAX_VALUE
-        
+
         var dotProduct = 0f
         for (i in a.indices) {
             dotProduct += a[i] * b[i]
         }
-        
+
         return 1f - dotProduct.coerceIn(-1f, 1f)
     }
 

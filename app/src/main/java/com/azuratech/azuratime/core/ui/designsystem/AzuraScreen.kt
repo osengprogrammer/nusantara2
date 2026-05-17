@@ -1,8 +1,6 @@
 package com.azuratech.azuratime.core.ui.designsystem
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -19,26 +17,26 @@ fun AzuraScreen(
     snackbarHost: @Composable () -> Unit = { SnackbarHost(hostState = snackbarHostState) },
     floatingActionButton: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     Scaffold(
         topBar = {
             AppTopBar(
                 title = title,
                 onBack = onBack,
-                actions = actions
+                actions = actions,
             )
         },
         snackbarHost = snackbarHost,
         floatingActionButton = floatingActionButton,
         containerColor = MaterialTheme.colorScheme.background,
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = AzuraSpacing.md)
+                .padding(horizontal = AzuraSpacing.md),
         ) {
             content()
         }

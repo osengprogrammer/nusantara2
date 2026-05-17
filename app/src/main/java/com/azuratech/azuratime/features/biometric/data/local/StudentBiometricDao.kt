@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.features.biometric.data.local
 
 import androidx.room.*
-import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
 import kotlinx.coroutines.flow.Flow
 
@@ -33,9 +32,10 @@ interface StudentBiometricDao {
 
     @Query("SELECT * FROM student_biometrics WHERE embedding IS NOT NULL AND schoolId = :schoolId")
     suspend fun getAllStudentsForScanningList(schoolId: String): List<StudentBiometricEntity>
-    
+
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT student_biometrics.*, 
                classes.name as className,
                classes.id as classId
@@ -44,11 +44,13 @@ interface StudentBiometricDao {
         LEFT JOIN classes ON student_class_assignments.classId = classes.id AND classes.schoolId = :schoolId
         WHERE student_biometrics.schoolId = :schoolId
         ORDER BY student_biometrics.name ASC
-    """)
+    """,
+    )
     fun getAllStudentsWithDetailsFlow(schoolId: String): Flow<List<StudentBiometricDetails>>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT student_biometrics.*,
                classes.name as className,
                 classes.id as classId
@@ -57,7 +59,8 @@ interface StudentBiometricDao {
         LEFT JOIN classes ON student_class_assignments.classId = classes.id AND classes.schoolId = :schoolId
         WHERE student_biometrics.schoolId = :schoolId AND student_biometrics.studentId = :studentId
         LIMIT 1
-    """)
+    """,
+    )
     suspend fun getStudentWithDetails(studentId: String, schoolId: String): StudentBiometricDetails?
 
     @Query("DELETE FROM student_biometrics WHERE schoolId = :schoolId")
@@ -73,11 +76,13 @@ interface StudentBiometricDao {
     @Query("SELECT COUNT(*) FROM student_biometrics WHERE isSynced = 0 AND schoolId = :schoolId")
     fun getUnsyncedStudentsCountFlow(schoolId: String): Flow<Int>
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM student_biometrics 
         WHERE schoolId = :schoolId 
         AND studentId NOT IN (SELECT studentId FROM student_class_assignments WHERE schoolId = :schoolId)
-    """)
+    """,
+    )
     fun getStudentsMissingAssignment(schoolId: String): Flow<List<StudentBiometricEntity>>
 
     @Query("SELECT * FROM student_biometrics WHERE schoolId = :schoolId")

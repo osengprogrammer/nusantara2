@@ -26,9 +26,9 @@ class AccessSyncWorker @AssistedInject constructor(
     private val biometricRepository: StudentBiometricRepository,
     private val schoolRepository: SchoolRepository,
     private val studentRepository: StudentRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : CoroutineWorker(context, workerParams) {
-    
+
     companion object {
         private const val TAG = "AccessSyncWorker"
     }

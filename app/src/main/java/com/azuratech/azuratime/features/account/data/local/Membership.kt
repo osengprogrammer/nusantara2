@@ -7,5 +7,5 @@ data class Membership(
     val schoolName: String,
     val role: String, // "ADMIN", "TEACHER", "SUPER_USER"
     val status: String = "ACTIVE", // "ACTIVE", "PENDING", "REJECTED"
-    val assignedClassIds: List<String> = emptyList() // 🔥 Daftar kelas yang diamanahi
+    val assignedClassIds: List<String> = emptyList(), // 🔥 Daftar kelas yang diamanahi
 )

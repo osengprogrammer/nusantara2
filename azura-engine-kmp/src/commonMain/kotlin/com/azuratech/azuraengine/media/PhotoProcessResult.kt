@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class PhotoProcessResult(
     val success: Boolean,
     val imageBytes: ByteArray? = null,
-    val error: String? = null
+    val error: String? = null,
 )

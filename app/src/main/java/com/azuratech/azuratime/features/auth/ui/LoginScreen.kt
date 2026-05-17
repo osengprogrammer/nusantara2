@@ -7,7 +7,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +25,7 @@ import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun LoginScreen(
-    onLoginSuccessClick: (email: String, role: String?) -> Unit
+    onLoginSuccessClick: (email: String, role: String?) -> Unit,
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsState()
@@ -42,7 +41,7 @@ fun LoginScreen(
     val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
 
     val googleAuthLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
+        ActivityResultContracts.StartActivityForResult(),
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
@@ -67,12 +66,12 @@ fun LoginScreen(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface), 
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(0.85f).padding(AzuraSpacing.lg),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(painter = painterResource(id = R.drawable.ic_azura_logo), contentDescription = null, modifier = Modifier.size(160.dp))
             Spacer(modifier = Modifier.height(AzuraSpacing.lg))
@@ -83,7 +82,7 @@ fun LoginScreen(
                 text = "Sign in with Google",
                 isLoading = authState is AuthState.Loading,
                 onClick = { googleAuthLauncher.launch(googleSignInClient.signInIntent) },
-                icon = painterResource(id = R.drawable.ic_google_logo)
+                icon = painterResource(id = R.drawable.ic_google_logo),
             )
         }
     }

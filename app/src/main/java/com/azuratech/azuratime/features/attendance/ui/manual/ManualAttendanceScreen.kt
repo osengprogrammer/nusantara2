@@ -1,14 +1,13 @@
 package com.azuratech.azuratime.features.attendance.ui.manual
 
 import androidx.compose.runtime.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.biometric.ui.enroll.StudentBiometricViewModel
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
 import com.azuratech.azuratime.core.util.AttendanceService
-import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -18,10 +17,10 @@ fun ManualAttendanceScreen(
     biometricViewModel: StudentBiometricViewModel,
     attendanceViewModel: AttendanceViewModel,
     userViewModel: AccountManagementViewModel,
-    classViewModel: ClassViewModel, 
+    classViewModel: ClassViewModel,
     initialFaceId: String = "",
     initialDate: String = "",
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     val faces by biometricViewModel.studentRosterFlow.collectAsStateWithLifecycle()
     val currentUser by userViewModel.currentUser.collectAsStateWithLifecycle()
@@ -46,13 +45,16 @@ fun ManualAttendanceScreen(
     var selectedStatus by remember { mutableStateOf("H") }
     var selectedDate by remember {
         mutableStateOf(
-            if (initialDate.isNotEmpty()) runCatching { LocalDate.parse(initialDate) }.getOrElse { LocalDate.now() }
-            else LocalDate.now()
+            if (initialDate.isNotEmpty()) {
+                runCatching { LocalDate.parse(initialDate) }.getOrElse { LocalDate.now() }
+            } else {
+                LocalDate.now()
+            },
         )
     }
     var selectedTime by remember { mutableStateOf(LocalTime.now()) }
-    var selectedClass by remember(availableClasses) { 
-        mutableStateOf<ClassModel?>(null) 
+    var selectedClass by remember(availableClasses) {
+        mutableStateOf<ClassModel?>(null)
     }
 
     val isLocked = initialFaceId.isNotEmpty()
@@ -80,12 +82,12 @@ fun ManualAttendanceScreen(
                     activeClassId = selectedClass?.id,
                     activeClassName = selectedClass?.name ?: "Umum / Tanpa Kelas",
                     status = selectedStatus,
-                    attendanceTime = finalDateTime
+                    attendanceTime = finalDateTime,
                 )
                 attendanceViewModel.addRecord(newRecord)
                 onNavigateBack()
             }
         },
-        onBack = onNavigateBack
+        onBack = onNavigateBack,
     )
 }

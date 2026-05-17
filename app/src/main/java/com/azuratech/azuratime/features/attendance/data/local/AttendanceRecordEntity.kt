@@ -17,7 +17,7 @@ import java.util.UUID
 
 @Entity(
     tableName = "check_in_records",
-    indices = [Index(value = ["schoolId"])]
+    indices = [Index(value = ["schoolId"])],
 )
 data class AttendanceRecordEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
@@ -25,13 +25,13 @@ data class AttendanceRecordEntity(
     @ColumnInfo(name = "studentId") val studentId: String,
     val name: String,
     val accountEmail: String, // 🔥 Unified Identity: Email of the account that recorded this
-    val status: String, 
+    val status: String,
     val attendanceDate: LocalDate,
     val attendanceTime: LocalDateTime? = null,
     val classId: String? = null,
     val className: String? = null,
     val isSynced: Boolean = false,
-    val timestamp: Long = System.currentTimeMillis() 
+    val timestamp: Long = System.currentTimeMillis(),
 ) {
     // 1. FOR EXPORT & MATH: Converts the Long back to LocalDateTime
     val createdAtDateTime: LocalDateTime
@@ -55,7 +55,7 @@ data class AttendanceRecordEntity(
             timestamp = timestamp,
             status = AttendanceStatus.fromCode(status),
             isSynced = isSynced,
-            accountEmail = accountEmail
+            accountEmail = accountEmail,
         )
     }
 
@@ -73,9 +73,9 @@ data class AttendanceRecordEntity(
             "attendanceTime" to attendanceTime?.toString(),
             "classId" to classId,
             "className" to className,
-            "timestamp" to FieldValue.serverTimestamp(), 
+            "timestamp" to FieldValue.serverTimestamp(),
             "createdAt" to timestamp,
-            "isSynced" to true
+            "isSynced" to true,
         )
     }
 
@@ -83,7 +83,7 @@ data class AttendanceRecordEntity(
         fun fromDomain(domain: AttendanceRecord): AttendanceRecordEntity {
             val dateTime = LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(domain.timestamp),
-                ZoneId.systemDefault()
+                ZoneId.systemDefault(),
             )
             return AttendanceRecordEntity(
                 id = domain.recordId,
@@ -97,7 +97,7 @@ data class AttendanceRecordEntity(
                 classId = domain.classId,
                 className = domain.className,
                 isSynced = domain.isSynced,
-                timestamp = domain.timestamp
+                timestamp = domain.timestamp,
             )
         }
     }
@@ -111,9 +111,9 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
     return try {
         val dateStr = getString("attendanceDate") ?: java.time.LocalDate.now().toString()
         val timeStr = getString("attendanceTime") ?: getString("checkInTime")
-        
+
         AttendanceRecordEntity(
-            id = id, 
+            id = id,
             schoolId = schoolId,
             studentId = getString("studentId") ?: getString("faceId") ?: "",
             name = getString("name") ?: "Siswa",
@@ -124,9 +124,9 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
             classId = getString("classId"),
             className = getString("className"),
             isSynced = true,
-            timestamp = getTimestamp("createdAt")?.toDate()?.time ?: getLong("createdAt") ?: System.currentTimeMillis()
+            timestamp = getTimestamp("createdAt")?.toDate()?.time ?: getLong("createdAt") ?: System.currentTimeMillis(),
         )
     } catch (e: Exception) {
-        null 
+        null
     }
 }

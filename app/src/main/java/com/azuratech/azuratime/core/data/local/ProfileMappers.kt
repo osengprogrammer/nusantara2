@@ -31,7 +31,7 @@ fun AuditLogEntity.toProfile(): SystemAuditTrail {
         action = action,
         timestamp = timestamp,
         details = details,
-        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE
+        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE,
     )
 }
 
@@ -44,7 +44,7 @@ fun ExportJobEntity.toProfile(): ExportJobProfile {
         fileType = fileType,
         status = status,
         filePath = filePath,
-        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE
+        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE,
     )
 }
 
@@ -56,8 +56,8 @@ fun ReportEntity.toProfile(): SchoolAnalyticsSummary {
         reportId = reportId,
         reportName = name,
         dateRange = "${java.time.Instant.ofEpochMilli(startDate)} - ${java.time.Instant.ofEpochMilli(endDate)}",
-        metrics = emptyMap(), 
-        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE
+        metrics = emptyMap(),
+        syncStatus = if (isSynced) SyncStatus.SYNCED else SyncStatus.PENDING_UPDATE,
     )
 }
 
@@ -73,7 +73,7 @@ fun AccessRequestEntity.toProfile(): AccessRequestProfile {
         status = status,
         syncStatus = syncStatus,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
     )
 }
 
@@ -86,7 +86,7 @@ fun StudentBiometricEntity.toProfile(): BiometricEnrollmentProfile {
         studentName = name,
         photoUri = photoUrl,
         enrollmentDate = lastUpdated,
-        syncStatus = if (isSynced) SyncStatus.SYNCED else if (isDeleted) SyncStatus.PENDING_DELETE else SyncStatus.PENDING_UPDATE
+        syncStatus = if (isSynced) SyncStatus.SYNCED else if (isDeleted) SyncStatus.PENDING_DELETE else SyncStatus.PENDING_UPDATE,
     )
 }
 
@@ -111,7 +111,7 @@ fun RawStudentProfile.toDomain(): StudentProfile {
         photoUrl = photoUrl,
         syncStatus = status,
         createdAt = student.createdAt,
-        updatedAt = faceLastUpdated ?: student.createdAt
+        updatedAt = faceLastUpdated ?: student.createdAt,
     )
 }
 
@@ -120,8 +120,8 @@ fun RawStudentProfile.toDomain(): StudentProfile {
  * Joins with optional StudentBiometricEntity and class list.
  */
 fun StudentEntity.toDomain(
-    biometric: StudentBiometricEntity? = null, 
-    classIds: List<String> = emptyList()
+    biometric: StudentBiometricEntity? = null,
+    classIds: List<String> = emptyList(),
 ): StudentProfile {
     val status = when {
         isSynced && (biometric?.isSynced ?: true) -> SyncStatus.SYNCED
@@ -139,11 +139,11 @@ fun StudentEntity.toDomain(
         schoolId = schoolId,
         classIds = finalClassIds,
         faceId = biometric?.studentId,
-        embedding = biometric?.embedding, 
+        embedding = biometric?.embedding,
         photoUrl = biometric?.photoUrl,
         syncStatus = status,
         createdAt = createdAt,
-        updatedAt = biometric?.lastUpdated ?: createdAt
+        updatedAt = biometric?.lastUpdated ?: createdAt,
     )
 }
 
@@ -151,8 +151,8 @@ fun StudentEntity.toDomain(
  * Extension to convert StudentBiometricEntity to Domain Profile.
  */
 fun StudentBiometricEntity.toDomain(
-    student: StudentEntity? = null, 
-    classIds: List<String> = emptyList()
+    student: StudentEntity? = null,
+    classIds: List<String> = emptyList(),
 ): StudentProfile {
     val status = when {
         isSynced && (student?.isSynced ?: true) -> SyncStatus.SYNCED
@@ -174,7 +174,7 @@ fun StudentBiometricEntity.toDomain(
         photoUrl = photoUrl,
         syncStatus = status,
         createdAt = createdAt,
-        updatedAt = lastUpdated
+        updatedAt = lastUpdated,
     )
 }
 
@@ -182,8 +182,8 @@ fun StudentBiometricEntity.toDomain(
  * Extension to convert StudentClassAssignmentEntity to Domain Profile.
  */
 fun StudentClassAssignmentEntity.toDomain(
-    biometric: StudentBiometricEntity, 
-    student: StudentEntity? = null
+    biometric: StudentBiometricEntity,
+    student: StudentEntity? = null,
 ): StudentProfile {
     return biometric.toDomain(student, listOf(classId))
 }
@@ -200,14 +200,14 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, StudentBiometricEntity, L
         schoolId = schoolId,
         name = name,
         studentCode = studentCode,
-        classId = classIds.firstOrNull(), 
+        classId = classIds.firstOrNull(),
         createdAt = createdAt,
         isSynced = isSynced,
-        isDeleted = isDeleted
+        isDeleted = isDeleted,
     )
 
     val biometricEntity = StudentBiometricEntity(
-        studentId = faceId ?: studentId, 
+        studentId = faceId ?: studentId,
         schoolId = schoolId,
         name = name,
         photoUrl = photoUrl,
@@ -215,14 +215,14 @@ fun StudentProfile.toEntities(): Triple<StudentEntity, StudentBiometricEntity, L
         createdAt = createdAt,
         lastUpdated = updatedAt,
         isSynced = isSynced,
-        isDeleted = isDeleted
+        isDeleted = isDeleted,
     )
     val assignments = classIds.map { classId ->
         StudentClassAssignmentEntity(
             studentId = biometricEntity.studentId,
             classId = classId,
             schoolId = schoolId,
-            isSynced = isSynced
+            isSynced = isSynced,
         )
     }
 

@@ -12,9 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
 // ==========================================
@@ -35,7 +33,7 @@ val AzuraBackgroundDark = Color(0xFF101214) // Hampir Hitam
 // Warna Status
 val AzuraSuccess = Color(0xFF2E7D32) // Hijau Daun (Natural)
 val AzuraWarning = Color(0xFFF57C00) // Oranye Hangat
-val AzuraError = Color(0xFFB00020)   // Deep Red
+val AzuraError = Color(0xFFB00020) // Deep Red
 
 private val AzuraLightColorScheme = lightColorScheme(
     primary = AzuraPrimary,
@@ -47,7 +45,7 @@ private val AzuraLightColorScheme = lightColorScheme(
     surface = AzuraSurfaceLight,
     surfaceVariant = Color(0xFFF0F4F3), // Gemini-style subtle gray-teal
     outline = Color(0xFF707978),
-    error = AzuraError
+    error = AzuraError,
 )
 
 private val AzuraDarkColorScheme = darkColorScheme(
@@ -59,7 +57,7 @@ private val AzuraDarkColorScheme = darkColorScheme(
     surface = AzuraSurfaceDark,
     surfaceVariant = Color(0xFF3F4948), // Dark Mode Greyish Teal
     onSurface = Color(0xFFE1E3E2),
-    error = AzuraError
+    error = AzuraError,
 )
 
 // Rahasia Kecantikan: "The Gradient Touch" 💎
@@ -68,16 +66,16 @@ object AzuraGradients {
     fun primaryGradient() = Brush.linearGradient(
         colors = listOf(
             MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.secondary
-        )
+            MaterialTheme.colorScheme.secondary,
+        ),
     )
 
     @Composable
     fun surfaceGradient() = Brush.verticalGradient(
         colors = listOf(
             MaterialTheme.colorScheme.surface,
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        ),
     )
 }
 
@@ -105,7 +103,7 @@ object AzuraShapes {
 fun AzuraTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false, // Forced false to ensure Azura brand identity across all devices
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -133,8 +131,8 @@ fun AzuraTheme(
         shapes = Shapes(
             small = AzuraShapes.small,
             medium = AzuraShapes.medium,
-            large = AzuraShapes.large
+            large = AzuraShapes.large,
         ),
-        content = content
+        content = content,
     )
 }

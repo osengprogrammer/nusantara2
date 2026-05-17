@@ -38,7 +38,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 fun BulkRegistrationScreen(
     onNavigateBack: () -> Unit,
     // 🔥 FIX: Menggunakan hiltViewModel() agar otomatis terinjeksi oleh Hilt
-    bulkViewModel: RegisterViewModel = hiltViewModel() 
+    bulkViewModel: RegisterViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val bulkState by bulkViewModel.stateStateFlow.collectAsState()
@@ -79,7 +79,7 @@ fun BulkRegistrationScreen(
             if (mimeType.contains("csv") || pickedName?.endsWith(".csv") == true) {
                 fileUri = it
                 fileName = pickedName ?: "data.csv"
-                bulkViewModel.resetState() 
+                bulkViewModel.resetState()
             } else {
                 context.showToast("Hanya file .CSV yang didukung")
             }
@@ -90,7 +90,7 @@ fun BulkRegistrationScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             // --- INSTRUCTIONS ---
             item {
@@ -98,7 +98,7 @@ fun BulkRegistrationScreen(
                     modifier = Modifier.fillMaxWidth().padding(start = AzuraSpacing.md, end = AzuraSpacing.md, top = AzuraSpacing.md),
                     shape = AzuraShapes.medium,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                    onClick = { showCsvFormat = !showCsvFormat }
+                    onClick = { showCsvFormat = !showCsvFormat },
                 ) {
                     Column(modifier = Modifier.padding(AzuraSpacing.md)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -112,7 +112,7 @@ fun BulkRegistrationScreen(
                             Text(
                                 text = "Gunakan kolom: face_id, full_name, class_id, photo_url.\nSiswa otomatis akan masuk ke workspace ini.",
                                 style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(top = 8.dp)
+                                modifier = Modifier.padding(top = 8.dp),
                             )
                             Spacer(Modifier.height(12.dp))
                             Button(onClick = { downloadCsvTemplate() }, modifier = Modifier.fillMaxWidth()) {
@@ -132,7 +132,7 @@ fun BulkRegistrationScreen(
                         onClick = { fileLauncher.launch("*/*") },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = AzuraShapes.medium,
-                        enabled = !bulkState.isProcessing 
+                        enabled = !bulkState.isProcessing,
                     ) {
                         Icon(Icons.Default.AttachFile, null)
                         Spacer(Modifier.width(8.dp))
@@ -142,12 +142,12 @@ fun BulkRegistrationScreen(
                     if (fileUri != null) {
                         Spacer(Modifier.height(16.dp))
                         Button(
-                            onClick = { 
-                                bulkViewModel.processCsvFile(fileUri!!, "FACES") 
+                            onClick = {
+                                bulkViewModel.processCsvFile(fileUri!!, "FACES")
                             },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = AzuraShapes.medium,
-                            enabled = !bulkState.isProcessing
+                            enabled = !bulkState.isProcessing,
                         ) {
                             Icon(Icons.Default.CloudUpload, null)
                             Spacer(Modifier.width(8.dp))
@@ -181,10 +181,10 @@ fun BulkRegistrationScreen(
 fun ResultRow(result: ProcessResult) {
     val isSuccess = result.status.contains("Registered") || result.status.contains("Updated")
     val color = if (isSuccess) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
-    
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = AzuraSpacing.md, vertical = 2.dp),
-        border = BorderStroke(0.5.dp, color.copy(alpha = 0.5f))
+        border = BorderStroke(0.5.dp, color.copy(alpha = 0.5f)),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(if (isSuccess) Icons.Default.CheckCircle else Icons.Default.Error, null, tint = color)

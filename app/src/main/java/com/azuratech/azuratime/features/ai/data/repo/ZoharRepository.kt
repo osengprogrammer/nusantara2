@@ -17,26 +17,26 @@ import javax.inject.Singleton
  */
 @Singleton
 class ZoharRepository @Inject constructor(
-    private val database: AppDatabase
+    private val database: AppDatabase,
 ) {
     // Inisialisasi Gemini 1.5 Flash (Cepat & Hemat Token)
     private val generativeModel = GenerativeModel(
         modelName = "gemini-1.5-flash",
-        apiKey = BuildConfig.GEMINI_API_KEY
+        apiKey = BuildConfig.GEMINI_API_KEY,
     )
 
     suspend fun generateAttendanceInsight(schoolId: String): String = withContext(Dispatchers.IO) {
         try {
             // 1. Ambil data record terbaru dari Room
-            val allRecords = database.attendanceRecordDao().getAllRecords(schoolId).first() 
-            
+            val allRecords = database.attendanceRecordDao().getAllRecords(schoolId).first()
+
             if (allRecords.isEmpty()) {
                 return@withContext "Belum ada data absensi untuk dianalisis, brother. Semangat terus buat guru-guru di Banyuwangi!"
             }
 
             // 2. Ambil 30 data terakhir & format agar Zohar mudah membaca
             val recentRecords = allRecords.take(30)
-            
+
             // Format waktu agar lebih manusiawi untuk AI
             val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -64,7 +64,6 @@ class ZoharRepository @Inject constructor(
             // 4. Kirim ke Langit (Gemini Cloud)
             val response = generativeModel.generateContent(prompt)
             response.text ?: "Zohar sedang termenung melihat kode, coba tanya lagi nanti ya."
-            
         } catch (e: Exception) {
             "🚨 Zohar Error: ${e.message}"
         }

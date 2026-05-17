@@ -31,14 +31,14 @@ class SchoolWorkspaceRepository @Inject constructor(
     private val db: FirebaseFirestore,
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
-    private val accessRequestRepository: AccessRequestRepository
+    private val accessRequestRepository: AccessRequestRepository,
 ) {
-    private val accountDao     = database.accountDao()
-    private val biometricDao   = database.biometricDao()
-    private val recordDao      = database.attendanceRecordDao()
-    private val classDao       = database.classDao()
-    private val assignmentDao  = database.studentClassAssignmentDao()
-    private val schoolDao      = database.schoolDao()
+    private val accountDao = database.accountDao()
+    private val biometricDao = database.biometricDao()
+    private val recordDao = database.attendanceRecordDao()
+    private val classDao = database.classDao()
+    private val assignmentDao = database.studentClassAssignmentDao()
+    private val schoolDao = database.schoolDao()
 
     /**
      * Search schools by name from Local Room DB (SSOT).
@@ -50,7 +50,7 @@ class SchoolWorkspaceRepository @Inject constructor(
                 mapOf(
                     "schoolId" to school.id,
                     "schoolName" to school.name,
-                    "status" to school.status
+                    "status" to school.status,
                 )
             }
         } catch (e: Exception) {
@@ -72,7 +72,7 @@ class SchoolWorkspaceRepository @Inject constructor(
                 name = schoolName,
                 timezone = "Asia/Jakarta",
                 status = "PENDING",
-                syncStatus = SyncStatus.PENDING_INSERT.name
+                syncStatus = SyncStatus.PENDING_INSERT.name,
             )
             schoolDao.insertSchool(school)
             syncManager.enqueueSchoolSync(schoolId)
@@ -87,10 +87,12 @@ class SchoolWorkspaceRepository @Inject constructor(
         database.withTransaction {
             val school = schoolDao.getSchoolById(schoolId)
             if (school != null) {
-                schoolDao.insertSchool(school.copy(
-                    status = "ACTIVE",
-                    syncStatus = SyncStatus.PENDING_UPDATE.name
-                ))
+                schoolDao.insertSchool(
+                    school.copy(
+                        status = "ACTIVE",
+                        syncStatus = SyncStatus.PENDING_UPDATE.name,
+                    ),
+                )
                 syncManager.enqueueSchoolSync(schoolId)
             }
         }
@@ -103,10 +105,12 @@ class SchoolWorkspaceRepository @Inject constructor(
         database.withTransaction {
             val school = schoolDao.getSchoolById(schoolId)
             if (school != null) {
-                schoolDao.insertSchool(school.copy(
-                    name = newName.trim(),
-                    syncStatus = SyncStatus.PENDING_UPDATE.name
-                ))
+                schoolDao.insertSchool(
+                    school.copy(
+                        name = newName.trim(),
+                        syncStatus = SyncStatus.PENDING_UPDATE.name,
+                    ),
+                )
                 syncManager.enqueueSchoolSync(schoolId)
             }
         }
@@ -124,12 +128,14 @@ class SchoolWorkspaceRepository @Inject constructor(
             val oldSchoolId = database.withTransaction {
                 val account = accountDao.getAccountById(accountId)
                 val oldId = account?.activeSchoolId ?: ""
-                
+
                 if (account != null) {
-                    accountDao.updateAccount(account.copy(
-                        activeSchoolId = newSchoolId,
-                        syncStatus = SyncStatus.PENDING_UPDATE.name
-                    ))
+                    accountDao.updateAccount(
+                        account.copy(
+                            activeSchoolId = newSchoolId,
+                            syncStatus = SyncStatus.PENDING_UPDATE.name,
+                        ),
+                    )
                 }
                 oldId
             }
@@ -146,7 +152,7 @@ class SchoolWorkspaceRepository @Inject constructor(
             // 📥 TRIGGER BACKGROUND PULL/SYNC
             syncManager.enqueueProfileSync(accountId)
             syncManager.enqueueSync() // 🔥 RECOVERY: Pull classes and faces for the new school
-            
+
             Log.w("AZURA_WORKSPACE", "✅ Workspace switched locally. Syncing in background...")
         }
 
@@ -162,15 +168,17 @@ class SchoolWorkspaceRepository @Inject constructor(
                     val updatedMemberships = it.memberships.toMutableMap().apply {
                         put(schoolId, Membership(schoolName = schoolName, role = role))
                     }
-                    accountDao.updateAccount(it.copy(
-                        memberships = updatedMemberships,
-                        syncStatus = SyncStatus.PENDING_UPDATE.name
-                    ))
-                    
+                    accountDao.updateAccount(
+                        it.copy(
+                            memberships = updatedMemberships,
+                            syncStatus = SyncStatus.PENDING_UPDATE.name,
+                        ),
+                    )
+
                     // Trigger both profile (for memberships) and access sync as requested
                     syncManager.enqueueProfileSync(accountId)
                     syncManager.enqueueAccessSync(accountId)
-                    
+
                     Log.i("AZURA_WORKSPACE", "🔑 Assigned $role role locally for school $schoolId")
                 }
             }

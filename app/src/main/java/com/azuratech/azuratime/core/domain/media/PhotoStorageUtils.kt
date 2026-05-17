@@ -6,7 +6,7 @@ import javax.inject.Inject
 
 class PhotoStorageUtils @Inject constructor(
     private val imageProcessor: ImageProcessor,
-    private val storageProvider: StorageProvider
+    private val storageProvider: StorageProvider,
 ) : FileStorage {
     override fun saveFacePhoto(imageBytes: ByteArray, faceId: String): String? {
         val fileName = "${faceId}_${System.currentTimeMillis()}.jpg"
@@ -17,7 +17,7 @@ class PhotoStorageUtils @Inject constructor(
             null
         }
     }
-    
+
     override fun loadFacePhoto(filePath: String): ByteArray? {
         return try {
             storageProvider.read(filePath)
@@ -45,9 +45,11 @@ class PhotoStorageUtils @Inject constructor(
     override fun deleteFacePhoto(filePath: String?): Boolean {
         return if (filePath != null) {
             storageProvider.delete(filePath)
-        } else true
+        } else {
+            true
+        }
     }
-    
+
     fun resizeImage(imageBytes: ByteArray, maxDimension: Int): ByteArray {
         return imageProcessor.resize(imageBytes, maxDimension, maxDimension)
     }

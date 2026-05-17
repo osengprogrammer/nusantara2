@@ -9,5 +9,5 @@ import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 data class StudentDisplayItem(
     val profile: StudentProfile,
     val assignedClassNames: String,
-    val isBiometricReady: Boolean
+    val isBiometricReady: Boolean,
 )

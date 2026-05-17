@@ -22,7 +22,7 @@ import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 
 /**
  * 🛡️ THE INVISIBLE GUARDRAIL: Persistent Background Sync
- * 
+ *
  * Canonical worker for all data synchronization.
  * Handles both OneTimeWork (manual) and PeriodicWork (background).
  */
@@ -35,7 +35,7 @@ class SyncWorker @AssistedInject constructor(
     private val studentRepository: StudentRepository,
     private val attendanceRepository: AttendanceRepository,
     private val accountRepository: AccountRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {

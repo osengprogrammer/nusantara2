@@ -19,7 +19,7 @@ interface AttendanceConflictDao {
 
     @Delete
     suspend fun delete(conflict: AttendanceConflictEntity)
-    
+
     @Query("DELETE FROM attendance_conflicts WHERE conflictId = :conflictId")
     suspend fun deleteById(conflictId: String)
 }

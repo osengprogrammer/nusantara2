@@ -19,9 +19,8 @@ object ImageConversionUtils {
     fun convertImageProxyToBitmap(
         imageProxy: ImageProxy,
         isFrontCamera: Boolean = false,
-        applyMirroring: Boolean = false
+        applyMirroring: Boolean = false,
     ): Bitmap? {
-        
         // 1. Dapatkan original bitmap berdasarkan formatnya (Aman untuk JPEG & YUV)
         val rawBitmap: Bitmap = if (imageProxy.format == ImageFormat.JPEG) {
             val buffer = imageProxy.planes[0].buffer
@@ -55,9 +54,13 @@ object ImageConversionUtils {
         }
 
         val finalBitmap = Bitmap.createBitmap(
-            rawBitmap, 0, 0,
-            rawBitmap.width, rawBitmap.height,
-            matrix, true
+            rawBitmap,
+            0,
+            0,
+            rawBitmap.width,
+            rawBitmap.height,
+            matrix,
+            true,
         )
 
         // 4. CRITICAL FIX: Hapus bitmap asli dari RAM agar tidak OutOfMemory

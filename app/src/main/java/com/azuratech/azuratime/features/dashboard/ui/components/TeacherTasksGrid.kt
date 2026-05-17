@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,36 +25,36 @@ fun TeacherTasksGrid(
     onRegisterStudentClick: () -> Unit, // 👈 Added
     accountId: String? = null,
     isEnabled: Boolean = true, // 🔥 Added
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = AzuraSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
     ) {
         // ======================================================
         // 🔥 Row 1: QUICK ACTIONS
         // ======================================================
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             DashboardActionCard(
-                title = "Scan Barcode", 
-                icon = Icons.Default.QrCodeScanner, 
-                color = MaterialTheme.colorScheme.error, 
-                onClick = { navController.navigate(Screen.BarcodeScan.route) }, 
+                title = "Scan Barcode",
+                icon = Icons.Default.QrCodeScanner,
+                color = MaterialTheme.colorScheme.error,
+                onClick = { navController.navigate(Screen.BarcodeScan.route) },
                 enabled = isEnabled, // 🔥 Added
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             DashboardActionCard(
-                title = "Input Manual", 
-                icon = Icons.Default.EditCalendar, 
-                color = MaterialTheme.colorScheme.tertiary, 
-                onClick = { navController.navigate(Screen.ManualAttendance.createRoute("", "")) }, 
+                title = "Input Manual",
+                icon = Icons.Default.EditCalendar,
+                color = MaterialTheme.colorScheme.tertiary,
+                onClick = { navController.navigate(Screen.ManualAttendance.createRoute("", "")) },
                 enabled = isEnabled, // 🔥 Added
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
 
@@ -63,14 +62,26 @@ fun TeacherTasksGrid(
         // 🔥 Row 2: Scanner Wajah & Cetak Barcode
         // ======================================================
         Row(
-            modifier = Modifier.fillMaxWidth(), 
-            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
-            DashboardActionCard("Scanner Wajah", Icons.Default.CameraAlt, MaterialTheme.colorScheme.primary,
-                { navController.navigate(Screen.AttendanceCapture.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
+            DashboardActionCard(
+                "Scanner Wajah",
+                Icons.Default.CameraAlt,
+                MaterialTheme.colorScheme.primary,
+                { navController.navigate(Screen.AttendanceCapture.route) },
+                modifier = Modifier.weight(1f),
+                enabled = isEnabled,
+            )
 
-            DashboardActionCard("Cetak Barcode", Icons.Default.QrCode, MaterialTheme.colorScheme.secondary, 
-                { navController.navigate(Screen.StudentRosterBarcode.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
+            DashboardActionCard(
+                "Cetak Barcode",
+                Icons.Default.QrCode,
+                MaterialTheme.colorScheme.secondary,
+                { navController.navigate(Screen.StudentRosterBarcode.route) },
+                modifier = Modifier.weight(1f),
+                enabled = isEnabled,
+            )
         }
 
         // ======================================================
@@ -79,16 +90,28 @@ fun TeacherTasksGrid(
         if (isAdmin) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
-                DashboardActionCard("Manajemen Kelas", Icons.Default.Groups, MaterialTheme.colorScheme.primary,
-                    { 
+                DashboardActionCard(
+                    "Manajemen Kelas",
+                    Icons.Default.Groups,
+                    MaterialTheme.colorScheme.primary,
+                    {
                         if (accountId != null) {
                             navController.navigate(Screen.ClassManagement.createRoute(accountId))
                         }
-                    }, modifier = Modifier.weight(1f), enabled = isEnabled)
-                DashboardActionCard("Manajemen Siswa", Icons.Default.People, MaterialTheme.colorScheme.secondary,
-                    { navController.navigate(Screen.StudentRoster.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+                DashboardActionCard(
+                    "Manajemen Siswa",
+                    Icons.Default.People,
+                    MaterialTheme.colorScheme.secondary,
+                    { navController.navigate(Screen.StudentRoster.route) },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
             }
         }
 
@@ -97,23 +120,23 @@ fun TeacherTasksGrid(
         // ======================================================
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             DashboardActionCard(
-                title = "Manajemen Presensi", 
-                icon = Icons.Default.History, 
+                title = "Manajemen Presensi",
+                icon = Icons.Default.History,
                 color = MaterialTheme.colorScheme.primary,
-                onClick = { navController.navigate(Screen.AttendanceHistory.route) }, 
-                modifier = Modifier.weight(1f), 
-                enabled = isEnabled
+                onClick = { navController.navigate(Screen.AttendanceHistory.route) },
+                modifier = Modifier.weight(1f),
+                enabled = isEnabled,
             )
             DashboardActionCard(
-                title = "Laporan Matriks", 
-                icon = Icons.Default.GridOn, 
-                color = MaterialTheme.colorScheme.secondary, 
-                onClick = { navController.navigate(Screen.AttendanceMatrix.route) }, 
-                modifier = Modifier.weight(1f), 
-                enabled = isEnabled
+                title = "Laporan Matriks",
+                icon = Icons.Default.GridOn,
+                color = MaterialTheme.colorScheme.secondary,
+                onClick = { navController.navigate(Screen.AttendanceMatrix.route) },
+                modifier = Modifier.weight(1f),
+                enabled = isEnabled,
             )
         }
 
@@ -123,12 +146,24 @@ fun TeacherTasksGrid(
         if (isAdmin || currentRole == "SUPER_ADMIN") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
-                DashboardActionCard("Registrasi Baru", Icons.Default.PersonAdd, MaterialTheme.colorScheme.tertiary,
-                    onClick = onRegisterStudentClick, modifier = Modifier.weight(1f), enabled = isEnabled)
-                DashboardActionCard("Debug System", Icons.Default.BugReport, MaterialTheme.colorScheme.outline,
-                    { navController.navigate(Screen.Debug.route) }, modifier = Modifier.weight(1f), enabled = isEnabled)
+                DashboardActionCard(
+                    "Registrasi Baru",
+                    Icons.Default.PersonAdd,
+                    MaterialTheme.colorScheme.tertiary,
+                    onClick = onRegisterStudentClick,
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+                DashboardActionCard(
+                    "Debug System",
+                    Icons.Default.BugReport,
+                    MaterialTheme.colorScheme.outline,
+                    { navController.navigate(Screen.Debug.route) },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
             }
         }
     }
@@ -137,12 +172,12 @@ fun TeacherTasksGrid(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardActionCard(
-    title: String, 
-    icon: ImageVector, 
-    color: Color, 
-    onClick: () -> Unit, 
+    title: String,
+    icon: ImageVector,
+    color: Color,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true // 🔥 Added
+    enabled: Boolean = true, // 🔥 Added
 ) {
     val alpha = if (enabled) 1f else 0.4f
     Surface(
@@ -152,7 +187,7 @@ fun DashboardActionCard(
         shape = AzuraShapes.large,
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = if (enabled) 2.dp else 0.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f * alpha))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f * alpha)),
     ) {
         Row {
             Box(Modifier.width(6.dp).fillMaxHeight().background(color.copy(alpha = alpha)))
@@ -160,10 +195,10 @@ fun DashboardActionCard(
                 Icon(icon, null, tint = color.copy(alpha = alpha), modifier = Modifier.size(28.dp))
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    title, 
-                    style = MaterialTheme.typography.labelLarge, 
+                    title,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
                 )
             }
         }

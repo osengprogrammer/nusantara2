@@ -19,5 +19,5 @@ data class StudentRosterData(
     val allClasses: List<ClassModel> = emptyList(),
     val isSyncing: Boolean = false,
     val studentForClassAssignment: StudentDisplayItem? = null,
-    val studentForQuickEdit: StudentDisplayItem? = null
+    val studentForQuickEdit: StudentDisplayItem? = null,
 )

@@ -19,7 +19,7 @@ fun AzuraAuditTrail(
     createdAt: Long,
     createdBy: String?,
     lastUpdated: Long,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val dateFormatter = remember { java.text.SimpleDateFormat("dd MMM yyyy, HH:mm", java.util.Locale.getDefault()) }
 
@@ -27,15 +27,15 @@ fun AzuraAuditTrail(
         modifier = modifier.fillMaxWidth(),
         shape = AzuraShapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        ),
     ) {
         Column(modifier = Modifier.padding(AzuraSpacing.md)) {
             Text(
                 text = "LOG AUDIT & HISTORY",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
 
             Spacer(Modifier.height(AzuraSpacing.sm))
@@ -44,20 +44,20 @@ fun AzuraAuditTrail(
                 label = "Dibuat oleh",
                 value = createdBy ?: "Sistem",
                 date = dateFormatter.format(java.util.Date(createdAt)),
-                icon = Icons.Filled.AddModerator
+                icon = Icons.Filled.AddModerator,
             )
 
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = AzuraSpacing.sm),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
             )
 
             AuditRow(
                 label = "Update Terakhir",
                 value = "Sesi Saat Ini",
                 date = dateFormatter.format(java.util.Date(lastUpdated)),
-                icon = Icons.Filled.HistoryEdu
+                icon = Icons.Filled.HistoryEdu,
             )
         }
     }
@@ -70,19 +70,19 @@ private fun AuditRow(label: String, value: String, date: String, icon: androidx.
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         )
         Spacer(Modifier.width(12.dp))
         Column {
             Text(
                 text = "$label: $value",
                 style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Text(
                 text = date,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             )
         }
     }

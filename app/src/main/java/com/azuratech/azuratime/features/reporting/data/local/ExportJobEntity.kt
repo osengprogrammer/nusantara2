@@ -10,5 +10,5 @@ data class ExportJobEntity(
     val fileType: String,
     val status: String,
     val filePath: String? = null,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

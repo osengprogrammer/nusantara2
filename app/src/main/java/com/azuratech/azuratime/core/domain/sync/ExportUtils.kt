@@ -9,9 +9,9 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class ExportUtils @Inject constructor(
-    private val storageProvider: StorageProvider
+    private val storageProvider: StorageProvider,
 ) {
-    
+
     // 🔥 Fungsi Baru untuk Download Template CSV
     fun exportEmptyTemplate(type: String, header: String): String? {
         return try {
@@ -35,20 +35,19 @@ class ExportUtils @Inject constructor(
     suspend fun exportMatrixToCsv(
         rows: List<com.azuratech.azuratime.features.reporting.ui.matrix.MatrixRowModel>,
         dateRange: List<LocalDate>,
-        className: String
+        className: String,
     ): String? = withContext(Dispatchers.IO) {
-        
         val monthStr = dateRange.firstOrNull()?.month?.name ?: "REPORT"
         val fileName = "Azura_Payroll_${className.replace(" ", "_")}_$monthStr.csv"
 
         try {
             val stringBuilder = StringBuilder()
-            
+
             // 1. HEADER ROW - Dinamis mengikuti Range Tanggal
             val header = mutableListOf("NO", "FACE ID", "NAMA LENGKAP", "KELAS")
             dateRange.forEach { date -> header.add("${date.dayOfMonth}/${date.monthValue}") }
             header.addAll(listOf("REKAP KERJA", "SAKIT", "IZIN", "ALPA", "ESTIMASI GAJI (RP)"))
-            
+
             stringBuilder.appendLine(header.joinToString(",") { escapeCsv(it) })
 
             // 2. DATA ROWS
@@ -71,11 +70,11 @@ class ExportUtils @Inject constructor(
 
                 // Payroll Calculation (Tanpa Desimal agar Excel-Friendly)
                 val salaryValue = rowModel.estimatedSalary.replace(Regex("[^0-9]"), "")
-                row.add(if(salaryValue.isEmpty()) "0" else salaryValue)
+                row.add(if (salaryValue.isEmpty()) "0" else salaryValue)
 
                 stringBuilder.appendLine(row.joinToString(",") { escapeCsv(it) })
             }
-            
+
             val result = storageProvider.save(stringBuilder.toString().toByteArray(), fileName, "Documents")
             println("[Azura_Export] ✅ Report generated: $result")
             result
@@ -90,7 +89,7 @@ class ExportUtils @Inject constructor(
      */
     suspend fun exportRawLogsToCsv(records: List<AttendanceRecord>): String? = withContext(Dispatchers.IO) {
         val fileName = "Azura_RawLogs_${System.currentTimeMillis()}.csv"
-        
+
         try {
             val stringBuilder = StringBuilder()
             stringBuilder.appendLine("Face ID,Name,Date,Time,Status,Admin Email")
@@ -101,7 +100,7 @@ class ExportUtils @Inject constructor(
             records.forEach { record ->
                 val dateTime = java.time.LocalDateTime.ofInstant(
                     java.time.Instant.ofEpochMilli(record.timestamp),
-                    java.time.ZoneId.systemDefault()
+                    java.time.ZoneId.systemDefault(),
                 )
                 val row = listOf(
                     record.studentId,
@@ -109,7 +108,7 @@ class ExportUtils @Inject constructor(
                     dateTime.format(dateFormatter),
                     dateTime.format(timeFormatter),
                     record.status.toCode(),
-                    record.accountEmail
+                    record.accountEmail,
                 ).joinToString(",") { escapeCsv(it) }
 
                 stringBuilder.appendLine(row)
@@ -124,7 +123,7 @@ class ExportUtils @Inject constructor(
     suspend fun exportMasterDataToCsv(
         dataType: String,
         headers: List<String>,
-        rows: List<List<String>>
+        rows: List<List<String>>,
     ): String? = withContext(Dispatchers.IO) {
         val fileName = "Azura_Master_${dataType}_${System.currentTimeMillis()}.csv"
 

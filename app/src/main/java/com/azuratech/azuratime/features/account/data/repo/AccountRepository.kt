@@ -13,7 +13,7 @@ import javax.inject.Singleton
 @Singleton
 class AccountRepository @Inject constructor(
     private val accountDao: AccountDao,
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
 ) {
     fun getAccountDao() = accountDao
 
@@ -32,7 +32,7 @@ class AccountRepository @Inject constructor(
                 val role = snapshot.getString("role") ?: "USER"
                 val activeSchoolId = snapshot.getString("activeSchoolId")
                 val activeClassId = snapshot.getString("activeClassId")
-                
+
                 // Parse memberships map
                 val membershipsRaw = snapshot.get("memberships") as? Map<*, *>
                 val memberships = membershipsRaw?.mapNotNull { (key, value) ->
@@ -42,7 +42,7 @@ class AccountRepository @Inject constructor(
                         schoolName = v["schoolName"] as? String ?: "",
                         role = v["role"] as? String ?: "USER",
                         status = v["status"] as? String ?: "ACTIVE",
-                        assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                        assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                     )
                 }?.toMap() ?: emptyMap()
 
@@ -55,7 +55,7 @@ class AccountRepository @Inject constructor(
                     role = role,
                     activeSchoolId = activeSchoolId,
                     activeClassId = activeClassId,
-                    memberships = memberships
+                    memberships = memberships,
                 )
                 accountDao.upsertAccount(entity)
                 Result.Success(entity)
@@ -80,7 +80,7 @@ class AccountRepository @Inject constructor(
                 "activeSchoolId" to account.activeSchoolId,
                 "activeClassId" to account.activeClassId,
                 "memberships" to account.memberships,
-                "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
             )
             db.collection("accounts").document(accountId).set(data, com.google.firebase.firestore.SetOptions.merge()).await()
             Result.Success(Unit)

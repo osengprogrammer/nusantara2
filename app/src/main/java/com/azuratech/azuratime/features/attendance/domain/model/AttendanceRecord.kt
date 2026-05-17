@@ -15,14 +15,15 @@ data class AttendanceRecord(
     val status: AttendanceStatus,
     val photoUrl: String? = null,
     val isSynced: Boolean = false,
-    val accountEmail: String = ""
+    val accountEmail: String = "",
 )
 
 enum class AttendanceStatus {
     PRESENT,
     LATE,
     ABSENT,
-    EXCUSED;
+    EXCUSED,
+    ;
 
     fun toCode(): String = when (this) {
         PRESENT -> "H"

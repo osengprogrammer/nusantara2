@@ -13,18 +13,18 @@ import androidx.room.Index
             entity = SchoolEntity::class,
             parentColumns = ["id"],
             childColumns = ["schoolId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
             entity = ClassEntity::class,
             parentColumns = ["id"],
             childColumns = ["classId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
 )
 data class SchoolClassAssignment(
     val schoolId: String,
     val classId: String,
-    val assignedAt: Long = System.currentTimeMillis()
+    val assignedAt: Long = System.currentTimeMillis(),
 )

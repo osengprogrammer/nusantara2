@@ -12,13 +12,13 @@ import androidx.compose.ui.tooling.preview.Preview
     name = "Light Mode",
     group = "Azura System",
     showBackground = true,
-    backgroundColor = 0xFFFFFFFF
+    backgroundColor = 0xFFFFFFFF,
 )
 @Preview(
     name = "Dark Mode",
     group = "Azura System",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
     showBackground = true,
-    backgroundColor = 0xFF121212
+    backgroundColor = 0xFF121212,
 )
 annotation class AzuraPreviews

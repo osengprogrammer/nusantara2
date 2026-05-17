@@ -44,16 +44,16 @@ class Converters {
     fun toLocalDateTimeString(date: LocalDateTime?): String? = date?.toString()
 
     @TypeConverter
-    fun fromLocalDateTimeString(value: String?): LocalDateTime? = value?.let { 
-        try { LocalDateTime.parse(it) } catch (e: Exception) { null } 
+    fun fromLocalDateTimeString(value: String?): LocalDateTime? = value?.let {
+        try { LocalDateTime.parse(it) } catch (e: Exception) { null }
     }
 
     @TypeConverter
     fun toLocalDateString(date: LocalDate?): String? = date?.toString()
 
     @TypeConverter
-    fun fromLocalDateString(value: String?): LocalDate? = value?.let { 
-        try { LocalDate.parse(it) } catch (e: Exception) { null } 
+    fun fromLocalDateString(value: String?): LocalDate? = value?.let {
+        try { LocalDate.parse(it) } catch (e: Exception) { null }
     }
 
     @TypeConverter

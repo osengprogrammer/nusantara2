@@ -21,7 +21,7 @@ data class AttendanceMatrixData(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val selectedClassId: String,
-    val policy: String
+    val policy: String,
 )
 
 data class MatrixRowModel(
@@ -34,12 +34,12 @@ data class MatrixRowModel(
     val summaryS: String,
     val summaryI: String,
     val summaryA: String,
-    val estimatedSalary: String
+    val estimatedSalary: String,
 )
 
 data class MatrixCellModel(
     val text: String,
     val textColor: Color,
     val backgroundColor: Color,
-    val isPresent: Boolean
+    val isPresent: Boolean,
 )

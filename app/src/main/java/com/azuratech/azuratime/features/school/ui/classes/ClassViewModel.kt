@@ -28,7 +28,7 @@ class ClassViewModel @Inject constructor(
     private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
     private val registrationRepository: com.azuratech.azuratime.features.student.data.repo.StudentRegistrationRepository,
     private val userRepository: AccountRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -36,16 +36,16 @@ class ClassViewModel @Inject constructor(
 
     // 🔥 NEW: Reactive School ID Flow
     private val activeSchoolIdFlow = sessionManager.activeSchoolIdFlow
-        .onStart { 
+        .onStart {
             val initial = savedStateHandle.get<String>("schoolId") ?: sessionManager.getActiveSchoolId()
-            emit(initial) 
+            emit(initial)
         }
         .filterNotNull()
         .distinctUntilChanged()
 
-    private val schoolId: String 
+    private val schoolId: String
         get() = sessionManager.getActiveSchoolId() ?: ""
-        
+
     private val accountId: String = savedStateHandle.get<String>("accountId")
         ?: sessionManager.getCurrentUserId() ?: ""
 
@@ -62,7 +62,7 @@ class ClassViewModel @Inject constructor(
     val uiStateStateFlow: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdFlow
         .flatMapLatest { id -> schoolRepository.observeClasses(id) }
         .map { result ->
-            when(result) {
+            when (result) {
                 is Result.Success -> if (result.data.isEmpty()) UiState.Empty else UiState.Success(result.data)
                 is Result.Failure -> UiState.Error(result.error.message ?: "Unknown error")
                 is Result.Loading -> UiState.Loading
@@ -75,19 +75,21 @@ class ClassViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // 🔥 Added Available Classes Flow - Simplified to static for now
-    val availableClassesStateFlow: StateFlow<List<String>> = flowOf(listOf(
-        "10-IPA-1", "10-IPA-2", "10-IPA-3",
-        "10-IPS-1", "10-IPS-2", "10-IPS-3",
-        "11-IPA-1", "11-IPA-2", "11-IPA-3",
-        "11-IPS-1", "11-IPS-2", "11-IPS-3",
-        "12-IPA-1", "12-IPA-2", "12-IPA-3",
-        "12-IPS-1", "12-IPS-2", "12-IPS-3"
-    )).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val availableClassesStateFlow: StateFlow<List<String>> = flowOf(
+        listOf(
+            "10-IPA-1", "10-IPA-2", "10-IPA-3",
+            "10-IPS-1", "10-IPS-2", "10-IPS-3",
+            "11-IPA-1", "11-IPA-2", "11-IPA-3",
+            "11-IPS-1", "11-IPS-2", "11-IPS-3",
+            "12-IPA-1", "12-IPA-2", "12-IPA-3",
+            "12-IPS-1", "12-IPS-2", "12-IPS-3",
+        ),
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // 🔥 Added All Classes for Account Flow
     val allAccountClassesStateFlow: StateFlow<UiState<List<ClassModel>>> = schoolRepository.observeAllClassesForAccount(accountId)
         .map { result ->
-            when(result) {
+            when (result) {
                 is Result.Success -> if (result.data.isEmpty()) UiState.Empty else UiState.Success(result.data)
                 is Result.Failure -> UiState.Error(result.error.message ?: "Unknown error")
                 is Result.Loading -> UiState.Loading
@@ -115,7 +117,7 @@ class ClassViewModel @Inject constructor(
                 grade = _grade,
                 teacherId = null,
                 studentCount = 0,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
             )
             val result = schoolRepository.saveClass(accountId, targetSchoolId, classModel)
             when (result) {
@@ -150,7 +152,7 @@ class ClassViewModel @Inject constructor(
     fun deleteClass(
         classId: String,
         onFailure: (String) -> Unit = {},
-        onSuccess: () -> Unit = {}
+        onSuccess: () -> Unit = {},
     ) {
         viewModelScope.launch {
             val result = schoolRepository.deleteClass(accountId, schoolId, classId)
@@ -173,7 +175,7 @@ class ClassViewModel @Inject constructor(
     fun syncClasses() {
         val uid = sessionManager.getCurrentUserId() ?: return
         val sid = sessionManager.getActiveSchoolId() ?: return
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             _uiEvent.emit(UiEvent.ShowSnackbar("Sedang menyinkronkan data kelas..."))
             val result = schoolRepository.syncClasses(uid, sid)

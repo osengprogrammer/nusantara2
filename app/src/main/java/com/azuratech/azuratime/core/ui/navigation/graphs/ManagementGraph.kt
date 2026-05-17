@@ -24,52 +24,52 @@ import com.azuratech.azuratime.features.reporting.ui.integrity.DataIntegrityScre
 import com.azuratech.azuratime.features.reporting.ui.integrity.DataManagementScreen
 
 fun NavGraphBuilder.managementGraph(
-    navController: NavController
+    navController: NavController,
 ) {
     val uri = "azuratime://azuratech.com"
 
     navigation(
         startDestination = NavigationRoutes.REGISTRATION_MENU,
-        route = NavigationRoutes.MANAGEMENT_GRAPH
+        route = NavigationRoutes.MANAGEMENT_GRAPH,
     ) {
         composable(NavigationRoutes.REGISTRATION_MENU) {
             RegistrationMenuScreen(
                 onNavigateToAddStudent = { navController.navigate(NavigationRoutes.ADD_STUDENT) },
                 onNavigateToBulkRegister = { navController.navigate(NavigationRoutes.BULK_REGISTER) },
                 onNavigateToBiometricManagement = { navController.navigate(NavigationRoutes.BIOMETRIC_MANAGEMENT) },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable(NavigationRoutes.ADD_STUDENT) {
             AddStudentScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable(NavigationRoutes.BULK_REGISTER) {
             BulkRegistrationScreen(
                 onNavigateBack = { navController.popBackStack() },
-                bulkViewModel = hiltViewModel()
+                bulkViewModel = hiltViewModel(),
             )
         }
         composable(NavigationRoutes.BIOMETRIC_MANAGEMENT) {
             BiometricScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable(NavigationRoutes.STUDENT_ROSTER) {
             StudentRosterScreen(
                 onEditStudentClick = { studentId -> navController.navigate(Screen.EditStudent.createRoute(studentId)) },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable(NavigationRoutes.STUDENT_ROSTER_BARCODE) {
             StudentRosterBarcodeScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable(NavigationRoutes.DATA_DASHBOARD) {
             DataIntegrityScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable(NavigationRoutes.DATA_MANAGEMENT) {
@@ -77,48 +77,48 @@ fun NavGraphBuilder.managementGraph(
                 initialDataType = it.arguments?.getString("dataType") ?: "FACES",
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToClassList = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
-                registerViewModel = hiltViewModel()
+                registerViewModel = hiltViewModel(),
             )
         }
         composable(
             route = NavigationRoutes.EDIT_STUDENT,
-            arguments = listOf(navArgument("studentId") { type = NavType.StringType })
+            arguments = listOf(navArgument("studentId") { type = NavType.StringType }),
         ) { entry ->
             EditStudentScreen(
                 faceId = entry.arguments?.getString("studentId") ?: "",
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable(
             route = NavigationRoutes.CLASS_LIST,
             arguments = listOf(navArgument("schoolId") { type = NavType.StringType }),
-            deepLinks = listOf(navDeepLink { uriPattern = "$uri/classes/{schoolId}" })
-        ) { 
-            ClassManagementScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onClassSelected = { id, name ->
-                    navController.navigate(Screen.ClassDetail.createRoute(id, name))
-                }
-            )
-        }
-        composable(
-            route = NavigationRoutes.CLASS_MANAGEMENT,
-            arguments = listOf(navArgument("accountId") { type = NavType.StringType })
+            deepLinks = listOf(navDeepLink { uriPattern = "$uri/classes/{schoolId}" }),
         ) {
             ClassManagementScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onClassSelected = { id, name ->
                     navController.navigate(Screen.ClassDetail.createRoute(id, name))
-                }
+                },
+            )
+        }
+        composable(
+            route = NavigationRoutes.CLASS_MANAGEMENT,
+            arguments = listOf(navArgument("accountId") { type = NavType.StringType }),
+        ) {
+            ClassManagementScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onClassSelected = { id, name ->
+                    navController.navigate(Screen.ClassDetail.createRoute(id, name))
+                },
             )
         }
         composable(
             route = NavigationRoutes.CLASS_DETAIL,
             arguments = listOf(
                 navArgument("classId") { type = NavType.StringType },
-                navArgument("className") { type = NavType.StringType }
+                navArgument("className") { type = NavType.StringType },
             ),
-            deepLinks = listOf(navDeepLink { uriPattern = "$uri/class_detail/{classId}/{className}" })
+            deepLinks = listOf(navDeepLink { uriPattern = "$uri/class_detail/{classId}/{className}" }),
         ) { entry ->
             ClassDetailScreen(
                 classId = entry.arguments?.getString("classId") ?: "",
@@ -126,13 +126,13 @@ fun NavGraphBuilder.managementGraph(
                 classViewModel = hiltViewModel(),
                 biometricViewModel = hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() },
-                onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) }
+                onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
             )
         }
 
         composable(NavigationRoutes.PENDING_SCHOOLS) {
             PendingSchoolsScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
             )
         }
     }

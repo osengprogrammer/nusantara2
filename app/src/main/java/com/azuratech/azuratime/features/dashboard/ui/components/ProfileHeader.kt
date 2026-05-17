@@ -17,7 +17,6 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 
-
 @Composable
 fun ProfileHeader(
     name: String,
@@ -25,18 +24,18 @@ fun ProfileHeader(
     schoolName: String?,
     photoUrl: Uri?,
     onLogoutClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AzuraSpacing.md)
+            .padding(horizontal = AzuraSpacing.md),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(AzuraSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
                 model = photoUrl,
@@ -45,7 +44,7 @@ fun ProfileHeader(
                     .size(64.dp)
                     .clip(CircleShape)
                     .clickable { onProfileClick() },
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
             Column(modifier = Modifier.weight(1f)) {
@@ -56,7 +55,7 @@ fun ProfileHeader(
             IconButton(onClick = onLogoutClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = "Logout"
+                    contentDescription = "Logout",
                 )
             }
         }

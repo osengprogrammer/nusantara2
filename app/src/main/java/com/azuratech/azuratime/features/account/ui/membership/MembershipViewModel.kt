@@ -34,7 +34,7 @@ class MembershipViewModel @Inject constructor(
     private val accessRequestRepository: AccessRequestRepository,
     private val membershipRepository: MembershipRepository,
     private val sessionManager: SessionManager,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
 ) : ViewModel() {
 
     // =====================================================
@@ -71,8 +71,8 @@ class MembershipViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MembershipState.Loading)
 
-    val memberships: StateFlow<List<com.azuratech.azuratime.features.account.data.local.Membership>> = user.map { 
-        it?.memberships?.values?.toList() ?: emptyList() 
+    val memberships: StateFlow<List<com.azuratech.azuratime.features.account.data.local.Membership>> = user.map {
+        it?.memberships?.values?.toList() ?: emptyList()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // =====================================================
@@ -81,11 +81,11 @@ class MembershipViewModel @Inject constructor(
 
     fun checkMembership(email: String, displayName: String? = null) {
         val uid = sessionManager.getCurrentUserId() ?: return
-        
+
         viewModelScope.launch {
             // 🔥 CRITICAL: Pull the latest status from Firestore first to see if Admin approved
             val syncResult = accountRepository.syncAccount(uid)
-            
+
             // Trigger background sync to handle any local access requests
             syncManager.enqueueAccessSync(uid)
 
@@ -94,7 +94,7 @@ class MembershipViewModel @Inject constructor(
             } else {
                 // Cloud pull failed. Check local state.
                 val localAccount = accountRepository.getAccountDao().getAccountById(uid)
-                
+
                 // If account doesn't exist locally OR they are stuck in PENDING, push to the memberships collection
                 if (localAccount == null || localAccount.status == "PENDING") {
                     membershipRepository.createPendingUser(uid, email, displayName)
@@ -116,7 +116,7 @@ class MembershipViewModel @Inject constructor(
                     "status" to it.status,
                     "activeSchoolId" to (it.activeSchoolId ?: ""),
                     "role" to it.role,
-                    "memberships" to it.memberships
+                    "memberships" to it.memberships,
                 )
                 membershipRepository.activateSession(data)
             }

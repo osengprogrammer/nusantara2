@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Singleton
 class BiometricLocalDataSourceImpl @Inject constructor(
-    private val database: AppDatabase
+    private val database: AppDatabase,
 ) : BiometricLocalDataSource {
     private val biometricDao = database.biometricDao()
     private val assignmentDao = database.studentClassAssignmentDao()

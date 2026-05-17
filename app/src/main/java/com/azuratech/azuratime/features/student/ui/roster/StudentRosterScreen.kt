@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
@@ -25,7 +24,7 @@ import androidx.compose.animation.core.*
 fun StudentRosterScreen(
     onEditStudentClick: (String) -> Unit,
     onNavigateBack: () -> Unit,
-    viewModel: StudentRosterViewModel = hiltViewModel()
+    viewModel: StudentRosterViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -34,8 +33,8 @@ fun StudentRosterScreen(
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
             animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        )
+            repeatMode = RepeatMode.Restart,
+        ),
     )
 
     AzuraScreen(
@@ -45,15 +44,15 @@ fun StudentRosterScreen(
             val data = (uiState as? StudentRosterUiState.Success)?.data
             IconButton(
                 onClick = { viewModel.syncStudents() },
-                enabled = data?.isSyncing == false
+                enabled = data?.isSyncing == false,
             ) {
                 Icon(
                     Icons.Default.Refresh,
                     contentDescription = "Sync",
-                    modifier = if (data?.isSyncing == true) Modifier.rotate(rotation.value) else Modifier
+                    modifier = if (data?.isSyncing == true) Modifier.rotate(rotation.value) else Modifier,
                 )
             }
-        }
+        },
     ) {
         when (val state = uiState) {
             is StudentRosterUiState.Loading -> {
@@ -72,27 +71,27 @@ fun StudentRosterScreen(
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(AzuraSpacing.md)
+                            .padding(AzuraSpacing.md),
                     )
 
                     // Class Filter
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = AzuraSpacing.md),
-                        horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+                        horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                     ) {
                         item {
                             FilterChip(
                                 selected = data.selectedClassName == null,
                                 onClick = { viewModel.onClassSelected(null) },
-                                label = { Text("Semua") }
+                                label = { Text("Semua") },
                             )
                         }
                         items(data.allClasses) { classModel ->
                             FilterChip(
                                 selected = data.selectedClassName == classModel.name,
                                 onClick = { viewModel.onClassSelected(classModel.id) },
-                                label = { Text(classModel.name) }
+                                label = { Text(classModel.name) },
                             )
                         }
                     }
@@ -101,16 +100,16 @@ fun StudentRosterScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(AzuraSpacing.md),
-                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
                     ) {
                         items(data.students) { item ->
                             StudentRosterItem(
                                 item = item,
                                 onEditClick = { onEditStudentClick(item.profile.studentId) },
-                                onDeleteClick = { viewModel.deleteStudent(item.profile.studentId) }
+                                onDeleteClick = { viewModel.deleteStudent(item.profile.studentId) },
                             )
                         }
-                        
+
                         if (data.students.isEmpty()) {
                             item {
                                 Box(modifier = Modifier.fillMaxWidth().padding(AzuraSpacing.xl), contentAlignment = Alignment.Center) {

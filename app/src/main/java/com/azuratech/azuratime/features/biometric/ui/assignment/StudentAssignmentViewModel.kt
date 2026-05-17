@@ -7,7 +7,6 @@ import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiome
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -19,7 +18,7 @@ class StudentAssignmentViewModel @Inject constructor(
     private val biometricRepository: StudentBiometricRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
-    private val database: AppDatabase
+    private val database: AppDatabase,
 ) : ViewModel() {
 
     private val biometricDao = database.biometricDao()
@@ -40,11 +39,11 @@ class StudentAssignmentViewModel @Inject constructor(
             .flatMapLatest { schoolId ->
                 combine(
                     biometricRepository.getAllAssignmentsFlow(schoolId),
-                    schoolRepository.observeClasses(schoolId)
+                    schoolRepository.observeClasses(schoolId),
                 ) { assignments, classesResult ->
                     val allClasses = classesResult.getOrNull() ?: emptyList()
                     val classMap = allClasses.associateBy { it.id }
-                    
+
                     assignments.groupBy { it.studentId }
                         .mapValues { entry ->
                             entry.value.mapNotNull { classMap[it.classId] }

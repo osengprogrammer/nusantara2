@@ -11,9 +11,9 @@ object FaceGeometryUtils {
      * Mencegah distorsi wajah saat di-resize ke 160x160.
      */
     fun cropAndPadFace(
-        sourceBitmap: Bitmap, 
-        faceRect: Rect, 
-        padding: Float = FaceNetConstants.DEFAULT_FACE_PADDING
+        sourceBitmap: Bitmap,
+        faceRect: Rect,
+        padding: Float = FaceNetConstants.DEFAULT_FACE_PADDING,
     ): Bitmap {
         val centerX = faceRect.centerX()
         val centerY = faceRect.centerY()
@@ -21,16 +21,16 @@ object FaceGeometryUtils {
         // Base size is the longest side
         var size = max(faceRect.width(), faceRect.height())
         size += (size * padding).toInt()
-        
+
         var halfSize = size / 2
 
         // 🔥 CRITICAL FIX: Ensure the square doesn't bleed off the edges
         halfSize = minOf(
             halfSize,
-            centerX, 
-            centerY, 
-            sourceBitmap.width - centerX, 
-            sourceBitmap.height - centerY
+            centerX,
+            centerY,
+            sourceBitmap.width - centerX,
+            sourceBitmap.height - centerY,
         )
 
         val left = centerX - halfSize
@@ -46,7 +46,7 @@ object FaceGeometryUtils {
                 faceRect.left.coerceAtLeast(0),
                 faceRect.top.coerceAtLeast(0),
                 faceRect.width().coerceIn(1, sourceBitmap.width - faceRect.left.coerceAtLeast(0)),
-                faceRect.height().coerceIn(1, sourceBitmap.height - faceRect.top.coerceAtLeast(0))
+                faceRect.height().coerceIn(1, sourceBitmap.height - faceRect.top.coerceAtLeast(0)),
             )
         }
     }

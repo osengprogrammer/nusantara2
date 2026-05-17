@@ -5,7 +5,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 
 @Composable
 fun StudentRosterBarcodeScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     AzuraScreen(title = "Scan Roster", onBack = onNavigateBack) {
         // Placeholder

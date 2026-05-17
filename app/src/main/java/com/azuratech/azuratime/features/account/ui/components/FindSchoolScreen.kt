@@ -26,7 +26,6 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 // 🔥 DB & ViewModels
-import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 
@@ -39,7 +38,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 fun FindSchoolScreen(
     navController: NavController,
     workspaceViewModel: WorkspaceViewModel,
-    currentUser: AccountEntity?
+    currentUser: AccountEntity?,
 ) {
     val searchQuery by workspaceViewModel.searchQuery.collectAsStateWithLifecycle()
     val searchResults by workspaceViewModel.schoolSearchResults.collectAsStateWithLifecycle()
@@ -49,7 +48,7 @@ fun FindSchoolScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope() // 🔥 Needed for non-blocking snackbars
-    
+
     // 🔥 FIXED: Wrapped snackbar calls in scope.launch to prevent blocking the LaunchedEffect
     LaunchedEffect(uiState) {
         when (val currentState = uiState) {
@@ -75,16 +74,16 @@ fun FindSchoolScreen(
 
     AzuraScreen(
         title = "Temukan Workspace",
-        onBack = { navController.popBackStack() }
+        onBack = { navController.popBackStack() },
     ) {
-        // 🔥 FIXED: Removed nested Scaffold. AzuraScreen provides a BoxScope, 
+        // 🔥 FIXED: Removed nested Scaffold. AzuraScreen provides a BoxScope,
         // so we use Box to layer the UI and the SnackbarHost.
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = AzuraSpacing.md), // AzuraScreen already handles horizontal padding
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 // 🔍 Search Bar with Keyboard Support
                 OutlinedTextField(
@@ -98,7 +97,7 @@ fun FindSchoolScreen(
                     shape = AzuraShapes.medium,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
                 )
 
                 // 📊 Result Handling
@@ -106,28 +105,28 @@ fun FindSchoolScreen(
                     searchQuery.length < 3 -> {
                         EmptyDiscoveryState(
                             icon = Icons.Default.TravelExplore,
-                            message = "Ketik minimal 3 karakter untuk mencari sekolah."
+                            message = "Ketik minimal 3 karakter untuk mencari sekolah.",
                         )
                     }
                     searchResults.isEmpty() -> {
                         EmptyDiscoveryState(
                             icon = Icons.Default.Search,
-                            message = "Sekolah tidak ditemukan."
+                            message = "Sekolah tidak ditemukan.",
                         )
                     }
                     else -> {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                            contentPadding = PaddingValues(bottom = 100.dp)
+                            contentPadding = PaddingValues(bottom = 100.dp),
                         ) {
                             items(searchResults) { school ->
                                 val schoolId = school["schoolId"] as? String ?: ""
                                 val schoolName = school["schoolName"] as? String ?: "Unknown School"
-                                
+
                                 // Cek status membership di semua level (Active/Pending)
                                 val membership = currentUser?.memberships?.get(schoolId)
                                 val profile = accessRequests.find { it.schoolId == schoolId }
-                                
+
                                 val isFollowing = membership != null || profile != null
                                 val status = membership?.role ?: profile?.status?.name ?: ""
                                 val isSynced = profile?.syncStatus == SyncStatus.SYNCED
@@ -143,7 +142,7 @@ fun FindSchoolScreen(
                                         if (currentUser != null) {
                                             workspaceViewModel.sendJoinRequest(currentUser.accountId, schoolId, schoolName)
                                         }
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -154,7 +153,7 @@ fun FindSchoolScreen(
             // 🔥 Added SnackbarHost anchored to the bottom
             SnackbarHost(
                 hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
     }
@@ -179,23 +178,23 @@ fun SchoolFollowCard(
     isFollowing: Boolean,
     isSynced: Boolean,
     isLoading: Boolean,
-    onFollowClick: () -> Unit
+    onFollowClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AzuraShapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+        ),
     ) {
         Row(
             modifier = Modifier.padding(AzuraSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
                 color = MaterialTheme.colorScheme.primaryContainer,
                 shape = AzuraShapes.small,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(48.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.Business, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -213,13 +212,13 @@ fun SchoolFollowCard(
                 AssistChip(
                     onClick = {},
                     label = { Text(if (status == "PENDING") "Menunggu" else "Terdaftar") },
-                    leadingIcon = { 
+                    leadingIcon = {
                         if (!isSynced) {
                             Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(14.dp))
                         } else {
                             Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(14.dp))
                         }
-                    }
+                    },
                 )
             } else if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)

@@ -11,7 +11,7 @@ interface AttendanceLocalDataSource {
         accountId: String?,
         classId: String?,
         assignedIds: List<String>,
-        schoolId: String
+        schoolId: String,
     ): Flow<List<AttendanceRecordEntity>>
 
     suspend fun insert(record: AttendanceRecordEntity)

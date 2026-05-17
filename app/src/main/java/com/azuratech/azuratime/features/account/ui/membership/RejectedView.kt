@@ -10,28 +10,27 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun RejectedView(
-    reason: String?
+    reason: String?,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
-
         Text(
             text = "Akses Ditolak",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = reason ?: "Silakan hubungi administrator.",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
         )
     }
 }

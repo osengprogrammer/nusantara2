@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 data class Membership(
     val schoolName: String,
     val role: String,
-    val assignedClassIds: List<String> = emptyList()
+    val assignedClassIds: List<String> = emptyList(),
 )
 
 /**
@@ -19,7 +19,7 @@ data class Membership(
 data class FriendConnection(
     val friendName: String,
     val friendEmail: String,
-    val status: String
+    val status: String,
 )
 
 /**
@@ -38,7 +38,7 @@ data class User(
     val activeClassId: String? = null,
     val role: String = "USER",
     val deviceId: String? = null,
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
 ) {
     /** The role in the currently active school workspace, or null if no active school. */
     val membershipRole: String? get() = memberships[activeSchoolId]?.role

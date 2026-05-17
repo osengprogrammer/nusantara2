@@ -14,11 +14,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 object FaceRecognizer {
     private var interpreter: Interpreter? = null
     private var gpuDelegate: GpuDelegate? = null
-    private var tfliteModelBuffer: ByteBuffer? = null 
-    
+    private var tfliteModelBuffer: ByteBuffer? = null
+
     // 🔥 Menggunakan AtomicBoolean agar aman diakses dari banyak thread kamera
     private val isInitializing = AtomicBoolean(false)
-    
+
     var isInitialized = false
         private set
 
@@ -34,7 +34,7 @@ object FaceRecognizer {
 
         try {
             Log.d("AzuraBrain", "⚙️ Menyiapkan Otak AI Azura...")
-            
+
             if (!ModelGuard.isNativeReady) {
                 throw Exception("Native ModelGuard library is not ready!")
             }
@@ -51,7 +51,7 @@ object FaceRecognizer {
             tfliteModelBuffer = ByteBuffer.allocateDirect(decryptedBytes.size).apply {
                 order(ByteOrder.nativeOrder())
                 put(decryptedBytes)
-                rewind() 
+                rewind()
             }
 
             // Keamanan: Bersihkan ByteArray asli segera agar tidak bocor di RAM
@@ -59,7 +59,7 @@ object FaceRecognizer {
 
             // 3. Konfigurasi Interpreter
             val options = Interpreter.Options()
-            
+
             // 🔥 FIX FATAL CRASH: Cek kompabilitas GPU secara aman!
             val compatList = CompatibilityList()
             if (compatList.isDelegateSupportedOnThisDevice) {
@@ -76,12 +76,11 @@ object FaceRecognizer {
                 Log.w("AzuraBrain", "⚠️ Arsitektur GPU HP ini tidak mendukung model. Menggunakan CPU (4 Threads).")
                 options.setNumThreads(4) // Fallback ke CPU yang jauh lebih stabil
             }
-            
+
             // 4. Load Model ke Interpreter
             interpreter = Interpreter(tfliteModelBuffer!!, options)
             isInitialized = true
             Log.d("AzuraBrain", "✅✅✅ JOSS! FaceRecognizer Ready & Secured")
-            
         } catch (e: Exception) {
             Log.e("AzuraBrain", "❌ Initialization FAILED: ${e.message}")
             isInitialized = false
@@ -101,16 +100,16 @@ object FaceRecognizer {
             Log.e("AzuraBrain", "⚠️ Interpreter NULL! Pastikan initialize() sukses di MainActivity/ViewModel.")
             return FloatArray(FaceNetConstants.EMBEDDING_SIZE)
         }
-        
+
         return synchronized(this) {
             try {
                 // Jalankan AI
                 currentInterpreter.run(input, outputBuffer)
-                
+
                 // Ambil hasil dan lakukan Normalisasi L2 agar jarak (Distance) akurat
                 val embedding = outputBuffer[0].clone()
                 val normalized = l2Normalize(embedding)
-                
+
                 Log.d("AzuraBrain", "🧠 AI Berpikir... Vector: ${normalized[0]}, ${normalized[1]}")
                 normalized
             } catch (e: Exception) {
@@ -126,7 +125,7 @@ object FaceRecognizer {
     private fun l2Normalize(embedding: FloatArray): FloatArray {
         var sum = 0f
         for (v in embedding) sum += v * v
-        val norm = sqrt(sum.coerceAtLeast(1e-10f)) 
+        val norm = sqrt(sum.coerceAtLeast(1e-10f))
         for (i in embedding.indices) {
             embedding[i] /= norm
         }

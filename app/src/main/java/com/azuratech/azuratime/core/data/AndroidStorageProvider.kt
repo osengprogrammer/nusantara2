@@ -19,7 +19,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Singleton
 class AndroidStorageProvider @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : StorageProvider {
 
     private val httpClient = OkHttpClient.Builder()
@@ -50,7 +50,7 @@ class AndroidStorageProvider @Inject constructor(
                 "cache" -> context.cacheDir
                 else -> context.filesDir
             } ?: context.filesDir
-            
+
             val file = File(targetDir, filename)
             FileOutputStream(file).use { it.write(data) }
             file.absolutePath
@@ -95,7 +95,7 @@ class AndroidStorageProvider @Inject constructor(
             val contentUri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
-                file
+                file,
             )
 
             val shareIntent = Intent(Intent.ACTION_SEND).apply {

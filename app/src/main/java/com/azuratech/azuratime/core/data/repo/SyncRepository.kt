@@ -14,7 +14,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SyncRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val workManager = WorkManager.getInstance(context)
@@ -44,9 +44,9 @@ class SyncRepository @Inject constructor(
         workManager.enqueueUniqueWork(
             "AZURA_SYNC_WORK",
             ExistingWorkPolicy.REPLACE,
-            syncRequest
+            syncRequest,
         )
-        
+
         onComplete?.invoke()
     }
 }

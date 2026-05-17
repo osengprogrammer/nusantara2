@@ -18,9 +18,6 @@ import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.sync.SyncWorker
 import dagger.hilt.android.AndroidEntryPoint // 🔥 Import Hilt ditambahkan
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint // 🔥 Anotasi krusial agar UI Compose di bawahnya bisa menggunakan hiltViewModel()
 class MainActivity : ComponentActivity() {
@@ -31,7 +28,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // 🔥 1. Pasang Splash Screen
         val splashScreen = installSplashScreen()
-        
+
         super.onCreate(savedInstanceState)
 
         // 🔥 2. Tahan Splash Screen dengan kondisi yang stabil
@@ -49,9 +46,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AzuraTheme {
-                MainApp(onBootReady = { 
+                MainApp(onBootReady = {
                     // Panggil ini saat BootState sudah bukan Loading
-                    isBootReady = true 
+                    isBootReady = true
                 })
             }
         }
@@ -68,8 +65,8 @@ class MainActivity : ComponentActivity() {
 
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             "AzuraAutoSync",
-            ExistingPeriodicWorkPolicy.KEEP, 
-            syncRequest
+            ExistingPeriodicWorkPolicy.KEEP,
+            syncRequest,
         )
     }
 

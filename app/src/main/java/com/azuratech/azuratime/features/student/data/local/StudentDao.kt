@@ -28,7 +28,8 @@ interface StudentDao {
     suspend fun deleteAllBySchool(schoolId: String)
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT students.*, 
                student_biometrics.studentId as faceId,
                student_biometrics.embedding as embedding,
@@ -39,7 +40,8 @@ interface StudentDao {
         FROM students
         LEFT JOIN student_biometrics ON students.studentId = student_biometrics.studentId AND student_biometrics.schoolId = :schoolId
         WHERE students.schoolId = :schoolId AND students.isDeleted = 0
-    """)
+    """,
+    )
     fun getStudentProfilesFlow(schoolId: String): Flow<List<RawStudentProfile>>
 
     @Query("UPDATE students SET isDeleted = 1, isSynced = 0 WHERE studentId = :studentId AND schoolId = :schoolId")

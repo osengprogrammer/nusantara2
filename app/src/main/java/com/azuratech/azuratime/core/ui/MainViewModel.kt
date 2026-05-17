@@ -20,9 +20,9 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class MainViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
     application: Application,
-    private val repository: MainRepository // 🔥 FIX: Repositori disuntikkan secara otomatis
+    private val repository: MainRepository, // 🔥 FIX: Repositori disuntikkan secara otomatis
 ) : AndroidViewModel(application) {
-    
+
     private val _isRevoked = MutableStateFlow(false)
     val isRevoked: StateFlow<Boolean> = _isRevoked.asStateFlow()
 
@@ -49,7 +49,7 @@ class MainViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
 
     private fun startRealtimeRevokeListener(uid: String) {
         revokeJob?.cancel() // Bersihkan job lama jika ada
-        
+
         revokeJob = viewModelScope.launch {
             repository.observeRevokeStatus(uid).collect { isRevoked ->
                 if (isRevoked) {

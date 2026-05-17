@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,7 +28,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 
 @Composable
 fun DebugScreen(
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -86,7 +85,6 @@ fun DebugScreen(
                     }
                 }
                 debugInfo = info
-
             } catch (e: Exception) {
                 debugInfo = "Diagnostic Failure: ${e.message}"
             } finally {
@@ -102,7 +100,6 @@ fun DebugScreen(
     AzuraScreen(title = "System Debug", onBack = onNavigateBack) {
         // 🔥 FIXED: Changed to padding(top = AzuraSpacing.md) to prevent double horizontal padding
         Column(modifier = Modifier.fillMaxSize().padding(top = AzuraSpacing.md)) {
-            
             // Stats Row
             Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
                 DebugStatCard("DB Count", biometrics.size.toString(), Modifier.weight(1f))
@@ -117,13 +114,13 @@ fun DebugScreen(
                     Text("Refresh")
                 }
                 OutlinedButton(
-                    onClick = { 
-                        scope.launch { 
+                    onClick = {
+                        scope.launch {
                             BiometricCache.clear()
                             loadDebugData()
-                        } 
+                        }
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 ) {
                     Text("Purge Cache")
                 }
@@ -135,14 +132,14 @@ fun DebugScreen(
             Card(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                shape = AzuraShapes.medium
+                shape = AzuraShapes.medium,
             ) {
                 LazyColumn(modifier = Modifier.fillMaxSize().padding(AzuraSpacing.md)) {
                     item {
                         Text(
                             text = debugInfo,
                             style = MaterialTheme.typography.bodySmall,
-                            fontFamily = FontFamily.Monospace
+                            fontFamily = FontFamily.Monospace,
                         )
                     }
                 }

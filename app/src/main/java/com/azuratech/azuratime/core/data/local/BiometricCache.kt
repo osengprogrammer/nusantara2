@@ -23,7 +23,7 @@ object BiometricCache {
     }
 
     /**
-     * Load embeddings for a specific school. If the schoolId is different from 
+     * Load embeddings for a specific school. If the schoolId is different from
      * what's currently in memory, the cache is flushed first.
      */
     suspend fun load(context: Context, schoolId: String): List<Pair<String, FloatArray>> = withContext(Dispatchers.IO) {
@@ -36,7 +36,7 @@ object BiometricCache {
 
         val db = AppDatabase.getInstance(context)
         val entities = db.biometricDao().getAllStudentsForScanningList(schoolId)
-        
+
         val loaded = entities.mapNotNull { entity ->
             val embedding = entity.embedding
             if (embedding != null) {
@@ -45,7 +45,7 @@ object BiometricCache {
                 null
             }
         }
-        
+
         cache.addAll(loaded)
         return@withContext cache
     }

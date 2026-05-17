@@ -7,9 +7,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,7 +20,7 @@ fun <T> AzuraDropdownField(
     onOptionSelected: (T) -> Unit,
     getOptionLabel: (T) -> String,
     onEditClicked: (() -> Unit)? = null,
-    enabled: Boolean = true
+    enabled: Boolean = true,
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -45,12 +42,12 @@ fun <T> AzuraDropdownField(
                         }
                     }
                 }
-            }
+            },
         )
         DropdownMenu(
             expanded = isExpanded,
             onDismissRequest = { onExpandedChange(false) },
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f),
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
@@ -58,7 +55,7 @@ fun <T> AzuraDropdownField(
                     onClick = {
                         onOptionSelected(option)
                         onExpandedChange(false)
-                    }
+                    },
                 )
             }
         }

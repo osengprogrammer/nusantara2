@@ -2,10 +2,8 @@ package com.azuratech.azuratime.features.student.ui.roster
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +17,7 @@ import javax.inject.Inject
 class StudentRosterViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
     private val schoolRepository: SchoolRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -42,14 +40,14 @@ class StudentRosterViewModel @Inject constructor(
         _allClasses,
         _searchQuery,
         _selectedClassId,
-        _isSyncing
+        _isSyncing,
     ) { profiles, classes, query, classId, syncing ->
         val classMap = classes.associateBy { it.id }
-        
+
         val displayItems = profiles
             .filter { profile ->
                 val matchesQuery = profile.name.contains(query, ignoreCase = true) ||
-                        (profile.studentCode?.contains(query, ignoreCase = true) ?: false)
+                    (profile.studentCode?.contains(query, ignoreCase = true) ?: false)
                 val matchesClass = classId == null || profile.classIds.contains(classId)
                 matchesQuery && matchesClass
             }
@@ -57,11 +55,11 @@ class StudentRosterViewModel @Inject constructor(
                 val assignedClassNames = profile.classIds
                     .mapNotNull { classId -> classMap[classId]?.name }
                     .joinToString(", ")
-                
+
                 StudentDisplayItem(
                     profile = profile,
                     assignedClassNames = assignedClassNames.ifEmpty { "Tanpa Kelas" },
-                    isBiometricReady = profile.biometricExists
+                    isBiometricReady = profile.biometricExists,
                 )
             }
 
@@ -73,8 +71,8 @@ class StudentRosterViewModel @Inject constructor(
                 selectedClassName = selectedClassName,
                 students = displayItems,
                 allClasses = classes,
-                isSyncing = syncing
-            )
+                isSyncing = syncing,
+            ),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StudentRosterUiState.Loading)
 

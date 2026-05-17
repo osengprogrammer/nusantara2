@@ -14,5 +14,5 @@ data class AccessRequestProfile(
     val status: AccessRequestStatus,
     val syncStatus: SyncStatus,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
 )

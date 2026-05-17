@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 
-import com.azuratech.azuraengine.face.RegisterResult
 import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.session.SessionManager
@@ -20,7 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
@@ -40,7 +38,7 @@ import com.azuratech.azuratime.core.domain.model.SyncStatus
 class StudentBiometricViewModel @Inject constructor(
     application: Application,
     private val biometricRepository: StudentBiometricRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : AndroidViewModel(application) {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -51,9 +49,9 @@ class StudentBiometricViewModel @Inject constructor(
         .filterNotNull()
         .flatMapLatest { schoolId -> biometricRepository.getStudentsWithDetailsFlow(schoolId) }
         .stateIn(
-            scope = viewModelScope, 
-            started = SharingStarted.WhileSubscribed(5000), 
-            initialValue = emptyList()
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList(),
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -61,27 +59,27 @@ class StudentBiometricViewModel @Inject constructor(
         .filterNotNull()
         .flatMapLatest { schoolId -> biometricRepository.getEnrolledStudentsFlow(schoolId) }
         .stateIn(
-            scope = viewModelScope, 
-            started = SharingStarted.WhileSubscribed(5000), 
-            initialValue = emptyList()
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList(),
         )
 
-    fun getStudentsInClassFlow(classId: String): Flow<List<StudentBiometricEntity>> = 
+    fun getStudentsInClassFlow(classId: String): Flow<List<StudentBiometricEntity>> =
         biometricRepository.getStudentsInClassFlow(classId, sessionManager.getActiveSchoolId() ?: "")
 
     fun registerStudentBiometric(
-        inputId: String, 
-        classId: String, 
-        name: String, 
+        inputId: String,
+        classId: String,
+        name: String,
         embedding: FloatArray,
         photoBitmap: Bitmap? = null,
-        onSuccess: () -> Unit, 
-        onError: (String) -> Unit
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
     ) {
         viewModelScope.launch {
             val photoBytes = photoBitmap?.let { bitmapToByteArray(it) }
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            
+
             // 🔥 AI Friendly: Unified Identity
             val studentId = inputId
             val faceId = inputId
@@ -93,7 +91,7 @@ class StudentBiometricViewModel @Inject constructor(
                 classIds = listOf(classId),
                 faceId = faceId, // Explicitly unified
                 embedding = embedding,
-                syncStatus = SyncStatus.PENDING_UPDATE
+                syncStatus = SyncStatus.PENDING_UPDATE,
             )
 
             val result = biometricRepository.saveStudentProfile(profile, photoBytes)
@@ -113,17 +111,17 @@ class StudentBiometricViewModel @Inject constructor(
         return stream.toByteArray()
     }
 
-    fun deleteStudentBiometric(biometric: StudentBiometricEntity) { 
-        viewModelScope.launch { 
+    fun deleteStudentBiometric(biometric: StudentBiometricEntity) {
+        viewModelScope.launch {
             val result = biometricRepository.deleteStudent(biometric.studentId)
             if (result is Result.Failure) {
                 android.util.Log.e("StudentBiometricVM", "Gagal hapus: ${result.error.message}")
             }
-        } 
+        }
     }
 
     fun updateStudentClass(studentId: String, classId: String?) {
-        viewModelScope.launch { 
+        viewModelScope.launch {
             val result = biometricRepository.updateStudentClass(studentId, classId)
             if (result is Result.Failure) {
                 android.util.Log.e("StudentBiometricVM", "Gagal update kelas: ${result.error.message}")
@@ -137,20 +135,20 @@ class StudentBiometricViewModel @Inject constructor(
                 studentId = biometric.studentId,
                 name = biometric.name,
                 schoolId = biometric.schoolId,
-                classIds = emptyList(), 
+                classIds = emptyList(),
                 faceId = biometric.studentId,
                 embedding = biometric.embedding,
                 photoUrl = biometric.photoUrl,
-                syncStatus = SyncStatus.PENDING_UPDATE
+                syncStatus = SyncStatus.PENDING_UPDATE,
             )
-            
+
             val result = biometricRepository.saveStudentProfile(profile)
-            withContext(Dispatchers.Main) { 
+            withContext(Dispatchers.Main) {
                 if (result is Result.Failure) {
                     android.util.Log.e("StudentBiometricVM", "Gagal update biometric: ${result.error.message}")
                 }
-                onComplete() 
-            } 
+                onComplete()
+            }
         }
     }
 

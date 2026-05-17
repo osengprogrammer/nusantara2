@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.features.school.data.local
 
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.azuratech.azuraengine.model.ClassModel
@@ -9,7 +8,7 @@ import java.util.UUID
 
 @Entity(
     tableName = "classes",
-    indices = [Index(value = ["schoolId"])]
+    indices = [Index(value = ["schoolId"])],
 )
 data class ClassEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
@@ -21,7 +20,7 @@ data class ClassEntity(
     val studentCount: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val displayOrder: Int = 0,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 ) {
     fun toDomain(): ClassModel = ClassModel(
         id = id,
@@ -30,6 +29,6 @@ data class ClassEntity(
         grade = grade,
         teacherId = teacherId,
         studentCount = studentCount,
-        createdAt = createdAt
+        createdAt = createdAt,
     )
 }

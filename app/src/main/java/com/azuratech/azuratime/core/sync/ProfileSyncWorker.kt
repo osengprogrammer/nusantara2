@@ -26,7 +26,7 @@ class ProfileSyncWorker @AssistedInject constructor(
     private val accountRepository: AccountRepository,
     private val biometricRepository: StudentBiometricRepository,
     private val studentRepository: StudentRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -61,7 +61,6 @@ class ProfileSyncWorker @AssistedInject constructor(
 
             Log.i(TAG, "Successfully synced profile and student data for account $accountId")
             Result.success()
-
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error during profile sync: ${e.message}")
             if (runAttemptCount < 3) Result.retry() else Result.failure()

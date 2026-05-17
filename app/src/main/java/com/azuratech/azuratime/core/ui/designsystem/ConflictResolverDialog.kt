@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ConflictResolverDialog(
     conflict: AttendanceConflict,
-    onResolveClick: (useCloud: Boolean) -> Unit
+    onResolveClick: (useCloud: Boolean) -> Unit,
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
@@ -32,30 +32,30 @@ fun ConflictResolverDialog(
             Text(
                 text = "Konflik Data Absensi",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "Ditemukan perbedaan data untuk:",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
                     text = conflict.local.studentName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
-                
+
                 val dateTime = java.time.LocalDateTime.ofInstant(
                     java.time.Instant.ofEpochMilli(conflict.local.timestamp),
-                    java.time.ZoneId.systemDefault()
+                    java.time.ZoneId.systemDefault(),
                 )
 
                 Text(
                     text = "Tanggal: ${dateTime.toLocalDate()}",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
 
                 Spacer(modifier = Modifier.height(AzuraSpacing.lg))
@@ -63,7 +63,7 @@ fun ConflictResolverDialog(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // --- SISI LOKAL (HP) ---
                     ConflictSide(
@@ -72,7 +72,7 @@ fun ConflictResolverDialog(
                         status = conflict.local.status.name,
                         time = dateTime.format(timeFormatter),
                         color = Color.Gray,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
 
                     Text("VS", fontWeight = FontWeight.Black, modifier = Modifier.padding(horizontal = 8.dp))
@@ -80,32 +80,32 @@ fun ConflictResolverDialog(
                     // --- SISI CLOUD (FIRESTORE) ---
                     val cloudDateTime = java.time.LocalDateTime.ofInstant(
                         java.time.Instant.ofEpochMilli(conflict.cloud.timestamp),
-                        java.time.ZoneId.systemDefault()
+                        java.time.ZoneId.systemDefault(),
                     )
-                    
+
                     ConflictSide(
                         title = "DI CLOUD",
                         icon = Icons.Default.Cloud,
                         status = conflict.cloud.status.name,
                         time = cloudDateTime.format(timeFormatter),
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(AzuraSpacing.md))
                 Text(
                     text = "Data mana yang ingin Anda pertahankan?",
                     style = MaterialTheme.typography.labelSmall,
                     textAlign = TextAlign.Center,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = { onResolveClick(true) },
-                shape = AzuraShapes.medium
+                shape = AzuraShapes.medium,
             ) {
                 Text("Gunakan Data Cloud")
             }
@@ -113,12 +113,12 @@ fun ConflictResolverDialog(
         dismissButton = {
             OutlinedButton(
                 onClick = { onResolveClick(false) },
-                shape = AzuraShapes.medium
+                shape = AzuraShapes.medium,
             ) {
                 Text("Tetap Data Lokal")
             }
         },
-        shape = AzuraShapes.large
+        shape = AzuraShapes.large,
     )
 }
 
@@ -129,11 +129,11 @@ private fun ConflictSide(
     status: String,
     time: String,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
         Text(title, style = MaterialTheme.typography.labelSmall, color = color)
@@ -141,14 +141,14 @@ private fun ConflictSide(
         Surface(
             color = color.copy(alpha = 0.1f),
             shape = AzuraShapes.small,
-            border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f))
+            border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f)),
         ) {
             Text(
                 text = status,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyLarge,
-                color = color
+                color = color,
             )
         }
         Text(time, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
