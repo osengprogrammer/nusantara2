@@ -10,39 +10,48 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.util.showToast
-import com.azuratech.azuratime.core.ui.util.UiState
+import com.azuratech.azuratime.core.ui.UiEvent
 
 @Composable
 fun ClassListScreen(
-    classViewModel: ClassViewModel, // 🔥 Changed from OptionsViewModel
     onNavigateToDetail: (classId: String, className: String) -> Unit,
     onNavigateBack: () -> Unit,
+    viewModel: ClassViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // 🔥 Consume UiState instead of raw list
-    val uiState by classViewModel.uiStateStateFlow.collectAsStateWithLifecycle()
-    val availableClasses by classViewModel.availableClassesStateFlow.collectAsStateWithLifecycle()
-
-    var showAddDialog by remember { mutableStateOf(false) }
-    var classToEdit by remember { mutableStateOf<ClassModel?>(null) }
-    var classToDelete by remember { mutableStateOf<ClassModel?>(null) }
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            if (event is UiEvent.ShowSnackbar) {
+                snackbarHostState.showSnackbar(event.message)
+            }
+        }
+    }
 
     AzuraScreen(
         title = "Manajemen Kelas",
         onBack = onNavigateBack,
+        snackbarHostState = snackbarHostState,
+        actions = {
+            IconButton(
+                onClick = { viewModel.onEvent(ClassUiEvent.SyncClasses) },
+                enabled = !uiState.isLoading,
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = "Sinkronkan")
+            }
+        },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showAddDialog = true },
+                onClick = { viewModel.onEvent(ClassUiEvent.ShowAddDialog) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 shape = AzuraShapes.medium,
             ) {
@@ -50,92 +59,95 @@ fun ClassListScreen(
             }
         },
     ) {
-        when (val state = uiState) {
-            is UiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            is UiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = state.message ?: "Unknown Error", color = MaterialTheme.colorScheme.error)
-                }
-            }
-            is UiState.Empty -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Belum ada kelas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            is UiState.Success -> {
-                val classes: List<ClassModel> = state.data
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                    contentPadding = PaddingValues(top = AzuraSpacing.md, bottom = 100.dp),
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Error Banner
+            uiState.error?.let { errorMsg ->
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(AzuraSpacing.md),
                 ) {
-                    items(classes, key = { it.id }) { classItem ->
-                        ClassItemCard(
-                            classItem = classItem,
-                            onClick = { onNavigateToDetail(classItem.id, classItem.name) },
-                            onEditClick = { classToEdit = classItem },
-                            onDeleteClick = { classToDelete = classItem },
+                    Row(
+                        modifier = Modifier.padding(AzuraSpacing.md),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = errorMsg,
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
                         )
+                        TextButton(onClick = { viewModel.onEvent(ClassUiEvent.ClearError) }) {
+                            Text("OK")
+                        }
+                    }
+                }
+            }
+
+            Box(modifier = Modifier.weight(1f)) {
+                if (uiState.isLoading && uiState.classes.isEmpty()) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                } else if (uiState.classes.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Belum ada kelas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                        contentPadding = PaddingValues(top = AzuraSpacing.md, bottom = 100.dp),
+                    ) {
+                        items(uiState.classes, key = { it.id }) { classItem ->
+                            ClassItemCard(
+                                classItem = classItem,
+                                onClick = { onNavigateToDetail(classItem.id, classItem.name) },
+                                onEditClick = { viewModel.onEvent(ClassUiEvent.RequestEditClass(classItem)) },
+                                onDeleteClick = { viewModel.onEvent(ClassUiEvent.RequestDeleteClass(classItem)) },
+                            )
+                        }
                     }
                 }
             }
         }
 
         // --- ➕ DIALOG ADD ---
-        if (showAddDialog) {
+        if (uiState.isAddDialogVisible) {
             AddClassDialog(
-                availableClasses = availableClasses,
-                onDismissRequest = { showAddDialog = false },
+                availableClasses = uiState.availableClasses,
+                onDismissRequest = { viewModel.onEvent(ClassUiEvent.DismissAddDialog) },
                 onConfirmClick = { newName ->
-                    classViewModel.addClass(newName) // 🔥 Simplified call
-                    showAddDialog = false
+                    viewModel.onEvent(ClassUiEvent.CreateClass(newName))
                 },
             )
         }
 
         // --- ✏️ DIALOG EDIT ---
-        classToEdit?.let { item ->
+        uiState.classToEdit?.let { item ->
             AddClassDialog(
                 editingClass = item,
-                availableClasses = availableClasses,
-                onDismissRequest = { classToEdit = null },
+                availableClasses = uiState.availableClasses,
+                onDismissRequest = { viewModel.onEvent(ClassUiEvent.CancelEditClass) },
                 onConfirmClick = { newName ->
-                    classViewModel.updateClass(item.id, newName) // 🔥 Simplified call
-                    classToEdit = null
+                    viewModel.onEvent(ClassUiEvent.UpdateClass(item.id, newName))
                 },
             )
         }
 
         // --- 🗑️ DIALOG DELETE ---
-        classToDelete?.let { item ->
+        uiState.classToDelete?.let { item ->
             AlertDialog(
-                onDismissRequest = { classToDelete = null },
+                onDismissRequest = { viewModel.onEvent(ClassUiEvent.CancelDeleteClass) },
                 icon = { Icon(Icons.Default.DeleteForever, null, tint = MaterialTheme.colorScheme.error) },
                 title = { Text("Hapus Kelas?") },
                 text = { Text("Menghapus '${item.name}' akan memutus hubungan dengan siswa di kelas ini.") },
                 confirmButton = {
                     Button(
-                        onClick = {
-                            classViewModel.deleteClass(
-                                classId = item.id,
-                                onFailure = { msg ->
-                                    context.showToast(msg)
-                                    classToDelete = null
-                                },
-                                onSuccess = {
-                                    classToDelete = null
-                                },
-                            )
-                        },
+                        onClick = { viewModel.onEvent(ClassUiEvent.ConfirmDeleteClass) },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     ) { Text("Hapus") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { classToDelete = null }) { Text("Batal") }
+                    TextButton(onClick = { viewModel.onEvent(ClassUiEvent.CancelDeleteClass) }) { Text("Batal") }
                 },
             )
         }
@@ -144,7 +156,7 @@ fun ClassListScreen(
 
 @Composable
 fun ClassItemCard(
-    classItem: ClassModel, // 🔥 Changed from OptionEntity
+    classItem: ClassModel,
     onClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,

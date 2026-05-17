@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -250,6 +251,15 @@ class SchoolRepository @Inject constructor(
             .catch { e ->
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
+
+    suspend fun getClasses(schoolId: String): Result<List<ClassModel>> = withContext(Dispatchers.IO) {
+        try {
+            val entities = dao.getClasses(schoolId).first()
+            Result.Success(entities.map { it.toDomain() })
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
 
     suspend fun saveClass(_accountId: String, schoolId: String?, classModel: ClassModel): Result<Unit> {
         return try {

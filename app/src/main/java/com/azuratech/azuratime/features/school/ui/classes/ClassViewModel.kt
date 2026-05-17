@@ -2,31 +2,35 @@ package com.azuratech.azuratime.features.school.ui.classes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.SavedStateHandle
-import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.ui.util.UiState
 import com.azuratech.azuratime.core.ui.UiEvent
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import android.net.Uri
+import javax.inject.Inject
 
 /**
- * 🛠️ CLASS VIEW MODEL - Refactored to match School pattern
+ * 🛠️ CLASS VIEW MODEL (v3.2.0-ai-native)
+ * Refactored to Strict MVI & SSOT.
  */
 @HiltViewModel
 class ClassViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
-    private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
-    private val registrationRepository: com.azuratech.azuratime.features.student.data.repo.StudentRegistrationRepository,
+    private val schoolRepository: SchoolRepository,
     private val userRepository: AccountRepository,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
@@ -34,156 +38,163 @@ class ClassViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    // 🔥 NEW: Reactive School ID Flow
-    private val activeSchoolIdFlow = sessionManager.activeSchoolIdFlow
-        .onStart {
-            val initial = savedStateHandle.get<String>("schoolId") ?: sessionManager.getActiveSchoolId()
-            emit(initial)
-        }
-        .filterNotNull()
-        .distinctUntilChanged()
+    private val _state = MutableStateFlow(ClassUiState())
+    val uiState: StateFlow<ClassUiState> = _state.asStateFlow()
 
-    private val schoolId: String
-        get() = sessionManager.getActiveSchoolId() ?: ""
+    private val _availableClasses = listOf(
+        "10-IPA-1", "10-IPA-2", "10-IPA-3",
+        "10-IPS-1", "10-IPS-2", "10-IPS-3",
+        "11-IPA-1", "11-IPA-2", "11-IPA-3",
+        "11-IPS-1", "11-IPS-2", "11-IPS-3",
+        "12-IPA-1", "12-IPA-2", "12-IPA-3",
+        "12-IPS-1", "12-IPS-2", "12-IPS-3",
+    )
 
-    private val accountId: String = savedStateHandle.get<String>("accountId")
-        ?: sessionManager.getCurrentUserId() ?: ""
+    init {
+        _state.update { it.copy(availableClasses = _availableClasses) }
+        loadClasses()
+        observeClassesReactive()
+    }
 
-    // 🔥 User Flow for UI - Using AccountEntity for SSOT
-    val user: StateFlow<AccountEntity?> = sessionManager.currentUserIdFlow
-        .filterNotNull()
-        .flatMapLatest { userRepository.observeAccountEntity(it) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    // =====================================================
-    // 📊 CLASS FLOWS (State Management)
-    // =====================================================
-
-    val uiStateStateFlow: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdFlow
-        .flatMapLatest { id -> schoolRepository.observeClasses(id) }
-        .map { result ->
-            when (result) {
-                is Result.Success -> if (result.data.isEmpty()) UiState.Empty else UiState.Success(result.data)
-                is Result.Failure -> UiState.Error(result.error.message ?: "Unknown error")
-                is Result.Loading -> UiState.Loading
+    fun onEvent(event: ClassUiEvent) {
+        when (event) {
+            is ClassUiEvent.LoadClasses -> loadClasses()
+            is ClassUiEvent.CreateClass -> createClass(event.name)
+            is ClassUiEvent.UpdateClass -> updateClass(event.id, event.newName)
+            is ClassUiEvent.RequestDeleteClass -> {
+                _state.update { it.copy(classToDelete = event.classModel) }
             }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
-
-    val classesStateFlow: StateFlow<List<ClassModel>> = uiStateStateFlow.map {
-        if (it is UiState.Success) it.data else emptyList()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // 🔥 Added Available Classes Flow - Simplified to static for now
-    val availableClassesStateFlow: StateFlow<List<String>> = flowOf(
-        listOf(
-            "10-IPA-1", "10-IPA-2", "10-IPA-3",
-            "10-IPS-1", "10-IPS-2", "10-IPS-3",
-            "11-IPA-1", "11-IPA-2", "11-IPA-3",
-            "11-IPS-1", "11-IPS-2", "11-IPS-3",
-            "12-IPA-1", "12-IPA-2", "12-IPA-3",
-            "12-IPS-1", "12-IPS-2", "12-IPS-3",
-        ),
-    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // 🔥 Added All Classes for Account Flow
-    val allAccountClassesStateFlow: StateFlow<UiState<List<ClassModel>>> = schoolRepository.observeAllClassesForAccount(accountId)
-        .map { result ->
-            when (result) {
-                is Result.Success -> if (result.data.isEmpty()) UiState.Empty else UiState.Success(result.data)
-                is Result.Failure -> UiState.Error(result.error.message ?: "Unknown error")
-                is Result.Loading -> UiState.Loading
+            is ClassUiEvent.ConfirmDeleteClass -> {
+                _state.value.classToDelete?.let { deleteClass(it.id) }
             }
+            is ClassUiEvent.CancelDeleteClass -> {
+                _state.update { it.copy(classToDelete = null) }
+            }
+            is ClassUiEvent.RequestEditClass -> {
+                _state.update { it.copy(classToEdit = event.classModel) }
+            }
+            is ClassUiEvent.CancelEditClass -> {
+                _state.update { it.copy(classToEdit = null) }
+            }
+            is ClassUiEvent.ShowAddDialog -> {
+                _state.update { it.copy(isAddDialogVisible = true) }
+            }
+            is ClassUiEvent.DismissAddDialog -> {
+                _state.update { it.copy(isAddDialogVisible = false) }
+            }
+            is ClassUiEvent.ClearError -> {
+                _state.update { it.copy(error = null) }
+            }
+            is ClassUiEvent.SyncClasses -> syncClasses()
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
+    }
 
-    val schoolsStateFlow: StateFlow<List<School>> = schoolRepository.observeSchools(accountId)
-        .map { result ->
-            if (result is Result.Success) result.data else emptyList()
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // =====================================================
-    // ➕ CRUD OPERATIONS
-    // =====================================================
-
-    fun createClass(name: String, schoolId: String? = null, _grade: String = "") {
-        val targetSchoolId = schoolId ?: this.schoolId
+    private fun loadClasses() {
         viewModelScope.launch {
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
+            _state.update { it.copy(isLoading = true, error = null) }
+            schoolRepository.getClasses(schoolId)
+                .onSuccess { _state.update { it.copy(isLoading = false) } }
+                .onFailure { error -> _state.update { it.copy(isLoading = false, error = error.message) } }
+        }
+    }
+
+    private fun observeClassesReactive() {
+        sessionManager.activeSchoolIdFlow
+            .filterNotNull()
+            .flatMapLatest { schoolId -> schoolRepository.observeClasses(schoolId) }
+            .onEach { result ->
+                result.onSuccess { classes ->
+                    _state.update { it.copy(classes = classes) }
+                }.onFailure { error ->
+                    _state.update { it.copy(error = error.message) }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun createClass(name: String) {
+        viewModelScope.launch {
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
+            val accountId = sessionManager.getCurrentUserId() ?: return@launch
+
+            _state.update { it.copy(isLoading = true, isAddDialogVisible = false) }
+
             val classModel = ClassModel(
                 id = "cls_${System.currentTimeMillis()}",
                 name = name,
-                schoolId = targetSchoolId,
-                grade = _grade,
+                schoolId = schoolId,
+                grade = "", // Grade can be inferred from name or added later
                 teacherId = null,
                 studentCount = 0,
                 createdAt = System.currentTimeMillis(),
             )
-            val result = schoolRepository.saveClass(accountId, targetSchoolId, classModel)
-            when (result) {
-                is Result.Success -> _uiEvent.emit(UiEvent.ShowSnackbar("Kelas '$name' berhasil dibuat!"))
-                is Result.Failure -> _uiEvent.emit(UiEvent.ShowSnackbar("Gagal membuat kelas: ${result.error.message}"))
-                else -> Unit
-            }
-        }
-    }
 
-    fun addClass(name: String) {
-        createClass(name)
-    }
-
-    fun updateClass(classId: String, newName: String) {
-        viewModelScope.launch {
-            // Fetch existing to preserve other fields
-            val allClasses = classesStateFlow.value
-            val existing = allClasses.find { it.id == classId } ?: return@launch
-            val updated = existing.copy(name = newName)
-            schoolRepository.saveClass(accountId, null, updated)
-        }
-    }
-
-    fun importClassesFromCsv(uri: Uri, onComplete: () -> Unit) {
-        viewModelScope.launch {
-            registrationRepository.processCsv(uri.toString(), "CLASS").collect { }
-            onComplete()
-        }
-    }
-
-    fun deleteClass(
-        classId: String,
-        onFailure: (String) -> Unit = {},
-        onSuccess: () -> Unit = {},
-    ) {
-        viewModelScope.launch {
-            val result = schoolRepository.deleteClass(accountId, schoolId, classId)
-            withContext(Dispatchers.Main) {
-                when (result) {
-                    is Result.Success -> onSuccess()
-                    is Result.Failure -> onFailure(result.error.message ?: "Gagal menghapus kelas")
-                    else -> Unit
+            schoolRepository.saveClass(accountId, schoolId, classModel)
+                .onSuccess {
+                    _state.update { it.copy(isLoading = false) }
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Kelas '$name' berhasil dibuat!"))
                 }
-            }
+                .onFailure { error ->
+                    _state.update { it.copy(isLoading = false, error = error.message) }
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal membuat kelas: ${error.message}"))
+                }
         }
     }
 
-    fun reassignClass(classId: String, newSchoolId: String) {
+    private fun updateClass(classId: String, newName: String) {
         viewModelScope.launch {
-            schoolRepository.reassignClass(accountId, classId, newSchoolId)
+            val accountId = sessionManager.getCurrentUserId() ?: return@launch
+            val existing = _state.value.classes.find { it.id == classId } ?: return@launch
+
+            _state.update { it.copy(isLoading = true, classToEdit = null) }
+
+            val updated = existing.copy(name = newName)
+            schoolRepository.saveClass(accountId, existing.schoolId, updated)
+                .onSuccess {
+                    _state.update { it.copy(isLoading = false) }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(isLoading = false, error = error.message) }
+                }
         }
     }
 
-    fun syncClasses() {
-        val uid = sessionManager.getCurrentUserId() ?: return
-        val sid = sessionManager.getActiveSchoolId() ?: return
+    private fun deleteClass(classId: String) {
+        viewModelScope.launch {
+            val accountId = sessionManager.getCurrentUserId() ?: return@launch
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
 
+            _state.update { it.copy(isLoading = true, classToDelete = null) }
+
+            schoolRepository.deleteClass(accountId, schoolId, classId)
+                .onSuccess {
+                    _state.update { it.copy(isLoading = false) }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(isLoading = false, error = error.message) }
+                    _uiEvent.emit(UiEvent.ShowSnackbar(error.message ?: "Gagal menghapus kelas"))
+                }
+        }
+    }
+
+    private fun syncClasses() {
         viewModelScope.launch(Dispatchers.IO) {
+            val uid = sessionManager.getCurrentUserId() ?: return@launch
+            val sid = sessionManager.getActiveSchoolId() ?: return@launch
+
+            _state.update { it.copy(isLoading = true) }
             _uiEvent.emit(UiEvent.ShowSnackbar("Sedang menyinkronkan data kelas..."))
-            val result = schoolRepository.syncClasses(uid, sid)
-            when (result) {
-                is Result.Success -> _uiEvent.emit(UiEvent.ShowSnackbar("Data kelas berhasil diperbarui!"))
-                is Result.Failure -> _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron kelas: ${result.error.message}"))
-                else -> Unit
-            }
+
+            schoolRepository.syncClasses(uid, sid)
+                .onSuccess {
+                    _state.update { it.copy(isLoading = false) }
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Data kelas berhasil diperbarui!"))
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(isLoading = false, error = error.message) }
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron kelas: ${error.message}"))
+                }
         }
     }
 }
