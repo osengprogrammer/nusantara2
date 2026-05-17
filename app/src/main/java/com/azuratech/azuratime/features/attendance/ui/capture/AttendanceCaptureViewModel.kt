@@ -3,22 +3,22 @@ package com.azuratech.azuratime.features.attendance.ui.capture
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.attendance.data.repo.BiometricScannerRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -31,8 +31,8 @@ class AttendanceCaptureViewModel @Inject constructor(
     private val sessionManager: SessionManager,
 ) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(AttendanceCaptureUiState())
-    val uiState: StateFlow<AttendanceCaptureUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(AttendanceCheckInUiState())
+    val uiState: StateFlow<AttendanceCheckInUiState> = _uiState.asStateFlow()
 
     private val _sideEffect = Channel<AttendanceSideEffect>()
     val sideEffectFlow = _sideEffect.receiveAsFlow()
@@ -47,24 +47,28 @@ class AttendanceCaptureViewModel @Inject constructor(
     // Tracking for deduplication to prevent "double output"
     private var lastProcessedStudentId: String? = null
     private var lastProcessedTime: Long = 0L
-    private val REPEAT_SCAN_SUPPRESSION_MS = 600_000L // 10 minutes (60s * 10)
+    private val REPEAT_SCAN_SUPPRESSION_MS = 600_000L // 10 minutes
 
-    fun onEvent(event: AttendanceCaptureUiEvent) {
+    fun onEvent(event: AttendanceCheckInUiEvent) {
         when (event) {
-            is AttendanceCaptureUiEvent.StartScan -> startScannerSession(event.accountEmail)
-            is AttendanceCaptureUiEvent.BarcodeDetected -> processScannedBarcode(event.code)
-            is AttendanceCaptureUiEvent.FaceDetected -> processScannedBiometric(event.embedding)
-            is AttendanceCaptureUiEvent.GrantPermission -> _uiState.update { it.copy(cameraPermissionGranted = event.granted) }
-            AttendanceCaptureUiEvent.Retry -> {
-                _uiState.update { it.copy(error = null, studentProfile = null, isScanning = true) }
-                isProcessing.set(false)
-            }
+            is AttendanceCheckInUiEvent.StartScan -> startScannerSession(event.accountEmail, event.mode)
+            is AttendanceCheckInUiEvent.BarcodeDetected -> processScannedBarcode(event.code)
+            is AttendanceCheckInUiEvent.FaceMatched -> processScannedBiometric(event.embedding)
+            is AttendanceCheckInUiEvent.ManualEntryConfirmed -> { /* Logic for manual confirm if needed */ }
+            is AttendanceCheckInUiEvent.GrantPermission -> _uiState.update { it.copy(cameraPermissionGranted = event.granted) }
+            AttendanceCheckInUiEvent.Retry -> resetScanningState()
+            AttendanceCheckInUiEvent.NavigateBack -> viewModelScope.launch { _sideEffect.send(AttendanceSideEffect.NavigateBack) }
         }
     }
 
-    private fun startScannerSession(email: String) {
+    private fun resetScanningState() {
+        _uiState.update { it.copy(error = null, studentProfile = null, isScanning = true, isLoading = false) }
+        isProcessing.set(false)
+    }
+
+    private fun startScannerSession(email: String, mode: ScanMode) {
         currentTeacherEmail = email
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        _uiState.update { it.copy(isLoading = true, error = null, scanMode = mode) }
 
         viewModelScope.launch {
             val resolvedSchoolId = sessionManager.getActiveSchoolId()
@@ -118,7 +122,7 @@ class AttendanceCaptureViewModel @Inject constructor(
                 handleError("Error: Context Hilang")
                 return@launch
             }
-            _uiState.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null, scannedCode = barcode) }
+            _uiState.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null, scannedResult = barcode) }
             processAttendanceRecord(barcode, schoolId)
         }
     }
@@ -148,32 +152,16 @@ class AttendanceCaptureViewModel @Inject constructor(
             studentClassIds = studentClassIds,
         )
 
-        attendanceRepository.processAttendance(params)
-            .onSuccess { attendanceRes ->
-                when (attendanceRes) {
+        val result = attendanceRepository.processAttendance(params)
+
+        when (result) {
+            is Result.Success -> {
+                when (val attendanceRes = result.data) {
                     is AttendanceResult.Success -> {
-                        lastProcessedStudentId = scannedId
-                        lastProcessedTime = System.currentTimeMillis()
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                studentProfile = StudentProfile(scannedId, attendanceRes.name, false),
-                            )
-                        }
-                        _sideEffect.send(AttendanceSideEffect.Speak(attendanceRes.message))
-                        enterCooldown()
+                        handleCheckInSuccess(scannedId, attendanceRes.name, attendanceRes.message, false)
                     }
                     is AttendanceResult.AlreadyCheckedIn -> {
-                        lastProcessedStudentId = scannedId
-                        lastProcessedTime = System.currentTimeMillis()
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                studentProfile = StudentProfile(scannedId, attendanceRes.name, true),
-                            )
-                        }
-                        _sideEffect.send(AttendanceSideEffect.Speak("${attendanceRes.name}, sudah absen."))
-                        enterCooldown()
+                        handleCheckInSuccess(scannedId, attendanceRes.name, "${attendanceRes.name}, sudah absen.", true)
                     }
                     is AttendanceResult.Rejected -> {
                         handleError("${attendanceRes.name}: Bukan Kelas Ini!")
@@ -181,13 +169,29 @@ class AttendanceCaptureViewModel @Inject constructor(
                     AttendanceResult.Unregistered -> handleUnregistered()
                 }
             }
-            .onFailure { error ->
-                handleError(error.message ?: "Gagal Absen")
+            is Result.Failure -> {
+                handleError(result.error.message ?: "Gagal Absen")
             }
+            is Result.Loading -> { /* Not used here */ }
+        }
+    }
+
+    private suspend fun handleCheckInSuccess(studentId: String, name: String, speakMessage: String, alreadyCheckedIn: Boolean) {
+        lastProcessedStudentId = studentId
+        lastProcessedTime = System.currentTimeMillis()
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                studentProfile = StudentProfile(studentId = studentId, name = name, schoolId = _uiState.value.activeSchoolId ?: ""),
+                isAlreadyCheckedIn = alreadyCheckedIn,
+            )
+        }
+        _sideEffect.send(AttendanceSideEffect.Speak(speakMessage))
+        enterCooldown()
     }
 
     private suspend fun handleUnregistered() {
-        handleError("Wajah Tidak Dikenal")
+        handleError("Identitas Tidak Dikenal")
     }
 
     private suspend fun handleError(message: String) {
@@ -198,7 +202,6 @@ class AttendanceCaptureViewModel @Inject constructor(
 
     private suspend fun enterCooldown(duration: Long = 4000) {
         delay(duration)
-        _uiState.update { it.copy(error = null, studentProfile = null, isScanning = true) }
-        isProcessing.set(false)
+        resetScanningState()
     }
 }

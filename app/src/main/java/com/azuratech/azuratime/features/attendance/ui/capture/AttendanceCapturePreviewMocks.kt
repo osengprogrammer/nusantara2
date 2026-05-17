@@ -1,23 +1,33 @@
 package com.azuratech.azuratime.features.attendance.ui.capture
 
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+
+/**
+ * 📸 ATTENDANCE CHECK-IN PREVIEW MOCKS
+ */
 object AttendanceCapturePreviewMocks {
-    fun scanning(): AttendanceCaptureUiState = AttendanceCaptureUiState(
+    fun scanning(): AttendanceCheckInUiState = AttendanceCheckInUiState(
         isScanning = true,
         cameraPermissionGranted = true,
         activeClassName = "Kelas 10A",
     )
 
-    fun success(): AttendanceCaptureUiState = AttendanceCaptureUiState(
+    fun success(): AttendanceCheckInUiState = AttendanceCheckInUiState(
         isScanning = false,
         cameraPermissionGranted = true,
         activeClassName = "Kelas 10A",
-        studentProfile = StudentProfile(id = "stu_1", name = "Budi Santoso", alreadyCheckedIn = false),
+        studentProfile = StudentProfile(
+            studentId = "stu_1",
+            name = "Budi Santoso",
+            schoolId = "sch_1",
+        ),
+        isAlreadyCheckedIn = false,
     )
 
-    fun error(): AttendanceCaptureUiState = AttendanceCaptureUiState(
+    fun error(): AttendanceCheckInUiState = AttendanceCheckInUiState(
         isScanning = false,
         cameraPermissionGranted = true,
         activeClassName = "Kelas 10A",
-        error = "Wajah Tidak Dikenal",
+        error = "Identitas Tidak Dikenal",
     )
 }

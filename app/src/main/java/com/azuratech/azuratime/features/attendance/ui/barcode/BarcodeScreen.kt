@@ -12,19 +12,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel // 🔥 Gunakan Hilt
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-// 🔥 Custom Components & Utils
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCaptureViewModel
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCaptureUiEvent
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCheckInUiEvent
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
+import com.azuratech.azuratime.features.attendance.ui.capture.ScanMode
 import com.azuratech.azuratime.features.attendance.ui.components.MatchResultLabel
 import com.azuratech.azuratime.features.attendance.ui.components.StatusLabel
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
-import androidx.compose.foundation.layout.Column
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 
@@ -47,7 +46,7 @@ fun BarcodeScreen(
     }
 
     LaunchedEffect(accountEmail) {
-        viewModel.onEvent(AttendanceCaptureUiEvent.StartScan(accountEmail))
+        viewModel.onEvent(AttendanceCheckInUiEvent.StartScan(accountEmail, ScanMode.Barcode))
     }
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
@@ -57,7 +56,7 @@ fun BarcodeScreen(
             modifier = Modifier.fillMaxSize(),
         ) { barcodeValue ->
             if (!uiState.isLoading) {
-                viewModel.onEvent(AttendanceCaptureUiEvent.BarcodeDetected(barcodeValue))
+                viewModel.onEvent(AttendanceCheckInUiEvent.BarcodeDetected(barcodeValue))
             }
         }
 
@@ -76,7 +75,7 @@ fun BarcodeScreen(
             uiState.studentProfile?.let { profile ->
                 MatchResultLabel(
                     name = profile.name,
-                    isAlreadyIn = profile.alreadyCheckedIn,
+                    isAlreadyIn = uiState.isAlreadyCheckedIn,
                     primaryColor = MaterialTheme.colorScheme.primary,
                 )
             }
