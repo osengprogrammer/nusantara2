@@ -26,7 +26,7 @@ class AttendanceRepositoryImpl @Inject constructor(
     private val remoteDataSource: AttendanceRemoteDataSource,
     private val syncManager: com.azuratech.azuratime.core.sync.SyncManager,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
-    private val auditLogRepository: com.azuratech.azuratime.features.reporting.data.repo.AuditLogRepository
+    private val auditLogRepository: com.azuratech.azuratime.features.reporting.data.repo.AuditLogRepository,
 ) : AttendanceRepository {
 
     private val attendanceRecordDao = database.attendanceRecordDao()
@@ -41,10 +41,16 @@ class AttendanceRepositoryImpl @Inject constructor(
         accountId: String?,
         classId: String?,
         assignedIds: List<String>,
-        schoolId: String
+        schoolId: String,
     ): Flow<List<AttendanceRecordEntity>> {
         return localDataSource.getFilteredRecords(
-            name, startDate, endDate, accountId, classId, assignedIds, schoolId
+            name,
+            startDate,
+            endDate,
+            accountId,
+            classId,
+            assignedIds,
+            schoolId,
         )
     }
 
@@ -60,17 +66,17 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit> {
         return try {
-            val record = attendanceRecordDao.getRecordByIdNoSchool(recordId) 
+            val record = attendanceRecordDao.getRecordByIdNoSchool(recordId)
                 ?: return Result.Failure(AppError.BusinessRule("Record not found"))
 
             val updated = record.copy(
                 classId = classId,
                 className = className,
                 isSynced = false,
-                timestamp = System.currentTimeMillis() // Update modification time
+                timestamp = System.currentTimeMillis(), // Update modification time
             )
             attendanceRecordDao.update(updated)
-            syncManager.enqueueSync() 
+            syncManager.enqueueSync()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -87,17 +93,17 @@ class AttendanceRepositoryImpl @Inject constructor(
 
             val updated = record.copy(
                 status = status.toCode(),
-                isSynced = false
+                isSynced = false,
             )
             attendanceRecordDao.update(updated)
-            
+
             auditLogRepository.logAction(
                 schoolId = schoolId,
                 userId = sessionManager.getUserEmail(), // This might need renaming to getAccountEmail() later
                 action = "UPDATE_ATTENDANCE",
-                details = "Changed status for ${record.name} to ${status.name}"
+                details = "Changed status for ${record.name} to ${status.name}",
             )
-            
+
             syncManager.enqueueSync()
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -126,6 +132,16 @@ class AttendanceRepositoryImpl @Inject constructor(
                 syncManager.enqueueSync() // Background sync (will handle remote delete via worker)
             }
             Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun getStudentHistory(studentId: String): Result<List<AttendanceRecord>> {
+        return try {
+            val schoolId = sessionManager.getActiveSchoolId() ?: ""
+            val records = attendanceRecordDao.getStudentHistory(studentId, schoolId)
+            Result.Success(records.map { it.toDomain() })
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
         }
@@ -239,7 +255,7 @@ class AttendanceRepositoryImpl @Inject constructor(
     override suspend fun processAttendance(params: ProcessAttendanceParams): Result<com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult> = withContext(Dispatchers.IO) {
         try {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Failure(AppError.BusinessRule("School not selected"))
-            
+
             // 1. 🔥 AI Native: Time-based Duplicate Check
             // We allow re-recording after 10 minutes (600,000 ms)
             val today = LocalDate.now()
@@ -247,7 +263,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                 studentId = params.studentId,
                 classId = params.activeClassId ?: "",
                 date = today,
-                schoolId = schoolId
+                schoolId = schoolId,
             )
 
             if (latest != null) {
@@ -269,22 +285,22 @@ class AttendanceRepositoryImpl @Inject constructor(
                 studentName = params.studentName,
                 schoolId = schoolId,
                 classId = params.activeClassId ?: params.studentClassIds.firstOrNull() ?: "UNASSIGNED",
-                className = "Auto", 
+                className = "Auto",
                 timestamp = System.currentTimeMillis(),
                 status = AttendanceStatus.PRESENT,
-                accountEmail = params.accountEmail
+                accountEmail = params.accountEmail,
             )
-            
+
             saveRecord(record)
-            
+
             // 🔥 Log to Audit Trail
             auditLogRepository.logAction(
                 schoolId = schoolId,
                 userId = params.accountEmail,
                 action = "CHECK_IN",
-                details = "Student: ${params.studentName} (${params.studentId})"
+                details = "Student: ${params.studentName} (${params.studentId})",
             )
-            
+
             Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.Success(params.studentName, "Berhasil Absen"))
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))

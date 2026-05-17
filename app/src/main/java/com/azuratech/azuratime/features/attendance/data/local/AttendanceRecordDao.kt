@@ -27,12 +27,17 @@ interface AttendanceRecordDao {
     @Query("SELECT * FROM check_in_records WHERE studentId = :studentId AND attendanceDate = :date AND schoolId = :schoolId")
     suspend fun getRecordByStudentAndDate(studentId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM check_in_records 
         WHERE studentId = :studentId AND classId = :classId AND attendanceDate = :date AND schoolId = :schoolId 
         ORDER BY timestamp DESC LIMIT 1
-    """)
+    """,
+    )
     suspend fun getLatestRecordForStudent(studentId: String, classId: String, date: LocalDate, schoolId: String): AttendanceRecordEntity?
+
+    @Query("SELECT * FROM check_in_records WHERE studentId = :studentId AND schoolId = :schoolId ORDER BY timestamp DESC")
+    suspend fun getStudentHistory(studentId: String, schoolId: String): List<AttendanceRecordEntity>
 
     @Query("SELECT * FROM check_in_records WHERE schoolId = :schoolId AND isSynced = 0")
     suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecordEntity>
@@ -49,18 +54,20 @@ interface AttendanceRecordDao {
     @Query("SELECT COUNT(*) FROM check_in_records WHERE schoolId = :schoolId AND isSynced = 0")
     fun getUnsyncedRecordsCountFlow(schoolId: String): Flow<Int>
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM check_in_records 
         WHERE schoolId = :schoolId 
         AND (:nameFilter IS NULL OR name LIKE '%' || :nameFilter || '%')
         AND (:accountId IS NULL OR accountEmail = :accountId)
         AND (:classId IS NULL OR classId = :classId)
         ORDER BY timestamp DESC
-    """)
+    """,
+    )
     fun getFilteredRecords(
         schoolId: String,
         nameFilter: String?,
         accountId: String?,
-        classId: String?
+        classId: String?,
     ): Flow<List<AttendanceRecordEntity>>
 }

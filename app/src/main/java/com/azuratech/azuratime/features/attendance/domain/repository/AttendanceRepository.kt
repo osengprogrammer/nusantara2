@@ -12,7 +12,7 @@ data class ProcessAttendanceParams(
     val studentName: String,
     val accountEmail: String,
     val activeClassId: String?,
-    val studentClassIds: List<String>
+    val studentClassIds: List<String>,
 )
 
 /**
@@ -27,14 +27,15 @@ interface AttendanceRepository {
         accountId: String?,
         classId: String?,
         assignedIds: List<String>,
-        schoolId: String
+        schoolId: String,
     ): Flow<List<AttendanceRecordEntity>>
 
     suspend fun saveRecord(record: AttendanceRecord): Result<Unit>
     suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit>
     suspend fun updateRecordStatus(recordId: String, status: com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus, schoolId: String): Result<Unit>
     suspend fun deleteRecord(recordId: String, schoolId: String): Result<Unit>
-    
+    suspend fun getStudentHistory(studentId: String): Result<List<AttendanceRecord>>
+
     //  SYNC & MISC
     suspend fun syncRecord(record: AttendanceRecord): Result<Unit>
     fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Int>
