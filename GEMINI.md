@@ -7,6 +7,13 @@
 - **Compilation & SSOT Enforcement**: Resolved dependency mapping and import errors in `SchoolRepository` and `ClassViewModel` to strictly depend on `AccountDao` and `AccountEntity` as the single source of truth.
 
 ## 🚀 Recent Updates (May 16, 2026)
+n### Phase 12B: Complete Legacy Terminology Eradication
+- **Surgical Naming Refactor**: Conducted a final scan and successfully eradicated remaining instances of `user`, `USER`, `TEACHER`, and `Face ID` across the codebase.
+- **UI & State Alignments**: Renamed variables in `DashboardUiState`, `DashboardViewModel`, `ClassViewModel`, and `MembershipViewModel` to use `account` instead of `user`. Replaced hardcoded "User Info" with "Account Info".
+- **Role Standardization**: Updated fallback roles in `AccountEntity`, `Membership`, and auth states from `"USER"` / `"TEACHER"` to `"ACCOUNT"`. 
+- **Export Data**: Changed CSV header from `Face ID` to `Student ID` in `ExportUtils.kt`.
+- **Cleanup**: Purged stale `.broken` and `.nuclear-backup` files.
+- **Build Status**: Verified Kotlin compilation (`compileDebugKotlin` ✅).
 
 ### Phase 11G: Reporting DI & NavGraph Realignment
 - **Reporting Feature Consolidation**: Moved all reporting-related files (Entities, DAOs, Repositories, ViewModels, and Screens) to the `com.azuratech.azuratime.features.reporting` package.
@@ -114,3 +121,29 @@
 - ✅ 41 UseCases removed (2,355+ lines deleted)
 - ✅ Build: compileDebugKotlin --quiet → ALWAYS SILENT
 - ✅ Architecture: UI → Repository → Room → (internal) Cloud
+
+### 🤖 AI-Native Guardrails
+
+To ensure deterministic, hallucination-free code generation, all AI interactions MUST strictly follow these rules:
+
+#### 1. Code Formatting (Spotless)
+- You must write code that adheres to standard Kotlin style. 
+- You do NOT need to perfectly format imports yourself. Instead, before finishing a major task or finalizing a commit, you MUST run:
+  `./gradlew spotlessApply --quiet`
+- *Note:* If spotless fails due to legacy files during a task, fix the immediate file you are working on, but do not derail the task to fix the entire codebase.
+
+#### 2. Strict MVI Architecture (Model-View-Intent)
+- ViewModels must NEVER have disparate variables or isolated state flows (e.g., `val isLoading`, `val error`).
+- Every ViewModel MUST have exactly one `StateFlow<UiState>` and accept a single stream of `UiEvent`.
+- Define a single `data class UiState` inside the ViewModel file.
+- Define a single `sealed class UiEvent` inside the ViewModel file.
+- Handle all inputs via a single `fun onEvent(event: UiEvent)` block.
+
+#### 3. Strict Error Handling (Result<T>)
+- Repositories must NEVER throw exceptions. They must wrap all returns in `kotlin.Result<T>`.
+- The ViewModel is responsible for `.onSuccess { }` and `.onFailure { }`. This forces the compiler to ensure you have handled both the happy and sad paths during code generation.
+
+#### 4. UI Previews Mandate
+- No Compose screen or component is complete without a `@Preview`.
+- Previews must utilize the dummy data defined in `core/ui/preview/PreviewMocks.kt` to allow instant visual verification of the structural integrity of your generated code.
+

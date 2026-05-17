@@ -3,9 +3,9 @@ package com.azuratech.azuratime.core.data.repo
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject // 🔥 Tambahan Import
 
 class BootRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructor
     private val auth: FirebaseAuth,

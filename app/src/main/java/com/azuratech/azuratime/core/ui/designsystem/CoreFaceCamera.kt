@@ -3,31 +3,30 @@ package com.azuratech.azuratime.core.ui.designsystem
 import android.Manifest
 import android.util.Log
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.resolutionselector.AspectRatioStrategy
-import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCase
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.azuratech.azuratime.core.ui.designsystem.FaceOverlay
+import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
 import com.azuratech.azuratime.ml.detector.FaceAnalyzer
-import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler // Assuming this is in ui package
-import com.azuratech.azuratime.core.ui.designsystem.FaceOverlay // Assuming FaceOverlay is in ui package
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import kotlinx.coroutines.guava.await
 import java.util.concurrent.Executors
+import kotlinx.coroutines.guava.await
 
 // 🔥 Azura Design System Imports
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes

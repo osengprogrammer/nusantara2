@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.features.account.ui.membership
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -13,8 +12,6 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,8 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.boot.BootViewModel
-import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
+import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 
 // 🔥 Azura Design System Imports
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing

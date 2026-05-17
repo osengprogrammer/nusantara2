@@ -4,24 +4,23 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
-import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
+import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.domain.sync.ExportUtils
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.ui.util.UiState
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.domain.sync.ExportUtils
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class AttendanceViewModel @Inject constructor(
@@ -45,7 +44,7 @@ class AttendanceViewModel @Inject constructor(
     private val _filterParams = MutableStateFlow(FilterParams())
     val filterParams = _filterParams.asStateFlow()
 
-    val classes = sessionManager.activeSchoolIdFlow
+    val classes = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             schoolRepository.observeClasses(schoolId).map { it.getOrNull() ?: emptyList() }
@@ -53,7 +52,7 @@ class AttendanceViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val attendanceRecords = combine(
-        sessionManager.activeSchoolIdFlow.filterNotNull(),
+        sessionManager.activeSchoolIdStateFlow.filterNotNull(),
         _filterParams
     ) { schoolId, params ->
         repository.getAttendanceRecords(

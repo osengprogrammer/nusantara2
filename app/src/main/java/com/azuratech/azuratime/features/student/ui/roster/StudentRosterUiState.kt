@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.student.ui.roster
 
-import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 
 /**
  * 🎓 STUDENT ROSTER UI STATE

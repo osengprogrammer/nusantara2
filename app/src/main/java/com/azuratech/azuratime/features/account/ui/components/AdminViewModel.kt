@@ -4,15 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.features.school.data.local.ClassEntity
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.repo.AdminRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.account.data.repo.AdminRepository
+import com.azuratech.azuratime.features.school.data.local.ClassEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -26,7 +25,7 @@ class AdminViewModel @Inject constructor(
 
     // 🔥 Stream kelas berdasarkan sekolah aktif (untuk dialog approval)
     @OptIn(ExperimentalCoroutinesApi::class)
-    val classes: StateFlow<List<ClassEntity>> = sessionManager.activeSchoolIdFlow
+    val classes: StateFlow<List<ClassEntity>> = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> database.classDao().observeClassesBySchool(schoolId) }
         .stateIn(viewModelScope, SharingStarted.Companion.WhileSubscribed(5000), emptyList())

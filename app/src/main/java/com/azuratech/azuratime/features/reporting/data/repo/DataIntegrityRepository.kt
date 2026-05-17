@@ -1,13 +1,12 @@
 package com.azuratech.azuratime.features.reporting.data.repo
 
-import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 /**
  * 🏰 DATA INTEGRITY REPOSITORY
@@ -26,7 +25,7 @@ class DataIntegrityRepository @Inject constructor(
     private val conflictDao = database.attendanceConflictDao()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    private val schoolIdFlow = sessionManager.activeSchoolIdFlow.map { it ?: "" }
+    private val schoolIdFlow = sessionManager.activeSchoolIdStateFlow.map { it ?: "" }
 
     // =====================================================
     // 📊 VOLUME — How big is the system?

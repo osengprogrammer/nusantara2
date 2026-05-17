@@ -2,12 +2,11 @@ package com.azuratech.azuratime.features.attendance.ui.components
 
 import android.graphics.Rect
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 import com.azuratech.azuratime.core.ui.designsystem.CoreFaceCamera
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 
 /**
  * AZURA FACE SCANNER

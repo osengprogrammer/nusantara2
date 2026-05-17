@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.school.data.remote
 
-import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.Result
 import kotlinx.coroutines.flow.Flow
 

@@ -1,11 +1,8 @@
 package com.azuratech.azuratime.features.dashboard.ui
 
 import android.content.Intent
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,25 +13,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.MainActivity
-import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
-import com.azuratech.azuratime.core.ui.designsystem.ConflictResolverDialog
+import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.UiEvent
-import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.designsystem.ConflictResolverDialog
 import com.azuratech.azuratime.core.ui.designsystem.WorkspaceSelector
 import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
 import com.azuratech.azuratime.core.ui.preview.PreviewMocks
-import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
-import com.azuratech.azuratime.features.dashboard.ui.components.*
-import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
-import com.azuratech.azuratime.features.reporting.ui.integrity.IntegritySummaryWidget
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.ui.util.UiState
+import com.azuratech.azuratime.features.reporting.ui.integrity.IntegritySummaryWidget
+import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
+import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -95,7 +91,7 @@ fun DashboardScreen(
                 }
             } else {
                 // Sync schoolViewModel accountId
-                data.user?.accountId?.let { accountId ->
+                data.account?.accountId?.let { accountId ->
                     LaunchedEffect(accountId) {
                         schoolViewModel.setAccountId(accountId)
                     }
@@ -178,7 +174,7 @@ fun DashboardContent(
             )
         }
     ) {
-        val account = data.user ?: return@AzuraScreen
+        val account = data.account ?: return@AzuraScreen
         val photoUrl = FirebaseAuth.getInstance().currentUser?.photoUrl
 
         Box(modifier = Modifier.fillMaxSize()) {

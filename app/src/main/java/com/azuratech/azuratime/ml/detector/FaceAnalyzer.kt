@@ -11,19 +11,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.IntSize
+import com.azuratech.azuratime.ml.recognizer.FacePreprocessor
+import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
 import com.azuratech.azuratime.ml.utils.FaceGeometryUtils
 import com.azuratech.azuratime.ml.utils.ImageConversionUtils
-import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
-import com.azuratech.azuratime.ml.recognizer.FacePreprocessor
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicBoolean
 
 class FaceAnalyzer(
     private val isFrontCamera: Boolean = true,

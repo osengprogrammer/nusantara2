@@ -22,22 +22,22 @@ class AuthViewModel @Inject constructor(
     private val repository: AuthRepository
 ) : AndroidViewModel(application) {
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
-    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+    private val _authStateStateFlow = MutableStateFlow<AuthState>(AuthState.Idle)
+    val authStateStateFlow: StateFlow<AuthState> = _authStateStateFlow.asStateFlow()
 
     fun resetState() {
-        _authState.value = AuthState.Idle
+        _authStateStateFlow.value = AuthState.Idle
     }
 
     fun loginWithGoogle(idToken: String) {
         viewModelScope.launch {
-            _authState.value = AuthState.Loading 
+            _authStateStateFlow.value = AuthState.Loading 
             
             try {
                 val (account, isNewAccount) = repository.signInWithGoogle(idToken)
 
                 if (account == null) {
-                    _authState.value = AuthState.Error("Login gagal: Data akun tidak ditemukan.")
+                    _authStateStateFlow.value = AuthState.Error("Login gagal: Data akun tidak ditemukan.")
                     return@launch
                 }
 
@@ -48,7 +48,7 @@ class AuthViewModel @Inject constructor(
                     )
                     val autoRegData = mapOf(
                         "email" to account.email,
-                        "name" to account.name.ifBlank { "User Baru" },
+                        "name" to account.name.ifBlank { "Akun Baru" },
                         "status" to "PENDING",
                         "role" to "PENDING",
                         "hardwareId" to hardwareId,
@@ -62,17 +62,17 @@ class AuthViewModel @Inject constructor(
                     }
                     
                     // Gunakan state sesuai file AuthState.kt kamu
-                    _authState.value = AuthState.Success(account.email, "PENDING")
+                    _authStateStateFlow.value = AuthState.Success(account.email, "PENDING")
                     
                 } else {
                     val schoolId = account.activeSchoolId ?: ""
-                    val currentRole = account.memberships[schoolId]?.role ?: "USER"
+                    val currentRole = account.memberships[schoolId]?.role ?: "ACCOUNT"
                     
-                    _authState.value = AuthState.Success(account.email, currentRole)
+                    _authStateStateFlow.value = AuthState.Success(account.email, currentRole)
                 }
                 
             } catch (e: Exception) {
-                _authState.value = AuthState.Error("Login gagal: ${e.localizedMessage}")
+                _authStateStateFlow.value = AuthState.Error("Login gagal: ${e.localizedMessage}")
             }
         }
     }
@@ -101,7 +101,7 @@ class AuthViewModel @Inject constructor(
     fun logout(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             repository.clearAllDataAndSignOut()
-            _authState.value = AuthState.Idle
+            _authStateStateFlow.value = AuthState.Idle
             onComplete()
         }
     }

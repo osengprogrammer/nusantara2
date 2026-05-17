@@ -5,17 +5,16 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * 🛠️ ACCOUNT MANAGEMENT VIEW MODEL
@@ -32,19 +31,19 @@ class AccountManagementViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     // =====================================================
-    // 1. DIRI SENDIRI (Active Admin/Teacher Session)
+    // 1. DIRI SENDIRI (Active Admin/Account Session)
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val currentUser: StateFlow<AccountEntity?> = sessionManager.currentUserIdFlow
+    val currentUser: StateFlow<AccountEntity?> = sessionManager.currentUserIdStateFlow
         .filterNotNull()
         .flatMapLatest { uid -> repository.observeAccountEntity(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val assignedClassIds: StateFlow<List<String>> = sessionManager.activeSchoolIdFlow
+    val assignedClassIds: StateFlow<List<String>> = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
-        .combine(sessionManager.currentUserIdFlow.filterNotNull()) { schoolId, accountId -> schoolId to accountId }
+        .combine(sessionManager.currentUserIdStateFlow.filterNotNull()) { schoolId, accountId -> schoolId to accountId }
         .flatMapLatest { (schoolId, accountId) -> database.accountClassAccessDao().getAssignedClassIds(accountId, schoolId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -53,7 +52,7 @@ class AccountManagementViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val allUsersInSameSchool: StateFlow<List<AccountEntity>> = sessionManager.activeSchoolIdFlow
+    val allUsersInSameSchool: StateFlow<List<AccountEntity>> = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             repository.getAccountDao().observeAllAccounts().map { accounts ->
@@ -66,18 +65,18 @@ class AccountManagementViewModel @Inject constructor(
     // 3. TARGET MANAGEMENT (Managing other accounts)
     // =====================================================
 
-    private val _selectedTargetUser = MutableStateFlow<AccountEntity?>(null)
-    val selectedTargetUser: StateFlow<AccountEntity?> = _selectedTargetUser.asStateFlow()
+    private val _selectedTargetUserFlow = MutableStateFlow<AccountEntity?>(null)
+    val selectedTargetUserFlow: StateFlow<AccountEntity?> = _selectedTargetUserFlow.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val targetAssignedClassIds: StateFlow<List<String>> = _selectedTargetUser
+    val targetAssignedClassIds: StateFlow<List<String>> = _selectedTargetUserFlow
         .filterNotNull()
-        .combine(sessionManager.activeSchoolIdFlow.filterNotNull()) { target, schoolId -> target.accountId to schoolId }
+        .combine(sessionManager.activeSchoolIdStateFlow.filterNotNull()) { target, schoolId -> target.accountId to schoolId }
         .flatMapLatest { (targetId, schoolId) -> database.accountClassAccessDao().getAssignedClassIds(targetId, schoolId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setTargetUser(accountId: String, name: String, email: String) {
-        _selectedTargetUser.value = AccountEntity(
+        _selectedTargetUserFlow.value = AccountEntity(
             accountId = accountId,
             name = name,
             email = email

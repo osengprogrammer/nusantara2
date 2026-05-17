@@ -1,19 +1,16 @@
 package com.azuratech.azuratime.features.attendance.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
 
 @Composable
 fun AttendanceCaptureContent(

@@ -1,11 +1,8 @@
 package com.azuratech.azuratime.features.school.ui.list
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
 fun AddSchoolDialog(

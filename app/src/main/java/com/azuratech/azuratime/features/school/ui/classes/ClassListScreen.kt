@@ -1,13 +1,9 @@
 package com.azuratech.azuratime.features.school.ui.classes
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -18,8 +14,8 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuratime.core.ui.util.UiState
+import com.azuratech.azuratime.core.util.showToast
 
 @Composable
 fun ClassListScreen(

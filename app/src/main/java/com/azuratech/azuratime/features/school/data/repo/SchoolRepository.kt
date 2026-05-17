@@ -1,25 +1,22 @@
 package com.azuratech.azuratime.features.school.data.repo
 
+import androidx.room.withTransaction
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.core.data.local.*
-import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.account.data.local.Membership
-import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
-import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
+import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
-import androidx.room.withTransaction
+import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
+import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class SchoolRepository @Inject constructor(
@@ -85,14 +82,14 @@ class SchoolRepository @Inject constructor(
                     syncStatus = SyncStatus.PENDING_INSERT
                 ))
 
-                val user = database.accountDao().getAccountById(adminId)
-                if (user != null) {
-                    val updatedMemberships = user.memberships.toMutableMap()
+                val account = database.accountDao().getAccountById(adminId)
+                if (account != null) {
+                    val updatedMemberships = account.memberships.toMutableMap()
                     updatedMemberships[schoolId] = Membership(
                         schoolName = name,
                         role = "ADMIN"
                     )
-                    database.accountDao().updateAccount(user.copy(
+                    database.accountDao().updateAccount(account.copy(
                         memberships = updatedMemberships,
                         activeSchoolId = schoolId,
                         syncStatus = SyncStatus.PENDING_UPDATE.name

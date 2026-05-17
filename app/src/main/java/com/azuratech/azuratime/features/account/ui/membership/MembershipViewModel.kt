@@ -2,16 +2,17 @@ package com.azuratech.azuratime.features.account.ui.membership
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuratime.core.data.local.toProfile
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.Membership
-import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
-import com.azuratech.azuratime.features.account.data.repo.MembershipRepository
 import com.azuratech.azuratime.features.account.data.repo.AccountRepository
-import com.azuratech.azuratime.core.data.local.toProfile
+import com.azuratech.azuratime.features.account.data.repo.MembershipRepository
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * 🛠️ MEMBERSHIP VIEW MODEL
@@ -42,13 +42,13 @@ class MembershipViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val user: StateFlow<AccountEntity?> = sessionManager.currentUserIdFlow
+    val account: StateFlow<AccountEntity?> = sessionManager.currentUserIdStateFlow
         .filterNotNull()
         .flatMapLatest { uid -> accountRepository.observeAccountEntity(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val accessRequests: StateFlow<List<AccessRequestProfile>> = sessionManager.currentUserIdFlow
+    val accessRequests: StateFlow<List<AccessRequestProfile>> = sessionManager.currentUserIdStateFlow
         .filterNotNull()
         .flatMapLatest { uid ->
             accessRequestRepository.observeRequestsByUser(uid)
@@ -58,20 +58,20 @@ class MembershipViewModel @Inject constructor(
 
     /**
      * 🔥 DERIVED UI STATE
-     * Combines user status and pending requests for a single SSOT state.
+     * Combines account.status and pending requests for a single SSOT state.
      */
-    val state: StateFlow<MembershipState> = combine(user, accessRequests) { user, requests ->
+    val state: StateFlow<MembershipState> = combine(account, accessRequests) { account, requests ->
         when {
-            user == null -> MembershipState.Loading
-            user.status == "PENDING" -> MembershipState.Pending
-            user.status == SessionManager.STATUS_ACTIVE -> MembershipState.Approved
-            user.status == "REJECTED" -> MembershipState.Rejected("Akun Anda ditolak oleh administrator.")
+            account == null -> MembershipState.Loading
+            account.status == "PENDING" -> MembershipState.Pending
+            account.status == SessionManager.STATUS_ACTIVE -> MembershipState.Approved
+            account.status == "REJECTED" -> MembershipState.Rejected("Akun Anda ditolak oleh administrator.")
             requests.isNotEmpty() -> MembershipState.Pending
             else -> MembershipState.Idle
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MembershipState.Loading)
 
-    val memberships: StateFlow<List<com.azuratech.azuratime.features.account.data.local.Membership>> = user.map { 
+    val memberships: StateFlow<List<com.azuratech.azuratime.features.account.data.local.Membership>> = account.map { 
         it?.memberships?.values?.toList() ?: emptyList() 
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

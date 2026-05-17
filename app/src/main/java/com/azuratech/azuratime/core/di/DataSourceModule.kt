@@ -1,17 +1,17 @@
 package com.azuratech.azuratime.core.di
 
+import com.azuratech.azuraengine.core.ImageProcessor
+import com.azuratech.azuraengine.core.StorageProvider
 import com.azuratech.azuratime.core.data.AndroidImageProcessor
 import com.azuratech.azuratime.core.data.AndroidStorageProvider
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceLocalDataSource
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceLocalDataSourceImpl
-import com.azuratech.azuratime.features.biometric.data.local.BiometricLocalDataSource
-import com.azuratech.azuratime.features.biometric.data.local.BiometricLocalDataSourceImpl
 import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSource
 import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSourceImpl
+import com.azuratech.azuratime.features.biometric.data.local.BiometricLocalDataSource
+import com.azuratech.azuratime.features.biometric.data.local.BiometricLocalDataSourceImpl
 import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDataSource
 import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDataSourceImpl
-import com.azuratech.azuraengine.core.ImageProcessor
-import com.azuratech.azuraengine.core.StorageProvider
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSourceImpl
 import dagger.Binds

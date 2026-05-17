@@ -12,21 +12,20 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.azuratech.azuratime.ml.detector.BarcodeAnalyzer // Import analyzer baru kita
 import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.ml.detector.BarcodeAnalyzer
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import kotlinx.coroutines.guava.await
 import java.util.concurrent.Executors
+import kotlinx.coroutines.guava.await
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

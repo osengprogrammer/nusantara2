@@ -1,13 +1,9 @@
 package com.azuratech.azuratime.features.account.ui.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,15 +11,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
-import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
-import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
+import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 
 @Composable
 fun MyAssignedClassScreen(
@@ -36,8 +32,8 @@ fun MyAssignedClassScreen(
                         else userViewModel.targetAssignedClassIds)
                         .collectAsStateWithLifecycle()
     val allClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
-    val user by userViewModel.currentUser.collectAsStateWithLifecycle()
-    val targetUser by userViewModel.selectedTargetUser.collectAsStateWithLifecycle()
+    val account by userViewModel.currentUser.collectAsStateWithLifecycle()
+    val targetUser by userViewModel.selectedTargetUserFlow.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
 
@@ -56,8 +52,8 @@ fun MyAssignedClassScreen(
     val screenTitle = if (targetUserId == null) "Otoritas Kelas Saya"
                       else "Otoritas Kelas: ${targetUser?.name ?: targetUserId}"
 
-    LaunchedEffect(user?.activeClassId) {
-        println("✅ DEBUG: UI received updated activeClassId=${user?.activeClassId}")
+    LaunchedEffect(account?.activeClassId) {
+        println("✅ DEBUG: UI received updated activeClassId=${account?.activeClassId}")
     }
 
     MyAssignedClassContent(
@@ -72,7 +68,7 @@ fun MyAssignedClassScreen(
             userViewModel.selectActiveClass(classId, targetUserId) 
         },
         onAssignClass = { classId -> userViewModel.assignClassToUser(classId, targetUserId) },
-        user = user,
+        account = account,
         onBack = onNavigateBack
     )
 }
@@ -87,7 +83,7 @@ fun MyAssignedClassContent(
     onRemoveClass: (String) -> Unit,
     onSelectActiveClass: (String) -> Unit,
     onAssignClass: (String) -> Unit,
-    user: AccountEntity?,
+    account: AccountEntity?,
     onBack: () -> Unit
 ) {
     AzuraScreen(
@@ -128,7 +124,7 @@ fun MyAssignedClassContent(
                         }
                     } else {
                         items(myClasses, key = { it.id }) { classItem ->
-                            val isActive = user?.activeClassId == classItem.id
+                            val isActive = account?.activeClassId == classItem.id
 
                             AzuraCard(
                                 modifier = Modifier.fillMaxWidth(),
@@ -151,7 +147,7 @@ fun MyAssignedClassContent(
                                             Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error)
                                         }
 
-                                        if (user != null) {
+                                        if (account != null) {
                                             if (isActive) {
                                                 Icon(Icons.Default.CheckCircle, contentDescription = "Aktif", tint = Color(0xFF00C853))
                                             } else {

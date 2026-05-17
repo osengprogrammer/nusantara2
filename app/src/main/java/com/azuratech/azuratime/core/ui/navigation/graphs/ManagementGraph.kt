@@ -1,5 +1,6 @@
 package com.azuratech.azuratime.core.ui.navigation.graphs
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -7,21 +8,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
-import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.azuratech.azuratime.features.student.ui.RegistrationMenuScreen
-import com.azuratech.azuratime.features.student.ui.form.AddStudentScreen
-import com.azuratech.azuratime.features.student.ui.form.EditStudentScreen
-import com.azuratech.azuratime.features.student.ui.bulk.BulkRegistrationScreen
-import com.azuratech.azuratime.features.student.ui.roster.StudentRosterScreen
-import com.azuratech.azuratime.features.student.ui.roster.StudentRosterBarcodeScreen
+import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.features.biometric.ui.enroll.BiometricScreen
-import com.azuratech.azuratime.features.school.ui.classes.ClassManagementScreen
-import com.azuratech.azuratime.features.school.ui.classes.ClassDetailScreen
-import com.azuratech.azuratime.features.school.ui.admin.PendingSchoolsScreen
 import com.azuratech.azuratime.features.reporting.ui.integrity.DataIntegrityScreen
 import com.azuratech.azuratime.features.reporting.ui.integrity.DataManagementScreen
+import com.azuratech.azuratime.features.school.ui.admin.PendingSchoolsScreen
+import com.azuratech.azuratime.features.school.ui.classes.ClassDetailScreen
+import com.azuratech.azuratime.features.school.ui.classes.ClassManagementScreen
+import com.azuratech.azuratime.features.student.ui.RegistrationMenuScreen
+import com.azuratech.azuratime.features.student.ui.bulk.BulkRegistrationScreen
+import com.azuratech.azuratime.features.student.ui.form.AddStudentScreen
+import com.azuratech.azuratime.features.student.ui.form.EditStudentScreen
+import com.azuratech.azuratime.features.student.ui.roster.StudentRosterBarcodeScreen
+import com.azuratech.azuratime.features.student.ui.roster.StudentRosterScreen
 
 fun NavGraphBuilder.managementGraph(
     navController: NavController

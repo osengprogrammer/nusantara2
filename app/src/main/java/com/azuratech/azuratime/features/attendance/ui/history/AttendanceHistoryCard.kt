@@ -1,20 +1,18 @@
 package com.azuratech.azuratime.features.attendance.ui.history
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import java.time.format.DateTimeFormatter
 
 /**

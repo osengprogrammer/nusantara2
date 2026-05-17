@@ -1,5 +1,5 @@
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
 
 // --- 1. CONFIGURATION ---
 val localProperties = Properties()
@@ -60,11 +60,11 @@ android {
             // versionNameSuffix = "-debug"
         }
         release {
-            isMinifyEnabled = true          // ✅ Enable R8 code shrinking
-            isShrinkResources = true        // ✅ Remove unused resources
+            isMinifyEnabled = true // ✅ Enable R8 code shrinking
+            isShrinkResources = true // ✅ Remove unused resources
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("release")
             // Optional: keep Hilt/Room/Firebase classes if R8 removes them incorrectly
@@ -85,7 +85,7 @@ android {
 
     buildFeatures {
         compose = true
-        mlModelBinding = true 
+        mlModelBinding = true
         buildConfig = true
     }
 
@@ -177,7 +177,7 @@ dependencies {
     // --- DATABASE (ROOM) ---
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1") 
+    ksp("androidx.room:room-compiler:2.6.1")
 
     // --- SYSTEM & COROUTINES ---
     implementation("io.coil-kt:coil-compose:2.5.0")
@@ -207,8 +207,8 @@ dependencies {
 
     // 🔥 HILT EXTENSIONS (WORKER & VIEWMODEL)
     implementation("androidx.hilt:hilt-work:1.2.0")
-    ksp("androidx.hilt:hilt-compiler:1.2.0") 
-    
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
+
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.7.3") // For CameraX .await()
     implementation("com.google.firebase:firebase-functions-ktx:20.4.0") // For Firebase Functions
@@ -220,7 +220,7 @@ dependencies {
     testImplementation("io.mockk:mockk-agent-jvm:1.13.8")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("app.cash.turbine:turbine:1.0.0")
-    
+
     // Hilt Testing
     testImplementation("com.google.dagger:hilt-android-testing:2.48.1")
     kspTest("com.google.dagger:hilt-android-compiler:2.48.1")

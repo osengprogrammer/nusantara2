@@ -3,10 +3,10 @@ package com.azuratech.azuratime.features.biometric.data.local
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
 import com.azuratech.azuratime.features.school.data.local.ClassEntity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 @Singleton
 class BiometricLocalDataSourceImpl @Inject constructor(

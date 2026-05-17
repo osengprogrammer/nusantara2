@@ -1,16 +1,14 @@
 package com.azuratech.azuratime.features.attendance.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
-import com.azuratech.azuratime.features.attendance.ui.components.ScannerViewModel
 import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
+import com.azuratech.azuratime.features.attendance.ui.components.ScannerViewModel
 import kotlinx.coroutines.flow.collect
 
 @Composable

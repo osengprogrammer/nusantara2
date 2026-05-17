@@ -2,17 +2,16 @@ package com.azuratech.azuratime.features.biometric.ui.assignment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
-import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.data.local.AppDatabase
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class StudentAssignmentViewModel @Inject constructor(
@@ -26,7 +25,7 @@ class StudentAssignmentViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val studentRosterFlow: StateFlow<List<com.azuratech.azuratime.core.data.local.StudentBiometricDetails>> =
-        sessionManager.activeSchoolIdFlow
+        sessionManager.activeSchoolIdStateFlow
             .filterNotNull()
             .flatMapLatest { schoolId ->
                 biometricRepository.getStudentsWithDetailsFlow(schoolId)
@@ -35,7 +34,7 @@ class StudentAssignmentViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val allAssignedClassesMap: StateFlow<Map<String, List<ClassModel>>> =
-        sessionManager.activeSchoolIdFlow
+        sessionManager.activeSchoolIdStateFlow
             .filterNotNull()
             .flatMapLatest { schoolId ->
                 combine(
@@ -53,7 +52,7 @@ class StudentAssignmentViewModel @Inject constructor(
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    val availableClasses = sessionManager.activeSchoolIdFlow
+    val availableClasses = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             schoolRepository.observeClasses(schoolId).map { it.getOrNull() ?: emptyList() }

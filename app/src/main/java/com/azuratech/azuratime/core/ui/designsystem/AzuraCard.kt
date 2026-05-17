@@ -1,7 +1,5 @@
 package com.azuratech.azuratime.core.ui.designsystem
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,7 +54,7 @@ fun PreviewAzuraCard() {
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                AzuraCard(title = "User Info") {
+                AzuraCard(title = "Account Info") {
                     Text("Name: John Doe")
                     Text("Status: Active")
                 }

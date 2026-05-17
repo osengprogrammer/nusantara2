@@ -1,10 +1,10 @@
 package com.azuratech.azuratime.features.attendance.data.local
 
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 
 @Singleton
 class AttendanceLocalDataSourceImpl @Inject constructor(

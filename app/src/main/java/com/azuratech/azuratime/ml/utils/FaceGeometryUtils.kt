@@ -2,8 +2,8 @@ package com.azuratech.azuratime.ml.utils
 
 import android.graphics.Bitmap
 import android.graphics.Rect
-import kotlin.math.max
 import com.azuratech.azuratime.ml.recognizer.FaceNetConstants
+import kotlin.math.max
 
 object FaceGeometryUtils {
 

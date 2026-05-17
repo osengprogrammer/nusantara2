@@ -1,19 +1,16 @@
 package com.azuratech.azuratime.features.student.ui.form
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraUserFormContent
-import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
-import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 import com.azuratech.azuratime.core.ui.designsystem.CoreFaceCamera
+import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 

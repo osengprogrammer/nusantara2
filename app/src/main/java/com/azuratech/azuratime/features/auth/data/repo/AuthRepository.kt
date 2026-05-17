@@ -2,25 +2,25 @@ package com.azuratech.azuratime.features.auth.data.repo
 
 import android.app.Application
 import android.util.Log
+import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.core.data.repo.SecurityRepository
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.core.domain.model.SyncStatus
-import com.azuratech.azuraengine.result.Result as DomainResult
-import com.azuratech.azuratime.core.data.repo.SecurityRepository
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * 🏰 AUTH REPOSITORY (Optimized for Azura Time)
@@ -64,7 +64,7 @@ class AuthRepository @Inject constructor(
                 val newAccount = AccountEntity(
                     accountId = uid,
                     email = email,
-                    name = firebaseUser.displayName ?: "User Baru",
+                    name = firebaseUser.displayName ?: "Akun Baru",
                     memberships = emptyMap(),
                     activeSchoolId = null,
                     status = SessionManager.STATUS_PENDING,

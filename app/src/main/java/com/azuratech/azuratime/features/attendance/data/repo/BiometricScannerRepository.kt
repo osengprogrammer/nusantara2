@@ -2,24 +2,24 @@ package com.azuratech.azuratime.features.attendance.data.repo
 
 import android.app.Application
 import android.util.Log
+import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
+import com.azuratech.azuratime.core.data.local.BiometricCache
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.util.AttendanceService
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.ml.matcher.NativeSecurityVault
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.core.data.local.BiometricCache
-import com.azuratech.azuratime.core.util.AttendanceService
-import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
+import java.time.LocalDateTime
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.time.LocalDateTime
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class BiometricScannerRepository @Inject constructor(

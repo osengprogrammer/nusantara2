@@ -47,7 +47,7 @@ class StudentBiometricViewModel @Inject constructor(
     val uiEventFlow = _uiEvent.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val studentRosterFlow: StateFlow<List<StudentBiometricDetails>> = sessionManager.activeSchoolIdFlow
+    val studentRosterFlow: StateFlow<List<StudentBiometricDetails>> = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> biometricRepository.getStudentsWithDetailsFlow(schoolId) }
         .stateIn(
@@ -57,7 +57,7 @@ class StudentBiometricViewModel @Inject constructor(
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val enrolledStudentFlow: StateFlow<List<StudentBiometricEntity>> = sessionManager.activeSchoolIdFlow
+    val enrolledStudentFlow: StateFlow<List<StudentBiometricEntity>> = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> biometricRepository.getEnrolledStudentsFlow(schoolId) }
         .stateIn(

@@ -9,7 +9,7 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.azuratech.azuratime.MainActivity
-import com.azuratech.azuratime.R // Pastikan ini mengarah ke R project kamu
+import com.azuratech.azuratime.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 

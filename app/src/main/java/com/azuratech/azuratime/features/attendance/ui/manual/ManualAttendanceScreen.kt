@@ -1,14 +1,13 @@
 package com.azuratech.azuratime.features.attendance.ui.manual
 
-import androidx.compose.runtime.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.ui.enroll.StudentBiometricViewModel
-import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
+import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
+import com.azuratech.azuratime.core.util.AttendanceService
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
-import com.azuratech.azuratime.core.util.AttendanceService
-import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
+import com.azuratech.azuratime.features.biometric.ui.enroll.StudentBiometricViewModel
+import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

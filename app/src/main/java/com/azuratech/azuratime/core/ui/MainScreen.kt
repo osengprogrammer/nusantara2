@@ -1,29 +1,25 @@
 package com.azuratech.azuratime.core.ui
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.*
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.ZoharChatSheet
-import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
-import com.google.firebase.auth.FirebaseAuth
+import com.azuratech.azuratime.core.ui.navigation.graphs.accountGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.attendanceGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.dashboardGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.managementGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.reportingGraph
-import com.azuratech.azuratime.core.ui.navigation.graphs.accountGraph
+import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun MainScreen() {

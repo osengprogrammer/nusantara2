@@ -4,15 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.data.local.toProfile
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.core.data.local.toProfile
-import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.features.account.data.repo.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * 🛠️ WORKSPACE VIEW MODEL
@@ -152,7 +152,7 @@ class WorkspaceViewModel @Inject constructor(
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val accessRequests: StateFlow<List<AccessRequestProfile>> =
-        sessionManager.currentUserIdFlow.filterNotNull()
+        sessionManager.currentUserIdStateFlow.filterNotNull()
             .flatMapLatest { accountId ->
                 accessRequestRepository.observeRequestsByUser(accountId)
                     .map { entities -> entities.map { it.toProfile() } }

@@ -1,23 +1,22 @@
 package com.azuratech.azuratime.features.school.ui.list
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuratime.features.account.data.repo.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.account.data.repo.AccountRepository
-import com.azuratech.azuratime.core.domain.model.SyncStatus
-import androidx.compose.ui.graphics.Color
+import com.azuratech.azuratime.features.account.data.repo.SchoolWorkspaceRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -56,7 +55,7 @@ class SchoolViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val activeSchoolId: StateFlow<String?> = sessionManager.activeSchoolIdFlow
+    val activeSchoolId: StateFlow<String?> = sessionManager.activeSchoolIdStateFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), sessionManager.getActiveSchoolId())
 
     val activeSchool: StateFlow<School?> = activeSchoolId
@@ -110,7 +109,7 @@ class SchoolViewModel @Inject constructor(
         println("💾 DEBUG: Creating school: $name with ${selectedClassIds.size} classes")
         viewModelScope.launch {
             val account = accountRepository.getAccountById(currentAccountId)
-            val role = account?.role ?: "USER"
+            val role = account?.role ?: "ACCOUNT"
             
             // 🔥 Business Rule: One account one school unless SUPER_ADMIN
             if (role != "SUPER_ADMIN" && schools.value.isNotEmpty()) {

@@ -1,26 +1,23 @@
 package com.azuratech.azuratime.features.school.ui.classes
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Class
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.util.UiState
-import com.azuratech.azuratime.core.ui.UiEvent
-import com.azuratech.azuraengine.model.ClassModel
 
 @Composable
 fun ClassManagementScreen(

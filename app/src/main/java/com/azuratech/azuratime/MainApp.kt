@@ -3,9 +3,8 @@ package com.azuratech.azuratime
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -14,18 +13,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.core.boot.BootState
 import com.azuratech.azuratime.core.boot.BootViewModel
 import com.azuratech.azuratime.core.ui.MainScreen
-import com.azuratech.azuratime.features.auth.ui.LoginScreen
-import com.azuratech.azuratime.features.account.ui.membership.MembershipScreen
 import com.azuratech.azuratime.core.ui.MainViewModel
+import com.azuratech.azuratime.features.account.ui.membership.MembershipScreen
 import com.azuratech.azuratime.features.auth.ui.AuthViewModel
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import com.azuratech.azuratime.features.auth.ui.LoginScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun MainApp(onBootReady: () -> Unit = {}) {
     val bootViewModel: BootViewModel = hiltViewModel()
-    val bootState by bootViewModel.state.collectAsState()
+    val bootState by bootViewModel.stateFlow.collectAsState()
 
     LaunchedEffect(bootState) {
         if (bootState != BootState.Loading) {

@@ -3,17 +3,17 @@ package com.azuratech.azuratime.core.data.repo
 import android.content.Context
 import android.util.Log
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * 🏰 MAIN REPOSITORY

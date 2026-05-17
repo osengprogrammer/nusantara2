@@ -1,17 +1,17 @@
 package com.azuratech.azuratime.features.school.data.remote
 
-import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class SchoolRemoteDataSourceImpl @Inject constructor(

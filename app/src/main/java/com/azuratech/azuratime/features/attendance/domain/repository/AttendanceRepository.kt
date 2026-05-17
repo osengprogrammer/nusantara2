@@ -1,11 +1,11 @@
 package com.azuratech.azuratime.features.attendance.domain.repository
 
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
-import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
+import kotlinx.coroutines.flow.Flow
 
 data class ProcessAttendanceParams(
     val studentId: String,

@@ -3,21 +3,16 @@ package com.azuratech.azuratime.features.account.data.repo
 import android.app.Application
 import android.util.Log
 import androidx.room.withTransaction
-import com.azuratech.azuratime.core.data.local.*
-import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.account.data.local.*
-import com.azuratech.azuratime.features.attendance.data.local.*
-import com.azuratech.azuratime.features.biometric.data.local.*
-import com.azuratech.azuratime.features.account.data.local.Membership
-import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.core.domain.model.SyncStatus
+import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * 🏰 SCHOOL WORKSPACE REPOSITORY

@@ -1,13 +1,10 @@
 package com.azuratech.azuratime.core.data.local
 
 import android.content.Context
-import androidx.room.*
-import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.student.data.local.*
-import com.azuratech.azuratime.features.attendance.data.local.*
-import com.azuratech.azuratime.features.biometric.data.local.*
-import com.azuratech.azuratime.features.account.data.local.*
-import com.azuratech.azuratime.features.reporting.data.local.*
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
 @Database(
     entities = [

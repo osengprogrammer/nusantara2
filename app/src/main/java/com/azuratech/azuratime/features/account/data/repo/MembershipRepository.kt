@@ -1,13 +1,15 @@
 package com.azuratech.azuratime.features.account.data.repo
 
+import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.account.data.local.AccountDao
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.azuratech.azuratime.features.account.data.local.Membership
-import com.azuratech.azuratime.core.domain.model.SyncStatus
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -16,8 +18,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 sealed class MembershipDocUpdate {
     data class StatusChanged(val status: String, val data: Map<String, Any>?, val reason: String?) : MembershipDocUpdate()
@@ -80,7 +80,7 @@ class MembershipRepository @Inject constructor(
         val account = com.azuratech.azuratime.features.account.data.local.AccountEntity(
             accountId = uid,
             email = email,
-            name = displayName ?: "User",
+            name = displayName ?: "Account",
             status = SessionManager.STATUS_PENDING,
             syncStatus = SyncStatus.PENDING_UPDATE.name
         )
@@ -92,7 +92,7 @@ class MembershipRepository @Inject constructor(
             val pendingData = mapOf(
                 "accountId" to uid,
                 "email" to email,
-                "name" to (displayName ?: "User"),
+                "name" to (displayName ?: "Account"),
                 "hardwareId" to hardwareId,
                 "status" to "PENDING",
                 "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()

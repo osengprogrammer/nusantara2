@@ -6,7 +6,6 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.reporting.data.repo.AuditLogRepository
 import com.azuratech.azuratime.features.reporting.domain.model.SystemAuditTrail
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -15,7 +14,7 @@ class AuditLogViewModel @Inject constructor(
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
-    val auditLogs: StateFlow<List<SystemAuditTrail>> = sessionManager.activeSchoolIdFlow
+    val auditLogs: StateFlow<List<SystemAuditTrail>> = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             repository.observeAuditLogs(schoolId)

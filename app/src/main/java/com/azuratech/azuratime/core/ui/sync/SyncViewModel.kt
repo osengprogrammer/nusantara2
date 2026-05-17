@@ -2,9 +2,10 @@ package com.azuratech.azuratime.core.ui.sync
 
 import android.content.Context
 import android.widget.Toast
-import androidx.work.*
 import com.azuratech.azuratime.core.sync.SyncWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -12,8 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class SyncViewModel @Inject constructor(

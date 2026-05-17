@@ -3,16 +3,15 @@ package com.azuratech.azuratime.features.biometric.ui.enroll
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.toProfile
-import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
-import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollmentProfile
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
+import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollmentProfile
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 
 /**
  * 🛠️ BIOMETRIC VIEW MODEL - Phase 7.9 SSOT Migration
@@ -32,7 +31,7 @@ class BiometricViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val enrollmentList: StateFlow<List<BiometricEnrollmentProfile>> = 
-        sessionManager.activeSchoolIdFlow.filterNotNull()
+        sessionManager.activeSchoolIdStateFlow.filterNotNull()
             .flatMapLatest { schoolId -> 
                 biometricRepository.observeEnrollmentsBySchool(schoolId)
                     .map { entities -> entities.map { it.toProfile() } }

@@ -1,17 +1,17 @@
 package com.azuratech.azuratime.features.biometric.data.remote
 
 import android.util.Log
-import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
-import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
-import com.google.firebase.firestore.FirebaseFirestore
+import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.tasks.await
 
 @Singleton
 class BiometricRemoteDataSourceImpl @Inject constructor(

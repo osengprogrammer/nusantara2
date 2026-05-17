@@ -3,21 +3,20 @@ package com.azuratech.azuratime.features.attendance.ui.components
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.attendance.data.repo.BiometricScannerRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
-import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
+import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuraengine.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ScannerViewModel @Inject constructor(

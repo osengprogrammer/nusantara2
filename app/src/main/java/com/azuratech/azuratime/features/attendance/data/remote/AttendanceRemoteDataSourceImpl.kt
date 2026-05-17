@@ -1,14 +1,14 @@
 package com.azuratech.azuratime.features.attendance.data.remote
 
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
-import com.azuratech.azuratime.features.attendance.data.local.toAttendanceRecordEntity
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.features.attendance.data.local.toAttendanceRecordEntity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.tasks.await
 
 @Singleton
 class AttendanceRemoteDataSourceImpl @Inject constructor(

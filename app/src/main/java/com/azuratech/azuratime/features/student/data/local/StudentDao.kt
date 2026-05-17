@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.features.student.data.local
 
-import androidx.room.*
 import com.azuratech.azuratime.core.data.local.RawStudentProfile
 import kotlinx.coroutines.flow.Flow
 

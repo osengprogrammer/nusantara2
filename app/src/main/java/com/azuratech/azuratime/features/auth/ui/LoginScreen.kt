@@ -6,10 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -29,7 +26,7 @@ fun LoginScreen(
     onLoginSuccessClick: (email: String, role: String?) -> Unit
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
-    val authState by authViewModel.authState.collectAsState()
+    val authState by authViewModel.authStateStateFlow.collectAsState()
     val context = LocalContext.current
 
     val gso = remember {

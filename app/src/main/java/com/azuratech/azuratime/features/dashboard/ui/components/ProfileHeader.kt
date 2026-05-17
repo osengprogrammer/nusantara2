@@ -2,9 +2,9 @@ package com.azuratech.azuratime.features.dashboard.ui.components
 
 import android.net.Uri
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,8 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 
 
 @Composable
@@ -40,7 +38,7 @@ fun ProfileHeader(
         ) {
             AsyncImage(
                 model = photoUrl,
-                contentDescription = "User Profile Photo",
+                contentDescription = "Account Profile Photo",
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape)

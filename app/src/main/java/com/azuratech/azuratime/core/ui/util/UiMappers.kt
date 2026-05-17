@@ -2,7 +2,6 @@ package com.azuratech.azuratime.core.ui.util
 
 import androidx.compose.ui.graphics.Color
 import java.text.SimpleDateFormat
-import java.util.*
 import java.util.Locale
 
 object UiMappers {

@@ -4,12 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.core.ui.UiEvent
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class PendingSchoolsViewModel @Inject constructor(

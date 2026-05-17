@@ -1,14 +1,13 @@
 package com.azuratech.azuratime.core.data.local
 
 import android.content.Context
-import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.Membership
 import com.azuratech.azuratime.features.school.data.local.ClassDao
 import com.azuratech.azuratime.features.school.data.local.ClassEntity
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.UUID
 
 /**
  * 🌱 DATABASE SEEDER (Pure-Class 2.0)

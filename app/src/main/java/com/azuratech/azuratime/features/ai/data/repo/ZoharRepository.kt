@@ -3,12 +3,12 @@ package com.azuratech.azuratime.features.ai.data.repo
 import com.azuratech.azuratime.BuildConfig
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.google.ai.client.generativeai.GenerativeModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 /**
  * 🤖 ZOHAR REPOSITORY

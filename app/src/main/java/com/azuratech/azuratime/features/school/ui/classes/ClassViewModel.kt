@@ -1,23 +1,22 @@
 package com.azuratech.azuratime.features.school.ui.classes
 
+import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.SavedStateHandle
-import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.ui.util.UiState
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
+import com.azuratech.azuratime.core.ui.util.UiState
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.repo.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.net.Uri
 
 /**
  * 🛠️ CLASS VIEW MODEL - Refactored to match School pattern
@@ -35,7 +34,7 @@ class ClassViewModel @Inject constructor(
     val uiEvent = _uiEvent.asSharedFlow()
 
     // 🔥 NEW: Reactive School ID Flow
-    private val activeSchoolIdFlow = sessionManager.activeSchoolIdFlow
+    private val activeSchoolIdStateFlow = sessionManager.activeSchoolIdStateFlow
         .onStart { 
             val initial = savedStateHandle.get<String>("schoolId") ?: sessionManager.getActiveSchoolId()
             emit(initial) 
@@ -50,7 +49,7 @@ class ClassViewModel @Inject constructor(
         ?: sessionManager.getCurrentUserId() ?: ""
 
     // 🔥 User Flow for UI - Using AccountEntity for SSOT
-    val user: StateFlow<AccountEntity?> = sessionManager.currentUserIdFlow
+    val account: StateFlow<AccountEntity?> = sessionManager.currentUserIdStateFlow
         .filterNotNull()
         .flatMapLatest { userRepository.observeAccountEntity(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -59,7 +58,7 @@ class ClassViewModel @Inject constructor(
     // 📊 CLASS FLOWS (State Management)
     // =====================================================
 
-    val uiStateStateFlow: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdFlow
+    val uiStateStateFlow: StateFlow<UiState<List<ClassModel>>> = activeSchoolIdStateFlow
         .flatMapLatest { id -> schoolRepository.observeClasses(id) }
         .map { result ->
             when(result) {

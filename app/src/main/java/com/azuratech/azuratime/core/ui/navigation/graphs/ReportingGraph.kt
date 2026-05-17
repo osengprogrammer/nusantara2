@@ -3,8 +3,8 @@ package com.azuratech.azuratime.core.ui.navigation.graphs
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
+import com.azuratech.azuratime.core.navigation.Screen
 
 fun NavGraphBuilder.reportingGraph(
     navController: androidx.navigation.NavController

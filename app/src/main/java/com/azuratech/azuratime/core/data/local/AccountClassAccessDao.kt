@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.core.data.local
 
-import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao

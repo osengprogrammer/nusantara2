@@ -8,5 +8,5 @@ data class ProcessResult(
     val name: String,
     val status: String,
     val type: String = "",
-    val message: String = ""
+    val message: String = "",
 )

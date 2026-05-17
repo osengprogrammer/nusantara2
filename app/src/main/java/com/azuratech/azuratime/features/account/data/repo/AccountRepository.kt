@@ -1,14 +1,14 @@
 package com.azuratech.azuratime.features.account.data.repo
 
-import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.account.data.local.AccountDao
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.Membership
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.tasks.await
 
 @Singleton
 class AccountRepository @Inject constructor(
@@ -29,7 +29,7 @@ class AccountRepository @Inject constructor(
                 val name = snapshot.getString("name") ?: ""
                 val photoUrl = snapshot.getString("photoUrl")
                 val status = snapshot.getString("status") ?: "PENDING"
-                val role = snapshot.getString("role") ?: "USER"
+                val role = snapshot.getString("role") ?: "ACCOUNT"
                 val activeSchoolId = snapshot.getString("activeSchoolId")
                 val activeClassId = snapshot.getString("activeClassId")
                 
@@ -40,7 +40,7 @@ class AccountRepository @Inject constructor(
                     val v = value as? Map<*, *> ?: return@mapNotNull null
                     k to Membership(
                         schoolName = v["schoolName"] as? String ?: "",
-                        role = v["role"] as? String ?: "USER",
+                        role = v["role"] as? String ?: "ACCOUNT",
                         status = v["status"] as? String ?: "ACTIVE",
                         assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                     )

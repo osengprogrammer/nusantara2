@@ -1,18 +1,18 @@
 package com.azuratech.azuratime.core.data.local
 
-import com.azuratech.azuratime.features.reporting.domain.model.SystemAuditTrail
-import com.azuratech.azuratime.features.reporting.domain.model.ExportJobProfile
-import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollmentProfile
-import com.azuratech.azuratime.features.reporting.domain.model.SchoolAnalyticsSummary
-import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
-import com.azuratech.azuratime.features.student.data.local.StudentEntity
+import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
+import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.features.reporting.data.local.AuditLogEntity
 import com.azuratech.azuratime.features.reporting.data.local.ExportJobEntity
 import com.azuratech.azuratime.features.reporting.data.local.ReportEntity
-import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
-import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.features.reporting.domain.model.ExportJobProfile
+import com.azuratech.azuratime.features.reporting.domain.model.SchoolAnalyticsSummary
+import com.azuratech.azuratime.features.reporting.domain.model.SystemAuditTrail
+import com.azuratech.azuratime.features.student.data.local.StudentEntity
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 
 import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
 

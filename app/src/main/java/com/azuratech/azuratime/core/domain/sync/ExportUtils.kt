@@ -1,12 +1,12 @@
 package com.azuratech.azuratime.core.domain.sync
 
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuraengine.core.StorageProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class ExportUtils @Inject constructor(
     private val storageProvider: StorageProvider
@@ -45,7 +45,7 @@ class ExportUtils @Inject constructor(
             val stringBuilder = StringBuilder()
             
             // 1. HEADER ROW - Dinamis mengikuti Range Tanggal
-            val header = mutableListOf("NO", "FACE ID", "NAMA LENGKAP", "KELAS")
+            val header = mutableListOf("NO", "STUDENT ID", "NAMA LENGKAP", "KELAS")
             dateRange.forEach { date -> header.add("${date.dayOfMonth}/${date.monthValue}") }
             header.addAll(listOf("REKAP KERJA", "SAKIT", "IZIN", "ALPA", "ESTIMASI GAJI (RP)"))
             
@@ -93,7 +93,7 @@ class ExportUtils @Inject constructor(
         
         try {
             val stringBuilder = StringBuilder()
-            stringBuilder.appendLine("Face ID,Name,Date,Time,Status,Admin Email")
+            stringBuilder.appendLine("Student ID,Name,Date,Time,Status,Admin Email")
 
             val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
             val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")

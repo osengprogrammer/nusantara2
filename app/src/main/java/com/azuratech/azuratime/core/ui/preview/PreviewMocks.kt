@@ -1,10 +1,10 @@
 package com.azuratech.azuratime.core.ui.preview
 
 import androidx.compose.ui.graphics.Color
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.dashboard.ui.DashboardUiState
 import com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState
 import com.azuratech.azuratime.features.reporting.ui.matrix.MatrixCellModel
@@ -71,7 +71,7 @@ object PreviewMocks {
     )
 
     val mockDashboardStateSuccess = DashboardUiState(
-        user = mockUser,
+        account = mockUser,
         assignedClasses = mockClasses,
         allClasses = mockClasses,
         recentRecords = mockRecentRecords,
@@ -86,7 +86,7 @@ object PreviewMocks {
         unsyncedRecords = 12
     )
     
-    val mockDashboardStateLoading = DashboardUiState(user = null, isReady = false)
+    val mockDashboardStateLoading = DashboardUiState(account = null, isReady = false)
 
     val mockMatrixRows = listOf(
         MatrixRowModel(

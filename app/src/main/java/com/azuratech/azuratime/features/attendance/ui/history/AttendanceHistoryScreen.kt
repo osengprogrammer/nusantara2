@@ -1,31 +1,26 @@
 package com.azuratech.azuratime.features.attendance.ui.history
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.core.ui.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuratime.core.ui.theme.*
-import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
-import kotlinx.coroutines.launch
+import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +33,7 @@ fun AttendanceHistoryScreen(
 ) {
     // 1. Observation
     val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
-    val user by userViewModel.currentUser.collectAsStateWithLifecycle()
+    val account by userViewModel.currentUser.collectAsStateWithLifecycle()
     val records by attendanceViewModel.attendanceRecords.collectAsStateWithLifecycle()
     val filterParams by attendanceViewModel.filterParams.collectAsStateWithLifecycle()
     val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
@@ -51,12 +46,12 @@ fun AttendanceHistoryScreen(
     var showClassCorrectionDialog by remember { mutableStateOf<AttendanceRecord?>(null) }
 
     // Role helper
-    val activeSchoolId = user?.activeSchoolId ?: ""
-    val userRole = user?.memberships?.get(activeSchoolId)?.role ?: user?.role ?: "USER"
+    val activeSchoolId = account?.activeSchoolId ?: ""
+    val userRole = account?.memberships?.get(activeSchoolId)?.role ?: account?.role ?: "ACCOUNT"
     val isAdmin = userRole == "ADMIN" || userRole == "SUPER_ADMIN"
 
     // 2. Filter Sync
-    LaunchedEffect(user, startDate, endDate, selectedClassId) {
+    LaunchedEffect(account, startDate, endDate, selectedClassId) {
         attendanceViewModel.updateFilters(
             start = startDate,
             end = endDate

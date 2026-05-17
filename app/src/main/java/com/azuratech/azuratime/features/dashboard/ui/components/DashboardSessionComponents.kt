@@ -1,18 +1,12 @@
 package com.azuratech.azuratime.features.dashboard.ui.components
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.*
-import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
-import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -22,10 +16,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuraengine.model.User
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
@@ -56,7 +52,7 @@ fun SessionStudentsList(students: List<StudentBiometricEntity>) {
 
 /**
  * 🔑 MY ASSIGNED CLASSES
- * Shows the classes the teacher is actually responsible for.
+ * Shows the classes the account is actually responsible for.
  */
 @Composable
 fun MyAssignedClassesSection(myClasses: List<ClassModel>, onNavigateToAll: () -> Unit) {

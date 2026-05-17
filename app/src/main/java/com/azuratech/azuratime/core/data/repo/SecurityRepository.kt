@@ -4,11 +4,11 @@ import android.util.Log
 import com.azuratech.azuratime.core.security.SecurityVault
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.functions.FirebaseFunctions
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * 🛡️ AZURA SECURITY REPOSITORY

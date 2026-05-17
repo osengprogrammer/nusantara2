@@ -3,9 +3,9 @@ package com.azuratech.azuratime.core.domain.media
 import com.azuratech.azuraengine.core.ImageProcessor
 import com.azuratech.azuraengine.core.StorageProvider
 import com.azuratech.azuraengine.media.PhotoProcessResult
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 /**
  * Utility class for processing photos from various sources during bulk registration

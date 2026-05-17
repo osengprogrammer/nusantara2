@@ -1,13 +1,13 @@
 package com.azuratech.azuratime.features.dashboard.ui
 
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 
 data class DashboardUiState(
-    val user: AccountEntity? = null,
+    val account: AccountEntity? = null,
     val assignedClasses: List<ClassModel> = emptyList(),
     val allClasses: List<ClassModel> = emptyList(), 
     val recentRecords: List<AttendanceRecordEntity> = emptyList(), // SSOT: using Entity
@@ -15,7 +15,7 @@ data class DashboardUiState(
     val isSyncing: Boolean = false,
     val isReady: Boolean = false,
     val pendingRequests: Int = 0,
-    val currentRole: String = "USER",
+    val currentRole: String = "ACCOUNT",
     val isApproved: Boolean = false,
     // Integrity Data
     val totalStudents: Int = 0,

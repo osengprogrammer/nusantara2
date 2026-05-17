@@ -1,8 +1,7 @@
 package com.azuratech.azuratime.features.attendance.data.local
 
-import androidx.room.*
-import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AttendanceRecordDao {

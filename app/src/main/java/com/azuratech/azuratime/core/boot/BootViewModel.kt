@@ -4,15 +4,15 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.data.repo.BootRepository
-import dagger.hilt.android.lifecycle.HiltViewModel // 🔥 Tambahan Import
-import javax.inject.Inject // 🔥 Tambahan Import
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers 
-import kotlinx.coroutines.withContext 
-import kotlinx.coroutines.delay       
+import kotlinx.coroutines.withContext
 
 @HiltViewModel // 🔥 1. Tandai sebagai ViewModel Hilt
 class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
@@ -22,8 +22,8 @@ class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
     
     // ❌ HAPUS inisialisasi manual repository lama
 
-    private val _state = MutableStateFlow<BootState>(BootState.Loading)
-    val state: StateFlow<BootState> = _state.asStateFlow()
+    private val _stateFlow = MutableStateFlow<BootState>(BootState.Loading)
+    val stateFlow: StateFlow<BootState> = _stateFlow.asStateFlow()
 
     init {
         checkAuthStatus()
@@ -31,7 +31,7 @@ class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
 
     fun checkAuthStatus() {
         viewModelScope.launch { 
-            _state.value = BootState.Loading
+            _stateFlow.value = BootState.Loading
             
             withContext(Dispatchers.IO) {
                 try {
@@ -42,15 +42,15 @@ class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
                         val isLoggedIn = currentUser != null
                         
                         if (!isLoggedIn) {
-                            _state.value = BootState.NeedLogin
+                            _stateFlow.value = BootState.NeedLogin
                         } else {
                             val isActive = repository.isSessionActive() 
-                            _state.value = if (isActive) BootState.Ready else BootState.NeedActivation
+                            _stateFlow.value = if (isActive) BootState.Ready else BootState.NeedActivation
                         }
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        _state.value = BootState.Error("Gagal memuat sesi")
+                        _stateFlow.value = BootState.Error("Gagal memuat sesi")
                     }
                 }
             }

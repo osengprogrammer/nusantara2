@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.account.domain.repository
 
-import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
-import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
+import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import kotlinx.coroutines.flow.Flow
 
 interface AccessRequestRepository {

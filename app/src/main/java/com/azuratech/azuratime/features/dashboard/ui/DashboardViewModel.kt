@@ -2,28 +2,27 @@ package com.azuratech.azuratime.features.dashboard.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.repo.AdminRepository
-import com.azuratech.azuratime.features.auth.data.repo.AuthRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.ui.UiEvent
-import kotlinx.coroutines.channels.Channel
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.ui.util.UiState
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.account.data.repo.AdminRepository
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
+import com.azuratech.azuratime.features.auth.data.repo.AuthRepository
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -47,7 +46,7 @@ class DashboardViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _accountFlow = sessionManager.currentUserIdFlow
+    private val _accountFlow = sessionManager.currentUserIdStateFlow
         .flatMapLatest { accountId -> 
             if (accountId != null) {
                 accountRepository.observeAccountEntity(accountId)
@@ -56,7 +55,7 @@ class DashboardViewModel @Inject constructor(
             }
         }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
+    private val _recentRecordsFlow = sessionManager.activeSchoolIdStateFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
                 attendanceRepository.getAttendanceRecords("", null, null, null, null, emptyList(), schoolId).map { it.take(5) }
@@ -65,7 +64,7 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
-    private val _allClassesFlow = sessionManager.activeSchoolIdFlow
+    private val _allClassesFlow = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             schoolRepository.observeClasses(schoolId).map { result ->
@@ -74,7 +73,7 @@ class DashboardViewModel @Inject constructor(
         }
 
     private val _assignedClassesFlow = combine(
-        sessionManager.activeSchoolIdFlow,
+        sessionManager.activeSchoolIdStateFlow,
         _accountFlow
     ) { schoolId, account ->
         schoolId to account
@@ -109,7 +108,7 @@ class DashboardViewModel @Inject constructor(
 
     init {
         // 🔥 FIX: React to ID changes instead of one-shot check
-        sessionManager.currentUserIdFlow
+        sessionManager.currentUserIdStateFlow
             .filterNotNull()
             .onEach { accountId -> 
                 println("🔍 Dashboard: ID detected ($accountId), triggering sync...")
@@ -164,11 +163,11 @@ class DashboardViewModel @Inject constructor(
 
         val activeSchoolId = sessionManager.getActiveSchoolId()
         val membershipRole = account?.memberships?.get(activeSchoolId)?.role
-        val effectiveRole = membershipRole ?: account?.role ?: "USER"
+        val effectiveRole = membershipRole ?: account?.role ?: "ACCOUNT"
 
         UiState.Success(
             DashboardUiState(
-                user = account,
+                account = account,
                 recentRecords = recentRecords,
                 sessionStudents = sessionStudents,
                 assignedClasses = assignedClasses,
@@ -231,7 +230,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val currentState = state.value
             if (currentState is UiState.Success) {
-                val account = currentState.data.user ?: return@launch
+                val account = currentState.data.account ?: return@launch
                 accountRepository.getAccountDao().getAccountById(account.accountId)?.let {
                     accountRepository.getAccountDao().updateAccount(it.copy(activeClassId = classId))
                 }

@@ -5,11 +5,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
-import com.azuratech.azuratime.features.account.ui.profile.AccountProfileScreen
+import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.features.account.ui.components.MyAssignedClassScreen
 import com.azuratech.azuratime.features.account.ui.components.NetworkScreen
+import com.azuratech.azuratime.features.account.ui.profile.AccountProfileScreen
 
 fun NavGraphBuilder.accountGraph(
     navController: androidx.navigation.NavController

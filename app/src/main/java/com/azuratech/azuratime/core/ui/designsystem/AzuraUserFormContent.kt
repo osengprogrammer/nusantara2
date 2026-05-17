@@ -2,19 +2,17 @@ package com.azuratech.azuratime.core.ui.designsystem
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
 fun AzuraUserFormContent(
@@ -157,7 +155,7 @@ fun DualFacePhotoCaptureCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         bitmap = capturedBitmap.asImageBitmap(),
-                        contentDescription = "User photo",
+                        contentDescription = "Account photo",
                         modifier = Modifier
                             .size(80.dp)
                             .padding(end = AzuraSpacing.sm)

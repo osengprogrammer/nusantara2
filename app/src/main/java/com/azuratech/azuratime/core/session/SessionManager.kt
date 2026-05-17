@@ -59,13 +59,13 @@ class SessionManager private constructor(private val context: Context) {
     }
 
     // 🔥 REACTIVE TRIGGER: SSOT flows for user and school context
-    private val _activeSchoolIdFlow = MutableStateFlow<String?>(getActiveSchoolId())
-    val activeSchoolIdFlow: StateFlow<String?> = _activeSchoolIdFlow.asStateFlow()
+    private val _activeSchoolIdStateFlow = MutableStateFlow<String?>(getActiveSchoolId())
+    val activeSchoolIdStateFlow: StateFlow<String?> = _activeSchoolIdStateFlow.asStateFlow()
 
-    private val _currentUserIdFlow = MutableStateFlow<String?>(
+    private val _currentUserIdStateFlow = MutableStateFlow<String?>(
         try { getCurrentUserId() } catch (e: Exception) { null }
     )
-    val currentUserIdFlow: StateFlow<String?> = _currentUserIdFlow.asStateFlow()
+    val currentUserIdStateFlow: StateFlow<String?> = _currentUserIdStateFlow.asStateFlow()
 
     // =====================================================
     // IDENTITAS & TENANT
@@ -73,7 +73,7 @@ class SessionManager private constructor(private val context: Context) {
 
     fun saveActiveSchoolId(schoolId: String) {
         sharedPreferences.edit().putString(KEY_ACTIVE_SCHOOL_ID, schoolId).apply()
-        _activeSchoolIdFlow.value = schoolId
+        _activeSchoolIdStateFlow.value = schoolId
     }
 
     fun getActiveSchoolId(): String? {
@@ -83,7 +83,7 @@ class SessionManager private constructor(private val context: Context) {
 
     fun saveCurrentUserId(userId: String) {
         sharedPreferences.edit().putString(KEY_USER_ID, userId).apply()
-        _currentUserIdFlow.value = userId
+        _currentUserIdStateFlow.value = userId
     }
 
     fun getCurrentUserId(): String? = sharedPreferences.getString(KEY_USER_ID, null)

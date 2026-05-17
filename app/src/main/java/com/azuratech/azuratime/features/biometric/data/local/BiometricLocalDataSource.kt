@@ -2,9 +2,6 @@ package com.azuratech.azuratime.features.biometric.data.local
 
 import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
 import com.azuratech.azuratime.features.school.data.local.ClassEntity
-import com.azuratech.azuratime.features.account.data.local.*
-import com.azuratech.azuratime.features.attendance.data.local.*
-import com.azuratech.azuratime.features.biometric.data.local.*
 import kotlinx.coroutines.flow.Flow
 
 interface BiometricLocalDataSource {

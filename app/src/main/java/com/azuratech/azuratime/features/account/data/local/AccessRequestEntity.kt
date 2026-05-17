@@ -2,9 +2,9 @@ package com.azuratech.azuratime.features.account.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 
 /**
  * 🎫 Access Request Entity

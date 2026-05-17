@@ -2,14 +2,14 @@ package com.azuratech.azuratime.ml.recognizer
 
 import android.content.Context
 import android.util.Log
+import com.azuratech.azuratime.core.domain.model.ModelGuard
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.gpu.GpuDelegate
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlin.math.sqrt
-import com.azuratech.azuratime.core.domain.model.ModelGuard
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.sqrt
 
 object FaceRecognizer {
     private var interpreter: Interpreter? = null

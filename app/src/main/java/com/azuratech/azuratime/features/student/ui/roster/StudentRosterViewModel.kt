@@ -9,10 +9,9 @@ import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -26,7 +25,7 @@ class StudentRosterViewModel @Inject constructor(
     private val _selectedClassId = MutableStateFlow<String?>(null)
     private val _isSyncing = MutableStateFlow(false)
 
-    private val _allClasses = sessionManager.activeSchoolIdFlow
+    private val _allClasses = sessionManager.activeSchoolIdStateFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             schoolRepository.observeClasses(schoolId).map { result ->

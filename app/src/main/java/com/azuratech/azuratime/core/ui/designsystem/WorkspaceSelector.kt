@@ -1,10 +1,7 @@
 package com.azuratech.azuratime.core.ui.designsystem
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -12,8 +9,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 import com.azuratech.azuratime.features.account.ui.components.WorkspaceViewModel
+import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 
 @Composable
 fun WorkspaceSelector(

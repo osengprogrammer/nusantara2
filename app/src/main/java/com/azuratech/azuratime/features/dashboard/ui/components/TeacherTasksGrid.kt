@@ -2,10 +2,7 @@ package com.azuratech.azuratime.features.dashboard.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +19,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 fun TeacherTasksGrid(
     navController: NavController,
     isAdmin: Boolean,
-    currentRole: String = "USER", // 👈 Added
+    currentRole: String = "ACCOUNT", // 👈 Added
     onRegisterStudentClick: () -> Unit, // 👈 Added
     accountId: String? = null,
     isEnabled: Boolean = true, // 🔥 Added
