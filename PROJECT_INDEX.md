@@ -119,7 +119,7 @@
 | `MembershipScreen.kt` | `features.account.ui.membership` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `AccountProfileScreen.kt` | `features.account.ui.profile` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `BarcodeScreen.kt` | `features.attendance.ui.barcode` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `AttendanceCaptureScreen.kt` | `features.attendance.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
+| `AttendanceCaptureScreen.kt` | `features.attendance.ui.capture` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `AttendanceHistoryScreen.kt` | `features.attendance.ui.history` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `ManualAttendanceScreen.kt` | `features.attendance.ui.manual` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `LoginScreen.kt` | `features.auth.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |

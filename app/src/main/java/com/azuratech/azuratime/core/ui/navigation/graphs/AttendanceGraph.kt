@@ -13,7 +13,7 @@ fun NavGraphBuilder.attendanceGraph(
         route = NavigationRoutes.ATTENDANCE_GRAPH,
     ) {
         composable(NavigationRoutes.ATTENDANCE_CAPTURE) {
-            com.azuratech.azuratime.features.attendance.ui.components.AttendanceCaptureScreen(
+            com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCaptureScreen(
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onBarcodeScanClick = { navController.navigate(NavigationRoutes.BARCODE_SCAN) },
                 onNavigateBack = { navController.popBackStack() },
