@@ -33,7 +33,7 @@ fun BarcodeScreen(
     viewModel: AttendanceCaptureViewModel = hiltViewModel(),
 ) {
     val voiceAssistant = rememberVoiceAssistant()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     var currentCameraIsBack by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {

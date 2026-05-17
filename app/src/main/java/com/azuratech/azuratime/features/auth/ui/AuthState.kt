@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.auth.ui
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
-    object NewUserNeedRegistration : AuthState()
+    object NewAccountNeedRegistration : AuthState()
     data class Success(val email: String, val role: String = "TEACHER") : AuthState()
     data class Error(val message: String) : AuthState()
 }

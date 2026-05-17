@@ -5,12 +5,13 @@ import android.util.Log
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuratime.core.data.repo.SecurityRepository
+import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -23,10 +24,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 🏰 AUTH REPOSITORY (Optimized for Azura Time)
+ * 🏰 AUTH REPOSITORY IMPLEMENTATION (v3.2.0-ai-native)
  */
 @Singleton
-class AuthRepository @Inject constructor(
+class AuthRepositoryImpl @Inject constructor(
     private val application: Application,
     private val database: AppDatabase,
     private val firebaseAuth: FirebaseAuth,
@@ -35,10 +36,10 @@ class AuthRepository @Inject constructor(
     private val syncManager: SyncManager,
     private val accountRepository: AccountRepository,
     private val securityRepository: SecurityRepository,
-) {
+) : AuthRepository {
     private val accountDao = database.accountDao()
 
-    suspend fun signInWithGoogle(idToken: String): DomainResult<Pair<AccountEntity, Boolean>> = withContext(Dispatchers.IO) {
+    override suspend fun signInWithGoogle(idToken: String): DomainResult<Pair<AccountEntity, Boolean>> = withContext(Dispatchers.IO) {
         try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
@@ -64,7 +65,7 @@ class AuthRepository @Inject constructor(
                 val newAccount = AccountEntity(
                     accountId = uid,
                     email = email,
-                    name = firebaseUser.displayName ?: "User Baru",
+                    name = firebaseUser.displayName ?: "Account Baru",
                     memberships = emptyMap(),
                     activeSchoolId = null,
                     status = SessionManager.STATUS_PENDING,
@@ -73,17 +74,17 @@ class AuthRepository @Inject constructor(
                 accountDao.upsertAccount(newAccount)
                 syncManager.enqueueProfileSync(uid)
 
-                sessionManager.saveCurrentUserId(uid)
-                sessionManager.saveUserEmail(email)
-                sessionManager.saveUserStatus(newAccount.status)
+                sessionManager.saveCurrentAccountId(uid)
+                sessionManager.saveAccountEmail(email)
+                sessionManager.saveAccountStatus(newAccount.status)
 
                 return@withContext DomainResult.Success(Pair(newAccount, true))
             }
 
             // Existing account: Save to session and Room (already saved if pulled via UseCase)
-            sessionManager.saveCurrentUserId(uid)
-            sessionManager.saveUserEmail(email)
-            sessionManager.saveUserStatus(accountEntity.status)
+            sessionManager.saveCurrentAccountId(uid)
+            sessionManager.saveAccountEmail(email)
+            sessionManager.saveAccountStatus(accountEntity.status)
             accountEntity.activeSchoolId?.let { sessionManager.saveActiveSchoolId(it) }
 
             if (accountEntity.status == SessionManager.STATUS_ACTIVE) {
@@ -97,7 +98,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun registerMembership(uid: String, data: Map<String, Any>): DomainResult<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun registerMembership(uid: String, data: Map<String, Any>): DomainResult<Unit> = withContext(Dispatchers.IO) {
         try {
             // SSOT Migration v7.1: Update Room first, then trigger push worker
             val account = accountDao.getAccountById(uid)
@@ -121,7 +122,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun clearAllDataAndSignOut() = withContext(Dispatchers.IO) {
+    override suspend fun clearAllDataAndSignOut() = withContext(Dispatchers.IO) {
         database.clearAllTables()
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(application.getString(R.string.my_web_client_id))

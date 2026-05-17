@@ -12,11 +12,11 @@ import java.util.UUID
 )
 data class ClassEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val accountId: String,
+    val ownerAccountId: String,
     val schoolId: String? = null,
     val name: String,
     val grade: String = "",
-    val teacherId: String? = null,
+    val accountId: String? = null,
     val studentCount: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val displayOrder: Int = 0,
@@ -27,7 +27,7 @@ data class ClassEntity(
         schoolId = schoolId,
         name = name,
         grade = grade,
-        teacherId = teacherId,
+        accountId = accountId,
         studentCount = studentCount,
         createdAt = createdAt,
     )

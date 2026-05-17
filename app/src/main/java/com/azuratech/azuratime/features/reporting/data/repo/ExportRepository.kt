@@ -19,8 +19,8 @@ class ExportRepository @Inject constructor(
 ) {
     private val exportJobDao = database.exportJobDao()
 
-    fun observeExportJobs(userId: String): Flow<List<ExportJobProfile>> {
-        return exportJobDao.observeExportJobsByUser(userId).map { entities ->
+    fun observeExportJobs(accountId: String): Flow<List<ExportJobProfile>> {
+        return exportJobDao.observeExportJobsByAccount(accountId).map { entities ->
             entities.map { entity ->
                 ExportJobProfile(
                     jobId = entity.jobId,
@@ -37,12 +37,12 @@ class ExportRepository @Inject constructor(
         }
     }
 
-    suspend fun startExport(format: String, userId: String, schoolId: String): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun startExport(format: String, accountId: String, schoolId: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             val jobId = UUID.randomUUID().toString()
             val job = ExportJobEntity(
                 jobId = jobId,
-                userId = userId,
+                accountId = accountId,
                 fileType = format,
                 status = "PENDING",
                 filePath = null,
@@ -55,7 +55,7 @@ class ExportRepository @Inject constructor(
         }
     }
 
-    suspend fun clearCompletedJobs(userId: String) {
-        exportJobDao.clearCompletedJobs(userId)
+    suspend fun clearCompletedJobs(accountId: String) {
+        exportJobDao.clearCompletedJobs(accountId)
     }
 }

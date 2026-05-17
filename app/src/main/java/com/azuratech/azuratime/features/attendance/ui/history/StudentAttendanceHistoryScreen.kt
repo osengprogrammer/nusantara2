@@ -37,7 +37,7 @@ fun StudentAttendanceHistoryScreen(
     viewModel: AttendanceHistoryViewModel,
     onNavigateBack: () -> Unit = {},
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     LaunchedEffect(studentId) {
         viewModel.onEvent(AttendanceHistoryUiEvent.LoadHistory(studentId))

@@ -61,7 +61,7 @@ fun PreviewAzuraCard() {
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                AzuraCard(title = "User Info") {
+                AzuraCard(title = "Account Info") {
                     Text("Name: John Doe")
                     Text("Status: Active")
                 }

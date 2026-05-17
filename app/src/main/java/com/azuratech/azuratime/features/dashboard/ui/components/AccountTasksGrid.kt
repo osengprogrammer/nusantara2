@@ -18,10 +18,10 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
-fun TeacherTasksGrid(
+fun AccountTasksGrid(
     navController: NavController,
     isAdmin: Boolean,
-    currentRole: String = "USER", // 👈 Added
+    currentRole: String = "MEMBER", // 👈 Added
     onRegisterStudentClick: () -> Unit, // 👈 Added
     accountId: String? = null,
     isEnabled: Boolean = true, // 🔥 Added

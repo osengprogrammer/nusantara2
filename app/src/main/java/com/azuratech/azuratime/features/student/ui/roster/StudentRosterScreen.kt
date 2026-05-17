@@ -26,7 +26,7 @@ fun StudentRosterScreen(
     onNavigateBack: () -> Unit,
     viewModel: StudentRosterViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     val rotation = rememberInfiniteTransition().animateFloat(
         initialValue = 0f,

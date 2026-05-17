@@ -39,7 +39,7 @@ fun ProfileHeader(
         ) {
             AsyncImage(
                 model = photoUrl,
-                contentDescription = "User Profile Photo",
+                contentDescription = "Account Profile Photo",
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape)

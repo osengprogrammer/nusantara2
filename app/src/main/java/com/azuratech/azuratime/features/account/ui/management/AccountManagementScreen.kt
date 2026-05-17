@@ -39,7 +39,7 @@ fun AccountManagementScreen(
     viewModel: AccountManagementViewModel,
     onNavigateBack: () -> Unit,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     AccountManagementContent(
         uiState = uiState,
@@ -71,7 +71,7 @@ fun AccountManagementContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
-                val profile = uiState.userProfile
+                val profile = uiState.accountProfile
 
                 StudentAvatar(photoPath = profile?.photoUrl, size = 96.dp)
 

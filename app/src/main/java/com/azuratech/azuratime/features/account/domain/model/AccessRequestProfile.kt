@@ -8,7 +8,7 @@ import com.azuratech.azuratime.core.domain.model.SyncStatus
  */
 data class AccessRequestProfile(
     val requestId: String,
-    val requesterId: String,
+    val accountId: String,
     val schoolId: String,
     val schoolName: String,
     val status: AccessRequestStatus,

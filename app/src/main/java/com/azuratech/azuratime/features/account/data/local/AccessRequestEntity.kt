@@ -15,7 +15,7 @@ import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfil
 data class AccessRequestEntity(
     @PrimaryKey
     val requestId: String,
-    val requesterId: String,
+    val accountId: String,
     val schoolId: String,
     val schoolName: String,
     val status: AccessRequestStatus,
@@ -29,7 +29,7 @@ data class AccessRequestEntity(
  */
 fun AccessRequestEntity.toProfile() = AccessRequestProfile(
     requestId = requestId,
-    requesterId = requesterId,
+    accountId = accountId,
     schoolId = schoolId,
     schoolName = schoolName,
     status = status,
@@ -40,7 +40,7 @@ fun AccessRequestEntity.toProfile() = AccessRequestProfile(
 
 fun AccessRequestProfile.toEntity() = AccessRequestEntity(
     requestId = requestId,
-    requesterId = requesterId,
+    accountId = accountId,
     schoolId = schoolId,
     schoolName = schoolName,
     status = status,

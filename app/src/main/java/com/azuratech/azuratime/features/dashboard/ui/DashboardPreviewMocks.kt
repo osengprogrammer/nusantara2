@@ -9,7 +9,7 @@ object DashboardPreviewMocks {
 
     fun success(): DashboardUiState = DashboardUiState(
         isReady = true,
-        user = AccountEntity(
+        account = AccountEntity(
             accountId = "acc_1",
             email = "admin@azuratech.com",
             name = "Azura Admin",

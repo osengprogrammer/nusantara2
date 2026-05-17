@@ -21,7 +21,7 @@ object AuthPreviewMocks {
 
     fun success(): AuthUiState = AuthUiState(
         authStatus = AuthStatus.LoggedIn,
-        userEmail = "osengprogrammer@gmail.com",
-        userRole = "ADMIN",
+        accountEmail = "osengprogrammer@gmail.com",
+        accountRole = "ADMIN",
     )
 }

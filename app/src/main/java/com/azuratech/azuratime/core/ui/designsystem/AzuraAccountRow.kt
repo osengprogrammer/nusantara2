@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
-fun AzuraUserRow(
+fun AzuraAccountRow(
     name: String,
     subtitle: String,
     modifier: Modifier = Modifier,

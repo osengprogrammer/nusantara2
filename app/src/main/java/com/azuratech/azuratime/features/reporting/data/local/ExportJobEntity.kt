@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "export_jobs")
 data class ExportJobEntity(
     @PrimaryKey val jobId: String,
-    val userId: String,
+    val accountId: String,
     val fileType: String,
     val status: String,
     val filePath: String? = null,

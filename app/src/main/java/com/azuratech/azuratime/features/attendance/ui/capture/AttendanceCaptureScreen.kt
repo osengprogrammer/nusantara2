@@ -44,7 +44,7 @@ fun AttendanceCaptureScreen(
     accountEmail: String = "admin@azuratech.com",
     viewModel: AttendanceCaptureViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val voiceAssistant = rememberVoiceAssistant()
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 

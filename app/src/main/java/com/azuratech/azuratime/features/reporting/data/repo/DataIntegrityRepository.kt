@@ -11,7 +11,7 @@ import javax.inject.Singleton
 /**
  * 🏰 DATA INTEGRITY REPOSITORY
  * Monitors total system health: sync debt, structural gaps, relational breakages.
- * Strictly scoped to the active multi-tenant workspace (schoolId).
+ * Strictly scoped to the active multi-tenant workspace (schoolIdFlow).
  * Reacts in real-time via Room Flows — no manual refresh needed.
  */
 @Singleton

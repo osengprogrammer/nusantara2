@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface AccessRequestRepository {
     // UI focused methods
-    suspend fun submitRequest(userId: String, schoolId: String, schoolName: String): Result<Unit>
-    suspend fun cancelRequest(requesterId: String, schoolId: String): Result<Unit>
-    fun observeRequestsByUser(userId: String): Flow<List<AccessRequestEntity>>
+    suspend fun submitRequest(accountId: String, schoolId: String, schoolName: String): Result<Unit>
+    suspend fun cancelRequest(accountId: String, schoolId: String): Result<Unit>
+    fun observeRequestsByAccount(accountId: String): Flow<List<AccessRequestEntity>>
 
     // Admin focused methods (matching the interface I saw earlier)
     suspend fun getPendingRequests(schoolId: String): List<AccessRequestProfile>

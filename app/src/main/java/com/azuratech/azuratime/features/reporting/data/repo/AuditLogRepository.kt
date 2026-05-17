@@ -20,11 +20,11 @@ class AuditLogRepository @Inject constructor(
             .map { entities -> entities.map { it.toProfile() } }
     }
 
-    suspend fun logAction(schoolId: String, userId: String, action: String, details: String? = null) {
+    suspend fun logAction(schoolId: String, accountId: String, action: String, details: String? = null) {
         val log = AuditLogEntity(
-            logId = "log_${System.currentTimeMillis()}_${userId.take(5)}",
+            logId = "log_${System.currentTimeMillis()}_${accountId.take(5)}",
             schoolId = schoolId,
-            userId = userId,
+            accountId = accountId,
             action = action,
             timestamp = System.currentTimeMillis(),
             details = details,

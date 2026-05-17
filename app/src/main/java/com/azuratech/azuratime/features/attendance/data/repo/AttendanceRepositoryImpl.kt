@@ -99,7 +99,7 @@ class AttendanceRepositoryImpl @Inject constructor(
 
             auditLogRepository.logAction(
                 schoolId = schoolId,
-                userId = sessionManager.getUserEmail(), // This might need renaming to getAccountEmail() later
+                accountId = sessionManager.getAccountEmail(), // This might need renaming to getAccountEmail() later
                 action = "UPDATE_ATTENDANCE",
                 details = "Changed status for ${record.name} to ${status.name}",
             )
@@ -296,7 +296,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             // 🔥 Log to Audit Trail
             auditLogRepository.logAction(
                 schoolId = schoolId,
-                userId = params.accountEmail,
+                accountId = params.accountEmail,
                 action = "CHECK_IN",
                 details = "Student: ${params.studentName} (${params.studentId})",
             )

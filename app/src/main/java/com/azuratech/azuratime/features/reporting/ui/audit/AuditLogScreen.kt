@@ -25,7 +25,7 @@ fun AuditLogScreen(
     onNavigateBack: () -> Unit,
     viewModel: ReportViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     AzuraScreen(
         title = "Audit Trail System",
@@ -98,7 +98,7 @@ fun AuditLogItem(log: SystemAuditTrail) {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "User: ${log.userId}",
+                text = "Account: ${log.accountId}",
                 style = MaterialTheme.typography.bodySmall,
             )
 

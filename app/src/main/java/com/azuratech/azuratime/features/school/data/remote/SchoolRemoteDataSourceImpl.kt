@@ -195,7 +195,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 "schoolId" to classModel.schoolId,
                 "name" to classModel.name,
                 "grade" to classModel.grade,
-                "teacherId" to classModel.teacherId,
+                "accountId" to classModel.accountId,
                 "studentCount" to classModel.studentCount,
                 "createdAt" to classModel.createdAt,
             )
@@ -236,7 +236,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         schoolId = doc.getString("schoolId") ?: schoolId,
                         name = doc.getString("name") ?: "",
                         grade = doc.getString("grade") ?: "",
-                        teacherId = doc.getString("teacherId"),
+                        accountId = doc.getString("accountId"),
                         studentCount = doc.getLong("studentCount")?.toInt() ?: 0,
                         createdAt = createdAt,
                     )

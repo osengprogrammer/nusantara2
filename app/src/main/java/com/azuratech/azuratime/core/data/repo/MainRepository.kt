@@ -33,12 +33,14 @@ class MainRepository @Inject constructor( // 🔥 FIX: Tambahkan Inject Construc
     // =====================================================
     // 🧠 AI INITIALIZATION
     // =====================================================
-    suspend fun initializeAiBrain(context: Context) = withContext(Dispatchers.IO) {
+    suspend fun initializeAiBrain(context: Context): com.azuratech.azuraengine.result.Result<Unit> = withContext(Dispatchers.IO) {
         try {
             FaceRecognizer.initialize(context)
             Log.d("MainRepository", "✅ AI Brain Awakened in Background!")
+            com.azuratech.azuraengine.result.Result.Success(Unit)
         } catch (e: Exception) {
             Log.e("MainRepository", "❌ AI Init Error: ${e.message}")
+            com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule(e.message))
         }
     }
 
@@ -47,7 +49,7 @@ class MainRepository @Inject constructor( // 🔥 FIX: Tambahkan Inject Construc
     // =====================================================
 
     fun observeRevokeStatus(uid: String): Flow<Boolean> = callbackFlow {
-        val listener = firestore.collection("whitelisted_users")
+        val listener = firestore.collection("whitelisted_accounts")
             .document(uid)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -67,10 +69,15 @@ class MainRepository @Inject constructor( // 🔥 FIX: Tambahkan Inject Construc
         awaitClose { listener.remove() }
     }
 
-    fun executeRevocationCleanup() {
-        Log.w("MainRepository", "🚨 AKSES DICABUT OLEH ADMIN! Membersihkan sesi...")
-        sessionManager.clearSession()
-        firebaseAuth.signOut()
-        AppDatabase.destroyInstance()
+    fun executeRevocationCleanup(): com.azuratech.azuraengine.result.Result<Unit> {
+        return try {
+            Log.w("MainRepository", "🚨 AKSES DICABUT OLEH ADMIN! Membersihkan sesi...")
+            sessionManager.clearSession()
+            firebaseAuth.signOut()
+            AppDatabase.destroyInstance()
+            com.azuratech.azuraengine.result.Result.Success(Unit)
+        } catch (e: Exception) {
+            com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+        }
     }
 }

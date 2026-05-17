@@ -21,7 +21,7 @@ fun ExportScreen(
     onNavigateBack: () -> Unit,
     viewModel: ReportViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     AzuraScreen(
         title = "Export Data",

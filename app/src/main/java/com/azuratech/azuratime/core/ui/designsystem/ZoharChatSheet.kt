@@ -20,9 +20,9 @@ fun ZoharChatSheet(
     viewModel: ZoharAssistantViewModel,
     onDismiss: () -> Unit,
 ) {
-    val zoharResponse by viewModel.zoharResponse.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    var userQuery by remember { mutableStateOf("") }
+    val zoharResponse by viewModel.zoharResponseFlow.collectAsState()
+    val isLoading by viewModel.isLoadingFlow.collectAsState()
+    var query by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(
@@ -67,17 +67,17 @@ fun ZoharChatSheet(
 
             // Input Field
             OutlinedTextField(
-                value = userQuery,
-                onValueChange = { userQuery = it },
+                value = query,
+                onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Tanya Zohar tentang data...") },
                 shape = AzuraShapes.medium,
                 trailingIcon = {
                     IconButton(
                         onClick = {
-                            if (userQuery.isNotBlank()) {
-                                viewModel.askZohar(userQuery)
-                                userQuery = ""
+                            if (query.isNotBlank()) {
+                                viewModel.askZohar(query)
+                                query = ""
                             }
                         },
                         enabled = !isLoading,

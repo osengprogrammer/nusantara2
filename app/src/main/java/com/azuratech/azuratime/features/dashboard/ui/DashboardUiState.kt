@@ -9,7 +9,7 @@ import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEnt
 
 data class DashboardUiState(
     val isLoading: Boolean = false,
-    val user: AccountEntity? = null,
+    val account: AccountEntity? = null,
     val currentSchool: School? = null,
     val assignedClasses: List<ClassModel> = emptyList(),
     val allClasses: List<ClassModel> = emptyList(),
@@ -18,7 +18,7 @@ data class DashboardUiState(
     val isSyncing: Boolean = false,
     val isReady: Boolean = false,
     val pendingRequests: Int = 0,
-    val currentRole: String = "USER",
+    val currentRole: String = "MEMBER",
     val isApproved: Boolean = false,
     val totalStudents: Int = 0,
     val unassignedStudents: Int = 0,

@@ -31,14 +31,14 @@ class AttendanceCaptureViewModel @Inject constructor(
     private val sessionManager: SessionManager,
 ) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(AttendanceCheckInUiState())
-    val uiState: StateFlow<AttendanceCheckInUiState> = _uiState.asStateFlow()
+    private val _uiStateFlow = MutableStateFlow(AttendanceCheckInUiState())
+    val uiStateFlow: StateFlow<AttendanceCheckInUiState> = _uiStateFlow.asStateFlow()
 
-    private val _sideEffect = Channel<AttendanceSideEffect>()
-    val sideEffectFlow = _sideEffect.receiveAsFlow()
+    private val _sideEffectFlow = Channel<AttendanceSideEffect>()
+    val sideEffectFlow = _sideEffectFlow.receiveAsFlow()
 
     private var gallery: List<Pair<String, FloatArray>> = emptyList()
-    private var currentTeacherEmail: String = ""
+    private var currentAccountEmail: String = ""
     private var activeClassId: String? = null
 
     // Gatekeeper: Prevents multiple concurrent processing
@@ -55,39 +55,55 @@ class AttendanceCaptureViewModel @Inject constructor(
             is AttendanceCheckInUiEvent.BarcodeDetected -> processScannedBarcode(event.code)
             is AttendanceCheckInUiEvent.FaceMatched -> processScannedBiometric(event.embedding)
             is AttendanceCheckInUiEvent.ManualEntryConfirmed -> { /* Logic for manual confirm if needed */ }
-            is AttendanceCheckInUiEvent.GrantPermission -> _uiState.update { it.copy(cameraPermissionGranted = event.granted) }
+            is AttendanceCheckInUiEvent.GrantPermission -> _uiStateFlow.update { it.copy(cameraPermissionGranted = event.granted) }
             AttendanceCheckInUiEvent.Retry -> resetScanningState()
-            AttendanceCheckInUiEvent.NavigateBack -> viewModelScope.launch { _sideEffect.send(AttendanceSideEffect.NavigateBack) }
+            AttendanceCheckInUiEvent.NavigateBack -> viewModelScope.launch { _sideEffectFlow.send(AttendanceSideEffect.NavigateBack) }
         }
     }
 
     private fun resetScanningState() {
-        _uiState.update { it.copy(error = null, studentProfile = null, isScanning = true, isLoading = false) }
+        _uiStateFlow.update { it.copy(error = null, studentProfile = null, isScanning = true, isLoading = false) }
         isProcessing.set(false)
     }
 
     private fun startScannerSession(email: String, mode: ScanMode) {
-        currentTeacherEmail = email
-        _uiState.update { it.copy(isLoading = true, error = null, scanMode = mode) }
+        currentAccountEmail = email
+        _uiStateFlow.update { it.copy(isLoading = true, error = null, scanMode = mode) }
 
         viewModelScope.launch {
             val resolvedSchoolId = sessionManager.getActiveSchoolId()
 
-            val (classId, className, schoolId) = repository.getSessionData(email, resolvedSchoolId)
-            activeClassId = classId
+            when (val sessionResult = repository.getSessionData(email, resolvedSchoolId)) {
+                is com.azuratech.azuraengine.result.Result.Success -> {
+                    val (classId, className, schoolId) = sessionResult.data
+                    activeClassId = classId
 
-            if (schoolId != null) {
-                gallery = repository.loadGallery(schoolId)
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        activeClassName = className,
-                        activeSchoolId = schoolId,
-                        isScanning = true,
-                    )
+                    if (schoolId != null) {
+                        when (val galleryResult = repository.loadGallery(schoolId)) {
+                            is com.azuratech.azuraengine.result.Result.Success -> {
+                                gallery = galleryResult.data
+                                _uiStateFlow.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        activeClassName = className,
+                                        activeSchoolId = schoolId,
+                                        isScanning = true,
+                                    )
+                                }
+                            }
+                            is com.azuratech.azuraengine.result.Result.Failure -> {
+                                _uiStateFlow.update { it.copy(isLoading = false, error = galleryResult.error.message, isScanning = false) }
+                            }
+                            else -> {}
+                        }
+                    } else {
+                        _uiStateFlow.update { it.copy(isLoading = false, error = "Workspace Belum Dipilih", isScanning = false) }
+                    }
                 }
-            } else {
-                _uiState.update { it.copy(isLoading = false, error = "Workspace Belum Dipilih", isScanning = false) }
+                is com.azuratech.azuraengine.result.Result.Failure -> {
+                    _uiStateFlow.update { it.copy(isLoading = false, error = sessionResult.error.message, isScanning = false) }
+                }
+                else -> {}
             }
         }
     }
@@ -96,19 +112,27 @@ class AttendanceCaptureViewModel @Inject constructor(
         if (isProcessing.getAndSet(true)) return
 
         viewModelScope.launch {
-            val schoolId = _uiState.value.activeSchoolId
+            val schoolId = _uiStateFlow.value.activeSchoolId
             if (schoolId == null) {
                 handleError("Error: Context Hilang")
                 return@launch
             }
 
-            _uiState.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null) }
-            val matchedStudentId = repository.performMatch(embedding, gallery)
+            _uiStateFlow.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null) }
 
-            if (matchedStudentId != null) {
-                processAttendanceRecord(matchedStudentId, schoolId)
-            } else {
-                handleUnregistered()
+            when (val matchResult = repository.performMatch(embedding, gallery)) {
+                is com.azuratech.azuraengine.result.Result.Success -> {
+                    val matchedStudentId = matchResult.data
+                    if (matchedStudentId != null) {
+                        processAttendanceRecord(matchedStudentId, schoolId)
+                    } else {
+                        handleUnregistered()
+                    }
+                }
+                is com.azuratech.azuraengine.result.Result.Failure -> {
+                    handleError(matchResult.error.message ?: "Match Error")
+                }
+                else -> {}
             }
         }
     }
@@ -117,12 +141,12 @@ class AttendanceCaptureViewModel @Inject constructor(
         if (isProcessing.getAndSet(true)) return
 
         viewModelScope.launch {
-            val schoolId = _uiState.value.activeSchoolId
+            val schoolId = _uiStateFlow.value.activeSchoolId
             if (schoolId == null) {
                 handleError("Error: Context Hilang")
                 return@launch
             }
-            _uiState.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null, scannedResult = barcode) }
+            _uiStateFlow.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null, scannedResult = barcode) }
             processAttendanceRecord(barcode, schoolId)
         }
     }
@@ -132,7 +156,7 @@ class AttendanceCaptureViewModel @Inject constructor(
         if (scannedId == lastProcessedStudentId && (currentTime - lastProcessedTime < REPEAT_SCAN_SUPPRESSION_MS)) {
             // Deduplication logic
             isProcessing.set(false)
-            _uiState.update { it.copy(isLoading = false, isScanning = true) }
+            _uiStateFlow.update { it.copy(isLoading = false, isScanning = true) }
             return
         }
 
@@ -147,7 +171,7 @@ class AttendanceCaptureViewModel @Inject constructor(
         val params = ProcessAttendanceParams(
             studentId = scannedId,
             studentName = studentBiometric.name,
-            accountEmail = currentTeacherEmail,
+            accountEmail = currentAccountEmail,
             activeClassId = activeClassId,
             studentClassIds = studentClassIds,
         )
@@ -179,14 +203,14 @@ class AttendanceCaptureViewModel @Inject constructor(
     private suspend fun handleCheckInSuccess(studentId: String, name: String, speakMessage: String, alreadyCheckedIn: Boolean) {
         lastProcessedStudentId = studentId
         lastProcessedTime = System.currentTimeMillis()
-        _uiState.update {
+        _uiStateFlow.update {
             it.copy(
                 isLoading = false,
-                studentProfile = StudentProfile(studentId = studentId, name = name, schoolId = _uiState.value.activeSchoolId ?: ""),
+                studentProfile = StudentProfile(studentId = studentId, name = name, schoolId = _uiStateFlow.value.activeSchoolId ?: ""),
                 isAlreadyCheckedIn = alreadyCheckedIn,
             )
         }
-        _sideEffect.send(AttendanceSideEffect.Speak(speakMessage))
+        _sideEffectFlow.send(AttendanceSideEffect.Speak(speakMessage))
         enterCooldown()
     }
 
@@ -195,8 +219,8 @@ class AttendanceCaptureViewModel @Inject constructor(
     }
 
     private suspend fun handleError(message: String) {
-        _uiState.update { it.copy(isLoading = false, error = message, isScanning = false) }
-        _sideEffect.send(AttendanceSideEffect.Speak(message))
+        _uiStateFlow.update { it.copy(isLoading = false, error = message, isScanning = false) }
+        _sideEffectFlow.send(AttendanceSideEffect.Speak(message))
         enterCooldown()
     }
 

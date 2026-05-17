@@ -46,7 +46,7 @@ fun SessionStudentsList(students: List<StudentBiometricEntity>) {
 
 /**
  * 🔑 MY ASSIGNED CLASSES
- * Shows the classes the teacher is actually responsible for.
+ * Shows the classes the account is actually responsible for.
  */
 @Composable
 fun MyAssignedClassesSection(myClasses: List<ClassModel>, onNavigateToAll: () -> Unit) {

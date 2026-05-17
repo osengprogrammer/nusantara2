@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,14 +33,14 @@ class StudentRosterViewModel @Inject constructor(
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(StudentRosterUiState())
-    val uiState: StateFlow<StudentRosterUiState> = _state.asStateFlow()
+    private val _stateFlow = MutableStateFlow(StudentRosterUiState())
+    val uiStateFlow: StateFlow<StudentRosterUiState> = _stateFlow.asStateFlow()
 
     // Internal flows for reactive filtering
-    private val _searchQuery = MutableStateFlow("")
-    private val _selectedClassId = MutableStateFlow<String?>(null)
+    private val _searchQueryFlow = MutableStateFlow("")
+    private val _selectedClassIdFlow = MutableStateFlow<String?>(null)
 
-    private val _allClasses = sessionManager.activeSchoolIdFlow
+    private val _allClassesFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
             schoolRepository.observeClasses(schoolId).map { result ->
@@ -57,25 +57,25 @@ class StudentRosterViewModel @Inject constructor(
         when (event) {
             is StudentRosterUiEvent.LoadRoster -> loadRoster()
             is StudentRosterUiEvent.SelectClass -> {
-                _selectedClassId.value = event.classId
-                _state.update { it.copy(selectedClassId = event.classId) }
+                _selectedClassIdFlow.value = event.classId
+                _stateFlow.update { it.copy(selectedClassId = event.classId) }
             }
             is StudentRosterUiEvent.UpdateSearch -> {
-                _searchQuery.value = event.query
-                _state.update { it.copy(searchQuery = event.query) }
+                _searchQueryFlow.value = event.query
+                _stateFlow.update { it.copy(searchQuery = event.query) }
             }
             is StudentRosterUiEvent.RequestDelete -> {
-                _state.update { it.copy(isDeleteDialogVisible = true, targetStudentId = event.studentId) }
+                _stateFlow.update { it.copy(isDeleteDialogVisible = true, targetStudentId = event.studentId) }
             }
             is StudentRosterUiEvent.CancelDelete -> {
-                _state.update { it.copy(isDeleteDialogVisible = false, targetStudentId = null) }
+                _stateFlow.update { it.copy(isDeleteDialogVisible = false, targetStudentId = null) }
             }
             is StudentRosterUiEvent.ConfirmDelete -> deleteStudent(event.studentId)
             is StudentRosterUiEvent.RetryDelete -> {
-                _state.value.targetStudentId?.let { deleteStudent(it) }
+                _stateFlow.value.targetStudentId?.let { deleteStudent(it) }
             }
             is StudentRosterUiEvent.ClearError -> {
-                _state.update { it.copy(error = null) }
+                _stateFlow.update { it.copy(error = null) }
             }
             is StudentRosterUiEvent.SyncStudents -> syncStudents()
             is StudentRosterUiEvent.NavigateToDetail -> {
@@ -86,14 +86,14 @@ class StudentRosterViewModel @Inject constructor(
 
     private fun loadRoster() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _stateFlow.update { it.copy(isLoading = true, error = null) }
             studentRepository.getAll()
                 .onSuccess { profiles ->
                     // Profiles will also be updated via observeRosterReactive flow
-                    _state.update { it.copy(isLoading = false) }
+                    _stateFlow.update { it.copy(isLoading = false) }
                 }
                 .onFailure { error ->
-                    _state.update { it.copy(isLoading = false, error = error.message) }
+                    _stateFlow.update { it.copy(isLoading = false, error = error.message) }
                 }
         }
     }
@@ -101,9 +101,9 @@ class StudentRosterViewModel @Inject constructor(
     private fun observeRosterReactive() {
         combine(
             studentRepository.getStudentProfiles(),
-            _allClasses,
-            _searchQuery,
-            _selectedClassId,
+            _allClassesFlow,
+            _searchQueryFlow,
+            _selectedClassIdFlow,
         ) { profiles, classes, query, classId ->
             val classMap = classes.associateBy { it.id }
 
@@ -126,7 +126,7 @@ class StudentRosterViewModel @Inject constructor(
                     )
                 }
 
-            _state.update {
+            _stateFlow.update {
                 it.copy(
                     students = displayItems,
                     allClasses = classes,
@@ -138,19 +138,19 @@ class StudentRosterViewModel @Inject constructor(
     private fun syncStudents() {
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
-            _state.update { it.copy(isLoading = true) }
+            _stateFlow.update { it.copy(isLoading = true) }
             studentRepository.pullStudents(schoolId)
-                .onSuccess { _state.update { it.copy(isLoading = false) } }
-                .onFailure { error -> _state.update { it.copy(isLoading = false, error = error.message) } }
+                .onSuccess { _stateFlow.update { it.copy(isLoading = false) } }
+                .onFailure { error -> _stateFlow.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
 
     private fun deleteStudent(studentId: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, isDeleteDialogVisible = false) }
+            _stateFlow.update { it.copy(isLoading = true, isDeleteDialogVisible = false) }
             studentRepository.deleteProfile(studentId)
-                .onSuccess { _state.update { it.copy(isLoading = false, targetStudentId = null) } }
-                .onFailure { error -> _state.update { it.copy(isLoading = false, error = error.message) } }
+                .onSuccess { _stateFlow.update { it.copy(isLoading = false, targetStudentId = null) } }
+                .onFailure { error -> _stateFlow.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
 }

@@ -32,7 +32,7 @@ fun MySchoolsCard(
     onSchoolClick: (String) -> Unit,
     onAddSchoolClick: () -> Unit,
 ) {
-    val schoolUiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val schoolUiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val schools = schoolUiState.schools
     val isLoading = schoolUiState.isLoading
 

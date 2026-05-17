@@ -19,14 +19,14 @@ class SessionManager private constructor(private val context: Context) {
 
         private const val PREF_NAME = "azura_secure_session"
         private const val KEY_DB_CLOUD = "db_cloud_key"
-        private const val KEY_USER_STATUS = "user_status"
+        private const val KEY_USER_STATUS = "account_status"
         private const val KEY_EXPIRE_DATE = "expire_date"
         private const val KEY_LAST_SYNC = "last_sync_time"
         private const val KEY_LAST_FACES_SYNC = "last_faces_sync_time"
         private const val KEY_LAST_CLASSES_SYNC = "last_classes_sync_time"
         private const val KEY_LAST_RECORDS_SYNC = "last_records_sync_time"
-        private const val KEY_USER_EMAIL = "user_email"
-        private const val KEY_USER_ID = "current_user_id"
+        private const val KEY_USER_EMAIL = "account_email"
+        private const val KEY_USER_ID = "current_account_id"
         private const val KEY_ACTIVE_SCHOOL_ID = "active_school_id"
 
         @Volatile
@@ -62,10 +62,10 @@ class SessionManager private constructor(private val context: Context) {
     private val _activeSchoolIdFlow = MutableStateFlow<String?>(getActiveSchoolId())
     val activeSchoolIdFlow: StateFlow<String?> = _activeSchoolIdFlow.asStateFlow()
 
-    private val _currentUserIdFlow = MutableStateFlow<String?>(
-        try { getCurrentUserId() } catch (e: Exception) { null },
+    private val _currentAccountIdFlow = MutableStateFlow<String?>(
+        try { getCurrentAccountId() } catch (e: Exception) { null },
     )
-    val currentUserIdFlow: StateFlow<String?> = _currentUserIdFlow.asStateFlow()
+    val currentAccountIdFlow: StateFlow<String?> = _currentAccountIdFlow.asStateFlow()
 
     // =====================================================
     // IDENTITAS & TENANT
@@ -81,25 +81,25 @@ class SessionManager private constructor(private val context: Context) {
         return if (id.isNullOrBlank()) null else id
     }
 
-    fun saveCurrentUserId(userId: String) {
-        sharedPreferences.edit().putString(KEY_USER_ID, userId).apply()
-        _currentUserIdFlow.value = userId
+    fun saveCurrentAccountId(accountId: String) {
+        sharedPreferences.edit().putString(KEY_USER_ID, accountId).apply()
+        _currentAccountIdFlow.value = accountId
     }
 
-    fun getCurrentUserId(): String? = sharedPreferences.getString(KEY_USER_ID, null)
+    fun getCurrentAccountId(): String? = sharedPreferences.getString(KEY_USER_ID, null)
 
     // 🔥 RESTORED MISSING FUNCTIONS
-    fun saveUserEmail(email: String) {
+    fun saveAccountEmail(email: String) {
         sharedPreferences.edit().putString(KEY_USER_EMAIL, email).apply()
     }
 
-    fun getUserEmail(): String = sharedPreferences.getString(KEY_USER_EMAIL, "") ?: ""
+    fun getAccountEmail(): String = sharedPreferences.getString(KEY_USER_EMAIL, "") ?: ""
 
-    fun saveUserStatus(status: String) {
+    fun saveAccountStatus(status: String) {
         sharedPreferences.edit().putString(KEY_USER_STATUS, status).apply()
     }
 
-    fun getUserStatus(): String = sharedPreferences.getString(KEY_USER_STATUS, STATUS_PENDING) ?: STATUS_PENDING
+    fun getAccountStatus(): String = sharedPreferences.getString(KEY_USER_STATUS, STATUS_PENDING) ?: STATUS_PENDING
 
     fun getExpireDate(): Long = sharedPreferences.getLong(KEY_EXPIRE_DATE, 0L)
 

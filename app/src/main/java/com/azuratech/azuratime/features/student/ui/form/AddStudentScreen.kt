@@ -27,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuratime.core.ui.designsystem.AzuraUserFormContent
+import com.azuratech.azuratime.core.ui.designsystem.AzuraAccountFormContent
 import com.azuratech.azuratime.core.ui.designsystem.CoreFaceCamera
 import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -41,7 +41,7 @@ fun AddStudentScreen(
     onNavigateBack: () -> Unit,
     viewModel: StudentFormViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showCamera by remember { mutableStateOf(false) }
@@ -76,7 +76,7 @@ fun AddStudentScreen(
                     .fillMaxSize()
                     .padding(AzuraSpacing.md),
             ) {
-                AzuraUserFormContent(
+                AzuraAccountFormContent(
                     name = uiState.profile.name,
                     onNameChange = { viewModel.onEvent(StudentFormUiEvent.UpdateField("name", it)) },
                     faceId = uiState.profile.studentId,

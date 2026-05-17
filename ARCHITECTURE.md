@@ -1,5 +1,23 @@
 # 🏗️ AzuraTime Architecture Guide
 
+## 📐 Terminology Policy (v3.2.0)
+To ensure codebase consistency and eliminate domain ambiguity, the following terminology is enforced project-wide:
+
+- **Account**: The unified identity model. Replaces legacy "User", "Staff", and "Teacher" when referring to the application identity.
+- **Student**: Refers to the person being recorded/tracked (e.g., student in school context).
+- **Biometric**: Refers to face embeddings and enrollment data.
+
+### 🔑 Authorization & Role Management
+Role checks MUST use the `AccountRole` enum instead of raw string literals:
+- `ADMIN`: Full school management access.
+- `TEACHER`: Class management and attendance capture access.
+- `MEMBER`: General access to assigned resources.
+- `OBSERVER`: View-only access.
+
+Example: `if (account.role.toAccountRole() == AccountRole.ADMIN) { ... }`
+
+---
+
 ## 🎯 Philosophy & Principles
 AzuraTime is built on a **Vertical Slice Architecture** (Feature-First), designed for maximum modularity, testability, and AI-assisted development.
 

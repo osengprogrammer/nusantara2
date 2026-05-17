@@ -26,17 +26,17 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class BiometricEnrollmentViewModel @Inject constructor(
-    private val biometricRepository: com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository,
+    private val biometricRepository: com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
 ) : ViewModel() {
 
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
+    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
+    val uiEventFlow = _uiEventFlow.asSharedFlow()
 
-    private val _state = MutableStateFlow(BiometricEnrollmentUiState())
-    val uiState: StateFlow<BiometricEnrollmentUiState> = _state.asStateFlow()
+    private val _stateFlow = MutableStateFlow(BiometricEnrollmentUiState())
+    val uiStateFlow: StateFlow<BiometricEnrollmentUiState> = _stateFlow.asStateFlow()
 
-    val enrollmentList: StateFlow<List<BiometricEnrollmentProfile>> =
+    val enrollmentListFlow: StateFlow<List<BiometricEnrollmentProfile>> =
         biometricRepository.observeEnrollments()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -63,7 +63,7 @@ class BiometricEnrollmentViewModel @Inject constructor(
     fun onEvent(event: BiometricEnrollmentUiEvent) {
         when (event) {
             is BiometricEnrollmentUiEvent.StartCapture -> {
-                _state.update {
+                _stateFlow.update {
                     it.copy(
                         studentId = event.studentId,
                         enrollmentStatus = EnrollmentStatus.CAPTURING,
@@ -77,61 +77,61 @@ class BiometricEnrollmentViewModel @Inject constructor(
             is BiometricEnrollmentUiEvent.SyncBiometric -> syncBiometric()
             is BiometricEnrollmentUiEvent.DeleteBiometric -> deleteEnrollment(event.studentId)
             is BiometricEnrollmentUiEvent.Retry -> {
-                _state.update { it.copy(enrollmentStatus = EnrollmentStatus.CAPTURING, error = null) }
+                _stateFlow.update { it.copy(enrollmentStatus = EnrollmentStatus.CAPTURING, error = null) }
             }
             is BiometricEnrollmentUiEvent.ClearError -> {
-                _state.update { it.copy(error = null) }
+                _stateFlow.update { it.copy(error = null) }
             }
             is BiometricEnrollmentUiEvent.NavigateBack -> {
                 // Handled in Screen
             }
             is BiometricEnrollmentUiEvent.GrantCameraPermission -> {
-                _state.update { it.copy(cameraPermissionGranted = event.granted) }
+                _stateFlow.update { it.copy(cameraPermissionGranted = event.granted) }
             }
         }
     }
 
     private fun enrollStudent(embedding: FloatArray) {
-        val studentId = _state.value.studentId ?: return
+        val studentId = _stateFlow.value.studentId ?: return
 
         viewModelScope.launch {
-            _state.update { it.copy(enrollmentStatus = EnrollmentStatus.PROCESSING, isScanning = false) }
+            _stateFlow.update { it.copy(enrollmentStatus = EnrollmentStatus.PROCESSING, isScanning = false) }
 
             biometricRepository.enrollStudent(studentId, embedding)
                 .onSuccess {
-                    _state.update { it.copy(enrollmentStatus = EnrollmentStatus.SUCCESS, capturedEmbedding = embedding) }
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Pendaftaran biometrik berhasil!"))
+                    _stateFlow.update { it.copy(enrollmentStatus = EnrollmentStatus.SUCCESS, capturedEmbedding = embedding) }
+                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Pendaftaran biometrik berhasil!"))
                 }
                 .onFailure { error ->
-                    _state.update { it.copy(enrollmentStatus = EnrollmentStatus.FAILURE, error = error.message) }
+                    _stateFlow.update { it.copy(enrollmentStatus = EnrollmentStatus.FAILURE, error = error.message) }
                 }
         }
     }
 
     private fun deleteEnrollment(studentId: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _stateFlow.update { it.copy(isLoading = true) }
             biometricRepository.deleteEnrollment(studentId)
                 .onSuccess {
-                    _state.update { it.copy(isLoading = false) }
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Biometrik berhasil dihapus"))
+                    _stateFlow.update { it.copy(isLoading = false) }
+                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Biometrik berhasil dihapus"))
                 }
                 .onFailure { error ->
-                    _state.update { it.copy(isLoading = false, error = error.message) }
+                    _stateFlow.update { it.copy(isLoading = false, error = error.message) }
                 }
         }
     }
 
     private fun syncBiometric() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _stateFlow.update { it.copy(isLoading = true) }
             biometricRepository.syncBiometrics()
                 .onSuccess {
-                    _state.update { it.copy(isLoading = false) }
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi biometrik selesai"))
+                    _stateFlow.update { it.copy(isLoading = false) }
+                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Sinkronisasi biometrik selesai"))
                 }
                 .onFailure { error ->
-                    _state.update { it.copy(isLoading = false, error = error.message) }
+                    _stateFlow.update { it.copy(isLoading = false, error = error.message) }
                 }
         }
     }

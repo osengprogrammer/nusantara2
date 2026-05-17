@@ -23,39 +23,39 @@ class SecurityRepository @Inject constructor(private val session: SessionManager
 
     /**
      * Memeriksa integritas sistem (HMAC, Hardware ID, Time Tampering).
-     * @return 1 (Valid), < 0 (Security Compromised)
+     * @return Result<Int> 1 (Valid), < 0 (Security Compromised)
      */
-    suspend fun validateSecurityEnvelope(): Int = withContext(Dispatchers.IO) {
+    suspend fun validateSecurityEnvelope(): com.azuratech.azuraengine.result.Result<Int> = withContext(Dispatchers.IO) {
         try {
             Log.d("AZURA_SEC", "Initiating Native Security Check...")
 
             if (!SecurityVault.isNativeReady) {
                 Log.e("AZURA_SEC", "Native SecurityVault library is not ready!")
-                return@withContext -98
+                return@withContext com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule("Native library not ready"))
             }
 
             val result = vault.checkAccessStatus(
                 session.getLastSyncTime(),
                 session.getExpireDate(),
-                session.getUserStatus(),
+                session.getAccountStatus(),
                 session.getHardwareId(),
                 session.getCloudKey(),
             )
 
             Log.d("AZURA_SEC", "Native Validation Result: $result")
-            result
+            com.azuratech.azuraengine.result.Result.Success(result)
         } catch (e: Exception) {
             Log.e("AZURA_SEC", "Critical JNI Error: ${e.message}")
-            -99 // Kode error internal jika JNI gagal
+            com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule(e.message))
         }
     }
 
     /**
      * 🔥 SSOT: Refresh security ISO key from Cloud.
      */
-    suspend fun refreshIsoKeyFromServer(): String = withContext(Dispatchers.IO) {
+    suspend fun refreshIsoKeyFromServer(): com.azuratech.azuraengine.result.Result<String> = withContext(Dispatchers.IO) {
         try {
-            val functions = FirebaseFunctions.getInstance("us-central1")
+            val functions = com.google.firebase.functions.FirebaseFunctions.getInstance("us-central1")
 
             val result = functions
                 .getHttpsCallable("getSecurityIsoKey")
@@ -68,14 +68,14 @@ class SecurityRepository @Inject constructor(private val session: SessionManager
 
             if (isoKey.isNotBlank() && expireDate > System.currentTimeMillis()) {
                 session.injectSecurityEnvelope(isoKey, expireDate)
-                isoKey
+                com.azuratech.azuraengine.result.Result.Success(isoKey)
             } else {
                 Log.w("AZURA_SEC", "Refresh IsoKey gagal: Data tidak valid atau sudah expired.")
-                ""
+                com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule("Invalid or expired key"))
             }
         } catch (e: Exception) {
             Log.e("AZURA_SEC", "Refresh error: ${e.message}")
-            ""
+            com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))
         }
     }
 }

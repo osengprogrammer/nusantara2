@@ -38,12 +38,12 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 fun FindSchoolScreen(
     navController: NavController,
     workspaceViewModel: WorkspaceViewModel,
-    currentUser: AccountEntity?,
+    currentAccount: AccountEntity?,
 ) {
-    val searchQuery by workspaceViewModel.searchQuery.collectAsStateWithLifecycle()
-    val searchResults by workspaceViewModel.schoolSearchResults.collectAsStateWithLifecycle()
-    val accessRequests by workspaceViewModel.accessRequests.collectAsStateWithLifecycle()
-    val uiState by workspaceViewModel.uiState.collectAsStateWithLifecycle()
+    val searchQuery by workspaceViewModel.searchQueryFlow.collectAsStateWithLifecycle()
+    val searchResults by workspaceViewModel.schoolSearchResultsFlow.collectAsStateWithLifecycle()
+    val accessRequests by workspaceViewModel.accessRequestsFlow.collectAsStateWithLifecycle()
+    val uiState by workspaceViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -124,7 +124,7 @@ fun FindSchoolScreen(
                                 val schoolName = school["schoolName"] as? String ?: "Unknown School"
 
                                 // Cek status membership di semua level (Active/Pending)
-                                val membership = currentUser?.memberships?.get(schoolId)
+                                val membership = currentAccount?.memberships?.get(schoolId)
                                 val profile = accessRequests.find { it.schoolId == schoolId }
 
                                 val isFollowing = membership != null || profile != null
@@ -139,8 +139,8 @@ fun FindSchoolScreen(
                                     isSynced = isSynced,
                                     isLoading = uiState is WorkspaceViewModel.WorkspaceState.Switching,
                                     onFollowClick = {
-                                        if (currentUser != null) {
-                                            workspaceViewModel.sendJoinRequest(currentUser.accountId, schoolId, schoolName)
+                                        if (currentAccount != null) {
+                                            workspaceViewModel.sendJoinRequest(currentAccount.accountId, schoolId, schoolName)
                                         }
                                     },
                                 )

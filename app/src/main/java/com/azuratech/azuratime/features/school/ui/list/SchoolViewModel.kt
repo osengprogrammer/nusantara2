@@ -8,9 +8,9 @@ import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuratime.features.account.data.repo.SchoolWorkspaceRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -27,14 +27,14 @@ class SchoolViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
+    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
+    val uiEventFlow = _uiEventFlow.asSharedFlow()
 
-    private val _uiState = MutableStateFlow(SchoolUiState())
-    val uiState: StateFlow<SchoolUiState> = _uiState.asStateFlow()
+    private val _uiStateFlow = MutableStateFlow(SchoolUiState())
+    val uiStateFlow: StateFlow<SchoolUiState> = _uiStateFlow.asStateFlow()
 
     init {
-        val initialAccountId = savedStateHandle.get<String>("accountId") ?: sessionManager.getCurrentUserId() ?: ""
+        val initialAccountId = savedStateHandle.get<String>("accountId") ?: sessionManager.getCurrentAccountId() ?: ""
         if (initialAccountId.isNotEmpty()) {
             onEvent(SchoolUiEvent.LoadSchools(initialAccountId))
         }
@@ -42,7 +42,7 @@ class SchoolViewModel @Inject constructor(
         // Keep activeSchoolId in sync with SessionManager
         viewModelScope.launch {
             sessionManager.activeSchoolIdFlow.collect { id ->
-                _uiState.update { it.copy(activeSchoolId = id) }
+                _uiStateFlow.update { it.copy(activeSchoolId = id) }
             }
         }
     }
@@ -53,13 +53,13 @@ class SchoolViewModel @Inject constructor(
             is SchoolUiEvent.SelectSchool -> selectSchool(event.school)
             is SchoolUiEvent.CreateSchool -> createSchool(event.name, event.timezone, event.selectedClassIds)
             is SchoolUiEvent.DeleteSchool -> deleteSchool(event.id)
-            SchoolUiEvent.Retry -> _uiState.value.accountId.takeIf { it.isNotEmpty() }?.let { loadSchools(it) }
+            SchoolUiEvent.Retry -> _uiStateFlow.value.accountId.takeIf { it.isNotEmpty() }?.let { loadSchools(it) }
         }
     }
 
     private fun loadSchools(accountId: String) {
         if (accountId.isBlank()) return
-        _uiState.update { it.copy(isLoading = true, error = null, accountId = accountId) }
+        _uiStateFlow.update { it.copy(isLoading = true, error = null, accountId = accountId) }
 
         // 🔥 REACTIVE SSOT: Observe account memberships and schools in a unified flow
         viewModelScope.launch {
@@ -85,7 +85,7 @@ class SchoolViewModel @Inject constructor(
                     if (schools.isNotEmpty() && sessionManager.getActiveSchoolId().isNullOrBlank()) {
                         selectSchool(schools.first())
                     }
-                    _uiState.update { it.copy(isLoading = false, schools = schools) }
+                    _uiStateFlow.update { it.copy(isLoading = false, schools = schools) }
                 }
                 .launchIn(this)
         }
@@ -94,7 +94,7 @@ class SchoolViewModel @Inject constructor(
         viewModelScope.launch {
             schoolRepository.observeAllClassesForAccount(accountId).collect { result ->
                 result.onSuccess { classes ->
-                    _uiState.update { it.copy(availableClasses = classes) }
+                    _uiStateFlow.update { it.copy(availableClasses = classes) }
                 }
             }
         }
@@ -102,7 +102,7 @@ class SchoolViewModel @Inject constructor(
 
     private fun selectSchool(school: School) {
         viewModelScope.launch {
-            val currentAccountId = _uiState.value.accountId
+            val currentAccountId = _uiStateFlow.value.accountId
             if (currentAccountId.isEmpty()) return@launch
 
             sessionManager.saveActiveSchoolId(school.id)
@@ -112,43 +112,45 @@ class SchoolViewModel @Inject constructor(
     }
 
     private fun createSchool(name: String, timezone: String, selectedClassIds: List<String>) {
-        val currentAccountId = _uiState.value.accountId
+        val currentAccountId = _uiStateFlow.value.accountId
         if (currentAccountId.isEmpty()) return
 
         viewModelScope.launch {
-            val account = accountRepository.getAccountById(currentAccountId)
-            val role = account?.role ?: "USER"
+            accountRepository.getAccountById(currentAccountId).onSuccess { account ->
+                val role = account.role ?: "MEMBER"
 
-            if (role != "SUPER_ADMIN" && _uiState.value.schools.isNotEmpty()) {
-                _uiEvent.emit(UiEvent.ShowSnackbar("❌ Gagal: Hanya Super Admin yang dapat membuat lebih dari satu sekolah."))
-                return@launch
-            }
+                if (role != "SUPER_ADMIN" && _uiStateFlow.value.schools.isNotEmpty()) {
+                    _uiEventFlow.emit(UiEvent.ShowSnackbar("❌ Gagal: Hanya Super Admin yang dapat membuat lebih dari satu sekolah."))
+                    return@onSuccess
+                }
 
-            schoolRepository.createSchool(currentAccountId, name, timezone)
-                .onSuccess { newSchoolId ->
-                    selectedClassIds.forEach { classId ->
-                        schoolRepository.assignClassToSchool(newSchoolId, classId)
-                    }
-
-                    val newSchool = schoolRepository.getSchoolById(newSchoolId)
-                    val status = newSchool?.status ?: "PENDING"
-                    if (status == "ACTIVE") {
-                        _uiEvent.emit(UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
-                        if (sessionManager.getActiveSchoolId() == null) {
-                            newSchool?.let { selectSchool(it) }
+                schoolRepository.createSchool(currentAccountId, name, timezone)
+                    .onSuccess { newSchoolId ->
+                        selectedClassIds.forEach { classId ->
+                            schoolRepository.assignClassToSchool(newSchoolId, classId)
                         }
-                    } else {
-                        _uiEvent.emit(UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
+
+                        schoolRepository.getSchoolById(newSchoolId).onSuccess { newSchool ->
+                            val status = newSchool.status ?: "PENDING"
+                            if (status == "ACTIVE") {
+                                _uiEventFlow.emit(UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
+                                if (sessionManager.getActiveSchoolId() == null) {
+                                    selectSchool(newSchool)
+                                }
+                            } else {
+                                _uiEventFlow.emit(UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
+                            }
+                        }
                     }
-                }
-                .onFailure { error ->
-                    _uiEvent.emit(UiEvent.ShowSnackbar("❌ Gagal: ${error.message}"))
-                }
+                    .onFailure { error ->
+                        _uiEventFlow.emit(UiEvent.ShowSnackbar("❌ Gagal: ${error.message}"))
+                    }
+            }
         }
     }
 
     private fun deleteSchool(id: String) {
-        val currentAccountId = _uiState.value.accountId
+        val currentAccountId = _uiStateFlow.value.accountId
         if (currentAccountId.isEmpty()) return
 
         viewModelScope.launch {

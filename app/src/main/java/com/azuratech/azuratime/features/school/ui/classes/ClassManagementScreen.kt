@@ -27,11 +27,11 @@ fun ClassManagementScreen(
     onNavigateBack: () -> Unit,
     viewModel: ClassViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.uiEvent.collect { event ->
+        viewModel.uiEventFlow.collect { event ->
             if (event is UiEvent.ShowSnackbar) {
                 snackbarHostState.showSnackbar(event.message)
             }

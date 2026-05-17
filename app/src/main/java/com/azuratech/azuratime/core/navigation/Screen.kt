@@ -27,8 +27,9 @@ sealed class Screen(val route: String) {
     data object StudentRoster : Screen(NavigationRoutes.STUDENT_ROSTER)
     data object BiometricManagement : Screen(NavigationRoutes.BIOMETRIC_MANAGEMENT)
     data object StudentRosterBarcode : Screen(NavigationRoutes.STUDENT_ROSTER_BARCODE)
+    data object StudentAssignment : Screen(NavigationRoutes.STUDENT_ASSIGNMENT)
     data object EditStudent : Screen(NavigationRoutes.EDIT_STUDENT) {
-        fun createRoute(studentId: String) = "edit_student/$studentId"
+        fun createRoute(studentId: String) = "editStudent/$studentId"
     }
 
     // --- 📊 ATTENDANCE & REPORT ---
@@ -40,50 +41,50 @@ sealed class Screen(val route: String) {
     data object DailyDetail : Screen(NavigationRoutes.DAILY_DETAIL) {
         fun createRoute(studentId: String, name: String, date: String): String {
             val safeName = Uri.encode(name)
-            return "daily_detail/$studentId/$safeName/$date"
+            return "dailyDetail/$studentId/$safeName/$date"
         }
     }
 
     data object ManualAttendance : Screen(NavigationRoutes.MANUAL_ATTENDANCE) {
         fun createRoute(studentId: String = "", date: String = "") =
-            "manual_attendance?studentId=$studentId&date=$date"
+            "manualAttendance?studentId=$studentId&date=$date"
     }
 
     // --- 🗄️ DATA MANAGEMENT ---
     data object DataDashboard : Screen(NavigationRoutes.DATA_DASHBOARD)
     data object DataManagement : Screen(NavigationRoutes.DATA_MANAGEMENT) {
-        fun createRoute(dataType: String) = "data_management/$dataType"
+        fun createRoute(dataType: String) = "dataManagement/$dataType"
     }
 
     // --- 🏫 USER & CLASS MANAGEMENT ---
     data object AdminDashboard : Screen(NavigationRoutes.ADMIN_DASHBOARD)
     data object Profile : Screen(NavigationRoutes.ACCOUNT_PROFILE)
     data object SchoolList : Screen(NavigationRoutes.SCHOOL_LIST) {
-        fun createRoute(accountId: String) = "school_list/$accountId"
+        fun createRoute(accountId: String) = "schoolList/$accountId"
     }
     data object ClassList : Screen(NavigationRoutes.CLASS_LIST) {
-        fun createRoute(schoolId: String) = "class_list/$schoolId"
+        fun createRoute(schoolId: String) = "classList/$schoolId"
     }
 
     data object ClassManagement : Screen(NavigationRoutes.CLASS_MANAGEMENT) {
-        fun createRoute(accountId: String) = "class_management/$accountId"
+        fun createRoute(accountId: String) = "classManagement/$accountId"
     }
 
     // 🔥 PERBAIKAN BUG: Encode nama kelas jika nama kelasnya "12 / IPA"
     data object ClassDetail : Screen(NavigationRoutes.CLASS_DETAIL) {
         fun createRoute(classId: String, className: String): String {
             val safeName = Uri.encode(className)
-            return "class_detail/$classId/$safeName"
+            return "classDetail/$classId/$safeName"
         }
     }
 
     // 🔥 PERBAIKAN BUG: Encode nama siswa
     data object MyAssignedClass : Screen(NavigationRoutes.MY_ASSIGNED_CLASSES) {
-        fun createRoute(targetUserId: String? = null, schoolId: String? = null) =
+        fun createRoute(targetAccountId: String? = null, schoolId: String? = null) =
             buildString {
-                append("my_assigned_classes")
+                append("myAssignedClasses")
                 val params = mutableListOf<String>()
-                if (targetUserId != null) params.add("targetUserId=$targetUserId")
+                if (targetAccountId != null) params.add("targetAccountId=$targetAccountId")
                 if (schoolId != null) params.add("schoolId=$schoolId")
                 if (params.isNotEmpty()) {
                     append("?")

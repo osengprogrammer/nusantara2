@@ -26,22 +26,22 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 @Composable
 fun MyAssignedClassScreen(
     onNavigateBack: () -> Unit,
-    userViewModel: AccountManagementViewModel,
+    accountViewModel: AccountManagementViewModel,
     classViewModel: ClassViewModel,
-    targetUserId: String? = null,
+    targetAccountId: String? = null,
 ) {
     val assignedIds by (
-        if (targetUserId == null) {
-            userViewModel.assignedClassIds
+        if (targetAccountId == null) {
+            accountViewModel.assignedClassIdsFlow
         } else {
-            userViewModel.targetAssignedClassIds
+            accountViewModel.targetAssignedClassIdsFlow
         }
         )
         .collectAsStateWithLifecycle()
-    val classUiState by classViewModel.uiState.collectAsStateWithLifecycle()
+    val classUiState by classViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val allClasses = classUiState.classes
-    val user by userViewModel.currentUser.collectAsStateWithLifecycle()
-    val targetUser by userViewModel.selectedTargetUser.collectAsStateWithLifecycle()
+    val user by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
+    val targetAccount by accountViewModel.selectedTargetAccountFlow.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
 
@@ -57,10 +57,10 @@ fun MyAssignedClassScreen(
         }
     }
 
-    val screenTitle = if (targetUserId == null) {
+    val screenTitle = if (targetAccountId == null) {
         "Otoritas Kelas Saya"
     } else {
-        "Otoritas Kelas: ${targetUser?.name ?: targetUserId}"
+        "Otoritas Kelas: ${targetAccount?.name ?: targetAccountId}"
     }
 
     LaunchedEffect(user?.activeClassId) {
@@ -73,12 +73,12 @@ fun MyAssignedClassScreen(
         availableClasses = availableClasses,
         searchQuery = searchQuery,
         onSearchQueryChanged = { searchQuery = it },
-        onRemoveClass = { classId -> userViewModel.onEvent(AccountUiEvent.RemoveClassAccess(classId, targetUserId)) },
+        onRemoveClass = { classId -> accountViewModel.onEvent(AccountUiEvent.RemoveClassAccess(classId, targetAccountId)) },
         onSelectActiveClass = { classId ->
             println("🖱 DEBUG: Pilih Sesi clicked for classId=$classId")
-            userViewModel.onEvent(AccountUiEvent.SelectActiveClass(classId, targetUserId))
+            accountViewModel.onEvent(AccountUiEvent.SelectActiveClass(classId, targetAccountId))
         },
-        onAssignClass = { classId -> userViewModel.onEvent(AccountUiEvent.AssignClassToUser(classId, targetUserId)) },
+        onAssignClass = { classId -> accountViewModel.onEvent(AccountUiEvent.AssignClassToAccount(classId, targetAccountId)) },
         user = user,
         onBack = onNavigateBack,
     )
@@ -94,7 +94,7 @@ fun MyAssignedClassContent(
     onRemoveClass: (String) -> Unit,
     onSelectActiveClass: (String) -> Unit,
     onAssignClass: (String) -> Unit,
-    user: com.azuratech.azuratime.features.account.domain.model.UserProfile?,
+    user: com.azuratech.azuratime.features.account.domain.model.AccountProfile?,
     onBack: () -> Unit,
 ) {
     AzuraScreen(

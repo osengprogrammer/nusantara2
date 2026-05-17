@@ -20,8 +20,8 @@ class SyncViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val _isSyncing = MutableStateFlow(false)
-    val isSyncing = _isSyncing.asStateFlow()
+    private val _isSyncingFlow = MutableStateFlow(false)
+    val isSyncingFlow = _isSyncingFlow.asStateFlow()
 
     private val workManager = WorkManager.getInstance(context)
 
@@ -30,9 +30,9 @@ class SyncViewModel @Inject constructor(
             workManager.getWorkInfosForUniqueWorkFlow("AZURA_SYNC_WORK")
                 .collectLatest { workInfos ->
                     val isRunning = workInfos.any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
-                    val previouslySyncing = _isSyncing.value
+                    val previouslySyncing = _isSyncingFlow.value
 
-                    _isSyncing.value = isRunning
+                    _isSyncingFlow.value = isRunning
 
                     // Jika transisi dari RUNNING ke SUCCEEDED (dan bukan karena ada task baru di-enqueue)
                     val finishedNow = workInfos.any { it.state == WorkInfo.State.SUCCEEDED }

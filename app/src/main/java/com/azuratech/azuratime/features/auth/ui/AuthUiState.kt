@@ -12,8 +12,8 @@ data class AuthUiState(
     val isGoogleSigning: Boolean = false,
     val error: String? = null,
     val authStatus: AuthStatus = AuthStatus.Idle,
-    val userRole: String? = null,
-    val userEmail: String? = null,
+    val accountRole: String? = null,
+    val accountEmail: String? = null,
 )
 
 enum class AuthStatus {

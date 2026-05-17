@@ -27,7 +27,7 @@ import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignm
 fun AuditLogEntity.toProfile(): SystemAuditTrail {
     return SystemAuditTrail(
         logId = logId,
-        userId = userId,
+        accountId = accountId,
         action = action,
         timestamp = timestamp,
         details = details,
@@ -67,7 +67,7 @@ fun ReportEntity.toProfile(): SchoolAnalyticsSummary {
 fun AccessRequestEntity.toProfile(): AccessRequestProfile {
     return AccessRequestProfile(
         requestId = requestId,
-        requesterId = requesterId,
+        accountId = accountId,
         schoolId = schoolId,
         schoolName = schoolName,
         status = status,

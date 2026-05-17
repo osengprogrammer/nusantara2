@@ -60,19 +60,19 @@ object DatabaseSeeder {
             val defaultClasses = listOf(
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
-                    accountId = accountId,
+                    ownerAccountId = accountId,
                     schoolId = schoolId,
                     name = "X IPA 1",
                 ),
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
-                    accountId = accountId,
+                    ownerAccountId = accountId,
                     schoolId = schoolId,
                     name = "XI IPA 1",
                 ),
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
-                    accountId = accountId,
+                    ownerAccountId = accountId,
                     schoolId = schoolId,
                     name = "XII IPA 1",
                 ),

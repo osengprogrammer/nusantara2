@@ -29,13 +29,13 @@ fun PendingSchoolsScreen(
     onBack: () -> Unit,
     viewModel: PendingSchoolsViewModel = hiltViewModel(),
 ) {
-    val pendingSchools by viewModel.pendingSchools.collectAsStateWithLifecycle()
+    val pendingSchools by viewModel.pendingSchoolsFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var schoolToReject by remember { mutableStateOf<School?>(null) }
     var rejectionReason by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        viewModel.uiEvent.collect { event ->
+        viewModel.uiEventFlow.collect { event ->
             when (event) {
                 is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 else -> {}
