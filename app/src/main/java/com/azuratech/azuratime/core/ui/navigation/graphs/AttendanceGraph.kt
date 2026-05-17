@@ -21,14 +21,12 @@ fun NavGraphBuilder.attendanceGraph(
         }
 
         composable(NavigationRoutes.BARCODE_SCAN) {
-            // Check if AttendanceBarcodeScreen exists and use its correct package/name
-            // For now, I'll use a placeholder or check its existence
             TextPlaceholder("Barcode Screen")
         }
 
         composable(NavigationRoutes.MANUAL_ATTENDANCE) {
             com.azuratech.azuratime.features.attendance.ui.manual.ManualAttendanceScreen(
-                biometricViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                biometricViewModel = androidx.hilt.navigation.compose.hiltViewModel<com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel>(),
                 attendanceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
