@@ -20,9 +20,9 @@ class ArchitectureTest {
     @ArchTest
     val layer_dependencies_are_respected: ArchRule = layeredArchitecture()
         .consideringAllDependencies()
-        .layer("UI").definedBy("com.azuratech.azuratime.ui..", "com.azuratech.azuratime")
-        .layer("Domain").definedBy("com.azuratech.azuratime.domain..")
-        .layer("Data").definedBy("com.azuratech.azuratime.data..", "com.azuratech.azuratime.repository..")
+        .layer("UI").definedBy("com.azuratech.azuratime.ui..", "com.azuratech.azuratime.features..ui..", "com.azuratech.azuratime")
+        .layer("Domain").definedBy("com.azuratech.azuratime.domain..", "com.azuratech.azuratime.features..domain..")
+        .layer("Data").definedBy("com.azuratech.azuratime.data..", "com.azuratech.azuratime.repository..", "com.azuratech.azuratime.features..data..")
         .layer("Core").definedBy("com.azuratech.azuratime.core..", "com.azuratech.azuratime.utils..")
         .layer("DI").definedBy("com.azuratech.azuratime.di..", "com.azuratech.azuratime.core.di..")
         .layer("ML").definedBy("com.azuratech.azuratime.ml..")

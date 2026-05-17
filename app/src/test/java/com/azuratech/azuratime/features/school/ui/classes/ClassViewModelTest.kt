@@ -53,7 +53,7 @@ class ClassViewModelTest {
         every { userRepository.observeAccountEntity(any()) } returns flowOf(null)
 
         // Default behaviors
-        every { schoolRepository.observeClasses(schoolId) } returns flowOf(Result.Loading())
+        every { schoolRepository.observeClasses(schoolId) } returns flowOf(Result.Loading)
         every { schoolRepository.observeAllClassesForAccount(accountId) } returns flowOf(Result.Success(emptyList()))
         every { schoolRepository.observeSchools(accountId) } returns flowOf(Result.Success(emptyList()))
     }
@@ -74,7 +74,7 @@ class ClassViewModelTest {
     @Test
     fun `uiStateStateFlow should emit Loading initially then Success when data is loaded`() = runTest {
         val classes = listOf(ClassModel(id = "1", schoolId = schoolId, name = "Class A", grade = "", teacherId = null, createdAt = 0L))
-        val classesFlow = MutableStateFlow<Result<List<ClassModel>>>(Result.Loading())
+        val classesFlow = MutableStateFlow<Result<List<ClassModel>>>(Result.Loading)
         every { schoolRepository.observeClasses(schoolId) } returns classesFlow
 
         viewModel = createViewModel()
