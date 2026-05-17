@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
@@ -30,31 +29,32 @@ fun MySchoolsCard(
     @Suppress("UNUSED_PARAMETER") isApproved: Boolean,
     @Suppress("UNUSED_PARAMETER") globalRole: String,
     onSchoolClick: (String) -> Unit,
-    onAddSchoolClick: () -> Unit
+    onAddSchoolClick: () -> Unit,
 ) {
-    val schools by viewModel.allSchools.collectAsStateWithLifecycle()
+    val schoolUiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val schools = schoolUiState.schools
 
     AzuraCard(
         title = "Sekolah Saya",
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
             if (schools.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                 ) {
                     Text(
                         "Anda belum terdaftar di sekolah manapun.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(AzuraSpacing.xs))
                     Button(
                         onClick = onAddSchoolClick,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = AzuraShapes.medium
+                        shape = AzuraShapes.medium,
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(AzuraSpacing.sm))
@@ -63,7 +63,7 @@ fun MySchoolsCard(
                     OutlinedButton(
                         onClick = { /* TODO: Navigate to Join/Search School Screen */ },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = AzuraShapes.medium
+                        shape = AzuraShapes.medium,
                     ) {
                         Text("Gabung Sekolah")
                     }
@@ -71,42 +71,42 @@ fun MySchoolsCard(
             } else {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                    contentPadding = PaddingValues(vertical = AzuraSpacing.xs)
+                    contentPadding = PaddingValues(vertical = AzuraSpacing.xs),
                 ) {
                     items(schools) { school ->
                         SchoolItem(school = school, onClick = { onSchoolClick(school.id) })
                     }
                 }
-                
-                    if (globalRole == "SUPER_ADMIN") {
-                        Button(
-                            onClick = onAddSchoolClick,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = AzuraShapes.medium
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(Modifier.width(AzuraSpacing.sm))
-                            Text("Tambah Sekolah")
-                        }
+
+                if (globalRole == "SUPER_ADMIN") {
+                    Button(
+                        onClick = onAddSchoolClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = AzuraShapes.medium,
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(Modifier.width(AzuraSpacing.sm))
+                        Text("Tambah Sekolah")
                     }
+                }
             }
         }
     }
 }
 
 @Composable
-fun SchoolItem(school: School, onClick: () -> Unit) {
+fun SchoolItem(school: com.azuratech.azuraengine.model.School, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .width(140.dp)
             .clickable { onClick() },
         shape = AzuraShapes.medium,
         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-        border = AssistChipDefaults.assistChipBorder(enabled = true)
+        border = AssistChipDefaults.assistChipBorder(enabled = true),
     ) {
         Column(
             modifier = Modifier.padding(AzuraSpacing.sm),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(32.dp))
             Spacer(Modifier.height(AzuraSpacing.xs))
@@ -114,12 +114,12 @@ fun SchoolItem(school: School, onClick: () -> Unit) {
                 text = school.name,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                maxLines = 1
+                maxLines = 1,
             )
             Text(
                 text = school.status,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (school.status == "ACTIVE") Color(0xFF2E7D32) else Color.Gray
+                color = if (school.status == "ACTIVE") Color(0xFF2E7D32) else Color.Gray,
             )
         }
     }

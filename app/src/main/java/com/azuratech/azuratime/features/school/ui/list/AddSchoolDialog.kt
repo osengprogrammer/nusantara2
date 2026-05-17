@@ -11,7 +11,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 fun AddSchoolDialog(
     @Suppress("UNUSED_PARAMETER") availableClasses: List<com.azuratech.azuraengine.model.ClassModel> = emptyList(),
     onDismissRequest: () -> Unit,
-    onConfirmClick: (String, String, List<String>) -> Unit
+    onConfirmClick: (String, String, List<String>) -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var timezone by remember { mutableStateOf("Asia/Jakarta") }
@@ -25,13 +25,13 @@ fun AddSchoolDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = "Nama Sekolah",
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 AzuraTextField(
                     value = timezone,
                     onValueChange = { timezone = it },
                     label = "Timezone",
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
@@ -44,6 +44,6 @@ fun AddSchoolDialog(
             TextButton(onClick = onDismissRequest) {
                 Text("Batal")
             }
-        }
+        },
     )
 }
