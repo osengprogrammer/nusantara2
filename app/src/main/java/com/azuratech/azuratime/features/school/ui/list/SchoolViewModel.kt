@@ -58,40 +58,43 @@ class SchoolViewModel @Inject constructor(
     }
 
     private fun loadSchools(accountId: String) {
+        if (accountId.isBlank()) return
         _uiState.update { it.copy(isLoading = true, error = null, accountId = accountId) }
 
+        // 🔥 REACTIVE SSOT: Observe account memberships and schools in a unified flow
         viewModelScope.launch {
-            accountRepository.observeAccountEntity(accountId).collectLatest { account ->
-                if (account == null) {
-                    _uiState.update { it.copy(isLoading = false, schools = emptyList()) }
-                    return@collectLatest
-                }
-
-                val schoolIds = account.memberships.keys.toList()
-                if (schoolIds.isEmpty()) {
-                    _uiState.update { it.copy(isLoading = false, schools = emptyList()) }
-                } else {
-                    schoolRepository.observeSchoolsByIds(schoolIds).collectLatest { result ->
-                        result.onSuccess { schools ->
-                            if (schools.isNotEmpty() && sessionManager.getActiveSchoolId() == null) {
-                                selectSchool(schools.first())
-                            }
-                            _uiState.update { it.copy(isLoading = false, schools = schools) }
-                        }.onFailure { error ->
-                            _uiState.update { it.copy(isLoading = false, error = error.message) }
+            accountRepository.observeAccountEntity(accountId)
+                .filterNotNull()
+                .distinctUntilChangedBy { it.memberships.keys }
+                .flatMapLatest { account ->
+                    val schoolIds = account.memberships.keys.toList()
+                    if (schoolIds.isEmpty()) {
+                        flowOf(emptyList<School>())
+                    } else {
+                        // Trigger background sync for missing schools
+                        viewModelScope.launch {
+                            schoolRepository.syncSchools(schoolIds)
+                        }
+                        // Observe the schools from Room
+                        schoolRepository.observeSchoolsByIds(schoolIds).map { result ->
+                            result.getOrNull() ?: emptyList()
                         }
                     }
                 }
-            }
+                .onEach { schools ->
+                    if (schools.isNotEmpty() && sessionManager.getActiveSchoolId().isNullOrBlank()) {
+                        selectSchool(schools.first())
+                    }
+                    _uiState.update { it.copy(isLoading = false, schools = schools) }
+                }
+                .launchIn(this)
         }
 
+        // Separate classes observation
         viewModelScope.launch {
-            schoolRepository.observeAllClassesForAccount(accountId).collectLatest { result ->
+            schoolRepository.observeAllClassesForAccount(accountId).collect { result ->
                 result.onSuccess { classes ->
                     _uiState.update { it.copy(availableClasses = classes) }
-                }.onFailure {
-                    // Ignore class loading errors for the main school view
-                    _uiState.update { it.copy(availableClasses = emptyList()) }
                 }
             }
         }

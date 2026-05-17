@@ -38,12 +38,12 @@ class AuthRepository @Inject constructor(
 ) {
     private val accountDao = database.accountDao()
 
-    suspend fun signInWithGoogle(idToken: String): Pair<AccountEntity?, Boolean> = withContext(Dispatchers.IO) {
+    suspend fun signInWithGoogle(idToken: String): DomainResult<Pair<AccountEntity, Boolean>> = withContext(Dispatchers.IO) {
         try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
-            val firebaseUser = authResult.user ?: throw Exception("Google profile not found.")
-            val email = firebaseUser.email?.lowercase()?.trim() ?: throw Exception("Email not available.")
+            val firebaseUser = authResult.user ?: return@withContext DomainResult.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule("Google profile not found."))
+            val email = firebaseUser.email?.lowercase()?.trim() ?: return@withContext DomainResult.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule("Email not available."))
             val uid = firebaseUser.uid
 
             // SSOT Migration v7.1: Check Room first
@@ -77,7 +77,7 @@ class AuthRepository @Inject constructor(
                 sessionManager.saveUserEmail(email)
                 sessionManager.saveUserStatus(newAccount.status)
 
-                return@withContext Pair(newAccount, true)
+                return@withContext DomainResult.Success(Pair(newAccount, true))
             }
 
             // Existing account: Save to session and Room (already saved if pulled via UseCase)
@@ -90,28 +90,34 @@ class AuthRepository @Inject constructor(
                 securityRepository.refreshIsoKeyFromServer()
             }
 
-            return@withContext Pair(accountEntity, false)
+            return@withContext DomainResult.Success(Pair(accountEntity, false))
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error: ${e.message}")
-            throw e
+            DomainResult.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))
         }
     }
 
-    suspend fun registerMembership(uid: String, data: Map<String, Any>) = withContext(Dispatchers.IO) {
-        // SSOT Migration v7.1: Update Room first, then trigger push worker
-        val account = accountDao.getAccountById(uid)
-        if (account != null) {
-            val updatedAccount = account.copy(
-                status = data["status"]?.toString() ?: account.status,
-                name = data["name"]?.toString() ?: account.name,
-                syncStatus = SyncStatus.PENDING_UPDATE.name,
-            )
-            accountDao.updateAccount(updatedAccount)
-            syncManager.enqueueProfileSync(uid)
-            println("💾 Room: Updated account for membership registration. Sync enqueued.")
-        } else {
-            // If account doesn't exist, we can't update. This shouldn't happen in the normal flow.
-            Log.e("AuthRepository", "Cannot register membership: Account $uid not found in Room.")
+    suspend fun registerMembership(uid: String, data: Map<String, Any>): DomainResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // SSOT Migration v7.1: Update Room first, then trigger push worker
+            val account = accountDao.getAccountById(uid)
+            if (account != null) {
+                val updatedAccount = account.copy(
+                    status = data["status"]?.toString() ?: account.status,
+                    name = data["name"]?.toString() ?: account.name,
+                    syncStatus = SyncStatus.PENDING_UPDATE.name,
+                )
+                accountDao.updateAccount(updatedAccount)
+                syncManager.enqueueProfileSync(uid)
+                println("💾 Room: Updated account for membership registration. Sync enqueued.")
+                DomainResult.Success(Unit)
+            } else {
+                // If account doesn't exist, we can't update. This shouldn't happen in the normal flow.
+                Log.e("AuthRepository", "Cannot register membership: Account $uid not found in Room.")
+                DomainResult.Failure(com.azuratech.azuraengine.result.AppError.LocalDB("Account $uid not found in Room."))
+            }
+        } catch (e: Exception) {
+            DomainResult.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))
         }
     }
 

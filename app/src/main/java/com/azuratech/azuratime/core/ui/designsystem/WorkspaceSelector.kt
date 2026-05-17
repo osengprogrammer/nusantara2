@@ -28,60 +28,67 @@ fun WorkspaceSelector(
 
     val workspaceUiState by workspaceViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Hide when no schools are available
-    if (schools.isEmpty()) return
+    // Hide only when no schools are available AND no active school is set
+    if (schools.isEmpty() && activeSchoolId == null) return
 
-    val activeSchoolName = activeSchool?.name ?: "Pilih Workspace"
+    val activeSchoolName = activeSchool?.name ?: if (activeSchoolId != null) "Syncing..." else "Pilih Workspace"
 
     Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
         // 🔘 Anchor button
         OutlinedButton(
-            onClick = { expanded = true },
+            onClick = { if (schools.isNotEmpty()) expanded = true },
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+            enabled = schools.isNotEmpty() || activeSchoolId != null,
         ) {
+            if (activeSchool == null && activeSchoolId != null) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(8.dp))
+            }
             Text(text = activeSchoolName, maxLines = 1)
             Icon(Icons.Default.ArrowDropDown, contentDescription = "Ganti Workspace")
         }
 
         // 📋 Dropdown
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            schools.forEach { school ->
-                val isActive = school.id == activeSchoolId
-                DropdownMenuItem(
-                    text = {
-                        Column {
-                            Text(
-                                text = school.name,
-                                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isActive) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                },
-                            )
-                        }
-                    },
-                    onClick = {
-                        expanded = false
-                        if (!isActive) {
-                            schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
-                        }
-                    },
-                    // Show a checkmark on the active item
-                    trailingIcon = if (isActive) {
-                        (
-                            {
-                                Text("✓", color = MaterialTheme.colorScheme.primary)
+        if (schools.isNotEmpty()) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                schools.forEach { school ->
+                    val isActive = school.id == activeSchoolId
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(
+                                    text = school.name,
+                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isActive) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                )
                             }
-                            )
-                    } else {
-                        null
-                    },
-                )
+                        },
+                        onClick = {
+                            expanded = false
+                            if (!isActive) {
+                                schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
+                            }
+                        },
+                        // Show a checkmark on the active item
+                        trailingIcon = if (isActive) {
+                            (
+                                {
+                                    Text("✓", color = MaterialTheme.colorScheme.primary)
+                                }
+                                )
+                        } else {
+                            null
+                        },
+                    )
+                }
             }
         }
     }

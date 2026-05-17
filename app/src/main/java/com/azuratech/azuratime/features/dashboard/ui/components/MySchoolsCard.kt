@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -25,7 +26,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 @Composable
 fun MySchoolsCard(
     viewModel: SchoolViewModel,
-    @Suppress("UNUSED_PARAMETER") accountId: String,
+    accountId: String,
     @Suppress("UNUSED_PARAMETER") isApproved: Boolean,
     @Suppress("UNUSED_PARAMETER") globalRole: String,
     onSchoolClick: (String) -> Unit,
@@ -33,13 +34,27 @@ fun MySchoolsCard(
 ) {
     val schoolUiState by viewModel.uiState.collectAsStateWithLifecycle()
     val schools = schoolUiState.schools
+    val isLoading = schoolUiState.isLoading
 
     AzuraCard(
         title = "Sekolah Saya",
         modifier = Modifier.fillMaxWidth(),
+        actions = {
+            IconButton(onClick = { viewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId)) }) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Refresh,
+                    contentDescription = "Refresh Schools",
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
-            if (schools.isEmpty()) {
+            if (isLoading && schools.isEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().padding(AzuraSpacing.lg), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                }
+            } else if (schools.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,7 +93,7 @@ fun MySchoolsCard(
                     }
                 }
 
-                if (globalRole == "SUPER_ADMIN") {
+                if (globalRole == "SUPER_ADMIN" || globalRole == "ADMIN") {
                     Button(
                         onClick = onAddSchoolClick,
                         modifier = Modifier.fillMaxWidth(),

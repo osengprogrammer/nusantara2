@@ -2,19 +2,18 @@ package com.azuratech.azuratime.features.auth.ui
 
 import android.app.Application
 import android.provider.Settings
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.auth.data.repo.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-// 🔥 sealed class AuthState TIDAK ADA DI SINI LAGI (mengambil dari AuthState.kt)
+import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -22,76 +21,117 @@ class AuthViewModel @Inject constructor(
     private val repository: AuthRepository,
 ) : AndroidViewModel(application) {
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
-    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+    private val _uiState = MutableStateFlow(AuthUiState())
+    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    fun resetState() {
-        _authState.value = AuthState.Idle
+    fun onEvent(event: AuthUiEvent) {
+        when (event) {
+            is AuthUiEvent.UpdateEmail -> _uiState.update { it.copy(email = event.email) }
+            is AuthUiEvent.UpdatePassword -> _uiState.update { it.copy(password = event.password) }
+            is AuthUiEvent.UpdateSchoolName -> _uiState.update { it.copy(schoolName = event.schoolName) }
+            is AuthUiEvent.LoginWithEmail -> loginWithEmail()
+            is AuthUiEvent.RegisterSchool -> registerNewSchool()
+            is AuthUiEvent.SignInWithGoogle -> loginWithGoogle(event.idToken)
+            is AuthUiEvent.ClearError -> _uiState.update { it.copy(error = null) }
+            is AuthUiEvent.Logout -> logout()
+            is AuthUiEvent.NavigateToDashboard -> { /* Managed by screen */ }
+        }
     }
 
-    fun loginWithGoogle(idToken: String) {
+    private fun loginWithEmail() {
+        // Future implementation
+    }
+
+    private fun loginWithGoogle(idToken: String) {
         viewModelScope.launch {
-            _authState.value = AuthState.Loading
+            _uiState.update { it.copy(isLoading = true, isGoogleSigning = true, error = null) }
 
-            try {
-                val (account, isNewAccount) = repository.signInWithGoogle(idToken)
+            when (val result = repository.signInWithGoogle(idToken)) {
+                is Result.Success -> {
+                    val (account, isNewAccount) = result.data
+                    if (isNewAccount) {
+                        val hardwareId = Settings.Secure.getString(
+                            getApplication<Application>().contentResolver,
+                            Settings.Secure.ANDROID_ID,
+                        )
+                        val autoRegData = mapOf(
+                            "email" to account.email,
+                            "name" to account.name.ifBlank { "User Baru" },
+                            "status" to "PENDING",
+                            "role" to "PENDING",
+                            "hardwareId" to hardwareId,
+                            "createdAt" to System.currentTimeMillis(),
+                        )
 
-                if (account == null) {
-                    _authState.value = AuthState.Error("Login gagal: Data akun tidak ditemukan.")
-                    return@launch
-                }
-
-                if (isNewAccount) {
-                    val hardwareId = Settings.Secure.getString(
-                        getApplication<Application>().contentResolver,
-                        Settings.Secure.ANDROID_ID,
-                    )
-                    val autoRegData = mapOf(
-                        "email" to account.email,
-                        "name" to account.name.ifBlank { "User Baru" },
-                        "status" to "PENDING",
-                        "role" to "PENDING",
-                        "hardwareId" to hardwareId,
-                        "createdAt" to System.currentTimeMillis(),
-                    )
-
-                    try {
-                        repository.registerMembership(account.accountId, autoRegData)
-                    } catch (e: Exception) {
-                        Log.e("AuthViewModel", "Auto-register Firestore failed: ${e.message}")
+                        when (val regResult = repository.registerMembership(account.accountId, autoRegData)) {
+                            is Result.Success -> {
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        isGoogleSigning = false,
+                                        authStatus = AuthStatus.LoggedIn,
+                                        userEmail = account.email,
+                                        userRole = "PENDING",
+                                    )
+                                }
+                            }
+                            is Result.Failure -> {
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        isGoogleSigning = false,
+                                        error = regResult.error.message,
+                                    )
+                                }
+                            }
+                            is Result.Loading -> {}
+                        }
+                    } else {
+                        val schoolId = account.activeSchoolId ?: ""
+                        val currentRole = account.memberships[schoolId]?.role ?: "USER"
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isGoogleSigning = false,
+                                authStatus = AuthStatus.LoggedIn,
+                                userEmail = account.email,
+                                userRole = currentRole,
+                            )
+                        }
                     }
-
-                    // Gunakan state sesuai file AuthState.kt kamu
-                    _authState.value = AuthState.Success(account.email, "PENDING")
-                } else {
-                    val schoolId = account.activeSchoolId ?: ""
-                    val currentRole = account.memberships[schoolId]?.role ?: "USER"
-
-                    _authState.value = AuthState.Success(account.email, currentRole)
                 }
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error("Login gagal: ${e.localizedMessage}")
+                is Result.Failure -> {
+                    _uiState.update { it.copy(isLoading = false, isGoogleSigning = false, error = result.error.message) }
+                }
+                is Result.Loading -> {}
             }
         }
     }
 
-    fun registerNewSchool(data: Map<String, Any?>) {
+    private fun registerNewSchool() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val randomNumber = (1..5000).random()
         val defaultName = "Azura Candi $randomNumber"
-        val finalData = data.toMutableMap().apply {
-            this["accountId"] = uid
-            if (this["schoolName"]?.toString().isNullOrBlank()) {
-                this["schoolName"] = defaultName
-            }
-        }
+        val schoolName = _uiState.value.schoolName.ifBlank { defaultName }
+
+        val finalData = mapOf(
+            "accountId" to uid,
+            "schoolName" to schoolName,
+            "status" to "PENDING",
+            "role" to "ADMIN",
+            "createdAt" to System.currentTimeMillis(),
+        )
 
         viewModelScope.launch {
-            try {
-                @Suppress("UNCHECKED_CAST")
-                repository.registerMembership(uid, finalData as Map<String, Any>)
-            } catch (e: Exception) {
-                Log.e("AuthViewModel", "Gagal daftar candi: ${e.message}")
+            _uiState.update { it.copy(isLoading = true, authStatus = AuthStatus.Registering) }
+            when (val regResult = repository.registerMembership(uid, finalData)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(isLoading = false, authStatus = AuthStatus.LoggedIn) }
+                }
+                is Result.Failure -> {
+                    _uiState.update { it.copy(isLoading = false, error = regResult.error.message) }
+                }
+                is Result.Loading -> {}
             }
         }
     }
@@ -99,7 +139,7 @@ class AuthViewModel @Inject constructor(
     fun logout(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             repository.clearAllDataAndSignOut()
-            _authState.value = AuthState.Idle
+            _uiState.value = AuthUiState()
             onComplete()
         }
     }

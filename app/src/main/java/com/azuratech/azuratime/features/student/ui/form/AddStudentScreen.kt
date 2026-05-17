@@ -127,7 +127,7 @@ fun AddStudentScreen(
                     Text(
                         text = it,
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(top = AzuraSpacing.md)
+                        modifier = Modifier.padding(top = AzuraSpacing.md),
                     )
                 }
             }

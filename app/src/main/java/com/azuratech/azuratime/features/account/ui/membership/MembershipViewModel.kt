@@ -90,7 +90,10 @@ class MembershipViewModel @Inject constructor(
             syncManager.enqueueAccessSync(uid)
 
             if (syncResult is com.azuratech.azuraengine.result.Result.Success) {
-                // If cloud pull was successful, the local DB is already updated via syncAccount.
+                // If cloud pull was successful, and we are still pending, start polling
+                if (syncResult.data.status == "PENDING") {
+                    startPollingStatus(uid)
+                }
             } else {
                 // Cloud pull failed. Check local state.
                 val localAccount = accountRepository.getAccountDao().getAccountById(uid)
@@ -98,7 +101,23 @@ class MembershipViewModel @Inject constructor(
                 // If account doesn't exist locally OR they are stuck in PENDING, push to the memberships collection
                 if (localAccount == null || localAccount.status == "PENDING") {
                     membershipRepository.createPendingUser(uid, email, displayName)
+                    startPollingStatus(uid)
                 }
+            }
+        }
+    }
+
+    private fun startPollingStatus(uid: String) {
+        viewModelScope.launch {
+            // Poll for up to 2 minutes (12 retries * 10 seconds)
+            var retries = 0
+            while (retries < 12) {
+                kotlinx.coroutines.delay(10000) // Poll every 10 seconds
+                val result = accountRepository.syncAccount(uid)
+                if (result is com.azuratech.azuraengine.result.Result.Success && result.data.status == SessionManager.STATUS_ACTIVE) {
+                    break // Approved!
+                }
+                retries++
             }
         }
     }

@@ -33,8 +33,7 @@ class AccountRepository @Inject constructor(
                 val activeSchoolId = snapshot.getString("activeSchoolId")
                 val activeClassId = snapshot.getString("activeClassId")
 
-                // Parse memberships map
-                val membershipsRaw = snapshot.get("memberships") as? Map<*, *>
+                val membershipsRaw = snapshot.data?.get("memberships") as? Map<*, *>
                 val memberships = membershipsRaw?.mapNotNull { (key, value) ->
                     val k = key as? String ?: return@mapNotNull null
                     val v = value as? Map<*, *> ?: return@mapNotNull null

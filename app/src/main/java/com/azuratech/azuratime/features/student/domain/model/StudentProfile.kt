@@ -21,7 +21,7 @@ data class StudentProfile(
     val faceId: String? = null, // 🔥 Unified Identity: matches studentId
     val embedding: FloatArray? = null, // Handled by Converters.kt in Room
     val photoUrl: String? = null,
-    val syncStatus: SyncStatus = SyncStatus.SYNCED,
+    val syncStatus: SyncStatus = SyncStatus.PENDING_INSERT,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
 ) {
