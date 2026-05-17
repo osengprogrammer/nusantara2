@@ -19,7 +19,7 @@ import java.time.LocalDateTime
  */
 object PreviewMocks {
 
-    val mockUser = AccountEntity(
+    val mockAccount = AccountEntity(
         accountId = "usr_123",
         email = "admin@azuratech.com",
         name = "Azura Admin",
@@ -28,9 +28,9 @@ object PreviewMocks {
     )
 
     val mockClasses = listOf(
-        ClassModel(id = "cls_1", schoolId = "sch_1", name = "Kelas 10A", grade = "10", teacherId = null, studentCount = 0, createdAt = 0L),
-        ClassModel(id = "cls_2", schoolId = "sch_1", name = "Kelas 10B", grade = "10", teacherId = null, studentCount = 0, createdAt = 0L),
-        ClassModel(id = "cls_3", schoolId = "sch_1", name = "Garmen Shift Pagi", grade = "N/A", teacherId = null, studentCount = 0, createdAt = 0L),
+        ClassModel(id = "cls_1", schoolId = "sch_1", name = "Kelas 10A", grade = "10", accountId = null, studentCount = 0, createdAt = 0L),
+        ClassModel(id = "cls_2", schoolId = "sch_1", name = "Kelas 10B", grade = "10", accountId = null, studentCount = 0, createdAt = 0L),
+        ClassModel(id = "cls_3", schoolId = "sch_1", name = "Garmen Shift Pagi", grade = "N/A", accountId = null, studentCount = 0, createdAt = 0L),
     )
 
     val mockStudents = listOf(
@@ -71,7 +71,7 @@ object PreviewMocks {
     )
 
     val mockDashboardStateSuccess = DashboardUiState(
-        user = mockUser,
+        account = mockAccount,
         assignedClasses = mockClasses,
         allClasses = mockClasses,
         recentRecords = mockRecentRecords,
@@ -86,7 +86,7 @@ object PreviewMocks {
         unsyncedRecords = 12,
     )
 
-    val mockDashboardStateLoading = DashboardUiState(user = null, isReady = false)
+    val mockDashboardStateLoading = DashboardUiState(account = null, isReady = false)
 
     val mockMatrixRows = listOf(
         MatrixRowModel(

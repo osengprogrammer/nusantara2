@@ -8,6 +8,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AttendanceMatrixViewModel @Inject constructor() : ViewModel() {
-    private val _uiState = MutableStateFlow<AttendanceMatrixUiState>(AttendanceMatrixUiState.Loading)
-    val uiState: StateFlow<AttendanceMatrixUiState> = _uiState
+    private val _uiStateFlow = MutableStateFlow<AttendanceMatrixUiState>(AttendanceMatrixUiState.Loading)
+    val uiStateFlow: StateFlow<AttendanceMatrixUiState> = _uiStateFlow
 }

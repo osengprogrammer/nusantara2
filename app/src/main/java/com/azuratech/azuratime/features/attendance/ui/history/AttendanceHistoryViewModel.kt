@@ -18,31 +18,31 @@ class AttendanceHistoryViewModel @Inject constructor(
     private val repository: AttendanceRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AttendanceHistoryUiState())
-    val uiState: StateFlow<AttendanceHistoryUiState> = _uiState.asStateFlow()
+    private val _uiStateFlow = MutableStateFlow(AttendanceHistoryUiState())
+    val uiStateFlow: StateFlow<AttendanceHistoryUiState> = _uiStateFlow.asStateFlow()
 
     fun onEvent(event: AttendanceHistoryUiEvent) {
         when (event) {
             is AttendanceHistoryUiEvent.LoadHistory -> loadHistory(event.studentId)
             is AttendanceHistoryUiEvent.FilterByDate -> updateDateFilter(event.date)
-            AttendanceHistoryUiEvent.Retry -> _uiState.value.studentId?.let { loadHistory(it) }
+            AttendanceHistoryUiEvent.Retry -> _uiStateFlow.value.studentId?.let { loadHistory(it) }
         }
     }
 
     private fun loadHistory(studentId: String) {
-        _uiState.update { it.copy(isLoading = true, error = null, studentId = studentId) }
+        _uiStateFlow.update { it.copy(isLoading = true, error = null, studentId = studentId) }
         viewModelScope.launch {
             repository.getStudentHistory(studentId)
                 .onSuccess { records ->
-                    _uiState.update { it.copy(isLoading = false, records = records) }
+                    _uiStateFlow.update { it.copy(isLoading = false, records = records) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
+                    _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
                 }
         }
     }
 
     private fun updateDateFilter(date: java.time.LocalDate) {
-        _uiState.update { it.copy(selectedDate = date) }
+        _uiStateFlow.update { it.copy(selectedDate = date) }
     }
 }

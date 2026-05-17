@@ -19,15 +19,15 @@ class SyncRepository @Inject constructor(
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val workManager = WorkManager.getInstance(context)
 
-    private val _isSyncing = MutableStateFlow(false)
-    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
+    private val _isSyncingFlow = MutableStateFlow(false)
+    val isSyncingFlow: StateFlow<Boolean> = _isSyncingFlow.asStateFlow()
 
     init {
         scope.launch {
             workManager.getWorkInfosForUniqueWorkFlow("AZURA_SYNC_WORK")
                 .collectLatest { workInfos ->
                     val isRunning = workInfos.any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
-                    _isSyncing.value = isRunning
+                    _isSyncingFlow.value = isRunning
                 }
         }
     }

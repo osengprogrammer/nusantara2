@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class AuditLogEntity(
     @PrimaryKey val logId: String,
     val schoolId: String,
-    val userId: String,
+    val accountId: String,
     val action: String,
     val timestamp: Long,
     val details: String? = null,

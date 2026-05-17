@@ -17,6 +17,7 @@ import com.azuratech.azuratime.features.student.ui.bulk.BulkRegistrationScreen
 import com.azuratech.azuratime.features.student.ui.roster.StudentRosterScreen
 import com.azuratech.azuratime.features.student.ui.roster.StudentRosterBarcodeScreen
 import com.azuratech.azuratime.features.biometric.ui.enroll.BiometricScreen
+import com.azuratech.azuratime.features.biometric.ui.assignment.StudentAssignmentScreen
 import com.azuratech.azuratime.features.school.ui.classes.ClassManagementScreen
 import com.azuratech.azuratime.features.school.ui.classes.ClassDetailScreen
 import com.azuratech.azuratime.features.school.ui.admin.PendingSchoolsScreen
@@ -37,6 +38,7 @@ fun NavGraphBuilder.managementGraph(
                 onNavigateToAddStudent = { navController.navigate(NavigationRoutes.ADD_STUDENT) },
                 onNavigateToBulkRegister = { navController.navigate(NavigationRoutes.BULK_REGISTER) },
                 onNavigateToBiometricManagement = { navController.navigate(NavigationRoutes.BIOMETRIC_MANAGEMENT) },
+                onNavigateToAssignment = { navController.navigate(NavigationRoutes.STUDENT_ASSIGNMENT) },
                 onNavigateBack = { navController.popBackStack() },
             )
         }
@@ -53,6 +55,11 @@ fun NavGraphBuilder.managementGraph(
         }
         composable(NavigationRoutes.BIOMETRIC_MANAGEMENT) {
             BiometricScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+        composable(NavigationRoutes.STUDENT_ASSIGNMENT) {
+            StudentAssignmentScreen(
                 onNavigateBack = { navController.popBackStack() },
             )
         }

@@ -10,7 +10,7 @@ sealed class AccountUiEvent {
     data class UpdateDisplayName(val newName: String) : AccountUiEvent()
     data class SelectActiveClass(val classId: String?, val targetAccountId: String? = null) : AccountUiEvent()
     data class UpdatePhoto(val uri: Uri) : AccountUiEvent()
-    data class AssignClassToUser(val classId: String, val targetAccountId: String? = null) : AccountUiEvent()
+    data class AssignClassToAccount(val classId: String, val targetAccountId: String? = null) : AccountUiEvent()
     data class RemoveClassAccess(val classId: String, val targetAccountId: String? = null) : AccountUiEvent()
     data object ClearPhoto : AccountUiEvent()
     data object Logout : AccountUiEvent()

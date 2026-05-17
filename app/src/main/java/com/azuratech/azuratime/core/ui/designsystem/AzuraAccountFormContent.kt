@@ -17,7 +17,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 
 @Composable
-fun AzuraUserFormContent(
+fun AzuraAccountFormContent(
     name: String,
     onNameChange: (String) -> Unit,
     faceId: String,
@@ -167,7 +167,7 @@ fun DualFacePhotoCaptureCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         bitmap = capturedBitmap.asImageBitmap(),
-                        contentDescription = "User photo",
+                        contentDescription = "Account photo",
                         modifier = Modifier
                             .size(80.dp)
                             .padding(end = AzuraSpacing.sm)

@@ -22,8 +22,8 @@ class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
 
     // ❌ HAPUS inisialisasi manual repository lama
 
-    private val _state = MutableStateFlow<BootState>(BootState.Loading)
-    val state: StateFlow<BootState> = _state.asStateFlow()
+    private val _stateFlow = MutableStateFlow<BootState>(BootState.Loading)
+    val stateFlow: StateFlow<BootState> = _stateFlow.asStateFlow()
 
     init {
         checkAuthStatus()
@@ -31,26 +31,34 @@ class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
 
     fun checkAuthStatus() {
         viewModelScope.launch {
-            _state.value = BootState.Loading
+            _stateFlow.value = BootState.Loading
 
             withContext(Dispatchers.IO) {
                 try {
                     delay(600) // Jeda untuk stabilitas pembacaan enkripsi
-                    val currentUser = repository.getCurrentUser()
+                    val currentAccount = repository.getCurrentAccount()
 
                     withContext(Dispatchers.Main) {
-                        val isLoggedIn = currentUser != null
+                        val isLoggedIn = currentAccount != null
 
                         if (!isLoggedIn) {
-                            _state.value = BootState.NeedLogin
+                            _stateFlow.value = BootState.NeedLogin
                         } else {
-                            val isActive = repository.isSessionActive()
-                            _state.value = if (isActive) BootState.Ready else BootState.NeedActivation
+                            viewModelScope.launch {
+                                when (val result = repository.isSessionActive()) {
+                                    is com.azuratech.azuraengine.result.Result.Success -> {
+                                        _stateFlow.value = if (result.data) BootState.Ready else BootState.NeedActivation
+                                    }
+                                    else -> {
+                                        _stateFlow.value = BootState.Error("Gagal memuat sesi")
+                                    }
+                                }
+                            }
                         }
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        _state.value = BootState.Error("Gagal memuat sesi")
+                        _stateFlow.value = BootState.Error("Gagal memuat sesi")
                     }
                 }
             }

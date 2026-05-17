@@ -41,7 +41,7 @@ fun NavGraphBuilder.accountGraph(
         composable(
             route = NavigationRoutes.MY_ASSIGNED_CLASSES,
             arguments = listOf(
-                navArgument("targetUserId") {
+                navArgument("targetAccountId") {
                     type = NavType.StringType
                     nullable = true
                 },
@@ -51,11 +51,11 @@ fun NavGraphBuilder.accountGraph(
                 },
             ),
         ) { backStackEntry ->
-            val targetUserId = backStackEntry.arguments?.getString("targetUserId")
+            val targetAccountId = backStackEntry.arguments?.getString("targetAccountId")
             com.azuratech.azuratime.features.account.ui.components.MyAssignedClassScreen(
-                targetUserId = targetUserId,
+                targetAccountId = targetAccountId,
                 onNavigateBack = { navController.popBackStack() },
-                userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                accountViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
             )
         }

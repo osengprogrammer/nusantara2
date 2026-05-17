@@ -25,13 +25,13 @@ class ReportViewModel @Inject constructor(
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ReportUiState())
-    val uiState: StateFlow<ReportUiState> = combine(
-        _uiState,
-        sessionManager.currentUserIdFlow.filterNotNull(),
+    private val _uiStateFlow = MutableStateFlow(ReportUiState())
+    val uiStateFlow: StateFlow<ReportUiState> = combine(
+        _uiStateFlow,
+        sessionManager.currentAccountIdFlow.filterNotNull(),
         sessionManager.activeSchoolIdFlow.filterNotNull(),
-    ) { state, userId, schoolId ->
-        // We use combine to react to userId/schoolId changes if needed,
+    ) { state, accountId, schoolId ->
+        // We use combine to react to accountId/schoolId changes if needed,
         // but core data is loaded via onEvent/init
         state
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReportUiState())
@@ -43,13 +43,13 @@ class ReportViewModel @Inject constructor(
 
     private fun observeExportJobs() {
         viewModelScope.launch {
-            sessionManager.currentUserIdFlow
+            sessionManager.currentAccountIdFlow
                 .filterNotNull()
-                .flatMapLatest { userId ->
-                    exportRepository.observeExportJobs(userId)
+                .flatMapLatest { accountId ->
+                    exportRepository.observeExportJobs(accountId)
                 }
                 .collect { jobs ->
-                    _uiState.update { it.copy(exportJobs = jobs) }
+                    _uiStateFlow.update { it.copy(exportJobs = jobs) }
                 }
         }
     }
@@ -57,30 +57,30 @@ class ReportViewModel @Inject constructor(
     fun onEvent(event: ReportUiEvent) {
         when (event) {
             is ReportUiEvent.SetDateRange -> {
-                _uiState.update { it.copy(startDate = event.start, endDate = event.end) }
+                _uiStateFlow.update { it.copy(startDate = event.start, endDate = event.end) }
                 refreshData()
             }
             ReportUiEvent.RefreshData -> refreshData()
             is ReportUiEvent.StartExport -> startExport(event.format)
-            ReportUiEvent.ClearError -> _uiState.update { it.copy(error = null) }
-            is ReportUiEvent.SelectTab -> _uiState.update { it.copy(selectedTab = event.tab) }
+            ReportUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
+            is ReportUiEvent.SelectTab -> _uiStateFlow.update { it.copy(selectedTab = event.tab) }
             ReportUiEvent.NavigateToDetail -> { /* Handled by screen navigation */ }
             ReportUiEvent.ClearExportJobs -> clearExportJobs()
         }
     }
 
     private fun refreshData() {
-        val currentState = _uiState.value
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        val currentState = _uiStateFlow.value
+        _uiStateFlow.update { it.copy(isLoading = true, error = null) }
 
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
             when (val result = reportRepository.getAuditLogs(currentState.startDate, currentState.endDate, schoolId)) {
                 is Result.Success -> {
-                    _uiState.update { it.copy(isLoading = false, auditLogs = result.data) }
+                    _uiStateFlow.update { it.copy(isLoading = false, auditLogs = result.data) }
                 }
                 is Result.Failure -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.error.message) }
+                    _uiStateFlow.update { it.copy(isLoading = false, error = result.error.message) }
                 }
                 is Result.Loading -> {}
             }
@@ -88,18 +88,18 @@ class ReportViewModel @Inject constructor(
     }
 
     private fun startExport(format: String) {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        _uiStateFlow.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            val userId = sessionManager.getCurrentUserId() ?: ""
+            val accountId = sessionManager.getCurrentAccountId() ?: ""
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
 
-            when (val result = exportRepository.startExport(format, userId, schoolId)) {
+            when (val result = exportRepository.startExport(format, accountId, schoolId)) {
                 is Result.Success -> {
-                    _uiState.update { it.copy(isLoading = false) }
+                    _uiStateFlow.update { it.copy(isLoading = false) }
                     // UI will update via observeExportJobs flow
                 }
                 is Result.Failure -> {
-                    _uiState.update { it.copy(isLoading = false, error = result.error.message) }
+                    _uiStateFlow.update { it.copy(isLoading = false, error = result.error.message) }
                 }
                 is Result.Loading -> {}
             }
@@ -108,8 +108,8 @@ class ReportViewModel @Inject constructor(
 
     private fun clearExportJobs() {
         viewModelScope.launch {
-            val userId = sessionManager.getCurrentUserId() ?: ""
-            exportRepository.clearCompletedJobs(userId)
+            val accountId = sessionManager.getCurrentAccountId() ?: ""
+            exportRepository.clearCompletedJobs(accountId)
         }
     }
 }

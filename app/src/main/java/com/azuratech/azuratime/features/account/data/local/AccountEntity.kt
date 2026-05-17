@@ -13,7 +13,7 @@ data class AccountEntity(
     val name: String,
     val photoUrl: String? = null,
     val status: String = "PENDING",
-    val role: String = "USER",
+    val role: String = "MEMBER",
     val activeSchoolId: String? = null,
     val activeClassId: String? = null,
     val schoolName: String? = null,
@@ -22,7 +22,7 @@ data class AccountEntity(
     val syncStatus: String = "SYNCED",
 )
 
-fun AccountEntity.toProfile() = com.azuratech.azuratime.features.account.domain.model.UserProfile(
+fun AccountEntity.toProfile() = com.azuratech.azuratime.features.account.domain.model.AccountProfile(
     accountId = accountId,
     email = email,
     name = name,

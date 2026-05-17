@@ -55,7 +55,7 @@ object StudentRosterPreviewMocks {
                 name = "XII A",
                 schoolId = "sch_azura_jkt",
                 grade = "12",
-                teacherId = null,
+                accountId = null,
                 createdAt = System.currentTimeMillis(),
             ),
             ClassModel(
@@ -63,7 +63,7 @@ object StudentRosterPreviewMocks {
                 name = "XII B",
                 schoolId = "sch_azura_jkt",
                 grade = "12",
-                teacherId = null,
+                accountId = null,
                 createdAt = System.currentTimeMillis(),
             ),
         ),

@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.account.ui.management
 
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.account.domain.model.UserProfile
+import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 
 /**
  * 👤 ACCOUNT PREVIEW MOCKS (v3.2.0-ai-native)
@@ -10,7 +10,7 @@ object AccountPreviewMocks {
     fun loading(): AccountUiState = AccountUiState(isLoading = true)
 
     fun populated(
-        profile: UserProfile = UserProfile(
+        profile: AccountProfile = AccountProfile(
             accountId = "acc_123",
             email = "admin@azuratech.com",
             name = "Admin Azura",
@@ -21,7 +21,7 @@ object AccountPreviewMocks {
             ClassModel("cls_2", "sch_1", "Kelas 11-B", "11", null, 0, 0L),
         ),
     ): AccountUiState = AccountUiState(
-        userProfile = profile,
+        accountProfile = profile,
         availableClasses = classes,
         activeClassId = "cls_1",
     )

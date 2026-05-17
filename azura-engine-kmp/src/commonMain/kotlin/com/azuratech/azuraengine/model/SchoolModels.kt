@@ -19,7 +19,7 @@ data class ClassModel(
     val schoolId: String?,
     val name: String,
     val grade: String,
-    val teacherId: String?,
+    val accountId: String?,
     val studentCount: Int = 0,
     val createdAt: Long,
 )

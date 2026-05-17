@@ -40,11 +40,11 @@ fun MembershipScreen(
     val membershipViewModel: MembershipViewModel = hiltViewModel()
     val bootViewModel: BootViewModel = hiltViewModel()
 
-    val state by membershipViewModel.state.collectAsStateWithLifecycle()
+    val state by membershipViewModel.stateFlow.collectAsStateWithLifecycle()
 
     @Suppress("UNUSED_VARIABLE")
-    val memberships by membershipViewModel.memberships.collectAsStateWithLifecycle()
-    val accessRequests by membershipViewModel.accessRequests.collectAsStateWithLifecycle()
+    val memberships by membershipViewModel.membershipsFlow.collectAsStateWithLifecycle()
+    val accessRequests by membershipViewModel.accessRequestsFlow.collectAsStateWithLifecycle()
 
     LaunchedEffect(email) {
         membershipViewModel.checkMembership(email, displayName)

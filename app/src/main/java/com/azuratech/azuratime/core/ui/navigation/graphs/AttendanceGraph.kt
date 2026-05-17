@@ -28,8 +28,16 @@ fun NavGraphBuilder.attendanceGraph(
             com.azuratech.azuratime.features.attendance.ui.manual.ManualAttendanceScreen(
                 biometricViewModel = androidx.hilt.navigation.compose.hiltViewModel<com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel>(),
                 attendanceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                accountViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(NavigationRoutes.ATTENDANCE_HISTORY) {
+            com.azuratech.azuratime.features.attendance.ui.AttendanceScreen(
+                viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                accountViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() },
             )
         }

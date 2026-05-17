@@ -6,29 +6,43 @@ import com.azuratech.azuratime.features.account.data.local.AccountDao
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.toProfile
 import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AccountRepository @Inject constructor(
+class AccountRepositoryImpl @Inject constructor(
     private val accountDao: AccountDao,
     private val db: FirebaseFirestore,
-) {
-    fun getAccountDao() = accountDao
+) : AccountRepository {
+    override fun getAccountDao() = accountDao
 
-    suspend fun getAccountById(id: String): AccountEntity? = accountDao.getAccountById(id)
+    override suspend fun getAccountById(id: String): Result<AccountEntity> {
+        return try {
+            val account = accountDao.getAccountById(id)
+            if (account != null) {
+                Result.Success(account)
+            } else {
+                Result.Failure(AppError.LocalDB("Account not found"))
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
 
-    fun observeAccountEntity(id: String) = accountDao.observeAccountById(id)
+    override fun observeAccountEntity(id: String) = accountDao.observeAccountById(id)
 
-    suspend fun getProfile(accountId: String): Result<com.azuratech.azuratime.features.account.domain.model.UserProfile> {
+    override suspend fun getProfile(accountId: String): Result<com.azuratech.azuratime.features.account.domain.model.AccountProfile> {
         return syncAccount(accountId).map { it.toProfile() }
     }
 
-    suspend fun updateDisplayName(accountId: String, newName: String): Result<Unit> {
+    override suspend fun updateDisplayName(accountId: String, newName: String): Result<Unit> {
         return try {
-            val account = accountDao.getAccountById(accountId) ?: return Result.Failure(AppError.LocalDB("Account not found"))
+            val accountResult = getAccountById(accountId)
+            if (accountResult is Result.Failure) return Result.Failure(accountResult.error)
+            val account = (accountResult as Result.Success).data
             val updated = account.copy(name = newName)
             accountDao.upsertAccount(updated)
             pushAccount(accountId)
@@ -37,9 +51,11 @@ class AccountRepository @Inject constructor(
         }
     }
 
-    suspend fun updatePhoto(accountId: String, photoUrl: String): Result<Unit> {
+    override suspend fun updatePhoto(accountId: String, photoUrl: String): Result<Unit> {
         return try {
-            val account = accountDao.getAccountById(accountId) ?: return Result.Failure(AppError.LocalDB("Account not found"))
+            val accountResult = getAccountById(accountId)
+            if (accountResult is Result.Failure) return Result.Failure(accountResult.error)
+            val account = (accountResult as Result.Success).data
             val updated = account.copy(photoUrl = photoUrl)
             accountDao.upsertAccount(updated)
             pushAccount(accountId)
@@ -48,7 +64,7 @@ class AccountRepository @Inject constructor(
         }
     }
 
-    suspend fun syncAccount(accountId: String): Result<AccountEntity> {
+    override suspend fun syncAccount(accountId: String): Result<AccountEntity> {
         return try {
             val snapshot = db.collection("accounts").document(accountId).get().await()
             if (snapshot.exists()) {
@@ -56,7 +72,7 @@ class AccountRepository @Inject constructor(
                 val name = snapshot.getString("name") ?: ""
                 val photoUrl = snapshot.getString("photoUrl")
                 val status = snapshot.getString("status") ?: "PENDING"
-                val role = snapshot.getString("role") ?: "USER"
+                val role = snapshot.getString("role") ?: "MEMBER"
                 val activeSchoolId = snapshot.getString("activeSchoolId")
                 val activeClassId = snapshot.getString("activeClassId")
 
@@ -66,7 +82,7 @@ class AccountRepository @Inject constructor(
                     val v = value as? Map<*, *> ?: return@mapNotNull null
                     k to Membership(
                         schoolName = v["schoolName"] as? String ?: "",
-                        role = v["role"] as? String ?: "USER",
+                        role = v["role"] as? String ?: "MEMBER",
                         status = v["status"] as? String ?: "ACTIVE",
                         assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                     )
@@ -93,9 +109,11 @@ class AccountRepository @Inject constructor(
         }
     }
 
-    suspend fun pushAccount(accountId: String): Result<Unit> {
+    override suspend fun pushAccount(accountId: String): Result<Unit> {
         return try {
-            val account = accountDao.getAccountById(accountId) ?: return Result.Failure(AppError.LocalDB("Local account not found"))
+            val accountResult = getAccountById(accountId)
+            if (accountResult is Result.Failure) return Result.Failure(accountResult.error)
+            val account = (accountResult as Result.Success).data
             val data = mapOf(
                 "accountId" to account.accountId,
                 "email" to account.email,

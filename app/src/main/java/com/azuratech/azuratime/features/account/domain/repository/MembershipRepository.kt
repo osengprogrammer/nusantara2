@@ -1,0 +1,22 @@
+package com.azuratech.azuratime.features.account.domain.repository
+
+import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.account.data.local.Membership
+import kotlinx.coroutines.flow.Flow
+
+sealed class MembershipDocUpdate {
+    data class StatusChanged(val status: String, val data: Map<String, Any>, val isoKey: String?) : MembershipDocUpdate()
+    object DocumentMissing : MembershipDocUpdate()
+}
+
+interface MembershipRepository {
+    fun getCurrentUid(): String?
+    suspend fun checkWhitelisted(uid: String): Result<Map<String, Any>?>
+    suspend fun checkMembershipExists(uid: String): Result<Boolean>
+    suspend fun createPendingAccount(uid: String, email: String, displayName: String?): Result<Unit>
+    fun savePendingStatus()
+    fun activateSession(data: Map<String, Any>?): Result<Boolean>
+    fun observeMemberships(uid: String): Flow<List<Membership>>
+    fun observeMembershipFlow(uid: String): Flow<MembershipDocUpdate>
+    suspend fun pollWhitelistedFinal(uid: String): Result<Map<String, Any>?>
+}

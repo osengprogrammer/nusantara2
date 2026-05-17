@@ -8,8 +8,8 @@ import androidx.work.WorkerParameters
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -23,7 +23,7 @@ import dagger.assisted.AssistedInject
 class AccessSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val biometricRepository: StudentBiometricRepository,
+    private val biometricRepository: BiometricRepository,
     private val schoolRepository: SchoolRepository,
     private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager,
@@ -34,13 +34,13 @@ class AccessSyncWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        val userId = inputData.getString("userId") ?: return Result.failure()
+        val accountId = inputData.getString("accountId") ?: return Result.failure()
 
-        Log.d(TAG, "Starting access sync for user $userId")
+        Log.d(TAG, "Starting access sync for user $accountId")
 
         return try {
             // 1. Push Access Requests (Join/Leave school)
-            val accessResult = schoolRepository.pushAccessRequests(userId)
+            val accessResult = schoolRepository.pushAccessRequests(accountId)
             if (accessResult is DomainResult.Failure) {
                 Log.e(TAG, "Access requests sync failed: ${accessResult.error.message}")
                 return handleSyncError(accessResult.error)
@@ -58,7 +58,7 @@ class AccessSyncWorker @AssistedInject constructor(
                 studentRepository.autoHealStudentIdentities(schoolId)
             }
 
-            Log.i(TAG, "Successfully completed access sync for user $userId")
+            Log.i(TAG, "Successfully completed access sync for user $accountId")
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error during access sync: ${e.message}")

@@ -7,7 +7,7 @@ import com.azuratech.azuratime.core.domain.model.SyncStatus
  */
 data class SystemAuditTrail(
     val logId: String,
-    val userId: String,
+    val accountId: String,
     val action: String,
     val timestamp: Long,
     val details: String?,

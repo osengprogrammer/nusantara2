@@ -20,8 +20,8 @@ class SyncManager @Inject constructor(
     /**
      * Enqueue a one-time profile synchronization for the specified user.
      */
-    fun enqueueProfileSync(userId: String) {
-        val data = workDataOf("userId" to userId)
+    fun enqueueProfileSync(accountId: String) {
+        val data = workDataOf("accountId" to accountId)
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -39,19 +39,19 @@ class SyncManager @Inject constructor(
             .build()
 
         workManager.enqueueUniqueWork(
-            "sync_profile_$userId",
+            "sync_profile_$accountId",
             ExistingWorkPolicy.REPLACE, // Replace to ensure latest local changes are prioritized
             request,
         )
 
-        android.util.Log.d("SyncManager", "Enqueued profile sync for user $userId")
+        android.util.Log.d("SyncManager", "Enqueued profile sync for user $accountId")
     }
 
     /**
      * Enqueue a sync for access requests (Join/Leave school).
      */
-    fun enqueueAccessSync(userId: String) {
-        val data = workDataOf("userId" to userId)
+    fun enqueueAccessSync(accountId: String) {
+        val data = workDataOf("accountId" to accountId)
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -63,12 +63,12 @@ class SyncManager @Inject constructor(
             .build()
 
         workManager.enqueueUniqueWork(
-            "sync_access_$userId",
+            "sync_access_$accountId",
             ExistingWorkPolicy.REPLACE,
             request,
         )
 
-        android.util.Log.d("SyncManager", "Enqueued access sync for user $userId")
+        android.util.Log.d("SyncManager", "Enqueued access sync for user $accountId")
     }
 
     /**

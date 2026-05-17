@@ -41,7 +41,7 @@ fun BulkRegistrationScreen(
     bulkViewModel: RegisterViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val bulkState by bulkViewModel.stateStateFlow.collectAsState()
+    val bulkState by bulkViewModel.uiStateFlow.collectAsState()
 
     var fileUri by remember { mutableStateOf<Uri?>(null) }
     var fileName by remember { mutableStateOf<String?>(null) }

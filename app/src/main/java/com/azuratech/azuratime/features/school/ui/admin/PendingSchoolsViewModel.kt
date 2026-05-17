@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.core.ui.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,10 +16,10 @@ class PendingSchoolsViewModel @Inject constructor(
     private val schoolRepository: SchoolRepository,
 ) : ViewModel() {
 
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
+    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
+    val uiEventFlow = _uiEventFlow.asSharedFlow()
 
-    val pendingSchools: StateFlow<List<School>> = schoolRepository.observeAllSchools()
+    val pendingSchoolsFlow: StateFlow<List<School>> = schoolRepository.observeAllSchools()
         .map { result ->
             if (result is Result.Success) {
                 result.data.filter { it.status == "PENDING" }
@@ -34,9 +34,9 @@ class PendingSchoolsViewModel @Inject constructor(
             val result = schoolRepository.approveSchool(schoolId)
             if (result is Result.Success) {
                 println("👑 SuperAdmin: Approved school $schoolId")
-                _uiEvent.emit(UiEvent.ShowSnackbar("Sekolah berhasil disetujui!"))
+                _uiEventFlow.emit(UiEvent.ShowSnackbar("Sekolah berhasil disetujui!"))
             } else if (result is Result.Failure) {
-                _uiEvent.emit(UiEvent.ShowSnackbar("Gagal menyetujui sekolah: ${result.error.message}"))
+                _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal menyetujui sekolah: ${result.error.message}"))
             }
         }
     }
@@ -46,9 +46,9 @@ class PendingSchoolsViewModel @Inject constructor(
             val result = schoolRepository.rejectSchool(schoolId, reason)
             if (result is Result.Success) {
                 println("👑 SuperAdmin: Rejected school $schoolId")
-                _uiEvent.emit(UiEvent.ShowSnackbar("Sekolah telah ditolak."))
+                _uiEventFlow.emit(UiEvent.ShowSnackbar("Sekolah telah ditolak."))
             } else if (result is Result.Failure) {
-                _uiEvent.emit(UiEvent.ShowSnackbar("Gagal menolak sekolah: ${result.error.message}"))
+                _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal menolak sekolah: ${result.error.message}"))
             }
         }
     }

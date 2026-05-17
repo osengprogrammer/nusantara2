@@ -22,14 +22,14 @@ class AccessRequestRepositoryImpl @Inject constructor(
 
     private val accessRequestDao = database.accessRequestDao()
 
-    override suspend fun submitRequest(userId: String, schoolId: String, schoolName: String): Result<Unit> {
+    override suspend fun submitRequest(accountId: String, schoolId: String, schoolName: String): Result<Unit> {
         return try {
-            val requestId = "req_${userId}_${schoolId}_${System.currentTimeMillis()}"
+            val requestId = "req_${accountId}_${schoolId}_${System.currentTimeMillis()}"
             database.withTransaction {
                 accessRequestDao.insertRequest(
                     AccessRequestEntity(
                         requestId = requestId,
-                        requesterId = userId,
+                        accountId = accountId,
                         schoolId = schoolId,
                         schoolName = schoolName,
                         status = AccessRequestStatus.PENDING,
@@ -38,7 +38,7 @@ class AccessRequestRepositoryImpl @Inject constructor(
                         updatedAt = System.currentTimeMillis(),
                     ),
                 )
-                syncManager.enqueueAccessSync(userId)
+                syncManager.enqueueAccessSync(accountId)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -46,10 +46,10 @@ class AccessRequestRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun cancelRequest(requesterId: String, schoolId: String): Result<Unit> {
+    override suspend fun cancelRequest(accountId: String, schoolId: String): Result<Unit> {
         return try {
             database.withTransaction {
-                val existing = accessRequestDao.getRequestByUserAndSchool(requesterId, schoolId)
+                val existing = accessRequestDao.getRequestByAccountAndSchool(accountId, schoolId)
                 if (existing != null) {
                     accessRequestDao.insertRequest(
                         existing.copy(
@@ -58,7 +58,7 @@ class AccessRequestRepositoryImpl @Inject constructor(
                             updatedAt = System.currentTimeMillis(),
                         ),
                     )
-                    syncManager.enqueueAccessSync(requesterId)
+                    syncManager.enqueueAccessSync(accountId)
                 }
             }
             Result.Success(Unit)
@@ -67,8 +67,8 @@ class AccessRequestRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeRequestsByUser(userId: String): Flow<List<AccessRequestEntity>> {
-        return accessRequestDao.observeRequestsByUser(userId)
+    override fun observeRequestsByAccount(accountId: String): Flow<List<AccessRequestEntity>> {
+        return accessRequestDao.observeRequestsByAccount(accountId)
     }
 
     override suspend fun getPendingRequests(schoolId: String): List<AccessRequestProfile> {
@@ -87,7 +87,7 @@ class AccessRequestRepositoryImpl @Inject constructor(
                         updatedAt = System.currentTimeMillis(),
                     ),
                 )
-                syncManager.enqueueAccessSync(request.requesterId)
+                syncManager.enqueueAccessSync(request.accountId)
                 true
             } else {
                 false
@@ -108,7 +108,7 @@ class AccessRequestRepositoryImpl @Inject constructor(
                         updatedAt = System.currentTimeMillis(),
                     ),
                 )
-                syncManager.enqueueAccessSync(request.requesterId)
+                syncManager.enqueueAccessSync(request.accountId)
                 true
             } else {
                 false

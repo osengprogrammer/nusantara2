@@ -7,7 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 

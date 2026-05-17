@@ -11,16 +11,16 @@ class BootRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructo
     private val auth: FirebaseAuth,
     private val sessionManager: SessionManager,
 ) {
-    fun getCurrentUser(): FirebaseUser? = auth.currentUser
+    fun getCurrentAccount(): com.google.firebase.auth.FirebaseUser? = auth.currentUser
 
     // 🔥 Ubah menjadi suspend agar tidak memblokir Main Thread
-    suspend fun getUserStatus(): String = withContext(Dispatchers.IO) {
-        sessionManager.getUserStatus()
+    suspend fun getAccountStatus(): com.azuratech.azuraengine.result.Result<String> = withContext(Dispatchers.IO) {
+        com.azuratech.azuraengine.result.Result.Success(sessionManager.getAccountStatus())
     }
 
     // 🔥 Pengecekan sesi sekarang berjalan di jalur IO
-    suspend fun isSessionActive(): Boolean = withContext(Dispatchers.IO) {
-        sessionManager.getUserStatus() == SessionManager.STATUS_ACTIVE
+    suspend fun isSessionActive(): com.azuratech.azuraengine.result.Result<Boolean> = withContext(Dispatchers.IO) {
+        com.azuratech.azuraengine.result.Result.Success(sessionManager.getAccountStatus() == SessionManager.STATUS_ACTIVE)
     }
 
     fun getActiveSchoolId(): String? = sessionManager.getActiveSchoolId()

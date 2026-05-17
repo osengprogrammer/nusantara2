@@ -20,16 +20,16 @@ class ZoharAssistantViewModel(application: Application) : AndroidViewModel(appli
 
     private val zoharBrain = ZoharBrain(apiKey = BuildConfig.GEMINI_API_KEY)
 
-    private val _zoharResponse =
+    private val _zoharResponseFlow =
         MutableStateFlow("Halo Brother! Zohar siap mengawal Azura Ecosystem. Ada yang bisa Zohar bantu? Joss Gandos!")
-    val zoharResponse: StateFlow<String> = _zoharResponse
+    val zoharResponseFlow: StateFlow<String> = _zoharResponseFlow
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    private val _isLoadingFlow = MutableStateFlow(false)
+    val isLoadingFlow: StateFlow<Boolean> = _isLoadingFlow
 
     fun askZohar(userQuestion: String) {
         viewModelScope.launch {
-            _isLoading.value = true
+            _isLoadingFlow.value = true
 
             try {
                 // 🔥 FIXED: Passed schoolId to Zohar's memory fetch!
@@ -50,11 +50,11 @@ class ZoharAssistantViewModel(application: Application) : AndroidViewModel(appli
                     $userQuestion
                 """.trimIndent()
 
-                _zoharResponse.value = zoharBrain.think(fullPrompt)
+                _zoharResponseFlow.value = zoharBrain.think(fullPrompt)
             } catch (e: Exception) {
-                _zoharResponse.value = "Zohar mengalami gangguan koneksi: ${e.message}"
+                _zoharResponseFlow.value = "Zohar mengalami gangguan koneksi: ${e.message}"
             } finally {
-                _isLoading.value = false
+                _isLoadingFlow.value = false
             }
         }
     }

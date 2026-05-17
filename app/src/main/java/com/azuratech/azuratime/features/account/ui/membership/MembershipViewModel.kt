@@ -7,8 +7,8 @@ import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.Membership
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
-import com.azuratech.azuratime.features.account.data.repo.MembershipRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.account.domain.repository.MembershipRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.core.data.local.toProfile
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,36 +42,36 @@ class MembershipViewModel @Inject constructor(
     // =====================================================
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val user: StateFlow<AccountEntity?> = sessionManager.currentUserIdFlow
+    val accountFlow: StateFlow<AccountEntity?> = sessionManager.currentAccountIdFlow
         .filterNotNull()
         .flatMapLatest { uid -> accountRepository.observeAccountEntity(uid) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val accessRequests: StateFlow<List<AccessRequestProfile>> = sessionManager.currentUserIdFlow
+    val accessRequestsFlow: StateFlow<List<AccessRequestProfile>> = sessionManager.currentAccountIdFlow
         .filterNotNull()
         .flatMapLatest { uid ->
-            accessRequestRepository.observeRequestsByUser(uid)
+            accessRequestRepository.observeRequestsByAccount(uid)
                 .map { entities -> entities.map { it.toProfile() } }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
      * 🔥 DERIVED UI STATE
-     * Combines user status and pending requests for a single SSOT state.
+     * Combines accountFlow status and pending requests for a single SSOT stateFlow.
      */
-    val state: StateFlow<MembershipState> = combine(user, accessRequests) { user, requests ->
+    val stateFlow: StateFlow<MembershipState> = combine(accountFlow, accessRequestsFlow) { account, requests ->
         when {
-            user == null -> MembershipState.Loading
-            user.status == "PENDING" -> MembershipState.Pending
-            user.status == SessionManager.STATUS_ACTIVE -> MembershipState.Approved
-            user.status == "REJECTED" -> MembershipState.Rejected("Akun Anda ditolak oleh administrator.")
+            account == null -> MembershipState.Loading
+            account.status == "PENDING" -> MembershipState.Pending
+            account.status == SessionManager.STATUS_ACTIVE -> MembershipState.Approved
+            account.status == "REJECTED" -> MembershipState.Rejected("Akun Anda ditolak oleh administrator.")
             requests.isNotEmpty() -> MembershipState.Pending
             else -> MembershipState.Idle
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MembershipState.Loading)
 
-    val memberships: StateFlow<List<com.azuratech.azuratime.features.account.data.local.Membership>> = user.map {
+    val membershipsFlow: StateFlow<List<com.azuratech.azuratime.features.account.data.local.Membership>> = accountFlow.map {
         it?.memberships?.values?.toList() ?: emptyList()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -80,7 +80,7 @@ class MembershipViewModel @Inject constructor(
     // =====================================================
 
     fun checkMembership(email: String, displayName: String? = null) {
-        val uid = sessionManager.getCurrentUserId() ?: return
+        val uid = sessionManager.getCurrentAccountId() ?: return
 
         viewModelScope.launch {
             // 🔥 CRITICAL: Pull the latest status from Firestore first to see if Admin approved
@@ -95,12 +95,12 @@ class MembershipViewModel @Inject constructor(
                     startPollingStatus(uid)
                 }
             } else {
-                // Cloud pull failed. Check local state.
+                // Cloud pull failed. Check local stateFlow.
                 val localAccount = accountRepository.getAccountDao().getAccountById(uid)
 
-                // If account doesn't exist locally OR they are stuck in PENDING, push to the memberships collection
+                // If account doesn't exist locally OR they are stuck in PENDING, push to the membershipsFlow collection
                 if (localAccount == null || localAccount.status == "PENDING") {
-                    membershipRepository.createPendingUser(uid, email, displayName)
+                    membershipRepository.createPendingAccount(uid, email, displayName)
                     startPollingStatus(uid)
                 }
             }
@@ -127,7 +127,7 @@ class MembershipViewModel @Inject constructor(
      */
     fun activateMembership() {
         viewModelScope.launch {
-            val uid = sessionManager.getCurrentUserId() ?: return@launch
+            val uid = sessionManager.getCurrentAccountId() ?: return@launch
             val accountEntity = accountRepository.getAccountDao().getAccountById(uid)
             accountEntity?.let {
                 val data = mapOf(
@@ -135,7 +135,7 @@ class MembershipViewModel @Inject constructor(
                     "status" to it.status,
                     "activeSchoolId" to (it.activeSchoolId ?: ""),
                     "role" to it.role,
-                    "memberships" to it.memberships,
+                    "membershipsFlow" to it.memberships,
                 )
                 membershipRepository.activateSession(data)
             }

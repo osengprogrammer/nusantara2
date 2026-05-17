@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.attendance.ui.history
+package com.azuratech.azuratime.features.attendance.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,58 +15,41 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.ui.designsystem.AttendanceActionSheet
-import com.azuratech.azuratime.core.ui.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.*
-import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
-import java.time.LocalDate
+import com.azuratech.azuratime.features.attendance.ui.history.AttendanceHistoryCard
 
+/**
+ * 📝 ATTENDANCE SCREEN (v3.2.0-ai-native)
+ * Main management screen for viewing and correcting attendance logs.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AttendanceHistoryScreen(
-    userEmail: String,
+fun AttendanceScreen(
     onNavigateBack: () -> Unit = {},
-    attendanceViewModel: AttendanceViewModel,
-    userViewModel: AccountManagementViewModel,
-    classViewModel: ClassViewModel,
+    viewModel: AttendanceViewModel,
+    accountViewModel: AccountManagementViewModel,
 ) {
-    // 1. Observation
-    val classUiState by classViewModel.uiState.collectAsStateWithLifecycle()
-    val globalClasses = classUiState.classes
-    val user by userViewModel.currentUser.collectAsStateWithLifecycle()
-    val records by attendanceViewModel.attendanceRecords.collectAsStateWithLifecycle()
-    val filterParams by attendanceViewModel.filterParams.collectAsStateWithLifecycle()
-    val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val user by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
+    val assignedIds by accountViewModel.assignedClassIdsFlow.collectAsStateWithLifecycle()
 
     var editingRecord by remember { mutableStateOf<AttendanceRecord?>(null) }
     var showFilters by remember { mutableStateOf(false) }
-    var startDate by remember { mutableStateOf<LocalDate?>(null) }
-    var endDate by remember { mutableStateOf<LocalDate?>(null) }
-    var selectedClassId by remember { mutableStateOf<String?>(null) }
     var showClassCorrectionDialog by remember { mutableStateOf<AttendanceRecord?>(null) }
 
     // Role helper
-    val activeSchoolId = user?.activeSchoolId ?: ""
-    val userRole = user?.memberships?.get(activeSchoolId)?.role ?: user?.role ?: "USER"
-    val isAdmin = userRole == "ADMIN" || userRole == "SUPER_ADMIN"
+    val accountRole = user?.memberships?.get(user?.activeSchoolId)?.role ?: user?.role ?: "MEMBER"
+    val isAdmin = accountRole == "ADMIN" || accountRole == "SUPER_ADMIN"
 
-    // 2. Filter Sync
-    LaunchedEffect(user, startDate, endDate, selectedClassId) {
-        attendanceViewModel.updateFilters(
-            start = startDate,
-            end = endDate,
-        )
-    }
-
-    val availableClasses = remember(globalClasses, assignedIds, isAdmin) {
-        if (isAdmin) globalClasses else globalClasses.filter { it.id in assignedIds }
+    val availableClasses = remember(uiState.classes, assignedIds, isAdmin) {
+        if (isAdmin) uiState.classes else uiState.classes.filter { it.id in assignedIds }
     }
 
     AzuraScreen(
-        title = "History Log (${records.size})",
+        title = "History Log (${uiState.records.size})",
         onBack = onNavigateBack,
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = AzuraSpacing.md)) {
@@ -82,9 +65,9 @@ fun AttendanceHistoryScreen(
                 )
 
                 Button(
-                    onClick = { attendanceViewModel.exportRecords(records) },
+                    onClick = { viewModel.onEvent(AttendanceUiEvent.ExportRecords(uiState.records)) },
                     shape = AzuraShapes.medium,
-                    enabled = records.isNotEmpty(),
+                    enabled = uiState.records.isNotEmpty(),
                 ) {
                     Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -94,15 +77,15 @@ fun AttendanceHistoryScreen(
 
             // --- SEARCH BAR ---
             OutlinedTextField(
-                value = filterParams.name,
-                onValueChange = { attendanceViewModel.updateNameFilter(it) },
+                value = uiState.searchQuery,
+                onValueChange = { viewModel.onEvent(AttendanceUiEvent.UpdateSearchQuery(it)) },
                 placeholder = { Text("Cari nama siswa...") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = AzuraShapes.medium,
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 trailingIcon = {
-                    if (filterParams.name.isNotEmpty()) {
-                        IconButton(onClick = { attendanceViewModel.updateNameFilter("") }) {
+                    if (uiState.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.onEvent(AttendanceUiEvent.UpdateSearchQuery("")) }) {
                             Icon(Icons.Default.Close, null)
                         }
                     }
@@ -113,22 +96,16 @@ fun AttendanceHistoryScreen(
             if (showFilters) {
                 Spacer(modifier = Modifier.height(AzuraSpacing.sm))
                 LocalFilterPanel(
-                    startDate = startDate,
-                    endDate = endDate,
                     classes = availableClasses,
-                    selectedClassId = selectedClassId,
-                    onDatesChanged = { s, e ->
-                        startDate = s
-                        endDate = e
-                    },
-                    onClassSelected = { selectedClassId = it },
+                    selectedClassId = uiState.selectedClassId,
+                    onClassSelected = { viewModel.onEvent(AttendanceUiEvent.SelectClass(it)) },
                 )
             }
 
             Spacer(modifier = Modifier.height(AzuraSpacing.md))
 
             // --- RECORDS LIST ---
-            if (records.isEmpty()) {
+            if (uiState.records.isEmpty() && !uiState.isLoading) {
                 LocalEmptyPlaceholder("Tidak ada log ditemukan.")
             } else {
                 LazyColumn(
@@ -136,7 +113,7 @@ fun AttendanceHistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                     contentPadding = PaddingValues(bottom = 100.dp),
                 ) {
-                    items(records, key = { it.recordId }) { record ->
+                    items(uiState.records, key = { it.recordId }) { record ->
                         AttendanceHistoryCard(
                             record = record,
                             onEditRequested = { editingRecord = record },
@@ -152,11 +129,11 @@ fun AttendanceHistoryScreen(
                 record = selectedRecord,
                 onDismiss = { editingRecord = null },
                 onDelete = { record ->
-                    attendanceViewModel.deleteRecord(record)
+                    viewModel.onEvent(AttendanceUiEvent.DeleteRecord(record))
                     editingRecord = null
                 },
                 onUpdateStatus = { record, status ->
-                    attendanceViewModel.updateRecordStatus(record, status)
+                    viewModel.onEvent(AttendanceUiEvent.UpdateRecordStatus(record, status))
                     editingRecord = null
                 },
                 onShowClassCorrection = {
@@ -172,15 +149,13 @@ fun AttendanceHistoryScreen(
                 userClasses = availableClasses,
                 onDismiss = { showClassCorrectionDialog = null },
                 onClassSelected = { classItem ->
-                    attendanceViewModel.updateRecordClass(recordToCorrect, classItem)
+                    viewModel.onEvent(AttendanceUiEvent.UpdateRecordClass(recordToCorrect, classItem))
                     showClassCorrectionDialog = null
                 },
             )
         }
     }
 }
-
-// --- LOCAL HELPERS TO FIX UNRESOLVED REFERENCES ---
 
 @Composable
 fun FilterToggleButton(isActive: Boolean, onClick: () -> Unit) {
@@ -193,11 +168,8 @@ fun FilterToggleButton(isActive: Boolean, onClick: () -> Unit) {
 
 @Composable
 fun LocalFilterPanel(
-    startDate: LocalDate?,
-    endDate: LocalDate?,
     classes: List<ClassModel>,
     selectedClassId: String?,
-    onDatesChanged: (LocalDate?, LocalDate?) -> Unit,
     onClassSelected: (String?) -> Unit,
 ) {
     Card(
@@ -206,11 +178,6 @@ fun LocalFilterPanel(
     ) {
         var isClassExpanded by remember { mutableStateOf(false) }
         Column(modifier = Modifier.padding(AzuraSpacing.md), verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
-                AzuraDatePickerButton("Dari", startDate, { onDatesChanged(it, endDate) }, Modifier.weight(1f))
-                AzuraDatePickerButton("Sampai", endDate, { onDatesChanged(startDate, it) }, Modifier.weight(1f))
-            }
-
             AzuraDropdownField(
                 label = "Filter Kelas",
                 selectedValue = classes.find { it.id == selectedClassId }?.name ?: "Semua Kelas",
@@ -269,4 +236,43 @@ fun LocalClassCorrectionDialog(
         confirmButton = {},
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } },
     )
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun PreviewLoading() {
+    AzuraTheme {
+        Box(modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun PreviewSuccess() {
+    AzuraTheme {
+        val mockState = AttendancePreviewMocks.success()
+        Column(modifier = Modifier.fillMaxSize().padding(AzuraSpacing.md)) {
+            mockState.records.forEach { record ->
+                AttendanceHistoryCard(record = record)
+                Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+            }
+        }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun PreviewError() {
+    AzuraTheme {
+        val mockState = AttendancePreviewMocks.error()
+        Column(
+            modifier = Modifier.fillMaxSize().padding(AzuraSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(text = mockState.error ?: "Error", color = MaterialTheme.colorScheme.error)
+        }
+    }
 }

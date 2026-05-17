@@ -11,11 +11,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor() : ViewModel() {
-    private val _state = MutableStateFlow(RegisterUiState())
-    val stateStateFlow: StateFlow<RegisterUiState> = _state.asStateFlow()
+    private val _stateFlow = MutableStateFlow(RegisterUiState())
+    val uiStateFlow: StateFlow<RegisterUiState> = _stateFlow.asStateFlow()
 
     fun resetState() {
-        _state.value = RegisterUiState()
+        _stateFlow.value = RegisterUiState()
     }
 
     fun processCsvFile(@Suppress("UNUSED_PARAMETER") uri: Uri, @Suppress("UNUSED_PARAMETER") mode: String) {

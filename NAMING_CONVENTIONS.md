@@ -1,29 +1,33 @@
-# 📐 NUSANTARA v3.1 — AI-OPTIMIZED NAMING CONVENTIONS
+# 📐 NUSANTARA v3.2 — AI-OPTIMIZED NAMING CONVENTIONS
 ⚡ *Mandatory for all AI prompts & code generation.*
+
+## 🔹 TERMINOLOGY POLICY (v3.2.0)
+- **Account**: The unified identity model. NO "User", "Staff", or "Teacher" variants allowed for app identity.
+- **Student**: Refers to the person being recorded (e.g., student in school context).
+- **Biometric**: Refers to face embeddings and enrollment data.
 
 ## 🔹 FILE & CLASS NAMING
 - Files: `PascalCase.kt` → `FaceRepository.kt`, `CheckInViewModel.kt`
-- Classes/Objects: `PascalCase` → `class StudentProfile`, `object UiEvent`
-- Packages: `lowercase.dot.separated` → `data.repo`, `ui.checkin`
+- Classes/Objects: `PascalCase` → `class AttendanceViewModel`
+- Interfaces: `PascalCase` (No 'I' prefix) → `interface StudentRepository`
+- Implementations: `PascalCaseImpl` → `class StudentRepositoryImpl`
 
-## 🔹 FUNCTION & METHOD NAMING
-- Functions: `camelCase` + **verb-first** → `syncFaces()`, `getUserById()`, `observeActiveSchool()`
-- DAOs: `observeXxx()`, `insertXxx()`, `upsertXxx()`, `deleteXxx()`
-- Repos: `syncXxx()`, `saveXxx()`, `getXxx()`, `observeXxx()`
-- ViewModels: `refreshXxx()`, `handleXxxAction()`, `navigateToXxx()`
+## 🔹 FUNCTION NAMING
+- Functions: `camelCase` (verb-first) → `fun calculateAttendance()`
+- Composables: `PascalCase` → `@Composable fun StudentRow()`
+- Mappers: `toDomain()`, `toEntity()`, `toProfile()`
 
-## 🔹 VARIABLE & PROPERTY NAMING
-- Variables: `camelCase` + **noun-first** → `activeSchoolId`, `currentUser`, `syncStatus`
-- Constants: `UPPER_SNAKE_CASE` → `MAX_RETRY_COUNT`, `DB_VERSION`
-- Flows: Suffix with `Flow` → `schoolIdFlow`, `faceListFlow`
-- StateFlows: Suffix with `State` → `uiState`, `syncState`, `loadingState`
+## 🔹 VARIABLE & FLOW NAMING
+- Variables: `camelCase` → `val studentName`
+- Flow/StateFlow: MUST end with `Flow` suffix → `val uiStateFlow`, `val studentsFlow`
+- Constants: `UPPER_SNAKE_CASE` → `const val MAX_RETRIES = 3`
+- Routes: `camelCase` string values → `const val ATTENDANCE_CAPTURE = "attendanceCapture"`
 
-## 🔹 STRICT AI RULES
-1. NEVER use `snake_case` in Kotlin identifiers
-2. NEVER start functions with uppercase (`SaveUser` ❌ → `saveUser` ✅). **EXCEPTION:** `@Composable` functions MUST use `PascalCase` (`fun MainScreen()`).
-3. ALWAYS suffix reactive stream **properties/variables** with `Flow` or `State`. Functions returning a stream do not need the suffix (e.g., `observeUsers()`).
-4. ALWAYS use verb-first for functions, noun-first for variables
-5. If unsure → check this file first. When in doubt, match existing layer pattern.
+## 🔹 REPOSITORY PATTERN (SSOT)
+- Interfaces live in `domain.repository`
+- Implementations live in `data.repo`
+- All write operations MUST return `Result<T>`
+- Read operations MUST return `Flow<Result<T>>` or `Flow<T>` if reactive SSOT
 
 ## 🤖 AI PROMPT TEMPLATE
-"Follow NAMING_CONVENTIONS.md. Use camelCase functions (verb-first), PascalCase files/classes, suffix Flows with 'Flow'. Zero underscores in Kotlin code. If renaming, use IDE safe-refactor only."
+"Follow NAMING_CONVENTIONS.md. Use 'Account' for app identity, suffix Flows with 'Flow', use camelCase routes. Interface/Impl separation for repositories. Zero underscores in Kotlin code."

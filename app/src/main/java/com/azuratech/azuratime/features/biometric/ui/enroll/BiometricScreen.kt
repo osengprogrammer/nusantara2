@@ -52,8 +52,8 @@ fun BiometricScreen(
     onNavigateBack: () -> Unit,
     viewModel: BiometricEnrollmentViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val enrollmentList by viewModel.enrollmentList.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val enrollmentList by viewModel.enrollmentListFlow.collectAsStateWithLifecycle()
 
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 

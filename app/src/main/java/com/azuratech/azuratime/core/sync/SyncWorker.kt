@@ -14,11 +14,11 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 
 /**
  * 🛡️ THE INVISIBLE GUARDRAIL: Persistent Background Sync
@@ -31,7 +31,7 @@ class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val schoolRepository: SchoolRepository,
-    private val biometricRepository: StudentBiometricRepository,
+    private val biometricRepository: BiometricRepository,
     private val studentRepository: StudentRepository,
     private val attendanceRepository: AttendanceRepository,
     private val accountRepository: AccountRepository,
@@ -78,7 +78,7 @@ class SyncWorker @AssistedInject constructor(
 
         // 5. Modernized Sync (Classes, Accounts, Assignments)
         try {
-            val currentAccountId = sessionManager.getCurrentUserId() ?: ""
+            val currentAccountId = sessionManager.getCurrentAccountId() ?: ""
             if (currentAccountId.isNotEmpty()) {
                 accountRepository.syncAccount(currentAccountId)
             }

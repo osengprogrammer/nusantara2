@@ -21,7 +21,7 @@ fun SchoolListScreen(
     @Suppress("UNUSED_PARAMETER") onSchoolClick: (String) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 
     AzuraScreen(

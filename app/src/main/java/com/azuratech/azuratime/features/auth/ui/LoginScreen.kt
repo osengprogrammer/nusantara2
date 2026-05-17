@@ -39,7 +39,7 @@ fun LoginScreen(
     onNavigateToDashboard: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

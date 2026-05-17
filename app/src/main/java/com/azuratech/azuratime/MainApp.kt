@@ -25,7 +25,7 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun MainApp(onBootReady: () -> Unit = {}) {
     val bootViewModel: BootViewModel = hiltViewModel()
-    val bootState by bootViewModel.state.collectAsState()
+    val bootState by bootViewModel.stateFlow.collectAsState()
 
     LaunchedEffect(bootState) {
         if (bootState != BootState.Loading) {
@@ -69,7 +69,7 @@ fun MainApp(onBootReady: () -> Unit = {}) {
 
                 BootState.Ready -> {
                     val mainViewModel: MainViewModel = hiltViewModel()
-                    val isRevoked by mainViewModel.isRevoked.collectAsState()
+                    val isRevoked by mainViewModel.isRevokedFlow.collectAsState()
 
                     LaunchedEffect(Unit) {
                         mainViewModel.initializeApp()

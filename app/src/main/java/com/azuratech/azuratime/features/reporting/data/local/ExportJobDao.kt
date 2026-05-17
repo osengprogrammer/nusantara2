@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExportJobDao {
-    @Query("SELECT * FROM export_jobs WHERE userId = :userId ORDER BY jobId DESC")
-    fun observeExportJobsByUser(userId: String): Flow<List<ExportJobEntity>>
+    @Query("SELECT * FROM export_jobs WHERE accountId = :accountId ORDER BY jobId DESC")
+    fun observeExportJobsByAccount(accountId: String): Flow<List<ExportJobEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertJob(job: ExportJobEntity)
@@ -14,6 +14,6 @@ interface ExportJobDao {
     @Update
     suspend fun updateJob(job: ExportJobEntity)
 
-    @Query("DELETE FROM export_jobs WHERE userId = :userId AND status = 'COMPLETED'")
-    suspend fun clearCompletedJobs(userId: String)
+    @Query("DELETE FROM export_jobs WHERE accountId = :accountId AND status = 'COMPLETED'")
+    suspend fun clearCompletedJobs(accountId: String)
 }

@@ -21,12 +21,12 @@ fun WorkspaceSelector(
     workspaceViewModel: WorkspaceViewModel,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val schoolUiState by schoolViewModel.uiState.collectAsStateWithLifecycle()
+    val schoolUiState by schoolViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val schools = schoolUiState.schools
     val activeSchoolId = schoolUiState.activeSchoolId
     val activeSchool = schools.find { it.id == activeSchoolId }
 
-    val workspaceUiState by workspaceViewModel.uiState.collectAsStateWithLifecycle()
+    val workspaceUiState by workspaceViewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     // Hide only when no schools are available AND no active school is set
     if (schools.isEmpty() && activeSchoolId == null) return

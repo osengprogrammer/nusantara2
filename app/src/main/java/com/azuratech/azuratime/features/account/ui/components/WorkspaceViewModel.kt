@@ -8,9 +8,9 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.toProfile
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
-import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
-import com.azuratech.azuratime.features.account.data.repo.SchoolWorkspaceRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,61 +52,61 @@ class WorkspaceViewModel @Inject constructor(
         data class Error(val message: String) : WorkspaceState()
     }
 
-    private val _uiState = MutableStateFlow<WorkspaceState>(WorkspaceState.Idle)
-    val uiState: StateFlow<WorkspaceState> = _uiState.asStateFlow()
+    private val _uiStateFlow = MutableStateFlow<WorkspaceState>(WorkspaceState.Idle)
+    val uiStateFlow: StateFlow<WorkspaceState> = _uiStateFlow.asStateFlow()
 
-    private val currentAccountId: String get() = sessionManager.getCurrentUserId() ?: ""
+    private val currentAccountId: String get() = sessionManager.getCurrentAccountId() ?: ""
 
     /**
      * Berpindah workspace sekolah aktif.
      */
     fun changeWorkspace(accountId: String, newSchoolId: String, newSchoolName: String) {
         viewModelScope.launch {
-            _uiState.value = WorkspaceState.Switching
+            _uiStateFlow.value = WorkspaceState.Switching
             try {
                 sessionManager.saveActiveSchoolId(newSchoolId)
                 repository.switchWorkspace(accountId, newSchoolId)
                 syncManager.enqueueProfileSync(accountId)
-                _uiState.value = WorkspaceState.Success(newSchoolName)
+                _uiStateFlow.value = WorkspaceState.Success(newSchoolName)
             } catch (e: Exception) {
-                _uiState.value = WorkspaceState.Error("Gagal pindah workspace: ${e.message}")
+                _uiStateFlow.value = WorkspaceState.Error("Gagal pindah workspace: ${e.message}")
             }
         }
     }
 
     fun resetState() {
-        _uiState.value = WorkspaceState.Idle
+        _uiStateFlow.value = WorkspaceState.Idle
     }
 
     // =====================================================
     // 🔍 SCHOOL DISCOVERY & JOIN (REACTIVE)
     // =====================================================
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    private val _searchQueryFlow = MutableStateFlow("")
+    val searchQueryFlow: StateFlow<String> = _searchQueryFlow.asStateFlow()
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    val schoolSearchResults: StateFlow<List<Map<String, Any>>> = _searchQuery
+    val schoolSearchResultsFlow: StateFlow<List<Map<String, Any>>> = _searchQueryFlow
         .debounce(300)
         .distinctUntilChanged()
         .map { query ->
             if (query.length < 3) {
-                emptyList()
+                emptyList<Map<String, Any>>()
             } else {
-                repository.searchSchools(query)
+                repository.searchSchools(query).getOrNull() ?: emptyList()
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
+        _searchQueryFlow.value = query
     }
 
     fun sendJoinRequest(accountId: String, schoolId: String, schoolName: String) {
         viewModelScope.launch {
-            _uiState.value = WorkspaceState.Switching
+            _uiStateFlow.value = WorkspaceState.Switching
             accessRequestRepository.submitRequest(accountId, schoolId, schoolName)
-                .onSuccess { _uiState.value = WorkspaceState.RequestSent(schoolName) }
-                .onFailure { _uiState.value = WorkspaceState.RequestFailed(it.message) }
+                .onSuccess { _uiStateFlow.value = WorkspaceState.RequestSent(schoolName) }
+                .onFailure { _uiStateFlow.value = WorkspaceState.RequestFailed(it.message) }
         }
     }
 
@@ -122,10 +122,10 @@ class WorkspaceViewModel @Inject constructor(
 
     fun createNewSchool(accountId: String, @Suppress("UNUSED_PARAMETER") accountEmail: String, schoolName: String) {
         viewModelScope.launch {
-            _uiState.value = WorkspaceState.Switching
+            _uiStateFlow.value = WorkspaceState.Switching
             schoolRepository.createSchool(accountId, schoolName, "Asia/Jakarta")
-                .onSuccess { _uiState.value = WorkspaceState.Success(schoolName) }
-                .onFailure { _uiState.value = WorkspaceState.Error(it.message ?: "Gagal membuat sekolah") }
+                .onSuccess { _uiStateFlow.value = WorkspaceState.Success(schoolName) }
+                .onFailure { _uiStateFlow.value = WorkspaceState.Error(it.message ?: "Gagal membuat sekolah") }
         }
     }
 
@@ -137,14 +137,14 @@ class WorkspaceViewModel @Inject constructor(
 
     fun updateSchoolName(schoolId: String, @Suppress("UNUSED_PARAMETER") accountId: String, newName: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            _uiState.value = WorkspaceState.Switching
+            _uiStateFlow.value = WorkspaceState.Switching
             schoolRepository.updateSchoolDetails(schoolId, name = newName.trim(), timezone = null)
                 .onSuccess {
-                    _uiState.value = WorkspaceState.Idle
+                    _uiStateFlow.value = WorkspaceState.Idle
                     onSuccess()
                 }
                 .onFailure {
-                    _uiState.value = WorkspaceState.Error(it.message ?: "Gagal mengubah nama sekolah")
+                    _uiStateFlow.value = WorkspaceState.Error(it.message ?: "Gagal mengubah nama sekolah")
                     onError(it.message ?: "Gagal mengubah nama sekolah")
                 }
         }
@@ -154,10 +154,10 @@ class WorkspaceViewModel @Inject constructor(
      * Observe Access Requests for the current account (SSOT Stream)
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val accessRequests: StateFlow<List<AccessRequestProfile>> =
-        sessionManager.currentUserIdFlow.filterNotNull()
+    val accessRequestsFlow: StateFlow<List<AccessRequestProfile>> =
+        sessionManager.currentAccountIdFlow.filterNotNull()
             .flatMapLatest { accountId ->
-                accessRequestRepository.observeRequestsByUser(accountId)
+                accessRequestRepository.observeRequestsByAccount(accountId)
                     .map { entities -> entities.map { it.toProfile() } }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

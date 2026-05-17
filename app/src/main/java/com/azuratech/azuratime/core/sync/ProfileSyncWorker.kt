@@ -8,8 +8,8 @@ import androidx.work.WorkerParameters
 import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -24,7 +24,7 @@ class ProfileSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val accountRepository: AccountRepository,
-    private val biometricRepository: StudentBiometricRepository,
+    private val biometricRepository: BiometricRepository,
     private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager,
 ) : CoroutineWorker(context, workerParams) {
@@ -34,7 +34,7 @@ class ProfileSyncWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        val accountId = inputData.getString("userId") ?: return Result.failure()
+        val accountId = inputData.getString("accountId") ?: return Result.failure()
 
         Log.d(TAG, "Starting sync for account: $accountId")
 

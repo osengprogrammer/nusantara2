@@ -23,8 +23,8 @@ class MainViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
     private val repository: MainRepository, // 🔥 FIX: Repositori disuntikkan secara otomatis
 ) : AndroidViewModel(application) {
 
-    private val _isRevoked = MutableStateFlow(false)
-    val isRevoked: StateFlow<Boolean> = _isRevoked.asStateFlow()
+    private val _isRevokedFlow = MutableStateFlow(false)
+    val isRevokedFlow: StateFlow<Boolean> = _isRevokedFlow.asStateFlow()
 
     private var isInitialized = false
     private var revokeJob: Job? = null
@@ -51,10 +51,10 @@ class MainViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
         revokeJob?.cancel() // Bersihkan job lama jika ada
 
         revokeJob = viewModelScope.launch {
-            repository.observeRevokeStatus(uid).collect { isRevoked ->
-                if (isRevoked) {
+            repository.observeRevokeStatus(uid).collect { isRevokedFlow ->
+                if (isRevokedFlow) {
                     repository.executeRevocationCleanup()
-                    _isRevoked.value = true
+                    _isRevokedFlow.value = true
                 }
             }
         }

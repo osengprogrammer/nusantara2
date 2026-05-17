@@ -6,7 +6,15 @@
 - **Navigation Updates**: Refactored `UserGraph.kt` to `AccountGraph.kt` and updated `NavigationRoutes` to use `ACCOUNT_GRAPH` and `ACCOUNT_PROFILE`.
 - **Compilation & SSOT Enforcement**: Resolved dependency mapping and import errors in `SchoolRepository` and `ClassViewModel` to strictly depend on `AccountDao` and `AccountEntity` as the single source of truth.
 
-## 🚀 Recent Updates (May 16, 2026)
+### Phase 12: Final Terminology Unification & Naming Standard Enforcement (v3.2.0-ai-native)
+- **100% "Account" Terminology**: Eliminated all legacy "Teacher", "Staff", and "User" references (identity context) project-wide.
+- **AccountRole Enum**: Established `AccountRole` [ADMIN, TEACHER, MEMBER, OBSERVER] as the canonical role model.
+- **Flow Naming SSOT**: Enforced `Flow` suffix on all `Flow<T>` and `StateFlow<T>` variables (e.g., `uiStateFlow`, `studentsFlow`).
+- **Route CamelCase Enforcement**: Sanitized all navigation routes to use `camelCase` (e.g., `attendanceCapture`).
+- **Complete Repository Decoupling**: Migrated 7 legacy repositories to domain interfaces with `Result<T>` returns, strictly enforced via `RepositoryModule`.
+- **Build Stabilization**: Verified 100% compilation and linting compliance (`compileDebugKotlin` ✅).
+
+## 🚀 Recent Updates (May 17, 2026)
 
 ### Phase 11G: Reporting DI & NavGraph Realignment
 - **Reporting Feature Consolidation**: Moved all reporting-related files (Entities, DAOs, Repositories, ViewModels, and Screens) to the `com.azuratech.azuratime.features.reporting` package.

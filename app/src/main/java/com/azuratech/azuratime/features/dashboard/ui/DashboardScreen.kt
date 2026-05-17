@@ -38,15 +38,22 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     schoolViewModel: SchoolViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val schoolUiState by schoolViewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val schoolUiState by schoolViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val availableClasses = schoolUiState.availableClasses
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddSchoolDialog by remember { mutableStateOf(false) }
 
+    val accountId = uiState.account?.accountId
+    LaunchedEffect(accountId) {
+        if (accountId != null) {
+            schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId))
+        }
+    }
+
     LaunchedEffect(Unit) {
-        viewModel.uiEvent.collect { event ->
+        viewModel.uiEventFlow.collect { event ->
             when (event) {
                 is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 is UiEvent.NavigateTo -> {
@@ -64,7 +71,7 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(Unit) {
-        schoolViewModel.uiEvent.collect { event: UiEvent ->
+        schoolViewModel.uiEventFlow.collect { event: UiEvent ->
             when (event) {
                 is UiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(event.message)
@@ -95,13 +102,6 @@ fun DashboardScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
             else -> {
-                // Sync schoolViewModel accountId
-                uiState.user?.accountId?.let { accountId ->
-                    LaunchedEffect(accountId) {
-                        schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId))
-                    }
-                }
-
                 if (uiState.conflicts.isNotEmpty()) {
                     val firstConflict = uiState.conflicts.first()
                     ConflictResolverDialog(
@@ -148,7 +148,7 @@ fun DashboardContent(
     onSelectClass: (String?) -> Unit,
     onLogoutClick: () -> Unit,
 ) {
-    val schoolUiState by schoolViewModel.uiState.collectAsStateWithLifecycle()
+    val schoolUiState by schoolViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val schools = schoolUiState.schools
     val activeSchoolId = schoolUiState.activeSchoolId
     val activeSchool = schools.find { it.id == activeSchoolId }
@@ -167,7 +167,7 @@ fun DashboardContent(
             )
         },
     ) {
-        val account = data.user ?: return@AzuraScreen
+        val account = data.account ?: return@AzuraScreen
         val photoUrl = FirebaseAuth.getInstance().currentUser?.photoUrl
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -301,7 +301,7 @@ fun DashboardContent(
                 }
 
                 item {
-                    TeacherTasksGrid(
+                    AccountTasksGrid(
                         navController = navController,
                         isAdmin = data.currentRole == "ADMIN" || data.currentRole == "SUPER_ADMIN",
                         currentRole = data.currentRole,
@@ -339,7 +339,6 @@ fun DashboardContent(
 @Composable
 private fun PreviewEmpty() {
     AzuraTheme {
-        val mockState = DashboardPreviewMocks.empty()
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Dashboard is empty")
         }
@@ -350,10 +349,9 @@ private fun PreviewEmpty() {
 @Composable
 private fun PreviewLoaded() {
     AzuraTheme {
-        val mockState = DashboardPreviewMocks.success()
         // Here you would render a mock DashboardContent or similar
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Dashboard Loaded: ${mockState.user?.name}")
+            Text("Dashboard Loaded")
         }
     }
 }
@@ -362,13 +360,12 @@ private fun PreviewLoaded() {
 @Composable
 private fun PreviewError() {
     AzuraTheme {
-        val mockState = DashboardPreviewMocks.error()
         Column(
             modifier = Modifier.fillMaxSize().padding(AzuraSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text(text = mockState.error ?: "An error occurred", color = MaterialTheme.colorScheme.error)
+            Text(text = "An error occurred", color = MaterialTheme.colorScheme.error)
             Spacer(modifier = Modifier.height(AzuraSpacing.md))
             Button(onClick = {}) {
                 Text("Retry")

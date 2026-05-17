@@ -6,63 +6,56 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
-import com.azuratech.azuratime.core.util.AttendanceService
+import com.azuratech.azuratime.features.attendance.ui.AttendanceViewModel
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneOffset
+import com.azuratech.azuratime.core.domain.model.AccountRole
+import com.azuratech.azuratime.core.domain.model.toAccountRole
 
 @Composable
 fun ManualAttendanceScreen(
     biometricViewModel: BiometricEnrollmentViewModel,
     attendanceViewModel: AttendanceViewModel,
-    userViewModel: AccountManagementViewModel,
+    accountViewModel: AccountManagementViewModel,
     classViewModel: ClassViewModel,
     initialFaceId: String = "",
     initialDate: String = "",
     onNavigateBack: () -> Unit,
 ) {
     val faces by biometricViewModel.studentRosterFlow.collectAsStateWithLifecycle()
-    val currentUser by userViewModel.currentUser.collectAsStateWithLifecycle()
-    val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
-    val classUiState by classViewModel.uiState.collectAsStateWithLifecycle()
+    val currentAccount by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
+    val assignedIds by accountViewModel.assignedClassIdsFlow.collectAsStateWithLifecycle()
+    val classUiState by classViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val globalClasses = classUiState.classes
 
     // Role-Based Class Access
-    val isAdmin = currentUser?.memberships?.get(currentUser?.activeSchoolId)?.role == "ADMIN"
+    val isAdmin = currentAccount?.memberships?.get(currentAccount?.activeSchoolId)?.role.toAccountRole() == AccountRole.ADMIN
     val availableClasses = remember(globalClasses, assignedIds, isAdmin) {
         if (isAdmin) globalClasses else globalClasses.filter { classItem: ClassModel -> classItem.id in assignedIds }
     }
 
-    // 🔥 Make Class Selection Optional
     val classOptions = remember(availableClasses) {
         listOf(null) + availableClasses
     }
 
-    // --- State Management ---
-    var selectedStudent by remember(faces, initialFaceId) {
+    var selectedFace by remember(faces) {
         mutableStateOf(faces.find { it.biometric.studentId == initialFaceId })
     }
     var selectedStatus by remember { mutableStateOf("H") }
     var selectedDate by remember {
-        mutableStateOf(
-            if (initialDate.isNotEmpty()) {
-                runCatching { LocalDate.parse(initialDate) }.getOrElse { LocalDate.now() }
-            } else {
-                LocalDate.now()
-            },
-        )
+        mutableStateOf(if (initialDate.isNotEmpty()) LocalDate.parse(initialDate) else LocalDate.now())
     }
     var selectedTime by remember { mutableStateOf(LocalTime.now()) }
     var selectedClass by remember(availableClasses) {
-        mutableStateOf<ClassModel?>(null)
+        mutableStateOf(availableClasses.find { it.id == currentAccount?.activeClassId })
     }
 
-    val isLocked = initialFaceId.isNotEmpty()
-
     ManualAttendanceContent(
-        selectedFace = selectedStudent,
-        onFaceSelected = { selectedStudent = it },
+        selectedFace = selectedFace,
+        onFaceSelected = { selectedFace = it },
         faces = faces,
         selectedStatus = selectedStatus,
         onStatusSelected = { selectedStatus = it },
@@ -73,17 +66,32 @@ fun ManualAttendanceScreen(
         selectedClass = selectedClass,
         onClassSelected = { selectedClass = it },
         availableClasses = classOptions,
-        isLocked = isLocked,
+        isLocked = false,
         onSave = {
-            selectedStudent?.let { biometricDetails ->
-                val finalDateTime = LocalDateTime.of(selectedDate, selectedTime)
-                val newRecord = AttendanceService.createRecord(
-                    biometric = biometricDetails.biometric,
-                    accountEmail = currentUser?.email ?: "admin@azuratech.com",
-                    activeClassId = selectedClass?.id,
-                    activeClassName = selectedClass?.name ?: "Umum / Tanpa Kelas",
-                    status = selectedStatus,
-                    attendanceTime = finalDateTime,
+            val face = selectedFace ?: return@ManualAttendanceContent
+            val finalDateTime = LocalDateTime.of(selectedDate, selectedTime)
+
+            if (selectedClass != null) {
+                // Process through capture engine
+                attendanceViewModel.processManualAttendance(
+                    scannedStudentId = face.biometric.studentId,
+                    studentName = face.biometric.name,
+                    studentClasses = face.classIds,
+                ) { _, _ ->
+                    onNavigateBack()
+                }
+            } else {
+                // Direct Save
+                val newRecord = com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord(
+                    recordId = "man_${System.currentTimeMillis()}",
+                    studentId = face.biometric.studentId,
+                    studentName = face.biometric.name,
+                    classId = "",
+                    className = "Manual",
+                    schoolId = currentAccount?.activeSchoolId ?: "",
+                    accountEmail = currentAccount?.email ?: "admin@azuratech.com",
+                    status = AttendanceStatus.fromCode(selectedStatus),
+                    timestamp = finalDateTime.toInstant(ZoneOffset.UTC).toEpochMilli(),
                 )
                 attendanceViewModel.addRecord(newRecord)
                 onNavigateBack()

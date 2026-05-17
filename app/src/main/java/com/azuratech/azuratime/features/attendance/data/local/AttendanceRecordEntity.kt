@@ -117,7 +117,7 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
             schoolId = schoolId,
             studentId = getString("studentId") ?: getString("faceId") ?: "",
             name = getString("name") ?: "Siswa",
-            accountEmail = getString("accountEmail") ?: getString("teacherEmail") ?: getString("userId") ?: "",
+            accountEmail = getString("accountEmail") ?: getString("accountEmail") ?: getString("accountId") ?: "",
             status = getString("status") ?: "Hadir",
             attendanceDate = java.time.LocalDate.parse(dateStr),
             attendanceTime = timeStr?.let { java.time.LocalDateTime.parse(it) },

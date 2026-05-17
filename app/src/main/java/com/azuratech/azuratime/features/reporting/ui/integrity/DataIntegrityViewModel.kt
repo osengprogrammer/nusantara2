@@ -24,21 +24,21 @@ class DataIntegrityViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
 ) : ViewModel() {
 
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEvent.asSharedFlow()
+    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
+    val uiEventFlow = _uiEventFlow.asSharedFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    private val _error = MutableStateFlow<String?>(null)
+    private val _isLoadingFlow = MutableStateFlow(false)
+    private val _errorFlow = MutableStateFlow<String?>(null)
 
-    val uiState: StateFlow<DataIntegrityUiState> = combine(
+    val uiStateFlow: StateFlow<DataIntegrityUiState> = combine(
         repository.totalStudentsFlow,
         repository.totalRecordsFlow,
         repository.missingAssignmentFlow,
         repository.brokenAssignmentsFlow,
         repository.globalUnsyncedCountFlow,
         repository.conflictsFlow.map { entities -> entities.map { it.toDomain() } },
-        _isLoading,
-        _error,
+        _isLoadingFlow,
+        _errorFlow,
     ) { params: Array<Any?> ->
         DataIntegrityUiState(
             totalStudents = params[0] as Int,
@@ -56,23 +56,23 @@ class DataIntegrityViewModel @Inject constructor(
         when (event) {
             is DataIntegrityUiEvent.ResolveConflict -> resolveConflict(event.conflictId, event.useCloud)
             DataIntegrityUiEvent.RefreshIntegrity -> { /* Flows react automatically */ }
-            DataIntegrityUiEvent.ClearError -> _error.value = null
+            DataIntegrityUiEvent.ClearError -> _errorFlow.value = null
             is DataIntegrityUiEvent.ViewIncompleteProfiles -> { /* Managed by screen navigation */ }
         }
     }
 
     private fun resolveConflict(conflictId: String, useCloud: Boolean) {
         viewModelScope.launch {
-            _isLoading.value = true
+            _isLoadingFlow.value = true
             when (val result = attendanceRepository.resolveConflict(conflictId, useCloud)) {
                 is Result.Success -> {
-                    _isLoading.value = false
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Konflik berhasil diselesaikan"))
+                    _isLoadingFlow.value = false
+                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Konflik berhasil diselesaikan"))
                 }
                 is Result.Failure -> {
-                    _isLoading.value = false
-                    _error.value = result.error.message
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal: ${result.error.message}"))
+                    _isLoadingFlow.value = false
+                    _errorFlow.value = result.error.message
+                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal: ${result.error.message}"))
                 }
                 is Result.Loading -> {}
             }

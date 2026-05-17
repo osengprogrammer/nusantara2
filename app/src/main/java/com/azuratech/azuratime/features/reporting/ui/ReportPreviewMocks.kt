@@ -12,15 +12,15 @@ object ReportPreviewMocks {
         auditLogs = listOf(
             SystemAuditTrail(
                 logId = "log_1",
-                userId = "user_1",
+                accountId = "user_1",
                 action = "LOGIN",
                 timestamp = System.currentTimeMillis(),
-                details = "User logged in from Android device",
+                details = "Account logged in from Android device",
                 syncStatus = SyncStatus.SYNCED,
             ),
             SystemAuditTrail(
                 logId = "log_2",
-                userId = "user_1",
+                accountId = "user_1",
                 action = "REGISTER_STUDENT",
                 timestamp = System.currentTimeMillis() - 3600000,
                 details = "Student STU-123 registered",

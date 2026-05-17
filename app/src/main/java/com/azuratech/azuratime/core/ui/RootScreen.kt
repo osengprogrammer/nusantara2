@@ -18,7 +18,7 @@ import com.azuratech.azuratime.features.auth.ui.AuthViewModel
 fun RootScreen() {
     val bootViewModel: BootViewModel = hiltViewModel()
     val mainViewModel: MainViewModel = hiltViewModel()
-    val bootState by bootViewModel.state.collectAsState()
+    val bootState by bootViewModel.stateFlow.collectAsState()
 
     Crossfade(targetState = bootState, animationSpec = tween(500), label = "RootState") { state ->
         when (state) {

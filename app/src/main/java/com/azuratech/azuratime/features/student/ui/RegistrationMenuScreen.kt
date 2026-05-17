@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.PersonAdd
@@ -31,6 +32,7 @@ fun RegistrationMenuScreen(
     onNavigateToAddStudent: () -> Unit,
     onNavigateToBulkRegister: () -> Unit,
     onNavigateToBiometricManagement: () -> Unit,
+    onNavigateToAssignment: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     AzuraScreen(
@@ -94,6 +96,18 @@ fun RegistrationMenuScreen(
                     listOf(Color(0xFF4DB6AC), Color(0xFF00796B)),
                 ),
                 onClick = onNavigateToBiometricManagement,
+            )
+
+            Spacer(modifier = Modifier.height(AzuraSpacing.lg))
+
+            RegistrationCard(
+                title = "Penugasan Kelas",
+                description = "Atur penempatan siswa ke dalam sesi kelas atau departemen.",
+                icon = Icons.Default.Assignment,
+                gradient = Brush.linearGradient(
+                    listOf(Color(0xFFFFA726), Color(0xFFF57C00)),
+                ),
+                onClick = onNavigateToAssignment,
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.xl))
