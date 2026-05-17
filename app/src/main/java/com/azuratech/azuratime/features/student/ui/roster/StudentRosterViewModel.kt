@@ -2,27 +2,43 @@ package com.azuratech.azuratime.features.student.ui.roster
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 🎓 STUDENT ROSTER VIEW MODEL (v3.2.0-ai-native)
+ * Refactored to Strict MVI & SSOT.
+ */
 @HiltViewModel
-@OptIn(ExperimentalCoroutinesApi::class)
 class StudentRosterViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
+    private val _state = MutableStateFlow(StudentRosterUiState())
+    val uiState: StateFlow<StudentRosterUiState> = _state.asStateFlow()
+
+    // Internal flows for reactive filtering
     private val _searchQuery = MutableStateFlow("")
     private val _selectedClassId = MutableStateFlow<String?>(null)
-    private val _isSyncing = MutableStateFlow(false)
 
     private val _allClasses = sessionManager.activeSchoolIdFlow
         .filterNotNull()
@@ -31,71 +47,110 @@ class StudentRosterViewModel @Inject constructor(
                 result.getOrNull() ?: emptyList()
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _studentProfiles = studentRepository.getStudentProfiles()
-
-    val uiState: StateFlow<StudentRosterUiState> = combine(
-        _studentProfiles,
-        _allClasses,
-        _searchQuery,
-        _selectedClassId,
-        _isSyncing,
-    ) { profiles, classes, query, classId, syncing ->
-        val classMap = classes.associateBy { it.id }
-
-        val displayItems = profiles
-            .filter { profile ->
-                val matchesQuery = profile.name.contains(query, ignoreCase = true) ||
-                    (profile.studentCode?.contains(query, ignoreCase = true) ?: false)
-                val matchesClass = classId == null || profile.classIds.contains(classId)
-                matchesQuery && matchesClass
-            }
-            .map { profile ->
-                val assignedClassNames = profile.classIds
-                    .mapNotNull { classId -> classMap[classId]?.name }
-                    .joinToString(", ")
-
-                StudentDisplayItem(
-                    profile = profile,
-                    assignedClassNames = assignedClassNames.ifEmpty { "Tanpa Kelas" },
-                    isBiometricReady = profile.biometricExists,
-                )
-            }
-
-        val selectedClassName = classId?.let { id -> classMap[id]?.name }
-
-        StudentRosterUiState.Success(
-            StudentRosterData(
-                searchQuery = query,
-                selectedClassName = selectedClassName,
-                students = displayItems,
-                allClasses = classes,
-                isSyncing = syncing,
-            ),
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StudentRosterUiState.Loading)
-
-    fun onSearchQueryChanged(query: String) {
-        _searchQuery.value = query
+    init {
+        loadRoster()
+        observeRosterReactive()
     }
 
-    fun onClassSelected(classId: String?) {
-        _selectedClassId.value = classId
-    }
-
-    fun syncStudents() {
-        viewModelScope.launch {
-            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
-            _isSyncing.value = true
-            studentRepository.pullStudents(schoolId)
-            _isSyncing.value = false
+    fun onEvent(event: StudentRosterUiEvent) {
+        when (event) {
+            is StudentRosterUiEvent.LoadRoster -> loadRoster()
+            is StudentRosterUiEvent.SelectClass -> {
+                _selectedClassId.value = event.classId
+                _state.update { it.copy(selectedClassId = event.classId) }
+            }
+            is StudentRosterUiEvent.UpdateSearch -> {
+                _searchQuery.value = event.query
+                _state.update { it.copy(searchQuery = event.query) }
+            }
+            is StudentRosterUiEvent.RequestDelete -> {
+                _state.update { it.copy(isDeleteDialogVisible = true, targetStudentId = event.studentId) }
+            }
+            is StudentRosterUiEvent.CancelDelete -> {
+                _state.update { it.copy(isDeleteDialogVisible = false, targetStudentId = null) }
+            }
+            is StudentRosterUiEvent.ConfirmDelete -> deleteStudent(event.studentId)
+            is StudentRosterUiEvent.RetryDelete -> {
+                _state.value.targetStudentId?.let { deleteStudent(it) }
+            }
+            is StudentRosterUiEvent.ClearError -> {
+                _state.update { it.copy(error = null) }
+            }
+            is StudentRosterUiEvent.SyncStudents -> syncStudents()
+            is StudentRosterUiEvent.NavigateToDetail -> {
+                // Handled via Screen navigation callback
+            }
         }
     }
 
-    fun deleteStudent(studentId: String) {
+    private fun loadRoster() {
         viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null) }
+            studentRepository.getAll()
+                .onSuccess { profiles ->
+                    // Profiles will also be updated via observeRosterReactive flow
+                    _state.update { it.copy(isLoading = false) }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(isLoading = false, error = error.message) }
+                }
+        }
+    }
+
+    private fun observeRosterReactive() {
+        combine(
+            studentRepository.getStudentProfiles(),
+            _allClasses,
+            _searchQuery,
+            _selectedClassId,
+        ) { profiles, classes, query, classId ->
+            val classMap = classes.associateBy { it.id }
+
+            val displayItems = profiles
+                .filter { profile ->
+                    val matchesQuery = profile.name.contains(query, ignoreCase = true) ||
+                        (profile.studentCode?.contains(query, ignoreCase = true) ?: false)
+                    val matchesClass = classId == null || profile.classIds.contains(classId)
+                    matchesQuery && matchesClass
+                }
+                .map { profile ->
+                    val assignedClassNames = profile.classIds
+                        .mapNotNull { id -> classMap[id]?.name }
+                        .joinToString(", ")
+
+                    StudentDisplayItem(
+                        profile = profile,
+                        assignedClassNames = assignedClassNames.ifEmpty { "Tanpa Kelas" },
+                        isBiometricReady = profile.biometricExists,
+                    )
+                }
+
+            _state.update {
+                it.copy(
+                    students = displayItems,
+                    allClasses = classes,
+                )
+            }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    }
+
+    private fun syncStudents() {
+        viewModelScope.launch {
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
+            _state.update { it.copy(isLoading = true) }
+            studentRepository.pullStudents(schoolId)
+                .onSuccess { _state.update { it.copy(isLoading = false) } }
+                .onFailure { error -> _state.update { it.copy(isLoading = false, error = error.message) } }
+        }
+    }
+
+    private fun deleteStudent(studentId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, isDeleteDialogVisible = false) }
             studentRepository.deleteProfile(studentId)
+                .onSuccess { _state.update { it.copy(isLoading = false, targetStudentId = null) } }
+                .onFailure { error -> _state.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
 }

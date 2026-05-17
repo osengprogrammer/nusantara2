@@ -53,6 +53,21 @@ class StudentRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun getAll(): Result<List<StudentProfile>> = withContext(Dispatchers.IO) {
+        try {
+            val schoolId = sessionManager.getActiveSchoolId()
+            if (schoolId.isNullOrBlank()) {
+                return@withContext Result.Success(emptyList())
+            }
+            // We can't easily convert Flow to List without a non-flow DAO method or .first()
+            // Let's use .first() on the existing flow for SSOT consistency
+            val profiles = getStudentProfiles().first()
+            Result.Success(profiles)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
     override suspend fun saveProfile(profile: StudentProfile): Result<Unit> {
         return try {
             val (student, biometric, assignments) = profile.toEntities()

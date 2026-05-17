@@ -1,0 +1,49 @@
+package com.azuratech.azuratime.features.student.ui.roster
+
+import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
+
+/**
+ * 🏰 STUDENT ROSTER PREVIEW MOCKS (v3.2.0-ai-native)
+ */
+object StudentRosterPreviewMocks {
+    fun loading(): StudentRosterUiState = StudentRosterUiState(isLoading = true)
+
+    fun populated(): StudentRosterUiState = StudentRosterUiState(
+        students = listOf(
+            StudentDisplayItem(
+                profile = StudentProfile(
+                    studentId = "stu_1",
+                    schoolId = "sch_1",
+                    name = "Budi Santoso",
+                    studentCode = "S001",
+                    classIds = listOf("cls_1"),
+                    biometricExists = true,
+                ),
+                assignedClassNames = "10A",
+                isBiometricReady = true,
+            ),
+            StudentDisplayItem(
+                profile = StudentProfile(
+                    studentId = "stu_2",
+                    schoolId = "sch_1",
+                    name = "Siti Aminah",
+                    studentCode = "S002",
+                    classIds = listOf("cls_2"),
+                    biometricExists = false,
+                ),
+                assignedClassNames = "11B",
+                isBiometricReady = false,
+            ),
+        ),
+        allClasses = listOf(
+            ClassModel(id = "cls_1", name = "10A", schoolId = "sch_1"),
+            ClassModel(id = "cls_2", name = "11B", schoolId = "sch_1"),
+        ),
+    )
+
+    fun error(): StudentRosterUiState = StudentRosterUiState(
+        error = "Waduh, koneksi database lagi bermasalah, Lur.",
+    )
+}
