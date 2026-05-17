@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.attendance.ui.manual
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.ui.enroll.StudentBiometricViewModel
+import com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
@@ -14,7 +14,7 @@ import java.time.LocalTime
 
 @Composable
 fun ManualAttendanceScreen(
-    biometricViewModel: StudentBiometricViewModel,
+    biometricViewModel: BiometricEnrollmentViewModel,
     attendanceViewModel: AttendanceViewModel,
     userViewModel: AccountManagementViewModel,
     classViewModel: ClassViewModel,

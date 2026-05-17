@@ -38,6 +38,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun provideBiometricRepository(
+        impl: com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository,
+    ): com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
+
+    @Binds
+    @Singleton
     abstract fun provideFileStorage(
         impl: PhotoStorageUtils,
     ): FileStorage
