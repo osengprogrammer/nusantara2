@@ -3,208 +3,186 @@ package com.azuratech.azuratime.features.student.ui.form
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
-import com.azuratech.azuratime.features.student.domain.model.StudentProfile
-import com.azuratech.azuratime.core.domain.model.SyncStatus
-import com.azuratech.azuratime.core.domain.media.PhotoStorageUtils
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.domain.media.PhotoStorageUtils
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
+    private val studentRepository: StudentRepository,
     private val biometricRepository: StudentBiometricRepository,
     private val accountRepository: AccountRepository,
-    private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
-    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
+    private val schoolRepository: SchoolRepository,
+    private val sessionManager: SessionManager,
     private val photoStorageUtils: PhotoStorageUtils,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StudentFormUiState())
-    val uiStateStateFlow: StateFlow<StudentFormUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<StudentFormUiState> = _uiState.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEventFlow: SharedFlow<UiEvent> = _uiEvent.asSharedFlow()
 
-    // 🎓 REACTIVE CLASSES FLOW
-    private val _classesFlow = sessionManager.activeSchoolIdFlow
-        .filterNotNull()
-        .flatMapLatest { schoolId ->
-            schoolRepository.observeClasses(schoolId)
-        }
-        .map { result ->
-            when (result) {
-                is Result.Success -> result.data
-                else -> emptyList()
-            }
-        }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-
-    val classesStateFlow: StateFlow<List<com.azuratech.azuraengine.model.ClassModel>> = _classesFlow
-
-    private var selectedClassId: String? = null
-    private var selectedClassName: String? = null
-
     init {
-        // Keep UI state synced with classes flow for AddStudentContent compatibility
-        _classesFlow.onEach { classes ->
-            updateState { it.copy(availableClasses = classes) }
-        }.launchIn(viewModelScope)
+        observeClasses()
     }
 
-    fun loadStudentForEdit(studentId: String) {
+    private fun observeClasses() {
+        sessionManager.activeSchoolIdFlow
+            .filterNotNull()
+            .flatMapLatest { schoolId ->
+                schoolRepository.observeClasses(schoolId)
+            }
+            .onEach { result ->
+                when (result) {
+                    is Result.Success -> {
+                        _uiState.update { it.copy(availableClasses = result.data) }
+                    }
+                    else -> {
+                        _uiState.update { it.copy(availableClasses = emptyList()) }
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onEvent(event: StudentFormUiEvent) {
+        when (event) {
+            is StudentFormUiEvent.UpdateField -> updateField(event.field, event.value)
+            is StudentFormUiEvent.CapturePhoto -> _uiState.update { it.copy(isCapturingPhoto = true) }
+            is StudentFormUiEvent.PhotoSelected -> updateField("photoUrl", event.uri)
+            is StudentFormUiEvent.PhotoCaptured -> handlePhotoCaptured(event.bitmap)
+            is StudentFormUiEvent.BiometricScanned -> handleBiometricScanned(event.encoding)
+            is StudentFormUiEvent.FaceCaptured -> handleFaceCaptured(event.bitmap, event.embedding)
+            is StudentFormUiEvent.SubmitForm -> submitForm()
+            is StudentFormUiEvent.Retry -> submitForm()
+            is StudentFormUiEvent.ClearError -> _uiState.update { it.copy(error = null) }
+            is StudentFormUiEvent.NavigateBack -> viewModelScope.launch { _uiEvent.emit(UiEvent.NavigateUp) }
+        }
+    }
+
+    private fun updateField(field: String, value: Any) {
+        _uiState.update { state ->
+            val updatedProfile = when (field) {
+                "name" -> state.profile.copy(name = value as String)
+                "studentId" -> state.profile.copy(studentId = value as String, faceId = value as String)
+                "studentCode" -> state.profile.copy(studentCode = value as String)
+                "classId" -> state.profile.copy(classIds = listOf(value as String))
+                "photoUrl" -> state.profile.copy(photoUrl = value as String)
+                "embedding" -> state.profile.copy(embedding = value as FloatArray)
+                else -> state.profile
+            }
+            state.copy(profile = updatedProfile, validationErrors = state.validationErrors - field)
+        }
+    }
+
+    private fun handlePhotoCaptured(bitmap: Bitmap) {
+        _uiState.update { it.copy(capturedBitmap = bitmap, isCapturingPhoto = false) }
+    }
+
+    private fun handleBiometricScanned(encoding: ByteArray) {
+        // Map encoding to embedding if needed, or store as is
+        // For now, assuming encoding is the embedding as ByteArray
+        _uiState.update { it.copy(biometricStatus = BiometricStatus.Success) }
+    }
+
+    private fun handleFaceCaptured(bitmap: Bitmap, embedding: FloatArray) {
+        _uiState.update {
+            it.copy(
+                capturedBitmap = bitmap,
+                profile = it.profile.copy(embedding = embedding),
+                biometricStatus = BiometricStatus.Success,
+            )
+        }
+    }
+
+    private fun submitForm() {
+        val state = _uiState.value
+        val validationErrors = validateForm(state)
+        if (validationErrors.isNotEmpty()) {
+            _uiState.update { it.copy(validationErrors = validationErrors) }
+            return
+        }
+
+        _uiState.update { it.copy(isSubmitting = true, error = null) }
+
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            val studentBiometricDetails = biometricRepository.getStudentWithDetails(studentId, schoolId)
+            val profile = state.profile.copy(schoolId = schoolId)
 
-            if (studentBiometricDetails != null) {
-                selectedClassId = studentBiometricDetails.classId
-                updateState {
-                    it.copy(
-                        name = studentBiometricDetails.biometric.name,
-                        studentId = studentBiometricDetails.biometric.studentId,
-                        selectedClassId = studentBiometricDetails.classId,
-                        embedding = studentBiometricDetails.biometric.embedding,
-                        photoUrl = studentBiometricDetails.biometric.photoUrl,
-                        isEditMode = true,
-                        pageTitle = "Edit Profil Siswa",
-                    )
-                }
-            } else {
-                updateState { it.copy(formError = "Gagal memuat data") }
-            }
-        }
-    }
-
-    // --- Event Handlers for Form Fields ---
-
-    fun onNameChange(name: String) {
-        updateState { it.copy(name = name) }
-    }
-
-    fun onStudentIdChange(studentId: String) {
-        updateState { it.copy(studentId = studentId) }
-    }
-
-    fun onStudentCodeChange(studentCode: String) {
-        updateState { it.copy(studentCode = studentCode) }
-    }
-
-    fun onClassSelected(classId: String, className: String) {
-        selectedClassId = classId
-        selectedClassName = className
-        println("🎓 Class selected: $className ($classId)")
-        updateState { it.copy(selectedClassId = classId) }
-    }
-
-    fun onPhotoCaptured(bitmap: Bitmap) {
-        updateState { it.copy(capturedBitmap = bitmap) }
-    }
-
-    fun onPhotoUploaded(bitmap: Bitmap) {
-        updateState { it.copy(capturedBitmap = bitmap) }
-    }
-
-    fun onFaceCaptured(bitmap: Bitmap, embedding: FloatArray) {
-        updateState { it.copy(capturedBitmap = bitmap, embedding = embedding) }
-    }
-
-    fun onEmbeddingCaptured(embedding: FloatArray) {
-        updateState { it.copy(embedding = embedding) }
-    }
-
-    // --- Main Action ---
-
-    fun saveStudent() {
-        val currentState = _uiState.value
-        if (!currentState.isFormValid) return
-
-        println("🎓 ViewModel: Saving with classId=$selectedClassId")
-        updateState { it.copy(isSubmitting = true) }
-
-        viewModelScope.launch {
-            val photoBytes = currentState.capturedBitmap?.let { bitmapToByteArray(it) }
-            val activeSchoolId = sessionManager.getActiveSchoolId()
-            val currentAccountId = sessionManager.getCurrentUserId()
-            val account = currentAccountId?.let { accountRepository.getAccountById(it) }
-
-            account?.let { println("🔍 StudentForm: Fetched account ${it.accountId} for save") }
-
-            if (activeSchoolId == null && account?.role == "SUPER_ADMIN") {
-                updateState { it.copy(isSubmitting = false) }
-                _uiEvent.emit(UiEvent.ShowSnackbar("Please select a school first"))
-                return@launch
-            }
-
-            val resolvedSchoolId = activeSchoolId ?: ""
-            if (resolvedSchoolId.isBlank()) {
-                updateState { it.copy(isSubmitting = false) }
-                _uiEvent.emit(UiEvent.ShowSnackbar("School context required"))
-                return@launch
-            }
-
-            // Determine IDs
-            val studentId = if (currentState.studentId.isNotBlank()) {
-                currentState.studentId
-            } else {
-                "STU-${UUID.randomUUID().toString().take(8)}"
-            }
-
-            // 🔥 AI Friendly: Face ID must match Student ID to ensure unified identity
-            val faceId = studentId
-
-            // 1. Construct StudentProfile
-            val profile = StudentProfile(
-                studentId = studentId,
-                studentCode = currentState.studentCode,
-                name = currentState.name,
-                schoolId = resolvedSchoolId,
-                classIds = listOfNotNull(selectedClassId),
-                faceId = faceId, // Explicitly unified
-                embedding = currentState.embedding,
-                photoUrl = currentState.photoUrl,
-                syncStatus = SyncStatus.PENDING_UPDATE,
-            )
-
-            // 2. Save via Repository
-            when (val result = biometricRepository.saveStudentProfile(profile, photoBytes)) {
-                is Result.Success<Unit> -> {
-                    val message = if (currentState.isEditMode) "Berhasil diperbarui" else "Siswa berhasil didaftarkan"
-                    _uiEvent.emit(UiEvent.ShowSnackbar(message))
+            // 1. Save Profile
+            when (val result = studentRepository.saveProfile(profile)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(isSubmitting = false, isSubmitted = true) }
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Siswa berhasil disimpan"))
                     _uiEvent.emit(UiEvent.NavigateUp)
                 }
                 is Result.Failure -> {
-                    val errorMsg = result.error.message ?: "Gagal menyimpan"
-                    updateState { it.copy(isSubmitting = false, formError = errorMsg) }
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal menyimpan: $errorMsg"))
+                    _uiState.update { it.copy(isSubmitting = false, error = result.error.message) }
                 }
                 is Result.Loading -> {}
             }
         }
     }
 
-    // --- Private Helper ---
+    private fun validateForm(state: StudentFormUiState): Map<String, String> {
+        val errors = mutableMapOf<String, String>()
+        if (state.profile.name.isBlank()) errors["name"] = "Nama tidak boleh kosong"
+        if (state.profile.studentId.isBlank()) errors["studentId"] = "ID Siswa tidak boleh kosong"
+        if (state.profile.classIds.isEmpty()) errors["classId"] = "Pilih kelas terlebih dahulu"
+        if (state.profile.embedding == null) errors["biometric"] = "Biometrik wajah diperlukan"
+        return errors
+    }
 
     private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
-        val stream = java.io.ByteArrayOutputStream()
+        val stream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
         return stream.toByteArray()
     }
 
-    private fun updateState(update: (StudentFormUiState) -> StudentFormUiState) {
-        val newState = update(_uiState.value)
-        _uiState.value = newState.copy(isFormValid = validateForm(newState))
-    }
-
-    private fun validateForm(state: StudentFormUiState): Boolean {
-        return state.name.isNotBlank() &&
-            state.studentId.isNotBlank() &&
-            state.selectedClassId != null &&
-            state.embedding != null
+    fun loadStudentForEdit(studentId: String) {
+        viewModelScope.launch {
+            val schoolId = sessionManager.getActiveSchoolId() ?: ""
+            biometricRepository.getStudentWithDetails(studentId, schoolId)?.let { details ->
+                _uiState.update {
+                    it.copy(
+                        profile = StudentProfile(
+                            studentId = details.biometric.studentId,
+                            name = details.biometric.name,
+                            schoolId = schoolId,
+                            classIds = listOfNotNull(details.classId),
+                            faceId = details.biometric.studentId,
+                            embedding = details.biometric.embedding,
+                            photoUrl = details.biometric.photoUrl,
+                        ),
+                        isEditMode = true,
+                        pageTitle = "Edit Profil Siswa",
+                    )
+                }
+            } ?: run {
+                _uiState.update { it.copy(error = "Gagal memuat data siswa") }
+            }
+        }
     }
 }

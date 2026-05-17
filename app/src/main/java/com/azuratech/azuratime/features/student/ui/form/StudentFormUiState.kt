@@ -2,72 +2,36 @@ package com.azuratech.azuratime.features.student.ui.form
 
 import android.graphics.Bitmap
 import com.azuratech.azuraengine.model.ClassModel
-
-import java.util.UUID
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 
 /**
- * Represents the state of the student registration/edit form.
- * This is the single source of truth for the UI.
+ * 🎨 STUDENT FORM UI STATE
+ * v3.2.0-ai-native compliant
  */
 data class StudentFormUiState(
-    // Form Fields
-    val name: String = "",
-    val studentId: String = "STU-${UUID.randomUUID().toString().take(8).uppercase()}",
-    val studentCode: String? = null,
-    val selectedClassId: String? = null,
-    val capturedBitmap: Bitmap? = null,
-    val embedding: FloatArray? = null,
-    val photoUrl: String? = null,
-
-    // UI State
+    val profile: StudentProfile = StudentProfile(
+        studentId = "",
+        name = "",
+        schoolId = "",
+    ),
     val availableClasses: List<ClassModel> = emptyList(),
     val isSubmitting: Boolean = false,
-    val formError: String? = null,
+    val isCapturingPhoto: Boolean = false,
+    val biometricStatus: BiometricStatus = BiometricStatus.Idle,
+    val error: String? = null,
+    val validationErrors: Map<String, String> = emptyMap(),
+    val isSubmitted: Boolean = false,
     val isEditMode: Boolean = false,
-    val pageTitle: String = "Pendaftaran Baru",
-
-    // Real-time Validation
-    val isFormValid: Boolean = false,
+    val pageTitle: String = "Tambah Siswa",
+    val capturedBitmap: Bitmap? = null,
 ) {
-    // Overriding equals and hashCode for FloatArray comparison
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    val isFormValid: Boolean
+        get() = profile.name.isNotBlank() &&
+            profile.studentId.isNotBlank() &&
+            profile.classIds.isNotEmpty() &&
+            profile.embedding != null
+}
 
-        other as StudentFormUiState
-
-        if (name != other.name) return false
-        if (studentId != other.studentId) return false
-        if (selectedClassId != other.selectedClassId) return false
-        if (capturedBitmap != other.capturedBitmap) return false
-        if (embedding != null) {
-            if (other.embedding == null) return false
-            if (!embedding.contentEquals(other.embedding)) return false
-        } else if (other.embedding != null) return false
-        if (photoUrl != other.photoUrl) return false
-        if (availableClasses != other.availableClasses) return false
-        if (isSubmitting != other.isSubmitting) return false
-        if (formError != other.formError) return false
-        if (isEditMode != other.isEditMode) return false
-        if (pageTitle != other.pageTitle) return false
-        if (isFormValid != other.isFormValid) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + studentId.hashCode()
-        result = 31 * result + (selectedClassId?.hashCode() ?: 0)
-        result = 31 * result + (capturedBitmap?.hashCode() ?: 0)
-        result = 31 * result + (embedding?.contentHashCode() ?: 0)
-        result = 31 * result + (photoUrl?.hashCode() ?: 0)
-        result = 31 * result + availableClasses.hashCode()
-        result = 31 * result + isSubmitting.hashCode()
-        result = 31 * result + (formError?.hashCode() ?: 0)
-        result = 31 * result + isEditMode.hashCode()
-        result = 31 * result + pageTitle.hashCode()
-        result = 31 * result + isFormValid.hashCode()
-        return result
-    }
+enum class BiometricStatus {
+    Idle, Ready, Scanning, Success, Failure
 }
