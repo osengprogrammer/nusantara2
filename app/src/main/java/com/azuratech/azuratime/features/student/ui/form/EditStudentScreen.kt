@@ -1,14 +1,22 @@
 package com.azuratech.azuratime.features.student.ui.form
 
 import androidx.compose.runtime.Composable
-import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun EditStudentScreen(
-    @Suppress("UNUSED_PARAMETER") faceId: String,
+    faceId: String,
     onNavigateBack: () -> Unit,
+    viewModel: StudentFormViewModel = hiltViewModel(),
 ) {
-    AzuraScreen(title = "Edit Siswa", onBack = onNavigateBack) {
-        // Placeholder
+    LaunchedEffect(faceId) {
+        viewModel.loadStudentForEdit(faceId)
     }
+
+    // Reuse AddStudentScreen as they share the same form logic
+    AddStudentScreen(
+        onNavigateBack = onNavigateBack,
+        viewModel = viewModel,
+    )
 }
