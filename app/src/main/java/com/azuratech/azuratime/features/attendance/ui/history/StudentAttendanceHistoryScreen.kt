@@ -65,6 +65,7 @@ fun StudentAttendanceHistoryScreen(
                         Spacer(modifier = Modifier.height(AzuraSpacing.md))
                         AzuraLoadingButton(
                             text = "Retry",
+                            isLoading = false,
                             onClick = { viewModel.onEvent(AttendanceHistoryUiEvent.Retry) },
                         )
                     }
@@ -147,7 +148,7 @@ private fun PreviewError() {
                 color = MaterialTheme.colorScheme.error,
             )
             Spacer(modifier = Modifier.height(AzuraSpacing.md))
-            AzuraLoadingButton(text = "Retry", onClick = {})
+            AzuraLoadingButton(text = "Retry", isLoading = false, onClick = {})
         }
     }
 }
