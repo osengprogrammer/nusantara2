@@ -2,27 +2,42 @@ package com.azuratech.azuratime.features.dashboard.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.repo.AdminRepository
-import com.azuratech.azuratime.features.auth.data.repo.AuthRepository
-import com.azuratech.azuratime.features.account.data.repo.AccountRepository
-import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
+import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.ui.UiEvent
-import kotlinx.coroutines.channels.Channel
+import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.core.ui.util.UiState
+import com.azuratech.azuratime.core.ui.UiEvent
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.account.data.repo.AdminRepository
+import com.azuratech.azuratime.features.account.data.repo.SchoolWorkspaceRepository
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
+import com.azuratech.azuratime.features.auth.data.repo.AuthRepository
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.features.biometric.domain.repository.StudentBiometricRepository
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,31 +47,25 @@ class DashboardViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val biometricRepository: StudentBiometricRepository,
     private val attendanceRepository: AttendanceRepository,
-    private val schoolRepository: com.azuratech.azuratime.features.school.data.repo.SchoolRepository,
+    private val schoolRepository: SchoolRepository,
+    private val workspaceRepository: SchoolWorkspaceRepository,
     private val authRepository: AuthRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : ViewModel() {
-
-    sealed class NavigationEvent {
-        data class NavigateToRegistration(val schoolId: String) : NavigationEvent()
-    }
-
-    private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
-    val navigationEvent = _navigationEvent.asSharedFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _accountFlow = sessionManager.currentUserIdFlow
-        .flatMapLatest { accountId -> 
-            if (accountId != null) {
-                accountRepository.observeAccountEntity(accountId)
-            } else {
-                flowOf(null)
-            }
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    private val _refreshTrigger = MutableStateFlow(0)
 
-    private val _recentRecordsFlow = sessionManager.activeSchoolIdFlow
+    private val _accountFlow = sessionManager.currentUserIdFlow
+        .flatMapLatest { accountId ->
+            if (accountId != null) accountRepository.observeAccountEntity(accountId) else flowOf(null)
+        }
+
+    private val _activeSchoolIdFlow = sessionManager.activeSchoolIdFlow
+
+    private val _recentRecordsFlow = _activeSchoolIdFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
                 attendanceRepository.getAttendanceRecords("", null, null, null, null, emptyList(), schoolId).map { it.take(5) }
@@ -65,17 +74,20 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
-    private val _allClassesFlow = sessionManager.activeSchoolIdFlow
-        .filterNotNull()
+    private val _allClassesFlow = _activeSchoolIdFlow
         .flatMapLatest { schoolId ->
-            schoolRepository.observeClasses(schoolId).map { result ->
-                if (result is Result.Success) result.data else emptyList()
+            if (schoolId != null) {
+                schoolRepository.observeClasses(schoolId).map { result ->
+                    if (result is Result.Success) result.data else emptyList()
+                }
+            } else {
+                flowOf(emptyList())
             }
         }
 
     private val _assignedClassesFlow = combine(
-        sessionManager.activeSchoolIdFlow,
-        _accountFlow
+        _activeSchoolIdFlow,
+        _accountFlow,
     ) { schoolId, account ->
         schoolId to account
     }.flatMapLatest { (schoolId, account) ->
@@ -106,160 +118,141 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
-
-    init {
-        // 🔥 FIX: React to ID changes instead of one-shot check
-        sessionManager.currentUserIdFlow
-            .filterNotNull()
-            .onEach { accountId -> 
-                println("🔍 Dashboard: ID detected ($accountId), triggering sync...")
-                triggerAutoSyncIfNeeded() 
-            }
-            .launchIn(viewModelScope)
-    }
-
-    private suspend fun triggerAutoSyncIfNeeded() {
-        val lastSync = sessionManager.getLastSyncTime()
-        val isStale = System.currentTimeMillis() - lastSync > 24 * 60 * 60 * 1000 // 24h stale logic
-        
-        if (isStale) {
-            println("🔄 Persistence: Auto-sync triggered (isStale=$isStale).")
-            sync()
+    private val _activeSchoolFlow = _activeSchoolIdFlow
+        .flatMapLatest { id ->
+            if (id != null) flow { emit(schoolRepository.getSchoolById(id)) } else flowOf<School?>(null)
         }
-    }
 
-    val state: StateFlow<UiState<DashboardUiState>> = combine(
+    val uiState: StateFlow<DashboardUiState> = combine(
         _accountFlow,
         _recentRecordsFlow,
         _sessionStudentsFlow,
         _assignedClassesFlow,
         _allClassesFlow,
-        flowOf(false), // syncRepository removed
-        flowOf(0), // dataIntegrity removed
-        flowOf(0),
-        flowOf(0),
-        flowOf(0),
-        flowOf(emptyList<AttendanceConflict>())
-    ) { args ->
-        val account = args[0] as AccountEntity?
-        @Suppress("UNCHECKED_CAST")
-        val recentRecords = args[1] as List<AttendanceRecordEntity>
-        @Suppress("UNCHECKED_CAST")
-        val sessionStudents = args[2] as List<StudentBiometricEntity>
-        @Suppress("UNCHECKED_CAST")
-        val assignedClasses = args[3] as List<ClassModel>
-        @Suppress("UNCHECKED_CAST")
-        val allClasses = args[4] as List<ClassModel>
-        val isSyncing = args[5] as Boolean
-        val totalStudents = args[6] as Int
-        val unassigned = args[7] as Int
-        val broken = args[8] as Int
-        val unsynced = args[9] as Int
-        @Suppress("UNCHECKED_CAST")
-        val conflicts = args[10] as List<AttendanceConflict>
+        _activeSchoolFlow,
+        _refreshTrigger,
+    ) { flows ->
+        val account = flows[0] as AccountEntity?
 
-        val isReady = (account != null) && (isSyncing == false)
+        @Suppress("UNCHECKED_CAST")
+        val recentRecords = flows[1] as List<AttendanceRecordEntity>
 
-        println("🔄 Dashboard combine: account=${account?.accountId ?: "NULL"}, isReady=$isReady")
+        @Suppress("UNCHECKED_CAST")
+        val sessionStudents = flows[2] as List<StudentBiometricEntity>
 
-        val activeSchoolId = sessionManager.getActiveSchoolId()
+        @Suppress("UNCHECKED_CAST")
+        val assignedClasses = flows[3] as List<ClassModel>
+
+        @Suppress("UNCHECKED_CAST")
+        val allClasses = flows[4] as List<ClassModel>
+        val activeSchool = flows[5] as School?
+
+        val activeSchoolId = activeSchool?.id
         val membershipRole = account?.memberships?.get(activeSchoolId)?.role
         val effectiveRole = membershipRole ?: account?.role ?: "USER"
+        val isReady = account != null
 
-        UiState.Success(
-            DashboardUiState(
-                user = account,
-                recentRecords = recentRecords,
-                sessionStudents = sessionStudents,
-                assignedClasses = assignedClasses,
-                allClasses = allClasses,
-                isSyncing = isSyncing,
-                isReady = isReady,
-                totalStudents = totalStudents,
-                unassignedStudents = unassigned,
-                brokenAssignments = broken,
-                unsyncedRecords = unsynced,
-                conflicts = conflicts,
-                currentRole = effectiveRole,
-                isApproved = account?.status == "ACTIVE"
-            )
+        DashboardUiState(
+            user = account,
+            currentSchool = activeSchool,
+            recentRecords = recentRecords,
+            sessionStudents = sessionStudents,
+            assignedClasses = assignedClasses,
+            allClasses = allClasses,
+            isReady = isReady,
+            currentRole = effectiveRole,
+            isApproved = account?.status == "ACTIVE",
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState(isLoading = true))
 
-    fun sync() {
+    init {
+        sessionManager.currentUserIdFlow
+            .filterNotNull()
+            .onEach { triggerAutoSyncIfNeeded() }
+            .launchIn(viewModelScope)
+    }
+
+    fun onEvent(event: DashboardUiEvent) {
+        when (event) {
+            DashboardUiEvent.LoadDashboard -> _refreshTrigger.value++
+            DashboardUiEvent.Refresh -> sync()
+            is DashboardUiEvent.SelectSchool -> selectSchool(event.school)
+            is DashboardUiEvent.SelectActiveClass -> selectActiveClass(event.classId)
+            is DashboardUiEvent.ResolveConflict -> resolveConflict(event.conflict, event.useCloud)
+            is DashboardUiEvent.NavigateTo -> viewModelScope.launch { _uiEvent.emit(UiEvent.NavigateTo(event.route)) }
+            DashboardUiEvent.Logout -> logout()
+            DashboardUiEvent.OnRegisterStudentClick -> onRegisterStudentClick()
+        }
+    }
+
+    private suspend fun triggerAutoSyncIfNeeded() {
+        val lastSync = sessionManager.getLastSyncTime()
+        val isStale = System.currentTimeMillis() - lastSync > 24 * 60 * 60 * 1000
+        if (isStale) sync()
+    }
+
+    private fun sync() {
         viewModelScope.launch(Dispatchers.IO) {
             val accountId = sessionManager.getCurrentUserId() ?: return@launch
-            
-            println("🔄 Dashboard: Comprehensive sync starting for account $accountId...")
-            
-            // 1. Restore Profile & Schools
-            val accountResult = accountRepository.syncAccount(accountId)
-            val accountEntity = if (accountResult is Result.Success) accountResult.data else accountRepository.getAccountDao().getAccountById(accountId)
-            
-            // 2. Restore Classes for all member schools
-            accountEntity?.memberships?.keys?.forEach { schoolId ->
-                println("🏫 Dashboard: Syncing classes for school: $schoolId")
-                schoolRepository.syncClasses(accountId, schoolId)
-            }
-
-            // 3. Restoring biometrics & assignments (tenant-scoped)
-            val schoolId = accountEntity?.activeSchoolId ?: sessionManager.getActiveSchoolId()
-            
-            if (schoolId != null) {
-                println("🎭 Dashboard: Syncing school-specific data for: $schoolId")
-                
-                if (sessionManager.getActiveSchoolId().isNullOrBlank()) {
-                    sessionManager.saveActiveSchoolId(schoolId)
+            accountRepository.syncAccount(accountId)
+                .onSuccess { accountEntity ->
+                    accountEntity.memberships.keys.forEach { schoolId ->
+                        schoolRepository.syncClasses(accountId, schoolId)
+                    }
+                    val schoolId = accountEntity.activeSchoolId ?: sessionManager.getActiveSchoolId()
+                    if (schoolId != null) {
+                        if (sessionManager.getActiveSchoolId().isNullOrBlank()) {
+                            sessionManager.saveActiveSchoolId(schoolId)
+                        }
+                        biometricRepository.syncBiometrics()
+                        biometricRepository.syncAssignments()
+                        attendanceRepository.syncRecords()
+                    }
+                    sessionManager.saveLastSyncTime(System.currentTimeMillis())
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
                 }
-
-                val biometricSyncResult = biometricRepository.syncBiometrics()
-                biometricRepository.syncAssignments()
-                attendanceRepository.syncRecords()
-
-                if (biometricSyncResult is Result.Failure) {
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron data biometrik: ${biometricSyncResult.error.message}"))
+                .onFailure { error ->
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Gagal sinkron: ${error.message}"))
                 }
-            }
-            
-            sessionManager.saveLastSyncTime(System.currentTimeMillis())
-            _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
-            println("✅ Dashboard: Comprehensive sync completed.")
         }
     }
 
-    fun selectActiveClass(classId: String?) {
+    private fun selectSchool(school: School) {
         viewModelScope.launch {
-            val currentState = state.value
-            if (currentState is UiState.Success) {
-                val account = currentState.data.user ?: return@launch
-                accountRepository.getAccountDao().getAccountById(account.accountId)?.let {
-                    accountRepository.getAccountDao().updateAccount(it.copy(activeClassId = classId))
-                }
-            }
+            val accountId = sessionManager.getCurrentUserId() ?: return@launch
+            sessionManager.saveActiveSchoolId(school.id)
+            workspaceRepository.switchWorkspace(accountId, school.id)
         }
     }
 
-    fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
+    private fun selectActiveClass(classId: String?) {
+        viewModelScope.launch {
+            val account = uiState.value.user ?: return@launch
+            accountRepository.getAccountDao().updateAccount(account.copy(activeClassId = classId))
+        }
+    }
+
+    private fun resolveConflict(conflict: AttendanceConflict, useCloud: Boolean) {
         viewModelScope.launch {
             attendanceRepository.resolveConflict(conflict.conflictId, useCloud)
         }
     }
 
-    fun logout(onComplete: () -> Unit) {
+    private fun logout() {
         viewModelScope.launch {
             authRepository.clearAllDataAndSignOut()
-            onComplete()
+            _uiEvent.emit(UiEvent.NavigateTo("login")) // Assuming login route
         }
     }
 
-    fun onRegisterStudentClick() {
+    private fun onRegisterStudentClick() {
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId()
             if (schoolId == null) {
                 _uiEvent.emit(UiEvent.ShowSnackbar("Silakan pilih sekolah terlebih dahulu"))
                 return@launch
             }
-            _navigationEvent.emit(NavigationEvent.NavigateToRegistration(schoolId))
+            _uiEvent.emit(UiEvent.NavigateTo("registration_menu"))
         }
     }
 }
