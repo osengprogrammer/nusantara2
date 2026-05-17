@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,7 +29,7 @@ import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 import com.azuratech.azuratime.features.reporting.ui.integrity.IntegritySummaryWidget
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.util.UiState
+import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -37,7 +38,7 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     schoolViewModel: SchoolViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val schoolUiState by schoolViewModel.uiState.collectAsStateWithLifecycle()
     val availableClasses = schoolUiState.availableClasses
     val context = LocalContext.current
@@ -48,18 +49,16 @@ fun DashboardScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
-                is UiEvent.NavigateTo -> navController.navigate(event.route)
-                is UiEvent.NavigateUp -> navController.navigateUp()
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.navigationEvent.collect { event ->
-            when (event) {
-                is DashboardViewModel.NavigationEvent.NavigateToRegistration -> {
-                    navController.navigate(Screen.RegistrationMenu.route)
+                is UiEvent.NavigateTo -> {
+                    if (event.route == "login") {
+                        val intent = Intent(context, MainActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        context.startActivity(intent)
+                    } else {
+                        navController.navigate(event.route)
+                    }
                 }
+                is UiEvent.NavigateUp -> navController.navigateUp()
             }
         }
     }
@@ -75,67 +74,60 @@ fun DashboardScreen(
         }
     }
 
-    when (val state = uiState) {
-        is UiState.Loading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                CircularProgressIndicator()
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            uiState.isLoading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
-        }
-        is UiState.Success<DashboardUiState> -> {
-            val data = state.data
-
-            if (!data.isReady) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    CircularProgressIndicator()
+            uiState.error != null -> {
+                Column(
+                    modifier = Modifier.align(Alignment.Center).padding(AzuraSpacing.lg),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(text = uiState.error ?: "Unknown Error", color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(AzuraSpacing.md))
+                    Button(onClick = { viewModel.onEvent(DashboardUiEvent.Refresh) }) {
+                        Text("Retry")
+                    }
                 }
-            } else {
+            }
+            !uiState.isReady -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+            else -> {
                 // Sync schoolViewModel accountId
-                data.user?.accountId?.let { accountId ->
+                uiState.user?.accountId?.let { accountId ->
                     LaunchedEffect(accountId) {
                         schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId))
                     }
                 }
 
-                if (data.conflicts.isNotEmpty()) {
-                    val firstConflict = data.conflicts.first()
+                if (uiState.conflicts.isNotEmpty()) {
+                    val firstConflict = uiState.conflicts.first()
                     ConflictResolverDialog(
                         conflict = firstConflict,
-                        onResolveClick = { useCloud -> viewModel.resolveConflict(firstConflict, useCloud) },
+                        onResolveClick = { useCloud -> viewModel.onEvent(DashboardUiEvent.ResolveConflict(firstConflict, useCloud)) },
                     )
                 }
 
                 DashboardContent(
                     navController = navController,
-                    data = data,
+                    data = uiState,
                     schoolViewModel = schoolViewModel,
                     availableClasses = availableClasses,
                     snackbarHostState = snackbarHostState,
                     showAddSchoolDialog = showAddSchoolDialog,
                     onAddSchoolClick = { showAddSchoolDialog = true },
                     onDismissAddSchool = { showAddSchoolDialog = false },
-                    onSyncClick = { viewModel.sync() },
-                    onRegisterStudentClick = { viewModel.onRegisterStudentClick() },
+                    onSyncClick = { viewModel.onEvent(DashboardUiEvent.Refresh) },
+                    onRegisterStudentClick = { viewModel.onEvent(DashboardUiEvent.OnRegisterStudentClick) },
                     onSelectClass = { classId ->
-                        viewModel.selectActiveClass(classId)
+                        viewModel.onEvent(DashboardUiEvent.SelectActiveClass(classId))
                     },
                     onLogoutClick = {
-                        viewModel.logout {
-                            val intent = Intent(context, MainActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            context.startActivity(intent)
-                        }
+                        viewModel.onEvent(DashboardUiEvent.Logout)
                     },
                 )
-            }
-        }
-        is UiState.Error -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                Text(text = state.message ?: "Unknown Error")
-            }
-        }
-        is UiState.Empty -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                Text(text = "Empty")
             }
         }
     }
@@ -152,7 +144,7 @@ fun DashboardContent(
     onAddSchoolClick: () -> Unit,
     onDismissAddSchool: () -> Unit,
     onSyncClick: () -> Unit,
-    onRegisterStudentClick: () -> Unit, // 👈 Added
+    onRegisterStudentClick: () -> Unit,
     onSelectClass: (String?) -> Unit,
     onLogoutClick: () -> Unit,
 ) {
@@ -338,6 +330,48 @@ fun DashboardContent(
                         onDismissAddSchool()
                     },
                 )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewEmpty() {
+    AzuraTheme {
+        val mockState = DashboardPreviewMocks.empty()
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Dashboard is empty")
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewLoaded() {
+    AzuraTheme {
+        val mockState = DashboardPreviewMocks.success()
+        // Here you would render a mock DashboardContent or similar
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Dashboard Loaded: ${mockState.user?.name}")
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewError() {
+    AzuraTheme {
+        val mockState = DashboardPreviewMocks.error()
+        Column(
+            modifier = Modifier.fillMaxSize().padding(AzuraSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(text = mockState.error ?: "An error occurred", color = MaterialTheme.colorScheme.error)
+            Spacer(modifier = Modifier.height(AzuraSpacing.md))
+            Button(onClick = {}) {
+                Text("Retry")
             }
         }
     }
