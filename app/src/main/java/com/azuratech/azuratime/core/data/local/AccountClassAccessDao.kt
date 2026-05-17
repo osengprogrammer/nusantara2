@@ -11,6 +11,9 @@ interface AccountClassAccessDao {
     @Query("DELETE FROM account_class_access WHERE accountId = :accountId AND schoolId = :schoolId")
     suspend fun deleteByAccount(accountId: String, schoolId: String)
 
+    @Query("DELETE FROM account_class_access WHERE accountId = :accountId AND classId = :classId")
+    suspend fun deleteSpecificAccess(accountId: String, classId: String)
+
     @Query("SELECT classId FROM account_class_access WHERE accountId = :accountId AND schoolId = :schoolId")
     fun getAssignedClassIds(accountId: String, schoolId: String): Flow<List<String>>
 

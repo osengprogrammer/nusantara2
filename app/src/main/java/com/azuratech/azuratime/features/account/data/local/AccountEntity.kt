@@ -21,3 +21,14 @@ data class AccountEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val syncStatus: String = "SYNCED",
 )
+
+fun AccountEntity.toProfile() = com.azuratech.azuratime.features.account.domain.model.UserProfile(
+    accountId = accountId,
+    email = email,
+    name = name,
+    photoUrl = photoUrl,
+    role = role,
+    activeSchoolId = activeSchoolId,
+    activeClassId = activeClassId,
+    memberships = memberships,
+)

@@ -7,7 +7,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
-import com.azuratech.azuratime.features.account.ui.profile.AccountProfileScreen
+import com.azuratech.azuratime.features.account.ui.management.AccountManagementScreen
 import com.azuratech.azuratime.features.account.ui.components.MyAssignedClassScreen
 import com.azuratech.azuratime.features.account.ui.components.NetworkScreen
 
@@ -21,9 +21,8 @@ fun NavGraphBuilder.accountGraph(
         route = NavigationRoutes.ACCOUNT_GRAPH,
     ) {
         composable(NavigationRoutes.ACCOUNT_PROFILE) {
-            AccountProfileScreen(
-                userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                workspaceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+            AccountManagementScreen(
+                viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() },
             )
         }

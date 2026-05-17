@@ -4,6 +4,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.features.account.data.local.AccountDao
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.local.toProfile
 import com.azuratech.azuratime.features.account.data.local.Membership
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -20,6 +21,32 @@ class AccountRepository @Inject constructor(
     suspend fun getAccountById(id: String): AccountEntity? = accountDao.getAccountById(id)
 
     fun observeAccountEntity(id: String) = accountDao.observeAccountById(id)
+
+    suspend fun getProfile(accountId: String): Result<com.azuratech.azuratime.features.account.domain.model.UserProfile> {
+        return syncAccount(accountId).map { it.toProfile() }
+    }
+
+    suspend fun updateDisplayName(accountId: String, newName: String): Result<Unit> {
+        return try {
+            val account = accountDao.getAccountById(accountId) ?: return Result.Failure(AppError.LocalDB("Account not found"))
+            val updated = account.copy(name = newName)
+            accountDao.upsertAccount(updated)
+            pushAccount(accountId)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    suspend fun updatePhoto(accountId: String, photoUrl: String): Result<Unit> {
+        return try {
+            val account = accountDao.getAccountById(accountId) ?: return Result.Failure(AppError.LocalDB("Account not found"))
+            val updated = account.copy(photoUrl = photoUrl)
+            accountDao.upsertAccount(updated)
+            pushAccount(accountId)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
 
     suspend fun syncAccount(accountId: String): Result<AccountEntity> {
         return try {
