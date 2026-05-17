@@ -52,6 +52,9 @@ class SchoolRepository @Inject constructor(
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
+    fun observeSchoolById(id: String): Flow<School?> =
+        dao.observeSchoolById(id).map { it?.toDomain() }
+
     fun observeAllSchools(): Flow<Result<List<School>>> =
         dao.observeAllSchools()
             .map { entities ->
@@ -162,6 +165,24 @@ class SchoolRepository @Inject constructor(
     suspend fun getFirstSchoolId(accountId: String): String? = dao.getFirstSchoolId(accountId)
 
     suspend fun schoolExists(schoolId: String): Boolean = dao.getSchoolById(schoolId) != null
+
+    suspend fun syncSchools(schoolIds: List<String>): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        try {
+            if (schoolIds.isEmpty()) return@withContext Result.Success(Unit)
+
+            val remoteResult = remoteDataSource.getSchoolsByIds(schoolIds)
+            if (remoteResult is Result.Success) {
+                remoteResult.data.forEach { school ->
+                    saveSchoolLocally(school)
+                }
+                Result.Success(Unit)
+            } else {
+                remoteResult as Result.Failure
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
 
     suspend fun syncClasses(accountId: String, schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         try {

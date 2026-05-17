@@ -20,6 +20,9 @@ interface SchoolClassDao {
     @Query("SELECT * FROM schools WHERE id = :id")
     suspend fun getSchoolById(id: String): SchoolEntity?
 
+    @Query("SELECT * FROM schools WHERE id = :id")
+    fun observeSchoolById(id: String): Flow<SchoolEntity?>
+
     @Query("SELECT * FROM schools ORDER BY createdAt DESC")
     fun observeAllSchools(): Flow<List<SchoolEntity>>
 

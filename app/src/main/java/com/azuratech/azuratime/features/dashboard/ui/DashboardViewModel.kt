@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -46,6 +45,7 @@ class DashboardViewModel @Inject constructor(
     private val adminRepository: AdminRepository,
     private val accountRepository: AccountRepository,
     private val biometricRepository: StudentBiometricRepository,
+    private val studentRepository: com.azuratech.azuratime.features.student.domain.repository.StudentRepository,
     private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: SchoolRepository,
     private val workspaceRepository: SchoolWorkspaceRepository,
@@ -120,7 +120,7 @@ class DashboardViewModel @Inject constructor(
 
     private val _activeSchoolFlow = _activeSchoolIdFlow
         .flatMapLatest { id ->
-            if (id != null) flow { emit(schoolRepository.getSchoolById(id)) } else flowOf<School?>(null)
+            if (id != null) schoolRepository.observeSchoolById(id) else flowOf<School?>(null)
         }
 
     val uiState: StateFlow<DashboardUiState> = combine(
@@ -196,19 +196,35 @@ class DashboardViewModel @Inject constructor(
             val accountId = sessionManager.getCurrentUserId() ?: return@launch
             accountRepository.syncAccount(accountId)
                 .onSuccess { accountEntity ->
-                    accountEntity.memberships.keys.forEach { schoolId ->
-                        schoolRepository.syncClasses(accountId, schoolId)
-                    }
-                    val schoolId = accountEntity.activeSchoolId ?: sessionManager.getActiveSchoolId()
-                    if (schoolId != null) {
-                        if (sessionManager.getActiveSchoolId().isNullOrBlank()) {
-                            sessionManager.saveActiveSchoolId(schoolId)
+                    val schoolIds = accountEntity.memberships.keys.toList()
+
+                    // 1. 🔥 FORCE SYNC school metadata
+                    schoolRepository.syncSchools(schoolIds)
+
+                    // 2. 🔥 Determine the active school ID
+                    var activeSchoolId = accountEntity.activeSchoolId
+                        ?: sessionManager.getActiveSchoolId()
+                        ?: schoolIds.firstOrNull()
+
+                    // 3. 🔥 Persist selection if we found one
+                    if (!activeSchoolId.isNullOrBlank()) {
+                        sessionManager.saveActiveSchoolId(activeSchoolId)
+
+                        // 4. 🔥 Sync classes for ALL memberships to ensure they are available
+                        schoolIds.forEach { id ->
+                            schoolRepository.syncClasses(accountId, id)
                         }
+
+                        // 5. 🔥 Sync core data for the active workspace
+                        studentRepository.pullStudents(activeSchoolId)
                         biometricRepository.syncBiometrics()
+                        studentRepository.autoHealStudentIdentities(activeSchoolId)
                         biometricRepository.syncAssignments()
                         attendanceRepository.syncRecords()
+
+                        sessionManager.saveLastSyncTime(System.currentTimeMillis())
                     }
-                    sessionManager.saveLastSyncTime(System.currentTimeMillis())
+
                     _uiEvent.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
                 }
                 .onFailure { error ->

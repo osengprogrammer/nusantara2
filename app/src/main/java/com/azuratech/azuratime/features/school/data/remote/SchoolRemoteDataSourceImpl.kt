@@ -138,37 +138,51 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
         return try {
             if (schoolIds.isEmpty()) return Result.Success(emptyList())
 
-            val snapshot = getGlobalSchoolsRef()
-                .whereIn("schoolId", schoolIds)
-                .get().await()
+            val allSchools = mutableListOf<School>()
+            val chunks = schoolIds.chunked(10)
 
-            val schools = snapshot.documents.mapNotNull { doc ->
-                try {
-                    val createdAtRaw = doc.get("createdAt")
-                    val createdAt = when (createdAtRaw) {
-                        is com.google.firebase.Timestamp -> createdAtRaw.toDate().time
-                        is Number -> createdAtRaw.toLong()
-                        else -> 0L
-                    }
-                    val updatedAtRaw = doc.get("updatedAt")
-                    val updatedAt = when (updatedAtRaw) {
-                        is com.google.firebase.Timestamp -> updatedAtRaw.toDate().time
-                        is Number -> updatedAtRaw.toLong()
-                        else -> 0L
-                    }
+            for (chunk in chunks) {
+                // 🔥 Primary: Query by 'schoolId' field
+                var snapshot = getGlobalSchoolsRef()
+                    .whereIn("schoolId", chunk)
+                    .get().await()
 
-                    School(
-                        id = doc.id,
-                        accountId = doc.getString("accountId") ?: "",
-                        name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
-                        timezone = doc.getString("timezone") ?: "UTC",
-                        status = doc.getString("status") ?: "ACTIVE",
-                        createdAt = createdAt,
-                        updatedAt = updatedAt,
-                    )
-                } catch (e: Exception) { null }
+                if (snapshot.isEmpty) {
+                    // 🔥 Fallback: Try Document ID
+                    snapshot = getGlobalSchoolsRef()
+                        .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunk)
+                        .get().await()
+                }
+
+                val schools = snapshot.documents.mapNotNull { doc ->
+                    try {
+                        val createdAtRaw = doc.get("createdAt")
+                        val createdAt = when (createdAtRaw) {
+                            is com.google.firebase.Timestamp -> createdAtRaw.toDate().time
+                            is Number -> createdAtRaw.toLong()
+                            else -> 0L
+                        }
+                        val updatedAtRaw = doc.get("updatedAt")
+                        val updatedAt = when (updatedAtRaw) {
+                            is com.google.firebase.Timestamp -> updatedAtRaw.toDate().time
+                            is Number -> updatedAtRaw.toLong()
+                            else -> 0L
+                        }
+
+                        School(
+                            id = doc.getString("schoolId") ?: doc.id,
+                            accountId = doc.getString("accountId") ?: "",
+                            name = doc.getString("name") ?: doc.getString("schoolName") ?: "Unknown School",
+                            timezone = doc.getString("timezone") ?: "Asia/Jakarta",
+                            status = doc.getString("status") ?: "ACTIVE",
+                            createdAt = createdAt,
+                            updatedAt = updatedAt,
+                        )
+                    } catch (e: Exception) { null }
+                }
+                allSchools.addAll(schools)
             }
-            Result.Success(schools)
+            Result.Success(allSchools.distinctBy { it.id })
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
         }

@@ -18,6 +18,7 @@ fun AzuraCard(
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
     ),
     elevation: CardElevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    actions: @Composable RowScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
@@ -31,11 +32,18 @@ fun AzuraCard(
             verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
             content = {
                 if (title != null) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Row { actions() }
+                    }
                     Spacer(modifier = Modifier.height(AzuraSpacing.xs))
                 }
                 content()

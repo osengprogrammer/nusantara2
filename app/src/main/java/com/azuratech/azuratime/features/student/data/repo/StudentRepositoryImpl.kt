@@ -40,10 +40,17 @@ class StudentRepositoryImpl @Inject constructor(
     private val biometricDao = database.biometricDao()
     private val assignmentDao = database.studentClassAssignmentDao()
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun getStudentProfiles(): Flow<List<StudentProfile>> {
-        val schoolId = sessionManager.getActiveSchoolId() ?: ""
-        return studentDao.getStudentProfilesFlow(schoolId)
-            .map { list -> list.map { it.toDomain() } }
+        return sessionManager.activeSchoolIdFlow
+            .flatMapLatest { schoolId ->
+                if (schoolId.isNullOrBlank()) {
+                    flowOf(emptyList())
+                } else {
+                    studentDao.getStudentProfilesFlow(schoolId)
+                        .map { list -> list.map { it.toDomain() } }
+                }
+            }
     }
 
     override suspend fun saveProfile(profile: StudentProfile): Result<Unit> {

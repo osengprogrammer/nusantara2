@@ -147,7 +147,16 @@ fun PendingView(
                 }
             }
         } else {
-            CircularProgressIndicator()
+            val membershipViewModel: MembershipViewModel = hiltViewModel()
+            Button(
+                onClick = { membershipViewModel.checkMembership(email) },
+                modifier = Modifier.padding(vertical = AzuraSpacing.md),
+                shape = AzuraShapes.medium,
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(modifier = Modifier.width(AzuraSpacing.sm))
+                Text("Periksa Status Lagi")
+            }
             Spacer(modifier = Modifier.height(AzuraSpacing.xl))
         }
 

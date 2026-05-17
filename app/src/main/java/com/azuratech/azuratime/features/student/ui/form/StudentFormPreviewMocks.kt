@@ -7,8 +7,8 @@ object StudentFormPreviewMocks {
     fun initial(): StudentFormUiState = StudentFormUiState(
         availableClasses = listOf(
             ClassModel("cls_1", "sch_1", "10-A", "10", null, 0, System.currentTimeMillis()),
-            ClassModel("cls_2", "sch_1", "10-B", "10", null, 0, System.currentTimeMillis())
-        )
+            ClassModel("cls_2", "sch_1", "10-B", "10", null, 0, System.currentTimeMillis()),
+        ),
     )
 
     fun photoCapturing(): StudentFormUiState = initial().copy(
@@ -16,8 +16,8 @@ object StudentFormPreviewMocks {
         profile = StudentProfile(
             studentId = "STU-123",
             name = "John Doe",
-            schoolId = "sch_1"
-        )
+            schoolId = "sch_1",
+        ),
     )
 
     fun biometricScanning(): StudentFormUiState = initial().copy(
@@ -26,8 +26,8 @@ object StudentFormPreviewMocks {
             studentId = "STU-123",
             name = "John Doe",
             schoolId = "sch_1",
-            classIds = listOf("cls_1")
-        )
+            classIds = listOf("cls_1"),
+        ),
     )
 
     fun submitting(): StudentFormUiState = initial().copy(
@@ -37,8 +37,8 @@ object StudentFormPreviewMocks {
             name = "John Doe",
             schoolId = "sch_1",
             classIds = listOf("cls_1"),
-            embedding = FloatArray(512) { 0.1f }
-        )
+            embedding = FloatArray(512) { 0.1f },
+        ),
     )
 
     fun error(): StudentFormUiState = initial().copy(
@@ -48,8 +48,8 @@ object StudentFormPreviewMocks {
             name = "John Doe",
             schoolId = "sch_1",
             classIds = listOf("cls_1"),
-            embedding = FloatArray(512) { 0.1f }
-        )
+            embedding = FloatArray(512) { 0.1f },
+        ),
     )
 
     fun success(): StudentFormUiState = initial().copy(
@@ -59,7 +59,7 @@ object StudentFormPreviewMocks {
             name = "John Doe",
             schoolId = "sch_1",
             classIds = listOf("cls_1"),
-            embedding = FloatArray(512) { 0.1f }
-        )
+            embedding = FloatArray(512) { 0.1f },
+        ),
     )
 }

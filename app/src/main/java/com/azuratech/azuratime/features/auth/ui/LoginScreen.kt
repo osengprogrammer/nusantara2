@@ -1,21 +1,32 @@
 package com.azuratech.azuratime.features.auth.ui
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.ui.designsystem.GoogleSignInButton
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -25,65 +36,100 @@ import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun LoginScreen(
-    onLoginSuccessClick: (email: String, role: String?) -> Unit,
+    onNavigateToDashboard: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val authViewModel: AuthViewModel = hiltViewModel()
-    val authState by authViewModel.authState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    val gso = remember {
-        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.my_web_client_id))
-            .requestEmail()
-            .build()
-    }
+    val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.my_web_client_id))
+        .requestEmail()
+        .build()
 
-    val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
+    val googleSignInClient = GoogleSignIn.getClient(context, googleSignInOptions)
 
     val googleAuthLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
+        contract = ActivityResultContracts.StartActivityForResult(),
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                account?.idToken?.let { authViewModel.loginWithGoogle(it) }
+                account.idToken?.let { idToken ->
+                    viewModel.onEvent(AuthUiEvent.SignInWithGoogle(idToken))
+                }
             } catch (e: ApiException) {
-                Log.e("GoogleAuth", "Sign in failed: ${e.message}")
+                // Error handled via state downstream if needed
             }
         }
     }
 
-    LaunchedEffect(authState) {
-        when (val state = authState) {
-            is AuthState.Success -> {
-                onLoginSuccessClick(state.email, state.role)
-                authViewModel.resetState()
-            }
-            is AuthState.Error -> Log.e("Auth", state.message)
-            else -> {}
+    LaunchedEffect(uiState.authStatus) {
+        if (uiState.authStatus == AuthStatus.LoggedIn) {
+            onNavigateToDashboard()
         }
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(AzuraSpacing.lg),
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(0.85f).padding(AzuraSpacing.lg),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            Image(painter = painterResource(id = R.drawable.ic_azura_logo), contentDescription = null, modifier = Modifier.size(160.dp))
-            Spacer(modifier = Modifier.height(AzuraSpacing.lg))
-            Text("Azura Time", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(64.dp))
-
-            GoogleSignInButton(
-                text = "Sign in with Google",
-                isLoading = authState is AuthState.Loading,
-                onClick = { googleAuthLauncher.launch(googleSignInClient.signInIntent) },
-                icon = painterResource(id = R.drawable.ic_google_logo),
+            Text(
+                text = "Selamat Datang di Azura Time",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
             )
+
+            Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+
+            Text(
+                text = "Sistem Presensi Biometrik Sekolah Terintegrasi",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.height(AzuraSpacing.xl))
+
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(modifier = Modifier.height(AzuraSpacing.md))
+                Text(
+                    text = if (uiState.isGoogleSigning) "Menghubungkan Akun Google..." else "Memproses...",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            } else {
+                GoogleSignInButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Masuk dengan Google",
+                    isLoading = uiState.isGoogleSigning,
+                    onClick = { googleAuthLauncher.launch(googleSignInClient.signInIntent) },
+                    icon = painterResource(id = R.drawable.ic_google_logo),
+                )
+            }
+
+            uiState.error?.let {
+                Spacer(modifier = Modifier.height(AzuraSpacing.md))
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = AzuraSpacing.md),
+                )
+            }
         }
     }
 }

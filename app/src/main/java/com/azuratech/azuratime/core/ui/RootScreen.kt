@@ -29,7 +29,7 @@ fun RootScreen() {
             }
             BootState.NeedLogin -> {
                 LoginScreen(
-                    onLoginSuccessClick = { _, _ ->
+                    onNavigateToDashboard = {
                         bootViewModel.recheck()
                     },
                 )

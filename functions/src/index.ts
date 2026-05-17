@@ -37,6 +37,7 @@ export const onregistrationapproved = onDocumentUpdated(
 
         const batch = db.batch();
         const whitelistRef = db.collection("whitelisted_users").doc(uid);
+        const accountRef = db.collection("accounts").doc(uid);
 
         batch.set(whitelistRef, {
             userId: uid, email, name: after.name || after.adminName || "User Azura",
@@ -47,6 +48,15 @@ export const onregistrationapproved = onDocumentUpdated(
             schoolId: schoolId, schoolName: schoolName, role: role,
             followingIds: [], followerIds: []
         });
+
+        // 🔥 CRITICAL: Update the main accounts collection so the app can sync the status
+        batch.set(accountRef, {
+            status: "ACTIVE",
+            role: role,
+            activeSchoolId: schoolId,
+            memberships: { [schoolId]: { schoolName: schoolName, role: role, status: "ACTIVE" } },
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
 
         const orgRef = db.collection("schools").doc(schoolId);
         batch.set(orgRef, {

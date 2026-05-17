@@ -47,7 +47,7 @@ fun MainApp(onBootReady: () -> Unit = {}) {
 
                 BootState.NeedLogin -> {
                     LoginScreen(
-                        onLoginSuccessClick = { _, _ ->
+                        onNavigateToDashboard = {
                             bootViewModel.recheck()
                         },
                     )
