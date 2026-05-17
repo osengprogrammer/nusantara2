@@ -15,25 +15,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.azuratech.azuratime.MainActivity
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import com.azuratech.azuratime.core.ui.designsystem.ConflictResolverDialog
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.WorkspaceSelector
-import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
-import com.azuratech.azuratime.core.ui.preview.PreviewMocks
 import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
 import com.azuratech.azuratime.features.dashboard.ui.components.*
 import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 import com.azuratech.azuratime.features.reporting.ui.integrity.IntegritySummaryWidget
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuraengine.model.School
-import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.ui.util.UiState
 import com.google.firebase.auth.FirebaseAuth
 
@@ -41,10 +35,11 @@ import com.google.firebase.auth.FirebaseAuth
 fun DashboardScreen(
     navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel(),
-    schoolViewModel: SchoolViewModel = hiltViewModel()
+    schoolViewModel: SchoolViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.state.collectAsStateWithLifecycle()
-    val availableClasses by schoolViewModel.availableClasses.collectAsStateWithLifecycle()
+    val schoolUiState by schoolViewModel.uiState.collectAsStateWithLifecycle()
+    val availableClasses = schoolUiState.availableClasses
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddSchoolDialog by remember { mutableStateOf(false) }
@@ -88,7 +83,7 @@ fun DashboardScreen(
         }
         is UiState.Success<DashboardUiState> -> {
             val data = state.data
-            
+
             if (!data.isReady) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                     CircularProgressIndicator()
@@ -97,7 +92,7 @@ fun DashboardScreen(
                 // Sync schoolViewModel accountId
                 data.user?.accountId?.let { accountId ->
                     LaunchedEffect(accountId) {
-                        schoolViewModel.setAccountId(accountId)
+                        schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId))
                     }
                 }
 
@@ -105,7 +100,7 @@ fun DashboardScreen(
                     val firstConflict = data.conflicts.first()
                     ConflictResolverDialog(
                         conflict = firstConflict,
-                        onResolveClick = { useCloud -> viewModel.resolveConflict(firstConflict, useCloud) }
+                        onResolveClick = { useCloud -> viewModel.resolveConflict(firstConflict, useCloud) },
                     )
                 }
 
@@ -120,8 +115,8 @@ fun DashboardScreen(
                     onDismissAddSchool = { showAddSchoolDialog = false },
                     onSyncClick = { viewModel.sync() },
                     onRegisterStudentClick = { viewModel.onRegisterStudentClick() },
-                    onSelectClass = { classId -> 
-                        viewModel.selectActiveClass(classId) 
+                    onSelectClass = { classId ->
+                        viewModel.selectActiveClass(classId)
                     },
                     onLogoutClick = {
                         viewModel.logout {
@@ -129,7 +124,7 @@ fun DashboardScreen(
                             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             context.startActivity(intent)
                         }
-                    }
+                    },
                 )
             }
         }
@@ -159,10 +154,12 @@ fun DashboardContent(
     onSyncClick: () -> Unit,
     onRegisterStudentClick: () -> Unit, // 👈 Added
     onSelectClass: (String?) -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
 ) {
-    val activeSchool by schoolViewModel.activeSchool.collectAsStateWithLifecycle()
-    val schools by schoolViewModel.allSchools.collectAsStateWithLifecycle()
+    val schoolUiState by schoolViewModel.uiState.collectAsStateWithLifecycle()
+    val schools = schoolUiState.schools
+    val activeSchoolId = schoolUiState.activeSchoolId
+    val activeSchool = schools.find { it.id == activeSchoolId }
 
     AzuraScreen(
         title = activeSchool?.name?.let { "Azura - $it" } ?: "Azura IMS",
@@ -170,13 +167,13 @@ fun DashboardContent(
         actions = {
             WorkspaceSelector(
                 schoolViewModel = schoolViewModel,
-                workspaceViewModel = hiltViewModel()
+                workspaceViewModel = hiltViewModel(),
             )
             DashboardSyncButton(
                 isSyncing = data.isSyncing,
-                onSyncClick = onSyncClick
+                onSyncClick = onSyncClick,
             )
-        }
+        },
     ) {
         val account = data.user ?: return@AzuraScreen
         val photoUrl = FirebaseAuth.getInstance().currentUser?.photoUrl
@@ -185,18 +182,18 @@ fun DashboardContent(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.lg)
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.lg),
             ) {
                 if (!data.isApproved) {
                     item {
                         AzuraCard(
                             title = "Akses Dibatasi",
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                         ) {
                             Text(
                                 text = "Akun Anda sedang menunggu verifikasi Admin. Fitur scanner akan muncul setelah disetujui.",
                                 color = MaterialTheme.colorScheme.onErrorContainer,
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                     }
@@ -209,14 +206,14 @@ fun DashboardContent(
                         schoolName = activeSchool?.name ?: account.schoolName ?: "",
                         photoUrl = photoUrl,
                         onLogout = onLogoutClick,
-                        onProfileClick = { navController.navigate(Screen.Profile.route) }
+                        onProfileClick = { navController.navigate(Screen.Profile.route) },
                     )
                 }
 
                 item {
                     SedulurNetworkButton(
                         pendingRequests = data.pendingRequests,
-                        onClick = { navController.navigate(Screen.Network.route) }
+                        onClick = { navController.navigate(Screen.Network.route) },
                     )
                 }
 
@@ -225,13 +222,13 @@ fun DashboardContent(
                         Surface(
                             onClick = { navController.navigate(Screen.DataDashboard.route) },
                             color = Color.Transparent,
-                            shape = AzuraShapes.medium
+                            shape = AzuraShapes.medium,
                         ) {
                             IntegritySummaryWidget(
                                 totalStudents = data.totalStudents,
                                 unassignedCount = data.unassignedStudents,
                                 brokenLinks = data.brokenAssignments,
-                                unsyncedCount = data.unsyncedRecords
+                                unsyncedCount = data.unsyncedRecords,
                             )
                         }
                     }
@@ -242,12 +239,12 @@ fun DashboardContent(
                     item {
                         AzuraCard(
                             title = "Moderasi Sistem",
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text("Persetujuan Sekolah", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -255,7 +252,7 @@ fun DashboardContent(
                                 }
                                 Button(
                                     onClick = { navController.navigate(Screen.PendingSchools.route) },
-                                    shape = AzuraShapes.medium
+                                    shape = AzuraShapes.medium,
                                 ) {
                                     Text("Buka")
                                 }
@@ -280,12 +277,12 @@ fun DashboardContent(
                             onSchoolClick = { clickedSchoolId ->
                                 val school = schools.find { it.id == clickedSchoolId }
                                 if (school != null) {
-                                    schoolViewModel.selectSchool(school)
+                                    schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
                                 }
                             },
                             onAddSchoolClick = {
                                 onAddSchoolClick()
-                            }
+                            },
                         )
                     }
                 }
@@ -293,9 +290,9 @@ fun DashboardContent(
                 if (data.isApproved) {
                     item {
                         ActiveSessionCard(
-                            allClasses = data.allClasses, 
+                            allClasses = data.allClasses,
                             activeClassId = account.activeClassId,
-                            onSelectClass = onSelectClass
+                            onSelectClass = onSelectClass,
                         )
                     }
 
@@ -306,7 +303,7 @@ fun DashboardContent(
                     item {
                         MyAssignedClassesSection(
                             myClasses = data.assignedClasses,
-                            onNavigateToAll = { navController.navigate(Screen.MyAssignedClass.route) }
+                            onNavigateToAll = { navController.navigate(Screen.MyAssignedClass.route) },
                         )
                     }
                 }
@@ -318,7 +315,7 @@ fun DashboardContent(
                         currentRole = data.currentRole,
                         onRegisterStudentClick = onRegisterStudentClick,
                         accountId = account.accountId,
-                        isEnabled = activeSchool?.status == "ACTIVE" 
+                        isEnabled = activeSchool?.status == "ACTIVE",
                     )
                 }
 
@@ -337,9 +334,9 @@ fun DashboardContent(
                     availableClasses = availableClasses,
                     onDismissRequest = onDismissAddSchool,
                     onConfirmClick = { name: String, timezone: String, selectedClassIds: List<String> ->
-                        schoolViewModel.createSchool(name, timezone, selectedClassIds)
+                        schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.CreateSchool(name, timezone, selectedClassIds))
                         onDismissAddSchool()
-                    }
+                    },
                 )
             }
         }

@@ -18,13 +18,15 @@ import com.azuratech.azuratime.features.account.ui.components.WorkspaceViewModel
 @Composable
 fun WorkspaceSelector(
     schoolViewModel: SchoolViewModel,
-    workspaceViewModel: WorkspaceViewModel
+    workspaceViewModel: WorkspaceViewModel,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val schools by schoolViewModel.allSchools.collectAsStateWithLifecycle()
-    val activeSchoolId by schoolViewModel.activeSchoolId.collectAsStateWithLifecycle()
-    val activeSchool by schoolViewModel.activeSchool.collectAsStateWithLifecycle()
-    val uiState by workspaceViewModel.uiState.collectAsStateWithLifecycle()
+    val schoolUiState by schoolViewModel.uiState.collectAsStateWithLifecycle()
+    val schools = schoolUiState.schools
+    val activeSchoolId = schoolUiState.activeSchoolId
+    val activeSchool = schools.find { it.id == activeSchoolId }
+
+    val workspaceUiState by workspaceViewModel.uiState.collectAsStateWithLifecycle()
 
     // Hide when no schools are available
     if (schools.isEmpty()) return
@@ -32,12 +34,11 @@ fun WorkspaceSelector(
     val activeSchoolName = activeSchool?.name ?: "Pilih Workspace"
 
     Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
-
         // 🔘 Anchor button
         OutlinedButton(
             onClick = { expanded = true },
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
         ) {
             Text(text = activeSchoolName, maxLines = 1)
             Icon(Icons.Default.ArrowDropDown, contentDescription = "Ganti Workspace")
@@ -46,7 +47,7 @@ fun WorkspaceSelector(
         // 📋 Dropdown
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             schools.forEach { school ->
                 val isActive = school.id == activeSchoolId
@@ -56,47 +57,54 @@ fun WorkspaceSelector(
                             Text(
                                 text = school.name,
                                 fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                                color     = if (isActive)
+                                color = if (isActive) {
                                     MaterialTheme.colorScheme.primary
-                                else
+                                } else {
                                     MaterialTheme.colorScheme.onSurface
+                                },
                             )
                         }
                     },
                     onClick = {
                         expanded = false
                         if (!isActive) {
-                            schoolViewModel.selectSchool(school)
+                            schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
                         }
                     },
                     // Show a checkmark on the active item
-                    trailingIcon = if (isActive) ({
-                        Text("✓", color = MaterialTheme.colorScheme.primary)
-                    }) else null
+                    trailingIcon = if (isActive) {
+                        (
+                            {
+                                Text("✓", color = MaterialTheme.colorScheme.primary)
+                            }
+                            )
+                    } else {
+                        null
+                    },
                 )
             }
         }
     }
 
     // ⏳ Blocking loading overlay while the switch is in progress
-    if (uiState is WorkspaceViewModel.WorkspaceState.Switching) {
+    if (workspaceUiState is WorkspaceViewModel.WorkspaceState.Switching) {
         Dialog(onDismissRequest = { /* Prevent dismiss during switch */ }) {
             Card(
                 modifier = Modifier.padding(16.dp),
-                shape    = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
             ) {
                 Column(
-                    modifier              = Modifier.padding(24.dp),
-                    horizontalAlignment   = Alignment.CenterHorizontally,
-                    verticalArrangement   = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     CircularProgressIndicator()
                     Text("Menyiapkan Workspace...", fontWeight = FontWeight.Bold)
                     Text(
-                        text      = "Sedang menyinkronkan data biometrik dan absensi.",
-                        style     = MaterialTheme.typography.bodySmall,
+                        text = "Sedang menyinkronkan data biometrik dan absensi.",
+                        style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
-                        modifier  = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }
@@ -104,10 +112,11 @@ fun WorkspaceSelector(
     }
 
     // 🛠 Reset state once done
-    LaunchedEffect(uiState) {
-        when (uiState) {
+    LaunchedEffect(workspaceUiState) {
+        when (workspaceUiState) {
             is WorkspaceViewModel.WorkspaceState.Success,
-            is WorkspaceViewModel.WorkspaceState.Error -> workspaceViewModel.resetState()
+            is WorkspaceViewModel.WorkspaceState.Error,
+            -> workspaceViewModel.resetState()
             else -> {}
         }
     }

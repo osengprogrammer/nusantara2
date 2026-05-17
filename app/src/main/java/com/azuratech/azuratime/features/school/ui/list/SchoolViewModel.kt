@@ -3,16 +3,14 @@ package com.azuratech.azuratime.features.school.ui.list
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.features.account.data.repo.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.account.data.repo.AccountRepository
-import com.azuratech.azuratime.core.domain.model.SyncStatus
-import androidx.compose.ui.graphics.Color
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -26,137 +24,132 @@ class SchoolViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val schoolRepository: SchoolRepository,
     private val workspaceRepository: SchoolWorkspaceRepository,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _accountId = MutableStateFlow(savedStateHandle.get<String>("accountId") ?: sessionManager.getCurrentUserId() ?: "")
-    val accountId: StateFlow<String> = _accountId.asStateFlow()
+    private val _uiState = MutableStateFlow(SchoolUiState())
+    val uiState: StateFlow<SchoolUiState> = _uiState.asStateFlow()
 
-    // 🔥 v3.1: Reactive School SSOT Migration (Phase 7.7)
-    val schools: StateFlow<List<School>> = _accountId
-        .filter { it.isNotEmpty() }
-        .flatMapLatest { id -> accountRepository.observeAccountEntity(id) }
-        .filterNotNull()
-        .map { account -> account.memberships.keys.toList() }
-        .flatMapLatest { schoolIds -> 
-            if (schoolIds.isEmpty()) flowOf(Result.Success(emptyList()))
-            else schoolRepository.observeSchoolsByIds(schoolIds) 
+    init {
+        val initialAccountId = savedStateHandle.get<String>("accountId") ?: sessionManager.getCurrentUserId() ?: ""
+        if (initialAccountId.isNotEmpty()) {
+            onEvent(SchoolUiEvent.LoadSchools(initialAccountId))
         }
-        .map { result ->
-            if (result is Result.Success) {
-                // Auto-select first school if none active (Side-effect in map for SSOT transition)
-                if (result.data.isNotEmpty() && sessionManager.getActiveSchoolId() == null) {
-                    selectSchool(result.data.first())
-                }
-                result.data
-            } else emptyList()
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val activeSchoolId: StateFlow<String?> = sessionManager.activeSchoolIdFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), sessionManager.getActiveSchoolId())
-
-    val activeSchool: StateFlow<School?> = activeSchoolId
-        .flatMapLatest { id ->
-            if (id != null) flow { emit(schoolRepository.getSchoolById(id)) }
-            else flowOf<School?>(null)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val allSchools: StateFlow<List<School>> = schools
-
-    // 🔥 Added Available Classes flow for selection
-    val availableClasses: StateFlow<List<ClassModel>> = _accountId
-        .filter { it.isNotEmpty() }
-        .flatMapLatest { id ->
-            schoolRepository.observeAllClassesForAccount(id).map { result ->
-                if (result is Result.Success) result.data else emptyList()
-            }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    fun setAccountId(id: String) {
-        if (id.isNotEmpty() && _accountId.value != id) {
-            _accountId.value = id
-        }
-    }
-
-    /**
-     * 🔥 SELECT SCHOOL & PERSIST
-     * Updates local session and cloud context through SchoolWorkspaceRepository.
-     */
-    fun selectSchool(school: School) {
+        // Keep activeSchoolId in sync with SessionManager
         viewModelScope.launch {
-            val currentAccountId = _accountId.value
-            if (currentAccountId.isEmpty()) return@launch
-            
-            println("🔄 Switching school to: ${school.name} (${school.id})")
-            sessionManager.saveActiveSchoolId(school.id)
-            try {
-                workspaceRepository.switchWorkspace(currentAccountId, school.id)
-            } catch (e: Exception) {
-                println("⚠️ Error switching workspace: ${e.message}")
+            sessionManager.activeSchoolIdFlow.collect { id ->
+                _uiState.update { it.copy(activeSchoolId = id) }
             }
         }
     }
 
-    fun createSchool(name: String, timezone: String, selectedClassIds: List<String> = emptyList()) {
-        val currentAccountId = _accountId.value
+    fun onEvent(event: SchoolUiEvent) {
+        when (event) {
+            is SchoolUiEvent.LoadSchools -> loadSchools(event.accountId)
+            is SchoolUiEvent.SelectSchool -> selectSchool(event.school)
+            is SchoolUiEvent.CreateSchool -> createSchool(event.name, event.timezone, event.selectedClassIds)
+            is SchoolUiEvent.DeleteSchool -> deleteSchool(event.id)
+            SchoolUiEvent.Retry -> _uiState.value.accountId.takeIf { it.isNotEmpty() }?.let { loadSchools(it) }
+        }
+    }
+
+    private fun loadSchools(accountId: String) {
+        _uiState.update { it.copy(isLoading = true, error = null, accountId = accountId) }
+
+        viewModelScope.launch {
+            accountRepository.observeAccountEntity(accountId).collectLatest { account ->
+                if (account == null) {
+                    _uiState.update { it.copy(isLoading = false, schools = emptyList()) }
+                    return@collectLatest
+                }
+
+                val schoolIds = account.memberships.keys.toList()
+                if (schoolIds.isEmpty()) {
+                    _uiState.update { it.copy(isLoading = false, schools = emptyList()) }
+                } else {
+                    schoolRepository.observeSchoolsByIds(schoolIds).collectLatest { result ->
+                        result.onSuccess { schools ->
+                            if (schools.isNotEmpty() && sessionManager.getActiveSchoolId() == null) {
+                                selectSchool(schools.first())
+                            }
+                            _uiState.update { it.copy(isLoading = false, schools = schools) }
+                        }.onFailure { error ->
+                            _uiState.update { it.copy(isLoading = false, error = error.message) }
+                        }
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            schoolRepository.observeAllClassesForAccount(accountId).collectLatest { result ->
+                result.onSuccess { classes ->
+                    _uiState.update { it.copy(availableClasses = classes) }
+                }.onFailure {
+                    // Ignore class loading errors for the main school view
+                    _uiState.update { it.copy(availableClasses = emptyList()) }
+                }
+            }
+        }
+    }
+
+    private fun selectSchool(school: School) {
+        viewModelScope.launch {
+            val currentAccountId = _uiState.value.accountId
+            if (currentAccountId.isEmpty()) return@launch
+
+            sessionManager.saveActiveSchoolId(school.id)
+            // Error handling handled downstream or ignored if it's just a local switch preference
+            runCatching { workspaceRepository.switchWorkspace(currentAccountId, school.id) }
+        }
+    }
+
+    private fun createSchool(name: String, timezone: String, selectedClassIds: List<String>) {
+        val currentAccountId = _uiState.value.accountId
         if (currentAccountId.isEmpty()) return
-        
-        println("💾 DEBUG: Creating school: $name with ${selectedClassIds.size} classes")
+
         viewModelScope.launch {
             val account = accountRepository.getAccountById(currentAccountId)
             val role = account?.role ?: "USER"
-            
-            // 🔥 Business Rule: One account one school unless SUPER_ADMIN
-            if (role != "SUPER_ADMIN" && schools.value.isNotEmpty()) {
+
+            if (role != "SUPER_ADMIN" && _uiState.value.schools.isNotEmpty()) {
                 _uiEvent.emit(UiEvent.ShowSnackbar("❌ Gagal: Hanya Super Admin yang dapat membuat lebih dari satu sekolah."))
                 return@launch
             }
 
-            val result = schoolRepository.createSchool(currentAccountId, name, timezone)
-            if (result is Result.Success) {
-                val newSchoolId = result.data
-                selectedClassIds.forEach { classId ->
-                    schoolRepository.assignClassToSchool(newSchoolId, classId)
-                }
-                
-                val newSchool = schoolRepository.getSchoolById(newSchoolId)
-                
-                // Show Feedback
-                val status = newSchool?.status ?: "PENDING"
-                if (status == "ACTIVE") {
-                    _uiEvent.emit(UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
-                    
-                    // 🔥 Auto-select if it's the first one/active
-                    if (sessionManager.getActiveSchoolId() == null) {
-                        newSchool?.let { selectSchool(it) }
+            schoolRepository.createSchool(currentAccountId, name, timezone)
+                .onSuccess { newSchoolId ->
+                    selectedClassIds.forEach { classId ->
+                        schoolRepository.assignClassToSchool(newSchoolId, classId)
                     }
-                } else {
-                    _uiEvent.emit(UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
+
+                    val newSchool = schoolRepository.getSchoolById(newSchoolId)
+                    val status = newSchool?.status ?: "PENDING"
+                    if (status == "ACTIVE") {
+                        _uiEvent.emit(UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
+                        if (sessionManager.getActiveSchoolId() == null) {
+                            newSchool?.let { selectSchool(it) }
+                        }
+                    } else {
+                        _uiEvent.emit(UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
+                    }
                 }
-            } else if (result is Result.Failure) {
-                _uiEvent.emit(UiEvent.ShowSnackbar("❌ Gagal: ${result.error.message}"))
-            }
+                .onFailure { error ->
+                    _uiEvent.emit(UiEvent.ShowSnackbar("❌ Gagal: ${error.message}"))
+                }
         }
     }
 
-    fun deleteSchool(id: String) {
-        val currentAccountId = _accountId.value
+    private fun deleteSchool(id: String) {
+        val currentAccountId = _uiState.value.accountId
         if (currentAccountId.isEmpty()) return
-        
+
         viewModelScope.launch {
             schoolRepository.deleteSchool(id, currentAccountId)
         }
-    }
-
-    // Deprecated but kept for backward compatibility if needed, though we should update callers
-    fun addSchool(accountId: String, name: String, timezone: String) {
-        setAccountId(accountId)
-        createSchool(name, timezone)
     }
 }
