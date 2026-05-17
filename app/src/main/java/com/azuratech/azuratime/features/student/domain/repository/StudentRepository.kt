@@ -16,6 +16,11 @@ interface StudentRepository {
     fun getStudentProfiles(): Flow<List<StudentProfile>>
 
     /**
+     * 🔥 One-shot fetch: Get all active student profiles for the current school.
+     */
+    suspend fun getAll(): Result<List<StudentProfile>>
+
+    /**
      * Create or update a student profile locally and enqueue for remote sync.
      */
     suspend fun saveProfile(profile: StudentProfile): Result<Unit>

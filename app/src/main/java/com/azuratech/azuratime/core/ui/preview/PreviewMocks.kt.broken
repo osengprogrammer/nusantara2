@@ -140,13 +140,44 @@ object PreviewMocks {
 
     val mockMatrixStateLoading = com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState.Loading
 
-    // === Student Roster Mocks (delegates to feature-local mocks) ===
-    fun studentRosterLoading() =
-        com.azuratech.azuratime.features.student.ui.roster.StudentRosterPreviewMocks.loading()
+    // For FaceList
+    val mockStudentDisplayItems = listOf(
+        com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem(
+            profile = com.azuratech.azuratime.features.student.domain.model.StudentProfile(
+                studentId = "face_1",
+                name = "Budi Santoso",
+                schoolId = "sch_1",
+                classIds = listOf("cls_1"),
+                faceId = "face_1",
+                photoUrl = null,
+                syncStatus = com.azuratech.azuratime.core.domain.model.SyncStatus.SYNCED,
+            ),
+            assignedClassNames = "Kelas 10A",
+            isBiometricReady = true,
+        ),
+        com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem(
+            profile = com.azuratech.azuratime.features.student.domain.model.StudentProfile(
+                studentId = "face_2",
+                name = "Siti Aminah",
+                schoolId = "sch_1",
+                classIds = listOf("cls_2"),
+                faceId = "face_2",
+                photoUrl = null,
+                syncStatus = com.azuratech.azuratime.core.domain.model.SyncStatus.SYNCED,
+            ),
+            assignedClassNames = "Kelas 10B",
+            isBiometricReady = false,
+        ),
+    )
 
-    fun studentRosterPopulated() =
-        com.azuratech.azuratime.features.student.ui.roster.StudentRosterPreviewMocks.populated()
+        searchQuery = "",
+        selectedClassName = null,
+        students = mockStudentDisplayItems,
+        allClasses = mockClasses,
+        studentForClassAssignment = null,
+        studentForQuickEdit = null,
+    )
 
-    fun studentRosterError() =
-        com.azuratech.azuratime.features.student.ui.roster.StudentRosterPreviewMocks.error()
+    )
+
 }

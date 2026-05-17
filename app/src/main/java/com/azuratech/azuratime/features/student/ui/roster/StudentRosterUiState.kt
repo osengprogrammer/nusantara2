@@ -1,23 +1,18 @@
 package com.azuratech.azuratime.features.student.ui.roster
 
-import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 
 /**
- * 🎓 STUDENT ROSTER UI STATE
+ * 🎓 STUDENT ROSTER UI STATE (v3.2.0-ai-native)
  */
-sealed class StudentRosterUiState {
-    object Loading : StudentRosterUiState()
-    data class Success(val data: StudentRosterData) : StudentRosterUiState()
-    data class Error(val message: String) : StudentRosterUiState()
-}
-
-data class StudentRosterData(
-    val searchQuery: String = "",
-    val selectedClassName: String? = null,
+data class StudentRosterUiState(
+    val isLoading: Boolean = false,
     val students: List<StudentDisplayItem> = emptyList(),
     val allClasses: List<ClassModel> = emptyList(),
-    val isSyncing: Boolean = false,
-    val studentForClassAssignment: StudentDisplayItem? = null,
-    val studentForQuickEdit: StudentDisplayItem? = null,
+    val selectedClassId: String? = null,
+    val searchQuery: String = "",
+    val error: String? = null,
+    val isDeleteDialogVisible: Boolean = false,
+    val targetStudentId: String? = null,
 )

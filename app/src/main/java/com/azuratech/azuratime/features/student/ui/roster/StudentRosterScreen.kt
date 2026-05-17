@@ -1,5 +1,6 @@
 package com.azuratech.azuratime.features.student.ui.roster
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -18,7 +19,6 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
-import androidx.compose.animation.core.*
 
 @Composable
 fun StudentRosterScreen(
@@ -41,90 +41,138 @@ fun StudentRosterScreen(
         title = "Roster Siswa",
         onBack = onNavigateBack,
         actions = {
-            val data = (uiState as? StudentRosterUiState.Success)?.data
             IconButton(
-                onClick = { viewModel.syncStudents() },
-                enabled = data?.isSyncing == false,
+                onClick = { viewModel.onEvent(StudentRosterUiEvent.SyncStudents) },
+                enabled = !uiState.isLoading,
             ) {
                 Icon(
                     Icons.Default.Refresh,
                     contentDescription = "Sync",
-                    modifier = if (data?.isSyncing == true) Modifier.rotate(rotation.value) else Modifier,
+                    modifier = if (uiState.isLoading) Modifier.rotate(rotation.value) else Modifier,
                 )
             }
         },
     ) {
-        when (val state = uiState) {
-            is StudentRosterUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            is StudentRosterUiState.Success -> {
-                val data = state.data
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Search Bar
-                    AzuraTextField(
-                        value = data.searchQuery,
-                        onValueChange = { viewModel.onSearchQueryChanged(it) },
-                        label = "Cari Siswa / ID",
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(AzuraSpacing.md),
-                    )
-
-                    // Class Filter
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = AzuraSpacing.md),
-                        horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Error Banner
+            uiState.error?.let { errorMsg ->
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(AzuraSpacing.md),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(AzuraSpacing.md),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        item {
-                            FilterChip(
-                                selected = data.selectedClassName == null,
-                                onClick = { viewModel.onClassSelected(null) },
-                                label = { Text("Semua") },
-                            )
-                        }
-                        items(data.allClasses) { classModel ->
-                            FilterChip(
-                                selected = data.selectedClassName == classModel.name,
-                                onClick = { viewModel.onClassSelected(classModel.id) },
-                                label = { Text(classModel.name) },
-                            )
+                        Text(
+                            text = errorMsg,
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                        TextButton(onClick = { viewModel.onEvent(StudentRosterUiEvent.ClearError) }) {
+                            Text("OK")
                         }
                     }
+                }
+            }
 
-                    // Student List
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(AzuraSpacing.md),
-                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
-                    ) {
-                        items(data.students) { item ->
-                            StudentRosterItem(
-                                item = item,
-                                onEditClick = { onEditStudentClick(item.profile.studentId) },
-                                onDeleteClick = { viewModel.deleteStudent(item.profile.studentId) },
-                            )
-                        }
+            // Search Bar
+            AzuraTextField(
+                value = uiState.searchQuery,
+                onValueChange = { viewModel.onEvent(StudentRosterUiEvent.UpdateSearch(it)) },
+                label = "Cari Siswa / ID",
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
+            )
 
-                        if (data.students.isEmpty()) {
-                            item {
-                                Box(modifier = Modifier.fillMaxWidth().padding(AzuraSpacing.xl), contentAlignment = Alignment.Center) {
-                                    Text("Tidak ada siswa ditemukan", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
+            // Class Filter
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = AzuraSpacing.md),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+            ) {
+                item {
+                    FilterChip(
+                        selected = uiState.selectedClassId == null,
+                        onClick = { viewModel.onEvent(StudentRosterUiEvent.SelectClass(null)) },
+                        label = { Text("Semua") },
+                    )
+                }
+                items(uiState.allClasses) { classModel ->
+                    FilterChip(
+                        selected = uiState.selectedClassId == classModel.id,
+                        onClick = { viewModel.onEvent(StudentRosterUiEvent.SelectClass(classModel.id)) },
+                        label = { Text(classModel.name) },
+                    )
+                }
+            }
+
+            // Student List
+            Box(modifier = Modifier.weight(1f)) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(AzuraSpacing.md),
+                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+                ) {
+                    items(uiState.students, key = { it.profile.studentId }) { item ->
+                        StudentRosterItem(
+                            item = item,
+                            onEditClick = { onEditStudentClick(item.profile.studentId) },
+                            onDeleteClick = { viewModel.onEvent(StudentRosterUiEvent.RequestDelete(item.profile.studentId)) },
+                        )
+                    }
+
+                    if (uiState.students.isEmpty() && !uiState.isLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(AzuraSpacing.xl),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    "Tidak ada siswa ditemukan",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                             }
                         }
                     }
                 }
-            }
-            is StudentRosterUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = state.message, color = MaterialTheme.colorScheme.error)
+
+                if (uiState.isLoading && uiState.students.isEmpty()) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
             }
         }
+    }
+
+    // Delete Confirmation Dialog
+    if (uiState.isDeleteDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onEvent(StudentRosterUiEvent.CancelDelete) },
+            title = { Text("Hapus Siswa?") },
+            text = { Text("Data siswa akan dihapus secara permanen dari perangkat dan cloud.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        uiState.targetStudentId?.let {
+                            viewModel.onEvent(StudentRosterUiEvent.ConfirmDelete(it))
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text("Hapus")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onEvent(StudentRosterUiEvent.CancelDelete) }) {
+                    Text("Batal")
+                }
+            },
+        )
     }
 }
