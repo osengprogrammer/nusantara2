@@ -10,12 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.core.ui.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
@@ -24,7 +22,6 @@ import com.azuratech.azuratime.core.ui.theme.*
 import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceViewModel
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +31,7 @@ fun AttendanceHistoryScreen(
     onNavigateBack: () -> Unit = {},
     attendanceViewModel: AttendanceViewModel,
     userViewModel: AccountManagementViewModel,
-    classViewModel: ClassViewModel
+    classViewModel: ClassViewModel,
 ) {
     // 1. Observation
     val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
@@ -59,7 +56,7 @@ fun AttendanceHistoryScreen(
     LaunchedEffect(user, startDate, endDate, selectedClassId) {
         attendanceViewModel.updateFilters(
             start = startDate,
-            end = endDate
+            end = endDate,
         )
     }
 
@@ -68,26 +65,25 @@ fun AttendanceHistoryScreen(
     }
 
     AzuraScreen(
-        title = "History Log (${records.size})", 
-        onBack = onNavigateBack
+        title = "History Log (${records.size})",
+        onBack = onNavigateBack,
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = AzuraSpacing.md)) {
-            
             // --- HEADER ACTIONS ---
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = AzuraSpacing.sm),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 FilterToggleButton(
-                    isActive = showFilters, 
-                    onClick = { showFilters = !showFilters }
+                    isActive = showFilters,
+                    onClick = { showFilters = !showFilters },
                 )
 
                 Button(
                     onClick = { attendanceViewModel.exportRecords(records) },
                     shape = AzuraShapes.medium,
-                    enabled = records.isNotEmpty()
+                    enabled = records.isNotEmpty(),
                 ) {
                     Icon(Icons.Default.Download, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -109,7 +105,7 @@ fun AttendanceHistoryScreen(
                             Icon(Icons.Default.Close, null)
                         }
                     }
-                }
+                },
             )
 
             // --- FILTER PANEL ---
@@ -120,8 +116,11 @@ fun AttendanceHistoryScreen(
                     endDate = endDate,
                     classes = availableClasses,
                     selectedClassId = selectedClassId,
-                    onDatesChanged = { s, e -> startDate = s; endDate = e },
-                    onClassSelected = { selectedClassId = it }
+                    onDatesChanged = { s, e ->
+                        startDate = s
+                        endDate = e
+                    },
+                    onClassSelected = { selectedClassId = it },
                 )
             }
 
@@ -134,12 +133,12 @@ fun AttendanceHistoryScreen(
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                    contentPadding = PaddingValues(bottom = 100.dp)
+                    contentPadding = PaddingValues(bottom = 100.dp),
                 ) {
                     items(records, key = { it.recordId }) { record ->
                         AttendanceHistoryCard(
                             record = record,
-                            onEditRequested = { editingRecord = record }
+                            onEditRequested = { editingRecord = record },
                         )
                     }
                 }
@@ -151,18 +150,18 @@ fun AttendanceHistoryScreen(
             AttendanceActionSheet(
                 record = selectedRecord,
                 onDismiss = { editingRecord = null },
-                onDelete = { record -> 
+                onDelete = { record ->
                     attendanceViewModel.deleteRecord(record)
-                    editingRecord = null 
+                    editingRecord = null
                 },
-                onUpdateStatus = { record, status -> 
+                onUpdateStatus = { record, status ->
                     attendanceViewModel.updateRecordStatus(record, status)
-                    editingRecord = null 
+                    editingRecord = null
                 },
-                onShowClassCorrection = { 
+                onShowClassCorrection = {
                     showClassCorrectionDialog = selectedRecord
-                    editingRecord = null 
-                }
+                    editingRecord = null
+                },
             )
         }
 
@@ -174,7 +173,7 @@ fun AttendanceHistoryScreen(
                 onClassSelected = { classItem ->
                     attendanceViewModel.updateRecordClass(recordToCorrect, classItem)
                     showClassCorrectionDialog = null
-                }
+                },
             )
         }
     }
@@ -198,11 +197,11 @@ fun LocalFilterPanel(
     classes: List<ClassModel>,
     selectedClassId: String?,
     onDatesChanged: (LocalDate?, LocalDate?) -> Unit,
-    onClassSelected: (String?) -> Unit
+    onClassSelected: (String?) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
     ) {
         var isClassExpanded by remember { mutableStateOf(false) }
         Column(modifier = Modifier.padding(AzuraSpacing.md), verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
@@ -210,7 +209,7 @@ fun LocalFilterPanel(
                 AzuraDatePickerButton("Dari", startDate, { onDatesChanged(it, endDate) }, Modifier.weight(1f))
                 AzuraDatePickerButton("Sampai", endDate, { onDatesChanged(startDate, it) }, Modifier.weight(1f))
             }
-            
+
             AzuraDropdownField(
                 label = "Filter Kelas",
                 selectedValue = classes.find { it.id == selectedClassId }?.name ?: "Semua Kelas",
@@ -219,9 +218,9 @@ fun LocalFilterPanel(
                 onExpandedChange = { isClassExpanded = it },
                 onOptionSelected = { onClassSelected(it.id) },
                 onEditClicked = {},
-                getOptionLabel = { it.name }
+                getOptionLabel = { it.name },
             )
-            
+
             if (selectedClassId != null) {
                 TextButton(onClick = { onClassSelected(null) }, modifier = Modifier.align(Alignment.End)) {
                     Text("Reset Kelas", color = MaterialTheme.colorScheme.error)
@@ -246,7 +245,7 @@ fun LocalClassCorrectionDialog(
     currentClassName: String,
     userClasses: List<ClassModel>,
     onDismiss: () -> Unit,
-    onClassSelected: (ClassModel) -> Unit
+    onClassSelected: (ClassModel) -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -260,13 +259,13 @@ fun LocalClassCorrectionDialog(
                         OutlinedButton(
                             onClick = { onClassSelected(classItem) },
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            shape = AzuraShapes.medium
+                            shape = AzuraShapes.medium,
                         ) { Text(classItem.name) }
                     }
                 }
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } },
     )
 }

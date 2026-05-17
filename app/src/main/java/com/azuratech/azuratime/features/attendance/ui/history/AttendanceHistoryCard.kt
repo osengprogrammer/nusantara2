@@ -24,14 +24,14 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AttendanceHistoryCard(
     record: AttendanceRecord,
-    onEditRequested: (AttendanceRecord) -> Unit = {}
+    onEditRequested: (AttendanceRecord) -> Unit = {},
 ) {
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
     val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
 
     val dateTime = java.time.LocalDateTime.ofInstant(
         java.time.Instant.ofEpochMilli(record.timestamp),
-        java.time.ZoneId.systemDefault()
+        java.time.ZoneId.systemDefault(),
     )
 
     // 🔥 DYNAMIC COLOR LOGIC
@@ -48,32 +48,32 @@ fun AttendanceHistoryCard(
             .padding(horizontal = AzuraSpacing.xs, vertical = AzuraSpacing.sm),
         shape = AzuraShapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(modifier = Modifier.padding(AzuraSpacing.md)) {
             // --- Row 1: Name & Status Badge ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = record.studentName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Surface(
                     color = statusColor.copy(alpha = 0.1f),
-                    shape = AzuraShapes.small
+                    shape = AzuraShapes.small,
                 ) {
                     Text(
                         text = record.status.name,
                         modifier = Modifier.padding(horizontal = AzuraSpacing.sm, vertical = AzuraSpacing.xs),
                         style = MaterialTheme.typography.labelMedium,
                         color = statusColor,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
                     )
                 }
             }
@@ -87,7 +87,7 @@ fun AttendanceHistoryCard(
                 Text(
                     text = "${dateTime.format(timeFormatter)} • ${dateTime.format(dateFormatter)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -99,7 +99,7 @@ fun AttendanceHistoryCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.School, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
@@ -109,7 +109,7 @@ fun AttendanceHistoryCard(
                         text = displayClass,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -117,7 +117,7 @@ fun AttendanceHistoryCard(
                     onClick = { onEditRequested(record) },
                     contentPadding = PaddingValues(horizontal = AzuraSpacing.sm, vertical = 0.dp),
                     modifier = Modifier.height(32.dp),
-                    shape = AzuraShapes.small
+                    shape = AzuraShapes.small,
                 ) {
                     Icon(Icons.Default.Edit, null, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(AzuraSpacing.xs))
