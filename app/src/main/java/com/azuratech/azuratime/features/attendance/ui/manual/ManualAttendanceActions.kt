@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.features.attendance.ui.manual
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
@@ -17,7 +16,7 @@ import java.time.LocalTime
 fun ManualAttendanceLockBanner() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Row(modifier = Modifier.padding(AzuraSpacing.sm), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Lock, contentDescription = "Locked", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
@@ -35,13 +34,13 @@ fun <T> ManualAttendanceFilterDropdown(
     selectedOption: T?,
     onOptionSelected: (T?) -> Unit,
     getLabel: (T) -> String,
-    enabled: Boolean = true
+    enabled: Boolean = true,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     ExposedDropdownMenuBox(
-        expanded = expanded && enabled, 
-        onExpandedChange = { if (enabled) expanded = it }
+        expanded = expanded && enabled,
+        onExpandedChange = { if (enabled) expanded = it },
     ) {
         OutlinedTextField(
             value = selectedOption?.let { getLabel(it) } ?: "Pilih...",
@@ -51,14 +50,17 @@ fun <T> ManualAttendanceFilterDropdown(
             enabled = enabled,
             shape = AzuraShapes.medium,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable) 
+            modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
         )
-        
+
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(getLabel(option)) },
-                    onClick = { onOptionSelected(option); expanded = false }
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    },
                 )
             }
         }
@@ -71,19 +73,19 @@ fun ManualAttendanceTimePickerButton(
     label: String,
     selectedTime: LocalTime,
     onTimeSelected: (LocalTime) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var showTimePicker by remember { mutableStateOf(false) }
     val timePickerState = rememberTimePickerState(
         initialHour = selectedTime.hour,
         initialMinute = selectedTime.minute,
-        is24Hour = true
+        is24Hour = true,
     )
 
     OutlinedButton(
         onClick = { showTimePicker = true },
         modifier = modifier,
-        shape = AzuraShapes.medium
+        shape = AzuraShapes.medium,
     ) {
         val hour = selectedTime.hour.toString().padStart(2, '0')
         val minute = selectedTime.minute.toString().padStart(2, '0')
@@ -102,7 +104,7 @@ fun ManualAttendanceTimePickerButton(
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) { Text("Batal") }
             },
-            text = { TimePicker(state = timePickerState) }
+            text = { TimePicker(state = timePickerState) },
         )
     }
 }

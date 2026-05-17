@@ -11,5 +11,5 @@ data class ReportEntity(
     val startDate: Long,
     val endDate: Long,
     val metricsJson: String,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

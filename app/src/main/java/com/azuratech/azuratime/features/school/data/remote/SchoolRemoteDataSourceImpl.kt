@@ -15,16 +15,16 @@ import javax.inject.Singleton
 
 @Singleton
 class SchoolRemoteDataSourceImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
 ) : SchoolRemoteDataSource {
 
     private fun getAccountRef(_accountId: String) = db.collection("accounts").document(_accountId)
     private fun getSchoolsRef(accountId: String) = getAccountRef(accountId).collection("schools")
-    
+
     // 🔥 Top-level collection for school discovery
     private fun getGlobalSchoolsRef() = db.collection("schools")
 
-    private fun getClassesRef(schoolId: String) = 
+    private fun getClassesRef(schoolId: String) =
         getGlobalSchoolsRef().document(schoolId).collection("classes")
 
     override suspend fun saveSchool(accountId: String, school: School): Result<Unit> {
@@ -36,7 +36,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 "timezone" to school.timezone,
                 "status" to school.status,
                 "createdAt" to school.createdAt,
-                "updatedAt" to school.updatedAt
+                "updatedAt" to school.updatedAt,
             )
             getGlobalSchoolsRef().document(school.id).set(data, SetOptions.merge()).await()
             Result.Success(Unit)
@@ -59,40 +59,40 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
         val subscription = getGlobalSchoolsRef()
             .whereEqualTo("accountId", accountId)
             .addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                trySend(Result.Failure(AppError.Network(error.message)))
-                return@addSnapshotListener
-            }
-            if (snapshot != null) {
-                val schools = snapshot.documents.mapNotNull { doc ->
-                    try {
-                        val createdAtRaw = doc.get("createdAt")
-                        val createdAt = when (createdAtRaw) {
-                            is com.google.firebase.Timestamp -> createdAtRaw.toDate().time
-                            is Number -> createdAtRaw.toLong()
-                            else -> 0L
-                        }
-                        val updatedAtRaw = doc.get("updatedAt")
-                        val updatedAt = when (updatedAtRaw) {
-                            is com.google.firebase.Timestamp -> updatedAtRaw.toDate().time
-                            is Number -> updatedAtRaw.toLong()
-                            else -> 0L
-                        }
-
-                        School(
-                            id = doc.id,
-                            accountId = doc.getString("accountId") ?: "",
-                            name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
-                            timezone = doc.getString("timezone") ?: "UTC",
-                            status = doc.getString("status") ?: "ACTIVE",
-                            createdAt = createdAt,
-                            updatedAt = updatedAt
-                        )
-                    } catch (e: Exception) { null }
+                if (error != null) {
+                    trySend(Result.Failure(AppError.Network(error.message)))
+                    return@addSnapshotListener
                 }
-                trySend(Result.Success(schools))
+                if (snapshot != null) {
+                    val schools = snapshot.documents.mapNotNull { doc ->
+                        try {
+                            val createdAtRaw = doc.get("createdAt")
+                            val createdAt = when (createdAtRaw) {
+                                is com.google.firebase.Timestamp -> createdAtRaw.toDate().time
+                                is Number -> createdAtRaw.toLong()
+                                else -> 0L
+                            }
+                            val updatedAtRaw = doc.get("updatedAt")
+                            val updatedAt = when (updatedAtRaw) {
+                                is com.google.firebase.Timestamp -> updatedAtRaw.toDate().time
+                                is Number -> updatedAtRaw.toLong()
+                                else -> 0L
+                            }
+
+                            School(
+                                id = doc.id,
+                                accountId = doc.getString("accountId") ?: "",
+                                name = doc.getString("name") ?: doc.getString("schoolName") ?: "",
+                                timezone = doc.getString("timezone") ?: "UTC",
+                                status = doc.getString("status") ?: "ACTIVE",
+                                createdAt = createdAt,
+                                updatedAt = updatedAt,
+                            )
+                        } catch (e: Exception) { null }
+                    }
+                    trySend(Result.Success(schools))
+                }
             }
-        }
         awaitClose { subscription.remove() }
     }
 
@@ -101,7 +101,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             val snapshot = getGlobalSchoolsRef()
                 .whereEqualTo("accountId", accountId)
                 .get().await()
-                
+
             val schools = snapshot.documents.mapNotNull { doc ->
                 try {
                     val createdAtRaw = doc.get("createdAt")
@@ -124,7 +124,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         timezone = doc.getString("timezone") ?: "UTC",
                         status = doc.getString("status") ?: "ACTIVE",
                         createdAt = createdAt,
-                        updatedAt = updatedAt
+                        updatedAt = updatedAt,
                     )
                 } catch (e: Exception) { null }
             }
@@ -137,11 +137,11 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
     override suspend fun getSchoolsByIds(schoolIds: List<String>): Result<List<School>> {
         return try {
             if (schoolIds.isEmpty()) return Result.Success(emptyList())
-            
+
             val snapshot = getGlobalSchoolsRef()
                 .whereIn("schoolId", schoolIds)
                 .get().await()
-                
+
             val schools = snapshot.documents.mapNotNull { doc ->
                 try {
                     val createdAtRaw = doc.get("createdAt")
@@ -164,7 +164,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         timezone = doc.getString("timezone") ?: "UTC",
                         status = doc.getString("status") ?: "ACTIVE",
                         createdAt = createdAt,
-                        updatedAt = updatedAt
+                        updatedAt = updatedAt,
                     )
                 } catch (e: Exception) { null }
             }
@@ -183,7 +183,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 "grade" to classModel.grade,
                 "teacherId" to classModel.teacherId,
                 "studentCount" to classModel.studentCount,
-                "createdAt" to classModel.createdAt
+                "createdAt" to classModel.createdAt,
             )
             getClassesRef(schoolId).document(classModel.id).set(data, SetOptions.merge()).await()
             Result.Success(Unit)
@@ -207,7 +207,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             println("🔍 SYNC: Fetching classes from: ${ref.path}")
             val snapshot = ref.get().await()
             println("🔍 SYNC: Found ${snapshot.size()} documents in Firestore classes.")
-            
+
             val classes = snapshot.documents.mapNotNull { doc ->
                 try {
                     val createdAtRaw = doc.get("createdAt")
@@ -216,22 +216,22 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         is Number -> createdAtRaw.toLong()
                         else -> 0L
                     }
-                    
+
                     val classModel = ClassModel(
                         id = doc.id,
-                        schoolId = doc.getString("schoolId") ?: schoolId, 
+                        schoolId = doc.getString("schoolId") ?: schoolId,
                         name = doc.getString("name") ?: "",
                         grade = doc.getString("grade") ?: "",
                         teacherId = doc.getString("teacherId"),
                         studentCount = doc.getLong("studentCount")?.toInt() ?: 0,
-                        createdAt = createdAt
+                        createdAt = createdAt,
                     )
                     println("🔍 SYNC: Parsed class: ${classModel.name} (${classModel.id})")
                     classModel
-                } catch (e: Exception) { 
+                } catch (e: Exception) {
                     println("❌ SYNC: Failed to parse document ${doc.id}. Error: ${e.message}")
                     println("❌ SYNC: Document Data: ${doc.data}")
-                    null 
+                    null
                 }
             }
             Result.Success(classes)

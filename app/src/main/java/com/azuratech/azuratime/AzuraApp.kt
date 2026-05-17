@@ -15,4 +15,4 @@ class AzuraApp : Application(), Configuration.Provider { // 🔥 Tambahkan Provi
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
-    }
+}

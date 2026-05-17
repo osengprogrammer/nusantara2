@@ -14,7 +14,7 @@ data class SchoolEntity(
     val status: String = "ACTIVE",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val syncStatus: String = "SYNCED" // com.azuratech.azuratime.core.domain.model.SyncStatus.name
+    val syncStatus: String = "SYNCED", // com.azuratech.azuratime.core.domain.model.SyncStatus.name
 ) {
     fun toDomain(): School = School(
         id = id,
@@ -23,6 +23,6 @@ data class SchoolEntity(
         timezone = timezone,
         status = status,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
     )
 }

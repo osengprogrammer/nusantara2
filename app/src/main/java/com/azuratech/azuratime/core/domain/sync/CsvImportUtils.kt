@@ -17,9 +17,9 @@ import javax.inject.Singleton
  */
 @Singleton
 class CsvImportUtils @Inject constructor(
-    private val storageProvider: StorageProvider
+    private val storageProvider: StorageProvider,
 ) {
-    
+
     // 🔥 JEMBATAN KE VIEWMODEL: Memastikan sinkron dengan RegisterViewModel
     suspend fun parseCsvToStudentData(uriString: String): List<CsvStudentData> {
         return parseCsvFile(uriString).students
@@ -31,7 +31,7 @@ class CsvImportUtils @Inject constructor(
         val errors = mutableListOf<String>()
         var totalRows = 0
         var validRows = 0
-        
+
         try {
             val bytes = storageProvider.read(uriString)
             if (bytes.isEmpty()) {
@@ -42,12 +42,12 @@ class CsvImportUtils @Inject constructor(
                 var line: String?
                 var lineNumber = 0
                 var headers: List<String>? = null
-                
+
                 while (reader.readLine().also { line = it } != null) {
                     lineNumber++
                     val currentLine = line?.trim() ?: continue
                     if (currentLine.isEmpty()) continue
-                    
+
                     val columns = parseCsvLine(currentLine)
                     if (columns.isEmpty()) continue
 
@@ -63,7 +63,7 @@ class CsvImportUtils @Inject constructor(
                     }
 
                     totalRows++
-                    
+
                     try {
                         val student = parseStudentRow(headers, columns)
                         if (student != null) {
@@ -80,14 +80,14 @@ class CsvImportUtils @Inject constructor(
         } catch (e: Exception) {
             errors.add("Gagal membaca file: ${e.message}")
         }
-        
+
         CsvParseResult(students, errors, totalRows, validRows)
     }
 
     // 🔥 PARSE ROW: Super Fleksibel dengan Alias
     private fun parseStudentRow(headers: List<String>, columns: List<String>): CsvStudentData? {
         val headerMap = headers.mapIndexed { index, h -> h to index }.toMap()
-        
+
         // Fungsi pencari kolom cerdas (Abaikan spasi, underscore & huruf besar/kecil)
         fun getValue(aliases: List<String>): String {
             for (alias in aliases) {
@@ -99,11 +99,11 @@ class CsvImportUtils @Inject constructor(
             }
             return ""
         }
-        
+
         // 1. DATA WAJIB (Sudah mendeteksi face_id dari template)
         val faceId = getValue(listOf("faceid", "id", "noinduk", "nis", "nisn"))
         val name = getValue(listOf("fullname", "name", "nama", "namalengkap"))
-        
+
         // Jika ID kosong, baris ini diabaikan (invalid)
         if (faceId.isEmpty()) return null
 
@@ -124,7 +124,7 @@ class CsvImportUtils @Inject constructor(
             name = name,
             // 🔥 Tambahan photourl untuk nangkap dari template
             photoUrl = getValue(listOf("photourl", "photo", "image", "foto", "urlfoto")),
-            rawMetadata = metadata
+            rawMetadata = metadata,
         )
     }
 
@@ -140,12 +140,15 @@ class CsvImportUtils @Inject constructor(
                 '"' -> {
                     if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
                         current.append('"')
-                        i++ 
-                    } else inQuotes = !inQuotes
+                        i++
+                    } else {
+                        inQuotes = !inQuotes
+                    }
                 }
                 ',' -> {
-                    if (inQuotes) current.append(char)
-                    else {
+                    if (inQuotes) {
+                        current.append(char)
+                    } else {
                         result.add(current.toString().trim())
                         current.clear()
                     }
@@ -161,7 +164,7 @@ class CsvImportUtils @Inject constructor(
     // Update Sample CSV agar HRD tahu format terlengkapnya
     fun generateSampleCsv(): String {
         return "face_id,full_name,class_id,photo_url\n" +
-               "KRY-001,Gus Usman,Shift Pagi,https://link-foto-gus-usman.com/foto.jpg\n" +
-               "KRY-002,Zohar,Shift Malam,https://link-foto-zohar.com/foto.jpg"
+            "KRY-001,Gus Usman,Shift Pagi,https://link-foto-gus-usman.com/foto.jpg\n" +
+            "KRY-002,Zohar,Shift Malam,https://link-foto-zohar.com/foto.jpg"
     }
 }

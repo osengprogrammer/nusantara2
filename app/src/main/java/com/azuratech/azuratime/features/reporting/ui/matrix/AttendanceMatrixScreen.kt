@@ -8,11 +8,11 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 fun AttendanceMatrixScreen(
     onNavigateBack: () -> Unit,
     @Suppress("UNUSED_PARAMETER") onCellClick: (String, String, java.time.LocalDate) -> Unit,
-    @Suppress("UNUSED_PARAMETER") viewModel: AttendanceMatrixViewModel = hiltViewModel()
+    @Suppress("UNUSED_PARAMETER") viewModel: AttendanceMatrixViewModel = hiltViewModel(),
 ) {
     AzuraScreen(
         title = "Matriks Presensi",
-        onBack = onNavigateBack
+        onBack = onNavigateBack,
     ) {
         // Implementation placeholder
     }

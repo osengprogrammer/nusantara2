@@ -11,5 +11,5 @@ data class SystemAuditTrail(
     val action: String,
     val timestamp: Long,
     val details: String?,
-    val syncStatus: SyncStatus
+    val syncStatus: SyncStatus,
 )

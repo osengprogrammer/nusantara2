@@ -16,21 +16,25 @@ interface ClassDao {
     // =====================================================
 
     /** School-scoped reactive query — switches automatically when activeSchoolId changes. */
-    @Query("""
+    @Query(
+        """
         SELECT c.* FROM classes c
         JOIN school_class_assignments sca ON c.id = sca.classId
         WHERE sca.schoolId = :schoolId
         ORDER BY c.displayOrder ASC, c.name ASC
-    """)
+    """,
+    )
     fun observeClassesBySchool(schoolId: String): Flow<List<ClassEntity>>
 
     /** Used for UI chips or specific selections */
-    @Query("""
+    @Query(
+        """
         SELECT c.* FROM classes c
         JOIN school_class_assignments sca ON c.id = sca.classId
         WHERE sca.schoolId = :schoolId AND c.id IN (:ids)
         ORDER BY c.displayOrder ASC, c.name ASC
-    """)
+    """,
+    )
     fun getClassesByIdsFlow(schoolId: String, ids: List<String>): Flow<List<ClassEntity>>
 
     // =====================================================
@@ -43,12 +47,14 @@ interface ClassDao {
     @Query("SELECT * FROM classes WHERE name = :name COLLATE NOCASE LIMIT 1")
     suspend fun getClassByName(name: String): ClassEntity?
 
-    @Query("""
+    @Query(
+        """
         SELECT c.* FROM classes c
         JOIN school_class_assignments sca ON c.id = sca.classId
         WHERE sca.schoolId = :schoolId
         ORDER BY c.displayOrder ASC, c.name ASC
-    """)
+    """,
+    )
     suspend fun getClassesBySchoolOnce(schoolId: String): List<ClassEntity>
 
     /** Safety guard: count faces assigned to a class before allowing delete. */

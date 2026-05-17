@@ -3,7 +3,6 @@ package com.azuratech.azuratime.features.biometric.domain.repository
 import android.app.Application
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.BiometricCache
-import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
@@ -20,7 +19,7 @@ class StudentBiometricRepository @Inject constructor(
     private val localDataSource: BiometricLocalDataSource,
     private val remoteDataSource: BiometricRemoteDataSource,
     private val sessionManager: SessionManager,
-    private val studentRepository: StudentRepository
+    private val studentRepository: StudentRepository,
 ) {
     private val schoolId: String
         get() = sessionManager.getActiveSchoolId() ?: ""
@@ -68,7 +67,7 @@ class StudentBiometricRepository @Inject constructor(
     }
 
     suspend fun removeStudentFromClass(studentId: String, @Suppress("UNUSED_PARAMETER") classId: String): Result<Unit> = try {
-        localDataSource.deleteAssignmentsByStudent(studentId, schoolId) 
+        localDataSource.deleteAssignmentsByStudent(studentId, schoolId)
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
@@ -96,12 +95,12 @@ class StudentBiometricRepository @Inject constructor(
     suspend fun saveStudentProfile(profile: StudentProfile, @Suppress("UNUSED_PARAMETER") photoBytes: ByteArray? = null): Result<Unit> {
         return studentRepository.saveProfile(profile)
     }
-    
+
     suspend fun syncBiometrics(): Result<Unit> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         try {
             val lastSync = sessionManager.getLastFacesSyncTime()
             val syncResult = remoteDataSource.getBiometricUpdates(schoolId, lastSync)
-            
+
             if (syncResult is Result.Success) {
                 val updatedData = syncResult.data
                 if (updatedData.isNotEmpty()) {
@@ -109,7 +108,7 @@ class StudentBiometricRepository @Inject constructor(
                         .groupBy { it.studentId }
                         .map { entry ->
                             val itemsForStudent = entry.value
-                            itemsForStudent.maxByOrNull { it.lastUpdated } 
+                            itemsForStudent.maxByOrNull { it.lastUpdated }
                                 ?: itemsForStudent.first()
                         }
 

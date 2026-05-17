@@ -21,24 +21,24 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun provideStudentRepository(
-        impl: StudentRepositoryImpl
+        impl: StudentRepositoryImpl,
     ): StudentRepository
 
     @Binds
     @Singleton
     abstract fun provideAttendanceRepository(
-        impl: AttendanceRepositoryImpl
+        impl: AttendanceRepositoryImpl,
     ): AttendanceRepository
 
     @Binds
     @Singleton
     abstract fun provideAccessRequestRepository(
-        impl: AccessRequestRepositoryImpl
+        impl: AccessRequestRepositoryImpl,
     ): AccessRequestRepository
 
     @Binds
     @Singleton
     abstract fun provideFileStorage(
-        impl: PhotoStorageUtils
+        impl: PhotoStorageUtils,
     ): FileStorage
 }

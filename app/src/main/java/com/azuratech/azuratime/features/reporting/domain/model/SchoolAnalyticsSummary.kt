@@ -10,5 +10,5 @@ data class SchoolAnalyticsSummary(
     val reportName: String,
     val dateRange: String,
     val metrics: Map<String, String>,
-    val syncStatus: SyncStatus
+    val syncStatus: SyncStatus,
 )

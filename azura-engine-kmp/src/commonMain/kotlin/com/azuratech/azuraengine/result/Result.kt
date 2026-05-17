@@ -16,7 +16,7 @@ sealed class Result<out T> {
     inline fun <R> fold(
         onSuccess: (T) -> R,
         onFailure: (AppError) -> R,
-        onLoading: () -> R = { throw IllegalStateException("Result is Loading") }
+        onLoading: () -> R = { throw IllegalStateException("Result is Loading") },
     ): R = when (this) {
         is Success -> onSuccess(data)
         is Failure -> onFailure(error)

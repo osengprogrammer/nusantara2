@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AndroidImageProcessor @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : ImageProcessor {
 
     override fun resize(imageBytes: ByteArray, maxWidth: Int, maxHeight: Int): ByteArray {
@@ -24,12 +24,12 @@ class AndroidImageProcessor @Inject constructor(
 
         options.inSampleSize = calculateInSampleSize(options, maxWidth, maxHeight)
         options.inJustDecodeBounds = false
-        
+
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size, options) ?: return imageBytes
-        
+
         val width = bitmap.width
         val height = bitmap.height
-        
+
         if (width <= maxWidth && height <= maxHeight) {
             return if (options.inSampleSize > 1) {
                 val res = bitmapToByteArray(bitmap)
@@ -46,9 +46,9 @@ class AndroidImageProcessor @Inject constructor(
             bitmap,
             (width * ratio).toInt(),
             (height * ratio).toInt(),
-            true
+            true,
         )
-        
+
         val result = bitmapToByteArray(scaledBitmap)
         if (scaledBitmap != bitmap) {
             scaledBitmap.recycle()
@@ -59,14 +59,20 @@ class AndroidImageProcessor @Inject constructor(
 
     override fun rotate(imageBytes: ByteArray, degrees: Int): ByteArray {
         if (degrees % 360 == 0) return imageBytes
-        
+
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size) ?: return imageBytes
         val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
-        
+
         val rotatedBitmap = Bitmap.createBitmap(
-            bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+            bitmap,
+            0,
+            0,
+            bitmap.width,
+            bitmap.height,
+            matrix,
+            true,
         )
-        
+
         val result = bitmapToByteArray(rotatedBitmap)
         if (rotatedBitmap != bitmap) {
             rotatedBitmap.recycle()
@@ -77,10 +83,10 @@ class AndroidImageProcessor @Inject constructor(
 
     override suspend fun extractFaceEmbedding(imageBytes: ByteArray): Pair<ByteArray, FloatArray>? {
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size) ?: return null
-        
+
         val result = PhotoProcessingUtils.processBitmapForFaceEmbedding(context, bitmap)
         bitmap.recycle()
-        
+
         return result?.let { (faceBitmap, embedding) ->
             val faceBytes = bitmapToByteArray(faceBitmap)
             faceBitmap.recycle()

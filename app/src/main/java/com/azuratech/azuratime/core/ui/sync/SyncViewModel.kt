@@ -17,7 +17,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SyncViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val _isSyncing = MutableStateFlow(false)
@@ -31,7 +31,7 @@ class SyncViewModel @Inject constructor(
                 .collectLatest { workInfos ->
                     val isRunning = workInfos.any { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
                     val previouslySyncing = _isSyncing.value
-                    
+
                     _isSyncing.value = isRunning
 
                     // Jika transisi dari RUNNING ke SUCCEEDED (dan bukan karena ada task baru di-enqueue)
@@ -56,9 +56,9 @@ class SyncViewModel @Inject constructor(
         workManager.enqueueUniqueWork(
             "AZURA_SYNC_WORK",
             ExistingWorkPolicy.REPLACE,
-            syncRequest
+            syncRequest,
         )
-        
+
         onComplete?.invoke()
     }
 }

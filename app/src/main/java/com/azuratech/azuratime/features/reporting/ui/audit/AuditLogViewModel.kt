@@ -12,7 +12,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AuditLogViewModel @Inject constructor(
     private val repository: AuditLogRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : ViewModel() {
 
     val auditLogs: StateFlow<List<SystemAuditTrail>> = sessionManager.activeSchoolIdFlow

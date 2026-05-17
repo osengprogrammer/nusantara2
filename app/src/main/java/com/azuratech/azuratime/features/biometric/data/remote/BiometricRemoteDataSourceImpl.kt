@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.features.biometric.data.remote
 
-import android.util.Log
 import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuraengine.result.Result
@@ -16,7 +15,7 @@ import javax.inject.Singleton
 @Singleton
 class BiometricRemoteDataSourceImpl @Inject constructor(
     private val db: FirebaseFirestore,
-    private val storage: FirebaseStorage
+    private val storage: FirebaseStorage,
 ) : BiometricRemoteDataSource {
 
     private fun getTenantRef(schoolId: String) = db.collection("schools").document(schoolId)
@@ -24,7 +23,7 @@ class BiometricRemoteDataSourceImpl @Inject constructor(
     override suspend fun getBiometricUpdates(schoolId: String, lastSync: Long): Result<List<Pair<StudentBiometricEntity, Boolean>>> {
         return try {
             val lastTimestamp = com.google.firebase.Timestamp(java.util.Date(lastSync))
-            
+
             val snapshot = getTenantRef(schoolId).collection("master_faces")
                 .whereGreaterThan("lastUpdated", lastTimestamp).get().await()
 
@@ -37,7 +36,7 @@ class BiometricRemoteDataSourceImpl @Inject constructor(
                         name = doc.getString("name") ?: "",
                         embedding = embedding,
                         photoUrl = doc.getString("photoUrl"),
-                        isSynced = true
+                        isSynced = true,
                     )
                     Pair(entity, doc.getBoolean("isActive") ?: true)
                 } catch (e: Exception) { null }
@@ -71,7 +70,7 @@ class BiometricRemoteDataSourceImpl @Inject constructor(
                         "embedding" to student.embedding?.toList(),
                         "photoUrl" to student.photoUrl,
                         "lastUpdated" to FieldValue.serverTimestamp(),
-                        "isActive" to !student.isDeleted
+                        "isActive" to !student.isDeleted,
                     )
                     batch.set(getTenantRef(schoolId).collection("master_faces").document(student.studentId), data, SetOptions.merge())
                 }
@@ -87,9 +86,9 @@ class BiometricRemoteDataSourceImpl @Inject constructor(
         return try {
             val docId = "${assignment.studentId}_${assignment.classId}"
             val data = hashMapOf(
-                "studentId" to assignment.studentId, 
+                "studentId" to assignment.studentId,
                 "classId" to assignment.classId,
-                "lastUpdated" to FieldValue.serverTimestamp()
+                "lastUpdated" to FieldValue.serverTimestamp(),
             )
             getTenantRef(assignment.schoolId).collection("student_class_assignments").document(docId).set(data, SetOptions.merge()).await()
             Result.Success(Unit)

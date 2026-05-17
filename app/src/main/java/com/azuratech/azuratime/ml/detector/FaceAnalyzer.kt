@@ -30,7 +30,7 @@ class FaceAnalyzer(
     private val bypassLiveness: Boolean = false,
     private val onFaceEmbedding: (Rect, FloatArray) -> Unit,
     private val onFaceCaptured: ((Bitmap) -> Unit)? = null,
-    private val onLivenessStatus: (String) -> Unit
+    private val onLivenessStatus: (String) -> Unit,
 ) : ImageAnalysis.Analyzer {
 
     private val analyzerScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -38,14 +38,14 @@ class FaceAnalyzer(
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL) 
+            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
             .enableTracking()
-            .build()
+            .build(),
     )
 
     private var isEyeClosed = false
     private var hasBlinked = false
-    private val BLINK_THRESHOLD = 0.25f 
+    private val BLINK_THRESHOLD = 0.25f
 
     var faceBounds by mutableStateOf<List<Rect>>(emptyList())
         private set
@@ -113,7 +113,7 @@ class FaceAnalyzer(
                         } else {
                             onLivenessStatus("Silakan Berkedip")
                         }
-                        
+
                         if (!hasBlinked) {
                             imageProxy.close()
                             isProcessing.set(false)
@@ -122,13 +122,13 @@ class FaceAnalyzer(
                     }
 
                     // --- 🔥 PERBAIKAN KRUSIAL: EKSTRAK BITMAP DI SINI (SINKRON) ---
-                    // Jangan mengekstrak imageProxy di dalam coroutine (background) 
+                    // Jangan mengekstrak imageProxy di dalam coroutine (background)
                     // karena sistem bisa menutupnya kapan saja.
                     val safeBitmap = try {
                         ImageConversionUtils.convertImageProxyToBitmap(
                             imageProxy = imageProxy,
                             isFrontCamera = isFrontCamera,
-                            applyMirroring = false
+                            applyMirroring = false,
                         )
                     } catch (e: Exception) {
                         Log.e("FaceAnalyzer", "Gagal convert ImageProxy: ${e.message}")
@@ -141,7 +141,7 @@ class FaceAnalyzer(
                     // --- PROCESS EMBEDDING DI BACKGROUND ---
                     if (safeBitmap != null) {
                         val bounds = face.boundingBox
-                        
+
                         analyzerScope.launch {
                             try {
                                 // Potong wajah, convert ke TFLite buffer, dan jalankan AI
@@ -158,7 +158,7 @@ class FaceAnalyzer(
                                 // Bersihkan memori Bitmap secara manual agar tidak memory leak
                                 // SANGAT PENTING: Consumer harus meng-copy bitmap jika ingin menyimpannya!
                                 if (safeCrop != safeBitmap) safeCrop.recycle()
-                                safeBitmap.recycle() 
+                                safeBitmap.recycle()
                             } catch (e: Exception) {
                                 Log.e("FaceAnalyzer", "Error di Coroutine: ${e.message}")
                             } finally {
@@ -169,7 +169,6 @@ class FaceAnalyzer(
                     } else {
                         isProcessing.set(false)
                     }
-
                 } else {
                     // Reset liveness jika wajah hilang dari frame kamera
                     hasBlinked = false

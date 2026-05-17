@@ -13,7 +13,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class SyncManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     private val workManager = WorkManager.getInstance(context)
 
@@ -22,7 +22,7 @@ class SyncManager @Inject constructor(
      */
     fun enqueueProfileSync(userId: String) {
         val data = workDataOf("userId" to userId)
-        
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)
@@ -34,16 +34,16 @@ class SyncManager @Inject constructor(
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 10,
-                TimeUnit.SECONDS
+                TimeUnit.SECONDS,
             )
             .build()
 
         workManager.enqueueUniqueWork(
             "sync_profile_$userId",
             ExistingWorkPolicy.REPLACE, // Replace to ensure latest local changes are prioritized
-            request
+            request,
         )
-        
+
         android.util.Log.d("SyncManager", "Enqueued profile sync for user $userId")
     }
 
@@ -52,7 +52,7 @@ class SyncManager @Inject constructor(
      */
     fun enqueueAccessSync(userId: String) {
         val data = workDataOf("userId" to userId)
-        
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -65,9 +65,9 @@ class SyncManager @Inject constructor(
         workManager.enqueueUniqueWork(
             "sync_access_$userId",
             ExistingWorkPolicy.REPLACE,
-            request
+            request,
         )
-        
+
         android.util.Log.d("SyncManager", "Enqueued access sync for user $userId")
     }
 
@@ -76,7 +76,7 @@ class SyncManager @Inject constructor(
      */
     fun enqueueSchoolSync(schoolId: String) {
         val data = workDataOf("schoolId" to schoolId)
-        
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -89,9 +89,9 @@ class SyncManager @Inject constructor(
         workManager.enqueueUniqueWork(
             "sync_school_$schoolId",
             ExistingWorkPolicy.REPLACE,
-            request
+            request,
         )
-        
+
         android.util.Log.d("SyncManager", "Enqueued school sync for school $schoolId")
     }
 
@@ -108,16 +108,16 @@ class SyncManager @Inject constructor(
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 10,
-                TimeUnit.SECONDS
+                TimeUnit.SECONDS,
             )
             .build()
 
         workManager.enqueueUniqueWork(
             "AzuraManualSync",
             ExistingWorkPolicy.REPLACE,
-            request
+            request,
         )
-        
+
         android.util.Log.d("SyncManager", "Enqueued global manual sync")
     }
 }

@@ -26,7 +26,7 @@ class SchoolRepository @Inject constructor(
     private val database: AppDatabase,
     private val remoteDataSource: SchoolRemoteDataSource,
     private val syncManager: SyncManager,
-    private val firestore: com.google.firebase.firestore.FirebaseFirestore
+    private val firestore: com.google.firebase.firestore.FirebaseFirestore,
 ) {
     private val dao = database.schoolClassDao()
     private val schoolDao = database.schoolDao()
@@ -36,28 +36,28 @@ class SchoolRepository @Inject constructor(
 
     fun observeSchools(accountId: String): Flow<Result<List<School>>> =
         dao.getSchools(accountId)
-            .map { entities -> 
+            .map { entities ->
                 Result.Success(entities.map { it.toDomain() }) as Result<List<School>>
             }
-            .catch { e -> 
+            .catch { e ->
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
     fun observeSchoolsByIds(schoolIds: List<String>): Flow<Result<List<School>>> =
         dao.observeSchoolsByIds(schoolIds)
-            .map { entities -> 
+            .map { entities ->
                 Result.Success(entities.map { it.toDomain() }) as Result<List<School>>
             }
-            .catch { e -> 
+            .catch { e ->
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
     fun observeAllSchools(): Flow<Result<List<School>>> =
         dao.observeAllSchools()
-            .map { entities -> 
+            .map { entities ->
                 Result.Success(entities.map { it.toDomain() }) as Result<List<School>>
             }
-            .catch { e -> 
+            .catch { e ->
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
@@ -71,32 +71,36 @@ class SchoolRepository @Inject constructor(
                     name = name,
                     timezone = timezone,
                     status = "ACTIVE",
-                    syncStatus = SyncStatus.PENDING_INSERT.name
+                    syncStatus = SyncStatus.PENDING_INSERT.name,
                 )
                 dao.upsertSchool(school)
 
                 val requestId = "req_creator_$schoolId"
-                accessRequestDao.insertRequest(AccessRequestEntity(
-                    requestId = requestId,
-                    requesterId = adminId,
-                    schoolId = schoolId,
-                    schoolName = name,
-                    status = AccessRequestStatus.APPROVED,
-                    syncStatus = SyncStatus.PENDING_INSERT
-                ))
+                accessRequestDao.insertRequest(
+                    AccessRequestEntity(
+                        requestId = requestId,
+                        requesterId = adminId,
+                        schoolId = schoolId,
+                        schoolName = name,
+                        status = AccessRequestStatus.APPROVED,
+                        syncStatus = SyncStatus.PENDING_INSERT,
+                    ),
+                )
 
                 val user = database.accountDao().getAccountById(adminId)
                 if (user != null) {
                     val updatedMemberships = user.memberships.toMutableMap()
                     updatedMemberships[schoolId] = Membership(
                         schoolName = name,
-                        role = "ADMIN"
+                        role = "ADMIN",
                     )
-                    database.accountDao().updateAccount(user.copy(
-                        memberships = updatedMemberships,
-                        activeSchoolId = schoolId,
-                        syncStatus = SyncStatus.PENDING_UPDATE.name
-                    ))
+                    database.accountDao().updateAccount(
+                        user.copy(
+                            memberships = updatedMemberships,
+                            activeSchoolId = schoolId,
+                            syncStatus = SyncStatus.PENDING_UPDATE.name,
+                        ),
+                    )
                 }
 
                 syncManager.enqueueSchoolSync(schoolId)
@@ -116,7 +120,7 @@ class SchoolRepository @Inject constructor(
                     name = name ?: existing.name,
                     timezone = timezone ?: existing.timezone,
                     updatedAt = System.currentTimeMillis(),
-                    syncStatus = SyncStatus.PENDING_UPDATE.name
+                    syncStatus = SyncStatus.PENDING_UPDATE.name,
                 )
                 dao.upsertSchool(updated)
                 syncManager.enqueueSchoolSync(schoolId)
@@ -145,12 +149,12 @@ class SchoolRepository @Inject constructor(
                 status = school.status,
                 createdAt = school.createdAt,
                 updatedAt = System.currentTimeMillis(),
-                syncStatus = SyncStatus.SYNCED.name
-            )
+                syncStatus = SyncStatus.SYNCED.name,
+            ),
         )
     }
 
-    suspend fun getSchoolById(id: String): School? = 
+    suspend fun getSchoolById(id: String): School? =
         dao.getSchoolById(id)?.toDomain()
 
     suspend fun getCountByUser(accountId: String): Int = dao.getSchoolCountByAccount(accountId)
@@ -177,10 +181,10 @@ class SchoolRepository @Inject constructor(
                             grade = classModel.grade,
                             teacherId = classModel.teacherId,
                             studentCount = classModel.studentCount,
-                            createdAt = classModel.createdAt
-                        )
+                            createdAt = classModel.createdAt,
+                        ),
                     )
-                    
+
                     // 🔥 JOIN TABLE RECOVERY: Ensure the assignment exists in Room after reinstall
                     dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
                 }
@@ -199,10 +203,12 @@ class SchoolRepository @Inject constructor(
         database.withTransaction {
             val existing = dao.getSchoolById(id)
             if (existing != null) {
-                dao.upsertSchool(existing.copy(
-                    status = "DELETED",
-                    syncStatus = SyncStatus.PENDING_DELETE.name
-                ))
+                dao.upsertSchool(
+                    existing.copy(
+                        status = "DELETED",
+                        syncStatus = SyncStatus.PENDING_DELETE.name,
+                    ),
+                )
                 syncManager.enqueueSchoolSync(id)
             }
         }
@@ -229,12 +235,12 @@ class SchoolRepository @Inject constructor(
             val entity = ClassEntity(
                 id = classModel.id,
                 accountId = _accountId,
-                schoolId = schoolId, 
+                schoolId = schoolId,
                 name = classModel.name,
                 grade = classModel.grade,
                 teacherId = classModel.teacherId,
                 studentCount = classModel.studentCount,
-                createdAt = classModel.createdAt
+                createdAt = classModel.createdAt,
             )
             dao.upsertClass(entity)
 
@@ -301,8 +307,8 @@ class SchoolRepository @Inject constructor(
 
     fun observeAllClassesForAccount(accountId: String): Flow<Result<List<ClassModel>>> =
         dao.getAllClasses(accountId).map { entities ->
-                Result.Success(entities.map { it.toDomain() }) as Result<List<ClassModel>>
-            }
+            Result.Success(entities.map { it.toDomain() }) as Result<List<ClassModel>>
+        }
             .catch { e ->
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
@@ -362,7 +368,7 @@ class SchoolRepository @Inject constructor(
                 "schoolName" to school.name,
                 "timezone" to school.timezone,
                 "status" to school.status,
-                "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
             )
 
             val docRef = firestore.collection("schools").document(schoolId)
@@ -397,19 +403,21 @@ class SchoolRepository @Inject constructor(
                     "schoolName" to request.schoolName,
                     "status" to request.status.name,
                     "createdAt" to request.createdAt,
-                    "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                    "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
                 )
 
                 com.google.android.gms.tasks.Tasks.await(
                     firestore.collection("access_requests")
                         .document(request.requestId)
-                        .set(requestData)
+                        .set(requestData),
                 )
 
-                accessRequestDao.insertRequest(request.copy(
-                    syncStatus = SyncStatus.SYNCED,
-                    updatedAt = System.currentTimeMillis()
-                ))
+                accessRequestDao.insertRequest(
+                    request.copy(
+                        syncStatus = SyncStatus.SYNCED,
+                        updatedAt = System.currentTimeMillis(),
+                    ),
+                )
             }
             Result.Success(Unit)
         } catch (e: Exception) {

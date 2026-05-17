@@ -23,12 +23,12 @@ fun SedulurNetworkButton(pendingRequests: Int, onClick: () -> Unit) {
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AzuraSpacing.md)
+            .padding(horizontal = AzuraSpacing.md),
     ) {
         OutlinedButton(
             onClick = onClick,
             modifier = Modifier.fillMaxWidth(),
-            shape = AzuraShapes.medium
+            shape = AzuraShapes.medium,
         ) {
             Icon(Icons.Default.People, contentDescription = "Jaringan Sedulur")
             Spacer(modifier = Modifier.width(8.dp))

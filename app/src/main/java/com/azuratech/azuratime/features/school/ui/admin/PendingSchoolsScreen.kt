@@ -17,7 +17,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.core.ui.UiEvent
-import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
@@ -28,7 +27,7 @@ import java.util.*
 @Composable
 fun PendingSchoolsScreen(
     onBack: () -> Unit,
-    viewModel: PendingSchoolsViewModel = hiltViewModel()
+    viewModel: PendingSchoolsViewModel = hiltViewModel(),
 ) {
     val pendingSchools by viewModel.pendingSchools.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -47,27 +46,27 @@ fun PendingSchoolsScreen(
     AzuraScreen(
         title = "Persetujuan Sekolah",
         onBack = onBack,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
     ) {
         if (pendingSchools.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "Tidak ada sekolah yang menunggu persetujuan.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline
+                    color = MaterialTheme.colorScheme.outline,
                 )
             }
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(AzuraSpacing.md),
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 items(pendingSchools, key = { it.id }) { school ->
                     SchoolApprovalCard(
                         school = school,
                         onApprove = { viewModel.approve(school.id) },
-                        onReject = { schoolToReject = school }
+                        onReject = { schoolToReject = school },
                     )
                 }
             }
@@ -76,7 +75,10 @@ fun PendingSchoolsScreen(
 
     if (schoolToReject != null) {
         AlertDialog(
-            onDismissRequest = { schoolToReject = null; rejectionReason = "" },
+            onDismissRequest = {
+                schoolToReject = null
+                rejectionReason = ""
+            },
             title = { Text("Tolak Pendaftaran Sekolah") },
             text = {
                 Column {
@@ -87,7 +89,7 @@ fun PendingSchoolsScreen(
                         onValueChange = { rejectionReason = it },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Contoh: Data tidak valid") },
-                        shape = AzuraShapes.medium
+                        shape = AzuraShapes.medium,
                     )
                 }
             },
@@ -98,16 +100,19 @@ fun PendingSchoolsScreen(
                         schoolToReject = null
                         rejectionReason = ""
                     },
-                    enabled = rejectionReason.isNotBlank()
+                    enabled = rejectionReason.isNotBlank(),
                 ) {
                     Text("Tolak", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { schoolToReject = null; rejectionReason = "" }) {
+                TextButton(onClick = {
+                    schoolToReject = null
+                    rejectionReason = ""
+                }) {
                     Text("Batal")
                 }
-            }
+            },
         )
     }
 }
@@ -116,7 +121,7 @@ fun PendingSchoolsScreen(
 fun SchoolApprovalCard(
     school: School,
     onApprove: () -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
 ) {
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
     val dateString = remember(school.createdAt) { dateFormatter.format(Date(school.createdAt)) }
@@ -126,43 +131,43 @@ fun SchoolApprovalCard(
             Text(
                 text = school.name,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Didaftar oleh: ${school.accountId}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline
+                color = MaterialTheme.colorScheme.outline,
             )
             Text(
                 text = "Pada: $dateString",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline
+                color = MaterialTheme.colorScheme.outline,
             )
-            
+
             Spacer(modifier = Modifier.height(AzuraSpacing.md))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
             ) {
                 OutlinedButton(
                     onClick = onReject,
                     modifier = Modifier.weight(1f),
                     shape = AzuraShapes.medium,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error),
                 ) {
                     Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Tolak")
                 }
-                
+
                 Button(
                     onClick = onApprove,
                     modifier = Modifier.weight(1f),
                     shape = AzuraShapes.medium,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)) // Green 800
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)), // Green 800
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))

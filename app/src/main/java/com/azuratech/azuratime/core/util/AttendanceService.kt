@@ -4,7 +4,6 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import java.time.Duration
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
@@ -25,14 +24,14 @@ object AttendanceService {
         activeClassId: String? = null,
         activeClassName: String? = null,
         status: String = "H",
-        attendanceTime: LocalDateTime? = LocalDateTime.now()
+        attendanceTime: LocalDateTime? = LocalDateTime.now(),
     ): AttendanceRecord {
         val dateTime = attendanceTime ?: LocalDateTime.now()
         val timestamp = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
         return AttendanceRecord(
             recordId = java.util.UUID.randomUUID().toString(),
-            studentId = biometric.studentId, 
+            studentId = biometric.studentId,
             studentName = biometric.name,
             accountEmail = accountEmail,
             classId = activeClassId ?: "",
@@ -40,7 +39,7 @@ object AttendanceService {
             schoolId = biometric.schoolId,
             status = AttendanceStatus.fromCode(status),
             timestamp = timestamp,
-            isSynced = false
+            isSynced = false,
         )
     }
 
@@ -51,7 +50,7 @@ object AttendanceService {
     fun isLate(
         attendanceTime: LocalDateTime?,
         thresholdHour: Int = 7,
-        thresholdMinute: Int = 30
+        thresholdMinute: Int = 30,
     ): Boolean {
         if (attendanceTime == null) return false
 

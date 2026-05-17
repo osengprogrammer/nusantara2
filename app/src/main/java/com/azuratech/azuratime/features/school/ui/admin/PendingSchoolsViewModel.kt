@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PendingSchoolsViewModel @Inject constructor(
-    private val schoolRepository: SchoolRepository
+    private val schoolRepository: SchoolRepository,
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()

@@ -13,22 +13,22 @@ import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignm
  */
 data class RawStudentProfile(
     @Embedded val student: StudentEntity,
-    
+
     @ColumnInfo(name = "faceId")
     val faceId: String? = null,
-    
+
     @ColumnInfo(name = "embedding")
     val embedding: FloatArray? = null,
-    
+
     @ColumnInfo(name = "photoUrl")
     val photoUrl: String? = null,
-    
+
     @ColumnInfo(name = "faceLastUpdated")
     val faceLastUpdated: Long? = null,
-    
+
     @ColumnInfo(name = "faceIsSynced")
     val faceIsSynced: Boolean? = null,
-    
+
     @ColumnInfo(name = "faceIsDeleted")
     val faceIsDeleted: Boolean? = null,
 
@@ -38,13 +38,13 @@ data class RawStudentProfile(
      */
     @Relation(
         parentColumn = "faceId",
-        entityColumn = "studentId"
+        entityColumn = "studentId",
     )
-    val assignments: List<StudentClassAssignmentEntity> = emptyList()
+    val assignments: List<StudentClassAssignmentEntity> = emptyList(),
 ) {
     /**
      * Extracts all unique class IDs from the assignments and the primary student entity.
      */
-    val allClassIds: List<String> 
+    val allClassIds: List<String>
         get() = (assignments.map { it.classId } + listOfNotNull(student.classId)).distinct()
 }

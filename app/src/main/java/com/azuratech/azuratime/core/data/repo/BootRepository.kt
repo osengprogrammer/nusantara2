@@ -9,7 +9,7 @@ import javax.inject.Inject // 🔥 Tambahan Import
 
 class BootRepository @Inject constructor( // 🔥 1. Tambahkan Inject Constructor
     private val auth: FirebaseAuth,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) {
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 

@@ -24,10 +24,10 @@ import com.azuratech.azuratime.features.reporting.data.local.*
         AttendanceConflictEntity::class,
         AuditLogEntity::class,
         ExportJobEntity::class,
-        ReportEntity::class
+        ReportEntity::class,
     ],
     version = 14,
-    exportSchema = false
+    exportSchema = false,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -56,12 +56,12 @@ abstract class AppDatabase : RoomDatabase() {
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "local_db2.sqlite"
+                    "local_db2.sqlite",
                 )
-                .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-                .fallbackToDestructiveMigration() 
-                .build()
-                .also { INSTANCE = it }
+                    .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also { INSTANCE = it }
             }
         }
 

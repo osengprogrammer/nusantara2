@@ -27,7 +27,7 @@ fun FaceOverlay(
     @Suppress("UNUSED_PARAMETER") imageRotation: Int = 0,
     isFrontCamera: Boolean,
     modifier: Modifier = Modifier,
-    paddingFactor: Float = 0.4f // 40% padding untuk membingkai seluruh kepala
+    paddingFactor: Float = 0.4f, // 40% padding untuk membingkai seluruh kepala
 ) {
     // Jangan menggambar jika data belum siap
     if (faceBounds.isEmpty() || imageSize.width <= 0 || imageSize.height <= 0) return
@@ -49,7 +49,7 @@ fun FaceOverlay(
         // Convert dp tokens to pixels for drawing
         val strokeWidthPx = strokeWidth.toPx()
         // Use a standard spacing token for corner radius so it matches buttons/cards
-        val cornerRadiusPx = AzuraSpacing.sm.toPx() 
+        val cornerRadiusPx = AzuraSpacing.sm.toPx()
 
         faceBounds.forEach { rect ->
             // 3. Transformasi Koordinat Mentah ML Kit ke Koordinat Layar
@@ -71,7 +71,7 @@ fun FaceOverlay(
 
             // 6. Paksa Simetris (Bentuk Kotak Sempurna)
             val longestSide = max(width, height)
-            
+
             // 7. Tambahkan Padding agar menutupi dahi dan dagu
             val finalSideLength = longestSide * (1f + paddingFactor)
 
@@ -87,8 +87,8 @@ fun FaceOverlay(
                 size = Size(finalSideLength, finalSideLength),
                 cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx), // 🔥 Rounded corners
                 style = Stroke(
-                    width = strokeWidthPx // 🔥 Standard system stroke width
-                )
+                    width = strokeWidthPx, // 🔥 Standard system stroke width
+                ),
             )
         }
     }

@@ -23,15 +23,18 @@ fun AddClassDialog(
     editingClass: ClassModel? = null,
     availableClasses: List<String> = emptyList(),
     onDismissRequest: () -> Unit,
-    onConfirmClick: (String) -> Unit
+    onConfirmClick: (String) -> Unit,
 ) {
     var name by remember { mutableStateOf(editingClass?.name ?: "") }
     var searchQuery by remember { mutableStateOf("") }
     val isNameValid = name.isNotBlank()
-    
+
     val filteredClasses = remember(searchQuery, availableClasses) {
-        if (searchQuery.isBlank()) availableClasses
-        else availableClasses.filter { it.contains(searchQuery, ignoreCase = true) }
+        if (searchQuery.isBlank()) {
+            availableClasses
+        } else {
+            availableClasses.filter { it.contains(searchQuery, ignoreCase = true) }
+        }
     }
 
     AlertDialog(
@@ -40,7 +43,7 @@ fun AddClassDialog(
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 AzuraTextField(
                     value = name,
@@ -48,7 +51,7 @@ fun AddClassDialog(
                     label = "Nama Kelas",
                     placeholder = "Contoh: 10-IPA-1",
                     errorText = if (name.isNotEmpty() && !isNameValid) "Nama tidak boleh kosong" else null,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 if (editingClass == null) {
@@ -57,7 +60,7 @@ fun AddClassDialog(
                         text = "Atau Pilih dari Katalog:",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
 
                     // Search Bar for Katalog
@@ -69,7 +72,7 @@ fun AddClassDialog(
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
                         shape = AzuraShapes.medium,
                         textStyle = MaterialTheme.typography.bodySmall,
-                        singleLine = true
+                        singleLine = true,
                     )
 
                     // Selection List
@@ -79,7 +82,7 @@ fun AddClassDialog(
                             .heightIn(max = 200.dp),
                         shape = AzuraShapes.medium,
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        border = AssistChipDefaults.assistChipBorder(enabled = true)
+                        border = AssistChipDefaults.assistChipBorder(enabled = true),
                     ) {
                         if (filteredClasses.isEmpty()) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -92,18 +95,18 @@ fun AddClassDialog(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clickable { 
+                                            .clickable {
                                                 name = className
                                                 println("📚 DEBUG: Selected class from catalog: $className")
                                             }
                                             .padding(AzuraSpacing.sm),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Text(
                                             text = className,
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                         )
                                         if (isSelected) {
                                             Spacer(modifier = Modifier.weight(1f))
@@ -111,14 +114,14 @@ fun AddClassDialog(
                                                 imageVector = Icons.Default.Done,
                                                 contentDescription = null,
                                                 tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(16.dp)
+                                                modifier = Modifier.size(16.dp),
                                             )
                                         }
                                     }
                                     HorizontalDivider(
                                         modifier = Modifier.padding(horizontal = AzuraSpacing.sm),
                                         thickness = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant
+                                        color = MaterialTheme.colorScheme.outlineVariant,
                                     )
                                 }
                             }
@@ -129,11 +132,11 @@ fun AddClassDialog(
         },
         confirmButton = {
             Button(
-                onClick = { 
+                onClick = {
                     println("✅ DEBUG: Confirming class: $name")
-                    onConfirmClick(name) 
+                    onConfirmClick(name)
                 },
-                enabled = isNameValid
+                enabled = isNameValid,
             ) {
                 Text("Simpan")
             }
@@ -142,6 +145,6 @@ fun AddClassDialog(
             TextButton(onClick = onDismissRequest) {
                 Text("Batal")
             }
-        }
+        },
     )
 }

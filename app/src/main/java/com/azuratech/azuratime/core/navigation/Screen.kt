@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.core.navigation
 
 import android.net.Uri
-import com.azuratech.azuratime.core.navigation.NavigationRoutes
 
 /**
  * 🗺️ AZURA NAVIGATION MAP (PURE-CLASS 2.0)
@@ -11,8 +10,9 @@ sealed class Screen(val route: String) {
 
     // --- 🚪 AUTH & ONBOARDING ---
     data object Login : Screen(NavigationRoutes.LOGIN)
+
     // 🔥 UBAH: Gabungkan rute validasi akun menjadi satu
-    data object Membership : Screen(NavigationRoutes.MEMBERSHIP) 
+    data object Membership : Screen(NavigationRoutes.MEMBERSHIP)
     data object SchoolRegistration : Screen(NavigationRoutes.SCHOOL_REGISTRATION)
 
     // --- 🏠 CORE FEATURES ---
@@ -35,7 +35,7 @@ sealed class Screen(val route: String) {
     data object AttendanceMatrix : Screen(NavigationRoutes.ATTENDANCE_MATRIX)
     data object AttendanceHistory : Screen(NavigationRoutes.ATTENDANCE_HISTORY)
     data object AuditLog : Screen(NavigationRoutes.AUDIT_LOG)
-    
+
     // 🔥 PERBAIKAN BUG: Gunakan Uri.encode() untuk nama agar tidak crash jika ada karakter "/"
     data object DailyDetail : Screen(NavigationRoutes.DAILY_DETAIL) {
         fun createRoute(studentId: String, name: String, date: String): String {
@@ -45,7 +45,7 @@ sealed class Screen(val route: String) {
     }
 
     data object ManualAttendance : Screen(NavigationRoutes.MANUAL_ATTENDANCE) {
-        fun createRoute(studentId: String = "", date: String = "") = 
+        fun createRoute(studentId: String = "", date: String = "") =
             "manual_attendance?studentId=$studentId&date=$date"
     }
 
@@ -64,7 +64,7 @@ sealed class Screen(val route: String) {
     data object ClassList : Screen(NavigationRoutes.CLASS_LIST) {
         fun createRoute(schoolId: String) = "class_list/$schoolId"
     }
-    
+
     data object ClassManagement : Screen(NavigationRoutes.CLASS_MANAGEMENT) {
         fun createRoute(accountId: String) = "class_management/$accountId"
     }

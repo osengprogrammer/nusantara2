@@ -17,12 +17,12 @@ fun BarcodeScanner(
     useBackCamera: Boolean = true, // Default true karena scan barcode biasanya pakai kamera belakang
     shape: Shape = AzuraShapes.large,
     modifier: Modifier = Modifier,
-    onBarcodeDetected: (String) -> Unit // Hasil teks dari barcode
+    onBarcodeDetected: (String) -> Unit, // Hasil teks dari barcode
 ) {
     // 1. Inisialisasi Analyzer
     val analyzer = remember {
         BarcodeAnalyzer(
-            onBarcodeDetected = onBarcodeDetected
+            onBarcodeDetected = onBarcodeDetected,
         )
     }
 
@@ -31,6 +31,6 @@ fun BarcodeScanner(
         analyzer = analyzer,
         useFrontCamera = !useBackCamera,
         shape = shape,
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
     )
 }

@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AuditLogRepository @Inject constructor(
-    private val database: AppDatabase
+    private val database: AppDatabase,
 ) {
     private val auditLogDao = database.auditLogDao()
 
@@ -28,7 +28,7 @@ class AuditLogRepository @Inject constructor(
             action = action,
             timestamp = System.currentTimeMillis(),
             details = details,
-            isSynced = false
+            isSynced = false,
         )
         auditLogDao.insertLog(log)
     }

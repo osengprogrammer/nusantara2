@@ -19,9 +19,9 @@ import dagger.assisted.AssistedInject
 class SchoolSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val schoolRepository: SchoolRepository
+    private val schoolRepository: SchoolRepository,
 ) : CoroutineWorker(context, workerParams) {
-    
+
     companion object {
         private const val TAG = "SchoolSyncWorker"
     }

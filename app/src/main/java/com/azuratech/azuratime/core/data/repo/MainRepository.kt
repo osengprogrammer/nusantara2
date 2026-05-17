@@ -24,10 +24,10 @@ import javax.inject.Singleton
 class MainRepository @Inject constructor( // 🔥 FIX: Tambahkan Inject Constructor
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) {
     fun getCurrentUid(): String? = firebaseAuth.currentUser?.uid
-    
+
     fun getCurrentEmail(): String = firebaseAuth.currentUser?.email ?: ""
 
     // =====================================================
@@ -45,7 +45,7 @@ class MainRepository @Inject constructor( // 🔥 FIX: Tambahkan Inject Construc
     // =====================================================
     // 🛡️ SECURITY & REVOKE LISTENER
     // =====================================================
-    
+
     fun observeRevokeStatus(uid: String): Flow<Boolean> = callbackFlow {
         val listener = firestore.collection("whitelisted_users")
             .document(uid)
@@ -54,9 +54,9 @@ class MainRepository @Inject constructor( // 🔥 FIX: Tambahkan Inject Construc
                     Log.e("MainRepository", "❌ Revoke Listener Error: ${error.message}")
                     return@addSnapshotListener
                 }
-                
+
                 val cloudStatus = snapshot?.getString("status") ?: ""
-                
+
                 if (cloudStatus == "REVOKED") {
                     trySend(true)
                 } else {

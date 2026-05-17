@@ -25,9 +25,11 @@ object FirebaseModule {
 
         // 🔥 Konfigurasi Offline Persistence (100MB Cache)
         db.firestoreSettings = com.google.firebase.firestore.firestoreSettings {
-            setLocalCacheSettings(com.google.firebase.firestore.persistentCacheSettings {
-                setSizeBytes(100 * 1024 * 1024)
-            })
+            setLocalCacheSettings(
+                com.google.firebase.firestore.persistentCacheSettings {
+                    setSizeBytes(100 * 1024 * 1024)
+                },
+            )
         }
         return db
     }

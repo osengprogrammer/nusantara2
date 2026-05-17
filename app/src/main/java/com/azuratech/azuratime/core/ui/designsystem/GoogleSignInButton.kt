@@ -18,22 +18,22 @@ fun GoogleSignInButton(
     onClick: () -> Unit,
     isLoading: Boolean,
     icon: Painter,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Button(
         onClick = onClick,
         enabled = !isLoading,
-        modifier = modifier
+        modifier = modifier,
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
         } else {
             Icon(
                 painter = icon,
                 contentDescription = "Google Sign-In",
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = text)

@@ -5,7 +5,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 
 @Composable
 fun DataIntegrityScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     AzuraScreen(title = "Kesehatan Data", onBack = onNavigateBack) {
         // Placeholder

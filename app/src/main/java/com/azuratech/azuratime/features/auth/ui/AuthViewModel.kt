@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     application: Application,
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
 ) : AndroidViewModel(application) {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -31,8 +31,8 @@ class AuthViewModel @Inject constructor(
 
     fun loginWithGoogle(idToken: String) {
         viewModelScope.launch {
-            _authState.value = AuthState.Loading 
-            
+            _authState.value = AuthState.Loading
+
             try {
                 val (account, isNewAccount) = repository.signInWithGoogle(idToken)
 
@@ -44,7 +44,7 @@ class AuthViewModel @Inject constructor(
                 if (isNewAccount) {
                     val hardwareId = Settings.Secure.getString(
                         getApplication<Application>().contentResolver,
-                        Settings.Secure.ANDROID_ID
+                        Settings.Secure.ANDROID_ID,
                     )
                     val autoRegData = mapOf(
                         "email" to account.email,
@@ -52,31 +52,29 @@ class AuthViewModel @Inject constructor(
                         "status" to "PENDING",
                         "role" to "PENDING",
                         "hardwareId" to hardwareId,
-                        "createdAt" to System.currentTimeMillis()
+                        "createdAt" to System.currentTimeMillis(),
                     )
-                    
+
                     try {
                         repository.registerMembership(account.accountId, autoRegData)
                     } catch (e: Exception) {
                         Log.e("AuthViewModel", "Auto-register Firestore failed: ${e.message}")
                     }
-                    
+
                     // Gunakan state sesuai file AuthState.kt kamu
                     _authState.value = AuthState.Success(account.email, "PENDING")
-                    
                 } else {
                     val schoolId = account.activeSchoolId ?: ""
                     val currentRole = account.memberships[schoolId]?.role ?: "USER"
-                    
+
                     _authState.value = AuthState.Success(account.email, currentRole)
                 }
-                
             } catch (e: Exception) {
                 _authState.value = AuthState.Error("Login gagal: ${e.localizedMessage}")
             }
         }
     }
-    
+
     fun registerNewSchool(data: Map<String, Any?>) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val randomNumber = (1..5000).random()

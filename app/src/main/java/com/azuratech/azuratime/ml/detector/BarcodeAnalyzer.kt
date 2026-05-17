@@ -9,12 +9,12 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 
 class BarcodeAnalyzer(
-    private val onBarcodeDetected: (String) -> Unit
+    private val onBarcodeDetected: (String) -> Unit,
 ) : ImageAnalysis.Analyzer {
 
     // 1. Fokuskan hanya pada QR CODE agar scanner lebih "galak" dan cepat
     private val options = BarcodeScannerOptions.Builder()
-        .setBarcodeFormats(Barcode.FORMAT_QR_CODE) 
+        .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
         .build()
 
     private val scanner = BarcodeScanning.getClient(options)
@@ -22,7 +22,7 @@ class BarcodeAnalyzer(
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
-        
+
         if (mediaImage != null) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 

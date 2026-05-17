@@ -6,17 +6,17 @@ import javax.inject.Singleton
 
 @Singleton
 class BackupUtils @Inject constructor(
-    private val storageProvider: StorageProvider
+    private val storageProvider: StorageProvider,
 ) {
     fun backupAndShareDatabase() {
         try {
             // 1. Dapatkan lokasi database original
             val dbPath = storageProvider.getDatabasePath(DB_NAME)
-            
+
             // 2. Buat file copy di folder cache agar bisa di-share tanpa permission storage ribet
             val backupFileName = "BACKUP_AZURA_${System.currentTimeMillis()}.db"
             val backupPath = storageProvider.save(ByteArray(0), backupFileName, "cache")
-            
+
             if (storageProvider.copyFile(dbPath, backupPath)) {
                 // 3. Share via StorageProvider
                 storageProvider.shareFile(backupPath, "Simpan Backup Azura Ke...", "application/octet-stream")
@@ -34,7 +34,7 @@ class BackupUtils @Inject constructor(
         try {
             // 1. Dapatkan jalur database tujuan
             val dbPath = storageProvider.getDatabasePath(DB_NAME)
-            
+
             // 2. Lakukan penyalinan file dengan membaca URI lewat StorageProvider
             val backupBytes = storageProvider.read(backupUriString)
             if (backupBytes.isNotEmpty()) {

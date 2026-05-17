@@ -26,7 +26,7 @@ import com.azuratech.azuraengine.model.ClassModel
 fun ClassManagementScreen(
     onClassSelected: (String, String) -> Unit,
     onNavigateBack: () -> Unit,
-    viewModel: ClassViewModel = hiltViewModel()
+    viewModel: ClassViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
     val availableClasses by viewModel.availableClassesStateFlow.collectAsStateWithLifecycle()
@@ -54,7 +54,7 @@ fun ClassManagementScreen(
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
             }
-        }
+        },
     ) {
         when (val state = uiState) {
             is UiState.Loading -> {
@@ -66,12 +66,12 @@ fun ClassManagementScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(AzuraSpacing.md),
-                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
                 ) {
                     items(state.data) { classModel ->
                         ClassItem(
                             classModel = classModel,
-                            onClick = { onClassSelected(classModel.id, classModel.name) }
+                            onClick = { onClassSelected(classModel.id, classModel.name) },
                         )
                     }
                 }
@@ -96,7 +96,7 @@ fun ClassManagementScreen(
             onConfirmClick = { name ->
                 viewModel.createClass(name)
                 showAddDialog = false
-            }
+            },
         )
     }
 }
@@ -106,11 +106,11 @@ fun ClassItem(classModel: ClassModel, onClick: () -> Unit) {
     AzuraCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable { onClick() },
     ) {
         Row(
             modifier = Modifier.padding(AzuraSpacing.sm), // Inner padding because AzuraCard already has padding
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Default.Class, contentDescription = null, modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
@@ -119,7 +119,7 @@ fun ClassItem(classModel: ClassModel, onClick: () -> Unit) {
                 Text(
                     text = "${classModel.studentCount} Siswa",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

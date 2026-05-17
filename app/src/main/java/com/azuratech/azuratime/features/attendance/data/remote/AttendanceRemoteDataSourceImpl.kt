@@ -12,7 +12,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AttendanceRemoteDataSourceImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
 ) : AttendanceRemoteDataSource {
 
     override suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecordEntity>> {
@@ -41,12 +41,12 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
             batch.set(
                 db.collection("schools").document(record.schoolId).collection("checkin_records").document(record.id),
                 data,
-                SetOptions.merge()
+                SetOptions.merge(),
             )
             batch.set(
                 db.collection("attendance_logs").document(record.id),
                 data,
-                SetOptions.merge()
+                SetOptions.merge(),
             )
 
             batch.commit().await()

@@ -27,7 +27,7 @@ data class StudentFormUiState(
     val pageTitle: String = "Pendaftaran Baru",
 
     // Real-time Validation
-    val isFormValid: Boolean = false
+    val isFormValid: Boolean = false,
 ) {
     // Overriding equals and hashCode for FloatArray comparison
     override fun equals(other: Any?): Boolean {

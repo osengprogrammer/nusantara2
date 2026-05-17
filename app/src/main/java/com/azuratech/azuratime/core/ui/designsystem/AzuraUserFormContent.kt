@@ -35,11 +35,11 @@ fun AzuraUserFormContent(
     submitText: String,
     submitIcon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     modifier: Modifier = Modifier,
-    additionalFields: @Composable ColumnScope.() -> Unit = {}
+    additionalFields: @Composable ColumnScope.() -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
     ) {
         OutlinedTextField(
             value = faceId,
@@ -53,14 +53,16 @@ fun AzuraUserFormContent(
                 OutlinedTextFieldDefaults.colors(
                     disabledTextColor = MaterialTheme.colorScheme.onSurface,
                     disabledBorderColor = MaterialTheme.colorScheme.outline,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
                 OutlinedTextFieldDefaults.colors()
             },
             supportingText = if (isfaceIdReadOnly) {
                 { Text("Student ID cannot be changed", style = MaterialTheme.typography.bodySmall) }
-            } else null
+            } else {
+                null
+            },
         )
 
         OutlinedTextField(
@@ -71,9 +73,11 @@ fun AzuraUserFormContent(
             isError = nameError != null,
             shape = AzuraShapes.medium,
             supportingText = nameError?.let { error ->
-                { Text(text = error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                {
+                    Text(text = error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
             },
-            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
         )
 
         additionalFields()
@@ -83,7 +87,7 @@ fun AzuraUserFormContent(
             capturedBitmap = capturedBitmap,
             onCaptureEmbeddingClick = onCaptureEmbedding,
             onCapturePhotoClick = onCapturePhoto,
-            onUploadPhotoClick = onUploadPhoto
+            onUploadPhotoClick = onUploadPhoto,
         )
 
         Spacer(modifier = Modifier.height(AzuraSpacing.sm))
@@ -94,7 +98,7 @@ fun AzuraUserFormContent(
             icon = submitIcon,
             enabled = isSubmitEnabled,
             modifier = Modifier.fillMaxWidth(),
-            onClick = onSubmit
+            onClick = onSubmit,
         )
     }
 }
@@ -106,16 +110,16 @@ fun DualFacePhotoCaptureCard(
     onCaptureEmbeddingClick: () -> Unit,
     onCapturePhotoClick: () -> Unit,
     onUploadPhotoClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = AzuraShapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(
             modifier = Modifier.padding(AzuraSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
         ) {
             Text("Face & Photo", style = MaterialTheme.typography.titleMedium)
 
@@ -124,9 +128,12 @@ fun DualFacePhotoCaptureCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AzuraShapes.medium,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (embedding == null) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.secondary
-                )
+                    containerColor = if (embedding == null) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.secondary
+                    },
+                ),
             ) {
                 Text(if (embedding == null) "Scan Face for Embedding" else "Embedding Captured! ✅")
             }
@@ -136,9 +143,12 @@ fun DualFacePhotoCaptureCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AzuraShapes.medium,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (capturedBitmap == null) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.secondary
-                )
+                    containerColor = if (capturedBitmap == null) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.secondary
+                    },
+                ),
             ) {
                 Text(if (capturedBitmap == null) "Capture Live Photo" else "Live Photo Captured! ✅")
             }
@@ -146,7 +156,7 @@ fun DualFacePhotoCaptureCard(
             OutlinedButton(
                 onClick = onUploadPhotoClick,
                 modifier = Modifier.fillMaxWidth(),
-                shape = AzuraShapes.medium
+                shape = AzuraShapes.medium,
             ) {
                 Icon(Icons.Default.Upload, contentDescription = "Upload from Gallery")
                 Spacer(Modifier.width(AzuraSpacing.sm))
@@ -161,12 +171,12 @@ fun DualFacePhotoCaptureCard(
                         modifier = Modifier
                             .size(80.dp)
                             .padding(end = AzuraSpacing.sm)
-                            .clip(AzuraShapes.medium)
+                            .clip(AzuraShapes.medium),
                     )
                     Text(
                         text = "✅ Photo ready",
                         color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
             }

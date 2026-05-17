@@ -17,4 +17,15 @@ plugins {
     
     // Opsional: Tambahkan ini jika di app level masih merah
     id("com.google.dagger.hilt.android") version "2.48.1" apply false
+    alias(libs.plugins.spotless) apply false
+}
+subprojects {
+    apply(plugin = "com.diffplug.spotless")
+    configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        kotlin {
+            target("**/*.kt")
+            targetExclude("**/build/**/*.kt")
+            ktlint("0.50.0")
+        }
+    }
 }

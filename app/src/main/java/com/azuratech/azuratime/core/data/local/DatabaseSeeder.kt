@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.core.data.local
 
 import android.content.Context
-import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.Membership
 import com.azuratech.azuratime.features.school.data.local.ClassDao
@@ -23,9 +22,8 @@ object DatabaseSeeder {
             val classDao = database.classDao() // 🔥 FIXED: Using classDao instead of optionDao
 
             val existingAccounts = accountDao.getAllAccountsOnce()
-            
+
             if (existingAccounts.isEmpty()) {
-                
                 // 1. Create Default Workspace
                 val defaultSchoolId = "AZURA-SCHOOL-${UUID.randomUUID().toString().take(8)}"
                 val schoolName = "Azura Academy"
@@ -38,17 +36,17 @@ object DatabaseSeeder {
                     memberships = mapOf(
                         defaultSchoolId to Membership(
                             schoolName = schoolName,
-                            role = "ADMIN" // Pure-Class role
-                        )
+                            role = "ADMIN", // Pure-Class role
+                        ),
                     ),
                     activeSchoolId = defaultSchoolId,
                     status = "ACTIVE",
                     activeClassId = null,
-                    createdAt = System.currentTimeMillis()
+                    createdAt = System.currentTimeMillis(),
                 )
-                
+
                 accountDao.upsertAccount(defaultAdmin)
-                
+
                 // 3. Seed Default Classes (Pure-Class 2.0 Logic)
                 seedDefaultClasses(classDao, defaultSchoolId, defaultAdmin.accountId)
             }
@@ -57,27 +55,27 @@ object DatabaseSeeder {
 
     private suspend fun seedDefaultClasses(classDao: ClassDao, schoolId: String, accountId: String) {
         val existingClasses = classDao.getClassesBySchoolOnce(schoolId)
-        
+
         if (existingClasses.isEmpty()) {
             val defaultClasses = listOf(
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
                     accountId = accountId,
                     schoolId = schoolId,
-                    name = "X IPA 1"
+                    name = "X IPA 1",
                 ),
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
                     accountId = accountId,
                     schoolId = schoolId,
-                    name = "XI IPA 1"
+                    name = "XI IPA 1",
                 ),
                 ClassEntity(
                     id = "CLASS-${UUID.randomUUID()}",
                     accountId = accountId,
                     schoolId = schoolId,
-                    name = "XII IPA 1"
-                )
+                    name = "XII IPA 1",
+                ),
             )
             // 🔥 FIXED: Standard insertAll for ClassEntity
             classDao.insertAll(defaultClasses)

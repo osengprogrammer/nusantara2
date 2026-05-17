@@ -19,23 +19,23 @@ import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollme
 @Composable
 fun BiometricScreen(
     onNavigateBack: () -> Unit,
-    viewModel: BiometricViewModel = hiltViewModel()
+    viewModel: BiometricViewModel = hiltViewModel(),
 ) {
     val enrollmentList by viewModel.enrollmentList.collectAsStateWithLifecycle()
 
     AzuraScreen(
         title = "Manajemen Biometrik",
-        onBack = onNavigateBack
+        onBack = onNavigateBack,
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
         ) {
             items(enrollmentList) { profile ->
                 BiometricEnrollmentItem(
                     profile = profile,
-                    onDelete = { viewModel.deleteEnrollment(profile.studentId) }
+                    onDelete = { viewModel.deleteEnrollment(profile.studentId) },
                 )
             }
         }
@@ -45,21 +45,21 @@ fun BiometricScreen(
 @Composable
 fun BiometricEnrollmentItem(
     profile: BiometricEnrollmentProfile,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
 ) {
     AzuraCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(AzuraSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             StudentAvatar(photoPath = profile.photoUri, size = 56.dp)
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(profile.studentName, style = MaterialTheme.typography.titleMedium)
                 Text(
                     text = "ID: ${profile.studentId}",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
 

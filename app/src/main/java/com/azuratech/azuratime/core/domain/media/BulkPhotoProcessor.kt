@@ -12,42 +12,41 @@ import javax.inject.Inject
  */
 class BulkPhotoProcessor @Inject constructor(
     private val imageProcessor: ImageProcessor,
-    private val storageProvider: StorageProvider
+    private val storageProvider: StorageProvider,
 ) {
-    
+
     // --- THREADING FIX: The entire pipeline runs safely on the IO thread ---
     suspend fun processPhotoSource(
         photoSource: String,
-        faceId: String
+        faceId: String,
     ): PhotoProcessResult = withContext(Dispatchers.IO) {
         if (photoSource.isBlank()) {
             return@withContext PhotoProcessResult(success = true, imageBytes = null, error = null)
         }
-        
+
         try {
             println("[$TAG] Processing photo for $faceId: ${photoSource.take(100)}...")
-            
+
             // --- REFACTOR: Use StorageProvider to read from any source (URL, Content, File, Base64) ---
             val imageBytes = storageProvider.read(photoSource)
-            
+
             if (imageBytes.isEmpty()) {
                 return@withContext PhotoProcessResult(success = false, error = "Failed to load image from source (Check format or permissions)")
             }
-            
+
             // --- REFACTOR: Use ImageProcessor for resizing ---
             val optimizedBytes = imageProcessor.resize(imageBytes, MAX_PHOTO_SIZE, MAX_PHOTO_SIZE)
-            
+
             PhotoProcessResult(
                 success = true,
-                imageBytes = optimizedBytes
+                imageBytes = optimizedBytes,
             )
-            
         } catch (e: Exception) {
             println("ERROR: [$TAG] Error processing photo for $faceId: ${e.message}")
             PhotoProcessResult(success = false, error = "Processing failed: ${e.message}")
         }
     }
-    
+
     fun getPhotoSourceType(photoSource: String): String {
         return when {
             photoSource.isBlank() -> "None"
@@ -58,15 +57,15 @@ class BulkPhotoProcessor @Inject constructor(
             else -> "Local Path"
         }
     }
-    
+
     fun estimateProcessingTime(photoSources: List<String>): Long {
         var totalSeconds = 0L
         photoSources.forEach { source ->
             totalSeconds += when {
                 source.isBlank() -> 0
-                source.startsWith("http") -> 3 
-                source.startsWith("data:") -> 1 
-                else -> 1 
+                source.startsWith("http") -> 3
+                source.startsWith("data:") -> 1
+                else -> 1
             }
         }
         return totalSeconds

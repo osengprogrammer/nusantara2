@@ -11,5 +11,5 @@ data class AuditLogEntity(
     val action: String,
     val timestamp: Long,
     val details: String? = null,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

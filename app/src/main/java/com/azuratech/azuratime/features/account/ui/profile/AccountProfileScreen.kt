@@ -19,13 +19,13 @@ import com.azuratech.azuratime.features.account.ui.components.WorkspaceViewModel
 fun AccountProfileScreen(
     userViewModel: AccountManagementViewModel,
     @Suppress("UNUSED_PARAMETER") workspaceViewModel: WorkspaceViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()
 
     AzuraScreen(
         title = "Profil Saya",
-        onBack = onNavigateBack
+        onBack = onNavigateBack,
     ) {
         Column(
             modifier = Modifier
@@ -33,18 +33,18 @@ fun AccountProfileScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = AzuraSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             StudentAvatar(photoPath = null, size = 96.dp)
 
             Text(
                 text = user?.email ?: "—",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.sm))
-            
+
             // Other profile details
         }
     }

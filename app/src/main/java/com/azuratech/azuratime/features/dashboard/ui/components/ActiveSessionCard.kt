@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
@@ -16,7 +14,7 @@ fun ActiveSessionCard(
     allClasses: List<ClassModel>,
     activeClassId: String?,
     onSelectClass: (String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val activeClassName = allClasses.find { it.id == activeClassId }?.name ?: "Pilih Kelas"
@@ -29,18 +27,18 @@ fun ActiveSessionCard(
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 OutlinedTextField(
                     value = activeClassName,
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth()
+                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth(),
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onDismissRequest = { expanded = false },
                 ) {
                     allClasses.forEach { classItem ->
                         DropdownMenuItem(
@@ -48,7 +46,7 @@ fun ActiveSessionCard(
                             onClick = {
                                 onSelectClass(classItem.id)
                                 expanded = false
-                            }
+                            },
                         )
                     }
                     if (activeClassId != null) {
@@ -58,7 +56,7 @@ fun ActiveSessionCard(
                             onClick = {
                                 onSelectClass(null)
                                 expanded = false
-                            }
+                            },
                         )
                     }
                 }

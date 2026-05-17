@@ -25,14 +25,14 @@ import com.azuratech.azuratime.core.ui.util.UiState
 fun ClassListScreen(
     classViewModel: ClassViewModel, // 🔥 Changed from OptionsViewModel
     onNavigateToDetail: (classId: String, className: String) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
-    val context = LocalContext.current 
-    
+    val context = LocalContext.current
+
     // 🔥 Consume UiState instead of raw list
     val uiState by classViewModel.uiStateStateFlow.collectAsStateWithLifecycle()
     val availableClasses by classViewModel.availableClassesStateFlow.collectAsStateWithLifecycle()
-    
+
     var showAddDialog by remember { mutableStateOf(false) }
     var classToEdit by remember { mutableStateOf<ClassModel?>(null) }
     var classToDelete by remember { mutableStateOf<ClassModel?>(null) }
@@ -44,11 +44,11 @@ fun ClassListScreen(
             FloatingActionButton(
                 onClick = { showAddDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary,
-                shape = AzuraShapes.medium
+                shape = AzuraShapes.medium,
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
             }
-        }
+        },
     ) {
         when (val state = uiState) {
             is UiState.Loading -> {
@@ -71,14 +71,14 @@ fun ClassListScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                    contentPadding = PaddingValues(top = AzuraSpacing.md, bottom = 100.dp)
+                    contentPadding = PaddingValues(top = AzuraSpacing.md, bottom = 100.dp),
                 ) {
                     items(classes, key = { it.id }) { classItem ->
                         ClassItemCard(
                             classItem = classItem,
                             onClick = { onNavigateToDetail(classItem.id, classItem.name) },
                             onEditClick = { classToEdit = classItem },
-                            onDeleteClick = { classToDelete = classItem }
+                            onDeleteClick = { classToDelete = classItem },
                         )
                     }
                 }
@@ -93,7 +93,7 @@ fun ClassListScreen(
                 onConfirmClick = { newName ->
                     classViewModel.addClass(newName) // 🔥 Simplified call
                     showAddDialog = false
-                }
+                },
             )
         }
 
@@ -106,7 +106,7 @@ fun ClassListScreen(
                 onConfirmClick = { newName ->
                     classViewModel.updateClass(item.id, newName) // 🔥 Simplified call
                     classToEdit = null
-                }
+                },
             )
         }
 
@@ -123,20 +123,20 @@ fun ClassListScreen(
                             classViewModel.deleteClass(
                                 classId = item.id,
                                 onFailure = { msg ->
-                                    context.showToast(msg) 
+                                    context.showToast(msg)
                                     classToDelete = null
                                 },
                                 onSuccess = {
                                     classToDelete = null
-                                }
+                                },
                             )
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     ) { Text("Hapus") }
                 },
                 dismissButton = {
                     TextButton(onClick = { classToDelete = null }) { Text("Batal") }
-                }
+                },
             )
         }
     }
@@ -147,28 +147,28 @@ fun ClassItemCard(
     classItem: ClassModel, // 🔥 Changed from OptionEntity
     onClick: () -> Unit,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = AzuraShapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
                 .padding(AzuraSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Default.Groups, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(AzuraSpacing.md))
-            
+
             Text(
-                text = classItem.name, 
-                style = MaterialTheme.typography.titleMedium, 
+                text = classItem.name,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             Row {

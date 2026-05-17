@@ -1,0 +1,4 @@
+[*.{kt,kts}]
+ij_kotlin_imports_layout=*
+ktlint_standard_import-ordering=disabled
+ktlint_standard_no-wildcard-imports=disabled

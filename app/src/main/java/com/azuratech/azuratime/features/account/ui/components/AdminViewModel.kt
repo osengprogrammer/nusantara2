@@ -21,7 +21,7 @@ class AdminViewModel @Inject constructor(
     database: AppDatabase,
     private val repository: AdminRepository,
     private val accountRepository: AccountRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : AndroidViewModel(application) {
 
     // 🔥 Stream kelas berdasarkan sekolah aktif (untuk dialog approval)
@@ -60,7 +60,7 @@ class AdminViewModel @Inject constructor(
         schoolId: String,
         schoolName: String,
         role: String,
-        assignedClassIds: List<String> = emptyList()
+        assignedClassIds: List<String> = emptyList(),
     ) {
         viewModelScope.launch {
             _uiState.value = AdminUiState.Loading

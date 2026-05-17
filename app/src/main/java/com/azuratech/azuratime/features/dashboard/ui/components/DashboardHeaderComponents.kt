@@ -33,20 +33,20 @@ fun DashboardSyncButton(isSyncing: Boolean, onSyncClick: () -> Unit) {
         enabled = !isSyncing,
         shape = CircleShape,
         colors = IconButtonDefaults.filledTonalIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-        )
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+        ),
     ) {
         if (isSyncing) {
             CircularProgressIndicator(
-                modifier = Modifier.size(20.dp), 
+                modifier = Modifier.size(20.dp),
                 strokeWidth = 2.5.dp,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         } else {
             Icon(
-                Icons.Default.CloudSync, 
-                contentDescription = "Force Sync Cloud", 
-                tint = MaterialTheme.colorScheme.primary
+                Icons.Default.CloudSync,
+                contentDescription = "Force Sync Cloud",
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
     }
@@ -60,16 +60,16 @@ fun DashboardSyncButton(isSyncing: Boolean, onSyncClick: () -> Unit) {
 fun ProfileHeader(
     name: String,
     email: String?,
-    schoolName: String?, 
+    schoolName: String?,
     photoUrl: Any?,
     onLogout: () -> Unit,
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = AzuraSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             model = photoUrl,
@@ -78,45 +78,45 @@ fun ProfileHeader(
                 .size(52.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onProfileClick() }
+                .clickable { onProfileClick() },
         )
-        
+
         Spacer(modifier = Modifier.width(AzuraSpacing.md))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = name, 
-                style = MaterialTheme.typography.titleLarge, 
+                text = name,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             if (!email.isNullOrBlank()) {
                 Text(
                     text = email,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )
             }
             if (!schoolName.isNullOrBlank()) {
                 Surface(
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
                     shape = AzuraShapes.small,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = 2.dp),
                 ) {
                     Text(
-                        text = schoolName, 
-                        style = MaterialTheme.typography.labelSmall, 
+                        text = schoolName,
+                        style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }
         }
-        
+
         IconButton(
             onClick = onLogout,
-            modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f), CircleShape)
+            modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f), CircleShape),
         ) {
             Icon(Icons.AutoMirrored.Filled.Logout, null, tint = MaterialTheme.colorScheme.error)
         }
@@ -133,25 +133,25 @@ fun UnassignedAlertButton(count: Int, onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = AzuraShapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.error)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.error),
     ) {
         Row(
             modifier = Modifier.padding(AzuraSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = Color.White)
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
-                    text = "Perlu Tindakan!", 
-                    style = MaterialTheme.typography.labelLarge, 
+                    text = "Perlu Tindakan!",
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.White,
                 )
                 Text(
-                    text = "$count Siswa belum masuk ke kelas manapun.", 
+                    text = "$count Siswa belum masuk ke kelas manapun.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = Color.White.copy(alpha = 0.9f),
                 )
             }
             Spacer(Modifier.weight(1f))

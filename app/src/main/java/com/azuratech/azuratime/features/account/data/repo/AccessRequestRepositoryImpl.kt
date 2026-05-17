@@ -17,7 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class AccessRequestRepositoryImpl @Inject constructor(
     private val database: AppDatabase,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
 ) : AccessRequestRepository {
 
     private val accessRequestDao = database.accessRequestDao()
@@ -26,16 +26,18 @@ class AccessRequestRepositoryImpl @Inject constructor(
         return try {
             val requestId = "req_${userId}_${schoolId}_${System.currentTimeMillis()}"
             database.withTransaction {
-                accessRequestDao.insertRequest(AccessRequestEntity(
-                    requestId = requestId,
-                    requesterId = userId,
-                    schoolId = schoolId,
-                    schoolName = schoolName,
-                    status = AccessRequestStatus.PENDING,
-                    syncStatus = SyncStatus.PENDING_INSERT,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
-                ))
+                accessRequestDao.insertRequest(
+                    AccessRequestEntity(
+                        requestId = requestId,
+                        requesterId = userId,
+                        schoolId = schoolId,
+                        schoolName = schoolName,
+                        status = AccessRequestStatus.PENDING,
+                        syncStatus = SyncStatus.PENDING_INSERT,
+                        createdAt = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis(),
+                    ),
+                )
                 syncManager.enqueueAccessSync(userId)
             }
             Result.Success(Unit)
@@ -49,11 +51,13 @@ class AccessRequestRepositoryImpl @Inject constructor(
             database.withTransaction {
                 val existing = accessRequestDao.getRequestByUserAndSchool(requesterId, schoolId)
                 if (existing != null) {
-                    accessRequestDao.insertRequest(existing.copy(
-                        status = AccessRequestStatus.LEFT,
-                        syncStatus = SyncStatus.PENDING_UPDATE,
-                        updatedAt = System.currentTimeMillis()
-                    ))
+                    accessRequestDao.insertRequest(
+                        existing.copy(
+                            status = AccessRequestStatus.LEFT,
+                            syncStatus = SyncStatus.PENDING_UPDATE,
+                            updatedAt = System.currentTimeMillis(),
+                        ),
+                    )
                     syncManager.enqueueAccessSync(requesterId)
                 }
             }
@@ -69,21 +73,25 @@ class AccessRequestRepositoryImpl @Inject constructor(
 
     override suspend fun getPendingRequests(schoolId: String): List<AccessRequestProfile> {
         // Basic implementation, can be refined
-        return emptyList() 
+        return emptyList()
     }
 
     override suspend fun approveRequest(requestId: String): Boolean {
         return try {
             val request = accessRequestDao.getRequestById(requestId)
             if (request != null) {
-                accessRequestDao.insertRequest(request.copy(
-                    status = AccessRequestStatus.APPROVED,
-                    syncStatus = SyncStatus.PENDING_UPDATE,
-                    updatedAt = System.currentTimeMillis()
-                ))
+                accessRequestDao.insertRequest(
+                    request.copy(
+                        status = AccessRequestStatus.APPROVED,
+                        syncStatus = SyncStatus.PENDING_UPDATE,
+                        updatedAt = System.currentTimeMillis(),
+                    ),
+                )
                 syncManager.enqueueAccessSync(request.requesterId)
                 true
-            } else false
+            } else {
+                false
+            }
         } catch (e: Exception) {
             false
         }
@@ -93,14 +101,18 @@ class AccessRequestRepositoryImpl @Inject constructor(
         return try {
             val request = accessRequestDao.getRequestById(requestId)
             if (request != null) {
-                accessRequestDao.insertRequest(request.copy(
-                    status = AccessRequestStatus.REJECTED,
-                    syncStatus = SyncStatus.PENDING_UPDATE,
-                    updatedAt = System.currentTimeMillis()
-                ))
+                accessRequestDao.insertRequest(
+                    request.copy(
+                        status = AccessRequestStatus.REJECTED,
+                        syncStatus = SyncStatus.PENDING_UPDATE,
+                        updatedAt = System.currentTimeMillis(),
+                    ),
+                )
                 syncManager.enqueueAccessSync(request.requesterId)
                 true
-            } else false
+            } else {
+                false
+            }
         } catch (e: Exception) {
             false
         }

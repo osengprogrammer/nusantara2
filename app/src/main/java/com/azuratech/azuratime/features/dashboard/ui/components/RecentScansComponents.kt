@@ -18,7 +18,7 @@ fun RecentScansHeader(navController: NavController) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text("Recent Scans", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         TextButton(onClick = { navController.navigate(Screen.AttendanceHistory.route) }) {
@@ -32,7 +32,7 @@ fun DashboardAttendanceItem(record: AttendanceRecordEntity) {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val dateTime = java.time.LocalDateTime.ofInstant(
         java.time.Instant.ofEpochMilli(record.timestamp),
-        java.time.ZoneId.systemDefault()
+        java.time.ZoneId.systemDefault(),
     )
     AzuraCard(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -45,9 +45,9 @@ fun DashboardAttendanceItem(record: AttendanceRecordEntity) {
                 Text(
                     dateTime.format(formatter),
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
-        }
+        },
     )
 }

@@ -1,12 +1,14 @@
-package com.azuratech.azuratime.ui.classes
+package com.azuratech.azuratime.features.school.ui.classes
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.domain.classes.usecase.*
-import com.azuratech.azuratime.data.repo.SchoolRepository
-import com.azuratech.azuratime.data.repo.StaffAccountRepository
+import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
+import com.azuratech.azuratime.features.account.data.repo.AccountRepository
+import com.azuratech.azuratime.features.student.data.repo.StudentRegistrationRepository
+import com.azuratech.azuratime.core.ui.util.UiState
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.Dispatchers
@@ -24,8 +26,11 @@ import org.junit.Test
 class ClassViewModelTest {
 
     @MockK lateinit var schoolRepository: SchoolRepository
-    @MockK lateinit var importClassesUseCase: ImportClassesUseCase
-    @MockK lateinit var userRepository: StaffAccountRepository
+
+    @MockK lateinit var registrationRepository: StudentRegistrationRepository
+
+    @MockK lateinit var userRepository: AccountRepository
+
     @MockK lateinit var sessionManager: SessionManager
 
     private lateinit var viewModel: ClassViewModel
@@ -37,15 +42,18 @@ class ClassViewModelTest {
     fun setUp() {
         MockKAnnotations.init(this)
         Dispatchers.setMain(testDispatcher)
-        
+
+        val schoolIdFlow = MutableStateFlow<String?>(schoolId)
+        val accountIdFlow = MutableStateFlow<String?>(accountId)
+
         every { sessionManager.getActiveSchoolId() } returns schoolId
         every { sessionManager.getCurrentUserId() } returns accountId
-        every { sessionManager.activeSchoolIdFlow } returns flowOf(schoolId)
-        every { sessionManager.currentUserIdFlow } returns flowOf(accountId)
-        every { userRepository.observeUserEntity(any()) } returns flowOf(null)
-        
+        every { sessionManager.activeSchoolIdFlow } returns schoolIdFlow
+        every { sessionManager.currentUserIdFlow } returns accountIdFlow
+        every { userRepository.observeAccountEntity(any()) } returns flowOf(null)
+
         // Default behaviors
-        every { schoolRepository.observeClasses(schoolId) } returns flowOf(Result.Loading)
+        every { schoolRepository.observeClasses(schoolId) } returns flowOf(Result.Loading())
         every { schoolRepository.observeAllClassesForAccount(accountId) } returns flowOf(Result.Success(emptyList()))
         every { schoolRepository.observeSchools(accountId) } returns flowOf(Result.Success(emptyList()))
     }
@@ -58,20 +66,20 @@ class ClassViewModelTest {
     private fun createViewModel() = ClassViewModel(
         SavedStateHandle(mapOf("schoolId" to schoolId, "accountId" to accountId)),
         schoolRepository,
-        importClassesUseCase,
+        registrationRepository,
         userRepository,
-        sessionManager
+        sessionManager,
     )
 
     @Test
-    fun `uiState should emit Loading initially then Success when data is loaded`() = runTest {
+    fun `uiStateStateFlow should emit Loading initially then Success when data is loaded`() = runTest {
         val classes = listOf(ClassModel(id = "1", schoolId = schoolId, name = "Class A", grade = "", teacherId = null, createdAt = 0L))
-        val classesFlow = MutableStateFlow<Result<List<ClassModel>>>(Result.Loading)
+        val classesFlow = MutableStateFlow<Result<List<ClassModel>>>(Result.Loading())
         every { schoolRepository.observeClasses(schoolId) } returns classesFlow
 
         viewModel = createViewModel()
 
-        viewModel.uiState.test {
+        viewModel.uiStateStateFlow.test {
             assertEquals(UiState.Loading, awaitItem())
             classesFlow.value = Result.Success(classes)
             val successItem = awaitItem()
@@ -81,13 +89,13 @@ class ClassViewModelTest {
     }
 
     @Test
-    fun `uiState should emit Empty when data is empty`() = runTest {
+    fun `uiStateStateFlow should emit Empty when data is empty`() = runTest {
         val classesFlow = flowOf(Result.Success(emptyList<ClassModel>()))
         every { schoolRepository.observeClasses(schoolId) } returns classesFlow
 
         viewModel = createViewModel()
 
-        viewModel.uiState.test {
+        viewModel.uiStateStateFlow.test {
             assertEquals(UiState.Loading, awaitItem())
             assertEquals(UiState.Empty, awaitItem())
         }
@@ -108,7 +116,7 @@ class ClassViewModelTest {
     fun `deleteClass should call schoolRepository deleteClass and trigger callback on success`() = runTest {
         coEvery { schoolRepository.deleteClass(accountId, schoolId, any()) } returns Result.Success(Unit)
         viewModel = createViewModel()
-        
+
         var successCalled = false
         viewModel.deleteClass("1", onSuccess = { successCalled = true })
         advanceUntilIdle()

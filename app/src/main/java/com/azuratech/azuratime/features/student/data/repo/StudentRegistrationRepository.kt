@@ -1,6 +1,5 @@
 package com.azuratech.azuratime.features.student.data.repo
 
-import android.app.Application
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
 import com.azuratech.azuratime.features.account.data.local.*
@@ -22,7 +21,7 @@ import javax.inject.Singleton
 class StudentRegistrationRepository @Inject constructor(
     private val database: AppDatabase,
     private val db: FirebaseFirestore,
-    private val storage: FirebaseStorage
+    private val storage: FirebaseStorage,
 ) {
     private val biometricDao = database.biometricDao()
     private val assignmentDao = database.studentClassAssignmentDao()
@@ -32,10 +31,10 @@ class StudentRegistrationRepository @Inject constructor(
     suspend fun getAllBiometrics(schoolId: String) = biometricDao.getAllStudentsForScanningList(schoolId)
     suspend fun upsertBiometric(biometric: StudentBiometricEntity) = biometricDao.upsertStudentBiometric(biometric)
     suspend fun upsertAllBiometrics(biometrics: List<StudentBiometricEntity>) = biometricDao.upsertAllStudentBiometrics(biometrics)
-    
+
     suspend fun getClassByName(name: String) = classDao.getClassByName(name)
     suspend fun insertClass(classEntity: ClassEntity) = classDao.insert(classEntity)
-    
+
     suspend fun insertAssignment(assignment: StudentClassAssignmentEntity) = assignmentDao.insertAssignment(assignment)
 
     fun processCsv(@Suppress("UNUSED_PARAMETER") uri: String, dataType: String): Flow<com.azuratech.azuraengine.model.ProcessResult> = flow {

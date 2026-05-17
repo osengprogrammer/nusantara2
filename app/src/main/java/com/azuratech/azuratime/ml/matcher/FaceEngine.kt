@@ -3,11 +3,11 @@ package com.azuratech.azuratime.ml.matcher
 import com.azuratech.azuratime.ml.recognizer.FaceNetConstants
 
 object FaceEngine {
-    
+
     fun findBestMatch(
         inputEmbedding: FloatArray,
         gallery: List<Pair<String, FloatArray>>,
-        isRegistrationMode: Boolean = false
+        isRegistrationMode: Boolean = false,
     ): MatchResult {
         if (gallery.isEmpty()) {
             return MatchResult.NoMatch
@@ -57,7 +57,7 @@ object FaceEngine {
     private fun findBestMatchKotlin(
         inputEmbedding: FloatArray,
         gallery: List<Pair<String, FloatArray>>,
-        isRegistrationMode: Boolean
+        isRegistrationMode: Boolean,
     ): MatchResult {
         var bestMatchName = ""
         var minDistance = Float.MAX_VALUE
@@ -69,7 +69,7 @@ object FaceEngine {
                 dotProduct += inputEmbedding[i] * savedEmbedding[i]
             }
             val distance = 1.0f - dotProduct
-            
+
             if (distance < minDistance) {
                 minDistance = distance
                 bestMatchName = name

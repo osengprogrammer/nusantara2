@@ -21,7 +21,7 @@ data class AccessRequestEntity(
     val status: AccessRequestStatus,
     val syncStatus: SyncStatus,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -35,7 +35,7 @@ fun AccessRequestEntity.toProfile() = AccessRequestProfile(
     status = status,
     syncStatus = syncStatus,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
 )
 
 fun AccessRequestProfile.toEntity() = AccessRequestEntity(
@@ -46,5 +46,5 @@ fun AccessRequestProfile.toEntity() = AccessRequestEntity(
     status = status,
     syncStatus = syncStatus,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
 )

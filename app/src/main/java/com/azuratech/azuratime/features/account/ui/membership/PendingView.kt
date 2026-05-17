@@ -11,27 +11,26 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun PendingView(
-    email: String
+    email: String,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
-
         Text(
             text = "Menunggu Persetujuan",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Akun Anda sedang dalam proses verifikasi oleh administrator.",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -39,7 +38,7 @@ fun PendingView(
         SelectionContainer {
             Text(
                 text = email,
-                style = MaterialTheme.typography.labelLarge
+                style = MaterialTheme.typography.labelLarge,
             )
         }
 

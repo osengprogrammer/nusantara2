@@ -3,7 +3,6 @@ package com.azuratech.azuratime.features.biometric.data.local
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.school.data.local.ClassEntity
 
 @Entity(
@@ -12,7 +11,7 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
     indices = [
         Index(value = ["studentId"]),
         Index(value = ["classId"]),
-        Index(value = ["schoolId"])
+        Index(value = ["schoolId"]),
     ],
     foreignKeys = [
         // 1. Link to the Student (Biometric)
@@ -21,21 +20,21 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
             parentColumns = ["studentId"],
             childColumns = ["studentId"],
             onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE
+            onUpdate = ForeignKey.CASCADE,
         ),
-        // 2. Link to the Class 
+        // 2. Link to the Class
         ForeignKey(
             entity = ClassEntity::class,
             parentColumns = ["id"],
             childColumns = ["classId"],
             onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE
-        )
-    ]
+            onUpdate = ForeignKey.CASCADE,
+        ),
+    ],
 )
 data class StudentClassAssignmentEntity(
-    val studentId: String,   
-    val classId: String,  
+    val studentId: String,
+    val classId: String,
     val schoolId: String = "",
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

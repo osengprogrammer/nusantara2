@@ -3,7 +3,6 @@ package com.azuratech.azuratime.features.reporting.data.repo
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
-import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -18,7 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class DataIntegrityRepository @Inject constructor(
     private val database: AppDatabase,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) {
     private val biometricDao = database.biometricDao()
     private val recordDao = database.attendanceRecordDao()
@@ -65,14 +64,14 @@ class DataIntegrityRepository @Inject constructor(
         combine(
             biometricDao.getUnsyncedStudentsCountFlow(id),
             recordDao.getUnsyncedRecordsCountFlow(id),
-            assignmentDao.getUnsyncedAssignmentsCountFlow(id)
+            assignmentDao.getUnsyncedAssignmentsCountFlow(id),
         ) { biometric, record, assignment ->
             biometric + record + assignment
         }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val conflictsFlow: Flow<List<com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity>> = 
+    val conflictsFlow: Flow<List<com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity>> =
         schoolIdFlow.flatMapLatest { id ->
             conflictDao.observeConflictsBySchool(id)
         }
@@ -84,8 +83,8 @@ class DataIntegrityRepository @Inject constructor(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun getIncompleteProfiles(type: String): Flow<List<StudentBiometricEntity>> = schoolIdFlow.flatMapLatest { id ->
         when (type) {
-            "CLASS"  -> biometricDao.getStudentsMissingAssignment(id)
-            else     -> flowOf(emptyList())
+            "CLASS" -> biometricDao.getStudentsMissingAssignment(id)
+            else -> flowOf(emptyList())
         }
     }
 }

@@ -9,12 +9,12 @@ import androidx.room.Index
     indices = [
         Index(value = ["accountId"]),
         Index(value = ["classId"]),
-        Index(value = ["schoolId"])
-    ] 
+        Index(value = ["schoolId"]),
+    ],
 )
 data class AccountClassAccessEntity(
-    val accountId: String,   // ID Guru / Admin (Account)
-    val classId: String,  // ID Kelas
+    val accountId: String, // ID Guru / Admin (Account)
+    val classId: String, // ID Kelas
     val schoolId: String = "",
-    val assignedAt: Long = System.currentTimeMillis() // Kapan akses ini diberikan
+    val assignedAt: Long = System.currentTimeMillis(), // Kapan akses ini diberikan
 )

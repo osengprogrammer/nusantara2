@@ -20,23 +20,23 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AuditLogScreen(
     onNavigateBack: () -> Unit,
-    viewModel: AuditLogViewModel = hiltViewModel()
+    viewModel: AuditLogViewModel = hiltViewModel(),
 ) {
     val logs by viewModel.auditLogs.collectAsStateWithLifecycle()
 
     AzuraScreen(
         title = "Audit Trail System",
-        onBack = onNavigateBack
+        onBack = onNavigateBack,
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(AzuraSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
         ) {
             items(logs) { log ->
                 AuditLogItem(log = log)
             }
-            
+
             if (logs.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(AzuraSpacing.xl)) {
@@ -59,32 +59,32 @@ fun AuditLogItem(log: SystemAuditTrail) {
         Column(modifier = Modifier.padding(AzuraSpacing.md)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = log.action,
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
                     text = dateTime.format(formatter),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Text(
                 text = "User: ${log.userId}",
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
-            
+
             log.details?.let {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = it,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
         }

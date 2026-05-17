@@ -10,15 +10,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.ZoharChatSheet
-import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
-import com.google.firebase.auth.FirebaseAuth
 import com.azuratech.azuratime.core.ui.navigation.graphs.attendanceGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.dashboardGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.managementGraph
@@ -35,8 +31,8 @@ fun MainScreen() {
 
     // Kontrol UI (BottomBar & FAB)
     val showBottomBar = currentRoute == Screen.Dashboard.route ||
-                        currentRoute == Screen.AttendanceCapture.route ||
-                        currentRoute == Screen.BarcodeScan.route
+        currentRoute == Screen.AttendanceCapture.route ||
+        currentRoute == Screen.BarcodeScan.route
 
     val showFab = showBottomBar || currentRoute == Screen.AttendanceMatrix.route
 
@@ -47,7 +43,7 @@ fun MainScreen() {
                 FloatingActionButton(
                     onClick = { showZoharChat = true },
                     containerColor = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
+                    shape = CircleShape,
                 ) {
                     Icon(Icons.Default.AutoAwesome, contentDescription = "Zohar Assistant")
                 }
@@ -57,13 +53,12 @@ fun MainScreen() {
             if (showBottomBar) {
                 BottomNav(navController)
             }
-        }
+        },
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
-
             NavHost(
                 navController = navController,
-                startDestination = Screen.Dashboard.route
+                startDestination = Screen.Dashboard.route,
             ) {
                 dashboardGraph(navController)
                 attendanceGraph(navController)
@@ -75,7 +70,7 @@ fun MainScreen() {
             if (showZoharChat) {
                 ZoharChatSheet(
                     viewModel = hiltViewModel(),
-                    onDismiss = { showZoharChat = false }
+                    onDismiss = { showZoharChat = false },
                 )
             }
         }
@@ -102,10 +97,10 @@ fun BottomNav(navController: NavHostController) {
                 icon = {
                     Icon(
                         if (screen == Screen.Dashboard) Icons.Default.Home else Icons.Default.CameraAlt,
-                        contentDescription = label
+                        contentDescription = label,
                     )
                 },
-                label = { Text(label) }
+                label = { Text(label) },
             )
         }
     }
@@ -115,7 +110,7 @@ fun BottomNav(navController: NavHostController) {
 fun LoadingPlaceholder() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }

@@ -27,42 +27,42 @@ abstract class DataSourceModule {
     @Binds
     @Singleton
     abstract fun bindSchoolRemoteDataSource(
-        impl: SchoolRemoteDataSourceImpl
+        impl: SchoolRemoteDataSourceImpl,
     ): SchoolRemoteDataSource
 
     @Binds
     @Singleton
     abstract fun bindImageProcessor(
-        impl: AndroidImageProcessor
+        impl: AndroidImageProcessor,
     ): ImageProcessor
 
     @Binds
     @Singleton
     abstract fun bindStorageProvider(
-        impl: AndroidStorageProvider
+        impl: AndroidStorageProvider,
     ): StorageProvider
 
     @Binds
     @Singleton
     abstract fun bindBiometricLocalDataSource(
-        impl: BiometricLocalDataSourceImpl
+        impl: BiometricLocalDataSourceImpl,
     ): BiometricLocalDataSource
 
     @Binds
     @Singleton
     abstract fun bindBiometricRemoteDataSource(
-        impl: BiometricRemoteDataSourceImpl
+        impl: BiometricRemoteDataSourceImpl,
     ): BiometricRemoteDataSource
 
     @Binds
     @Singleton
     abstract fun bindAttendanceLocalDataSource(
-        impl: AttendanceLocalDataSourceImpl
+        impl: AttendanceLocalDataSourceImpl,
     ): AttendanceLocalDataSource
 
     @Binds
     @Singleton
     abstract fun bindAttendanceRemoteDataSource(
-        impl: AttendanceRemoteDataSourceImpl
+        impl: AttendanceRemoteDataSourceImpl,
     ): AttendanceRemoteDataSource
 }

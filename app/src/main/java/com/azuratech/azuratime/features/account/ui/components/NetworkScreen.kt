@@ -9,7 +9,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 
 @Composable
 fun NetworkScreen(
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
 ) {
     AzuraScreen(title = "Jaringan", onBack = onNavigateBack) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

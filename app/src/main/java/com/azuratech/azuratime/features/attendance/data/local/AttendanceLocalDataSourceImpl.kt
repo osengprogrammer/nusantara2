@@ -8,7 +8,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AttendanceLocalDataSourceImpl @Inject constructor(
-    private val database: AppDatabase
+    private val database: AppDatabase,
 ) : AttendanceLocalDataSource {
 
     private val attendanceRecordDao = database.attendanceRecordDao()
@@ -20,13 +20,13 @@ class AttendanceLocalDataSourceImpl @Inject constructor(
         accountId: String?,
         classId: String?,
         assignedIds: List<String>,
-        schoolId: String
+        schoolId: String,
     ): Flow<List<AttendanceRecordEntity>> {
         return attendanceRecordDao.getFilteredRecords(
-            schoolId = schoolId, 
-            nameFilter = nameFilter.ifBlank { null }, 
-            accountId = accountId, 
-            classId = classId
+            schoolId = schoolId,
+            nameFilter = nameFilter.ifBlank { null },
+            accountId = accountId,
+            classId = classId,
         )
     }
 

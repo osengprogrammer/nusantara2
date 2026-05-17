@@ -6,10 +6,10 @@ import com.azuratech.azuratime.core.domain.model.SyncStatus
  * 🎓 STUDENT PROFILE - THE SINGLE SOURCE OF TRUTH (SSOT)
  *
  * This domain model represents a complete person within the system, combining
- * their identity (StudentEntity), biometric data (StudentBiometricEntity), and class 
+ * their identity (StudentEntity), biometric data (StudentBiometricEntity), and class
  * assignments (StudentClassAssignmentEntity).
  *
- * All UI components and business logic UseCases should use this model to 
+ * All UI components and business logic UseCases should use this model to
  * maintain consistency across the application layers.
  */
 data class StudentProfile(
@@ -23,7 +23,7 @@ data class StudentProfile(
     val photoUrl: String? = null,
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
 ) {
     /**
      * Backward compatibility helper for primary class.
@@ -44,8 +44,8 @@ data class StudentProfile(
      * Helper to create a copy of the profile with an updated sync status and timestamp.
      */
     fun withStatus(newStatus: SyncStatus) = this.copy(
-        syncStatus = newStatus, 
-        updatedAt = System.currentTimeMillis()
+        syncStatus = newStatus,
+        updatedAt = System.currentTimeMillis(),
     )
 
     // Equals and HashCode overridden for FloatArray content comparison and List comparison

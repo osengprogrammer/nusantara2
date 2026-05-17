@@ -6,7 +6,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 @Composable
 fun EditStudentScreen(
     @Suppress("UNUSED_PARAMETER") faceId: String,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     AzuraScreen(title = "Edit Siswa", onBack = onNavigateBack) {
         // Placeholder

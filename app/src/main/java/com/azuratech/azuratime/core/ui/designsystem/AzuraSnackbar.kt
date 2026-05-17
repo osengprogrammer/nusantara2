@@ -19,12 +19,12 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 fun AzuraDynamicSnackbarHost(hostState: SnackbarHostState) {
     SnackbarHost(hostState = hostState) { data ->
         val message = data.visuals.message
-        
+
         // Menentukan warna dan ikon berdasarkan awalan teks
         val bgColor: androidx.compose.ui.graphics.Color
         val contentColor: androidx.compose.ui.graphics.Color
         val icon: ImageVector
-        
+
         when {
             message.startsWith("✅") -> {
                 bgColor = MaterialTheme.colorScheme.primary
@@ -52,23 +52,23 @@ fun AzuraDynamicSnackbarHost(hostState: SnackbarHostState) {
             containerColor = bgColor,
             contentColor = contentColor,
             shape = AzuraShapes.medium,
-            modifier = Modifier.padding(AzuraSpacing.md)
+            modifier = Modifier.padding(AzuraSpacing.md),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = contentColor,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
                 Spacer(modifier = Modifier.width(AzuraSpacing.sm))
                 Text(
                     text = message.removePrefix("✅ ").removePrefix("⚠️ ").removePrefix("❌ ").trim(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = contentColor
+                    color = contentColor,
                 )
             }
         }

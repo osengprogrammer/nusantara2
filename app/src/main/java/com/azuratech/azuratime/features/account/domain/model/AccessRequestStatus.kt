@@ -7,5 +7,5 @@ enum class AccessRequestStatus {
     PENDING,
     APPROVED,
     REJECTED,
-    LEFT
+    LEFT,
 }

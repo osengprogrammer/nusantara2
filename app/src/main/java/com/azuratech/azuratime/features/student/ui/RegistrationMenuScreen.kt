@@ -31,24 +31,24 @@ fun RegistrationMenuScreen(
     onNavigateToAddStudent: () -> Unit,
     onNavigateToBulkRegister: () -> Unit,
     onNavigateToBiometricManagement: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     AzuraScreen(
         title = "Pendaftaran",
-        onBack = onNavigateBack
+        onBack = onNavigateBack,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = AzuraSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(
                 imageVector = Icons.Default.PersonAdd,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp).alpha(0.1f),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.md))
@@ -57,7 +57,7 @@ fun RegistrationMenuScreen(
                 text = "Pilih metode pendaftaran siswa",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.xl))
@@ -67,9 +67,9 @@ fun RegistrationMenuScreen(
                 description = "Daftarkan satu siswa lengkap dengan pemindaian wajah biometrik.",
                 icon = Icons.Default.PersonAdd,
                 gradient = Brush.linearGradient(
-                    listOf(MaterialTheme.colorScheme.primary, AzuraPrimaryDark)
+                    listOf(MaterialTheme.colorScheme.primary, AzuraPrimaryDark),
                 ),
-                onClick = onNavigateToAddStudent
+                onClick = onNavigateToAddStudent,
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.lg))
@@ -79,9 +79,9 @@ fun RegistrationMenuScreen(
                 description = "Proses ratusan data siswa sekaligus menggunakan file template Excel/CSV.",
                 icon = Icons.Default.Group,
                 gradient = Brush.linearGradient(
-                    listOf(MaterialTheme.colorScheme.secondary, Color(0xFF5C6BC0))
+                    listOf(MaterialTheme.colorScheme.secondary, Color(0xFF5C6BC0)),
                 ),
-                onClick = onNavigateToBulkRegister
+                onClick = onNavigateToBulkRegister,
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.lg))
@@ -91,9 +91,9 @@ fun RegistrationMenuScreen(
                 description = "Lihat, cari, dan kelola data pendaftaran wajah yang sudah ada.",
                 icon = Icons.Default.Face,
                 gradient = Brush.linearGradient(
-                    listOf(Color(0xFF4DB6AC), Color(0xFF00796B))
+                    listOf(Color(0xFF4DB6AC), Color(0xFF00796B)),
                 ),
-                onClick = onNavigateToBiometricManagement
+                onClick = onNavigateToBiometricManagement,
             )
 
             Spacer(modifier = Modifier.height(AzuraSpacing.xl))
@@ -103,7 +103,7 @@ fun RegistrationMenuScreen(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = AzuraSpacing.xl)
+                modifier = Modifier.padding(horizontal = AzuraSpacing.xl),
             )
         }
     }
@@ -115,7 +115,7 @@ private fun RegistrationCard(
     description: String,
     icon: ImageVector,
     gradient: Brush,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
         onClick = onClick,
@@ -123,22 +123,22 @@ private fun RegistrationCard(
             .fillMaxWidth()
             .height(130.dp), // Intentional fixed height for hero cards
         shape = AzuraShapes.large, // 🔥 System Shapes
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradient)
-                .padding(AzuraSpacing.lg) // 🔥 System Spacing
+                .padding(AzuraSpacing.lg), // 🔥 System Spacing
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null, // Decorative icon
                     tint = Color.White,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(48.dp),
                 )
 
                 Spacer(modifier = Modifier.width(AzuraSpacing.md)) // 🔥 System Spacing
@@ -147,9 +147,9 @@ private fun RegistrationCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         ),
-                        color = Color.White
+                        color = Color.White,
                     )
 
                     Spacer(modifier = Modifier.height(AzuraSpacing.xs)) // 🔥 System Spacing
@@ -157,7 +157,7 @@ private fun RegistrationCard(
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.85f)
+                        color = Color.White.copy(alpha = 0.85f),
                     )
                 }
             }

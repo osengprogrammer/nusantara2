@@ -50,7 +50,7 @@ class SessionManager private constructor(private val context: Context) {
                 PREF_NAME,
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
         } catch (e: Exception) {
             Log.e(TAG, "FATAL: EncryptedSharedPreferences failed. Falling back to regular prefs.", e)
@@ -63,7 +63,7 @@ class SessionManager private constructor(private val context: Context) {
     val activeSchoolIdFlow: StateFlow<String?> = _activeSchoolIdFlow.asStateFlow()
 
     private val _currentUserIdFlow = MutableStateFlow<String?>(
-        try { getCurrentUserId() } catch (e: Exception) { null }
+        try { getCurrentUserId() } catch (e: Exception) { null },
     )
     val currentUserIdFlow: StateFlow<String?> = _currentUserIdFlow.asStateFlow()
 

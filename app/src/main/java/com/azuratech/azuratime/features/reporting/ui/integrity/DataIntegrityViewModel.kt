@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DataIntegrityViewModel @Inject constructor(
     private val repository: DataIntegrityRepository,
-    private val attendanceRepository: AttendanceRepository
+    private val attendanceRepository: AttendanceRepository,
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()

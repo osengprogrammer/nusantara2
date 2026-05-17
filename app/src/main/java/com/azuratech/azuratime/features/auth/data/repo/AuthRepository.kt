@@ -34,7 +34,7 @@ class AuthRepository @Inject constructor(
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
     private val accountRepository: AccountRepository,
-    private val securityRepository: SecurityRepository
+    private val securityRepository: SecurityRepository,
 ) {
     private val accountDao = database.accountDao()
 
@@ -48,7 +48,7 @@ class AuthRepository @Inject constructor(
 
             // SSOT Migration v7.1: Check Room first
             var accountEntity = accountDao.getAccountById(uid)
-            
+
             if (accountEntity == null) {
                 // Not in Room, attempt to pull from Cloud
                 println("🔍 AuthRepository: Account not in Room, pulling from Cloud...")
@@ -68,16 +68,16 @@ class AuthRepository @Inject constructor(
                     memberships = emptyMap(),
                     activeSchoolId = null,
                     status = SessionManager.STATUS_PENDING,
-                    syncStatus = SyncStatus.PENDING_UPDATE.name
+                    syncStatus = SyncStatus.PENDING_UPDATE.name,
                 )
                 accountDao.upsertAccount(newAccount)
                 syncManager.enqueueProfileSync(uid)
-                
+
                 sessionManager.saveCurrentUserId(uid)
                 sessionManager.saveUserEmail(email)
                 sessionManager.saveUserStatus(newAccount.status)
-                
-                return@withContext Pair(newAccount, true) 
+
+                return@withContext Pair(newAccount, true)
             }
 
             // Existing account: Save to session and Room (already saved if pulled via UseCase)
@@ -91,7 +91,6 @@ class AuthRepository @Inject constructor(
             }
 
             return@withContext Pair(accountEntity, false)
-
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error: ${e.message}")
             throw e
@@ -105,7 +104,7 @@ class AuthRepository @Inject constructor(
             val updatedAccount = account.copy(
                 status = data["status"]?.toString() ?: account.status,
                 name = data["name"]?.toString() ?: account.name,
-                syncStatus = SyncStatus.PENDING_UPDATE.name
+                syncStatus = SyncStatus.PENDING_UPDATE.name,
             )
             accountDao.updateAccount(updatedAccount)
             syncManager.enqueueProfileSync(uid)

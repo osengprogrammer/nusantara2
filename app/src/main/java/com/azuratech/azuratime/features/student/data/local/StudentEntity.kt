@@ -9,8 +9,8 @@ import com.azuratech.azuraengine.model.StudentModel
     tableName = "students",
     indices = [
         Index(value = ["schoolId"]),
-        Index(value = ["classId"])
-    ]
+        Index(value = ["classId"]),
+    ],
 )
 data class StudentEntity(
     @PrimaryKey
@@ -21,7 +21,7 @@ data class StudentEntity(
     val classId: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val isSynced: Boolean = false,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
 ) {
     fun toDomain() = StudentModel(
         studentId = studentId,
@@ -30,6 +30,6 @@ data class StudentEntity(
         studentCode = studentCode,
         classId = classId,
         createdAt = createdAt,
-        isSynced = isSynced
+        isSynced = isSynced,
     )
 }

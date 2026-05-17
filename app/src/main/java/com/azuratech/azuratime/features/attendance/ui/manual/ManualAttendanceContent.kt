@@ -3,7 +3,6 @@ package com.azuratech.azuratime.features.attendance.ui.manual
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,18 +32,18 @@ fun ManualAttendanceContent(
     availableClasses: List<ClassModel?>,
     isLocked: Boolean,
     onSave: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     AzuraScreen(
         title = "Input Manual",
-        onBack = onBack
+        onBack = onBack,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = AzuraSpacing.lg),
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 if (isLocked) {
                     ManualAttendanceLockBanner()
@@ -57,7 +56,7 @@ fun ManualAttendanceContent(
                     selectedOption = selectedFace,
                     onOptionSelected = onFaceSelected,
                     getLabel = { it.biometric.name },
-                    enabled = !isLocked
+                    enabled = !isLocked,
                 )
 
                 // 2. Date & Time Selection
@@ -69,14 +68,14 @@ fun ManualAttendanceContent(
                             label = { Text("Tanggal") },
                             readOnly = true,
                             modifier = Modifier.weight(1f),
-                            shape = AzuraShapes.medium
+                            shape = AzuraShapes.medium,
                         )
                     } else {
                         AzuraDatePickerButton(
                             label = "Tanggal",
                             selectedDate = selectedDate,
                             onDateSelected = onDateSelected,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                     }
 
@@ -84,7 +83,7 @@ fun ManualAttendanceContent(
                         label = "Jam",
                         selectedTime = selectedTime,
                         onTimeSelected = onTimeSelected,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
 
@@ -99,7 +98,7 @@ fun ManualAttendanceContent(
                             onClick = { onStatusSelected(code) },
                             label = { Text(label, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
                             modifier = Modifier.weight(1f),
-                            shape = AzuraShapes.small
+                            shape = AzuraShapes.small,
                         )
                     }
                 }
@@ -112,7 +111,7 @@ fun ManualAttendanceContent(
                     options = availableClasses,
                     selectedOption = selectedClass,
                     onOptionSelected = onClassSelected,
-                    getLabel = { it?.name ?: "Umum / Tanpa Kelas" }
+                    getLabel = { it?.name ?: "Umum / Tanpa Kelas" },
                 )
 
                 Spacer(Modifier.weight(1f))
@@ -125,7 +124,7 @@ fun ManualAttendanceContent(
                         .fillMaxWidth()
                         .height(56.dp)
                         .padding(bottom = AzuraSpacing.lg),
-                    shape = AzuraShapes.medium
+                    shape = AzuraShapes.medium,
                 ) {
                     Text("Simpan Kehadiran", style = MaterialTheme.typography.titleMedium)
                 }

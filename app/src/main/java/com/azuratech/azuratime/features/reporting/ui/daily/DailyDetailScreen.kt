@@ -9,11 +9,11 @@ fun DailyDetailScreen(
     @Suppress("UNUSED_PARAMETER") studentName: String,
     @Suppress("UNUSED_PARAMETER") dateString: String,
     onNavigateBack: () -> Unit,
-    @Suppress("UNUSED_PARAMETER") onNavigateToManual: (String, String) -> Unit
+    @Suppress("UNUSED_PARAMETER") onNavigateToManual: (String, String) -> Unit,
 ) {
     AzuraScreen(
         title = "Detail Harian",
-        onBack = onNavigateBack
+        onBack = onNavigateBack,
     ) {
         // Implementation placeholder
     }

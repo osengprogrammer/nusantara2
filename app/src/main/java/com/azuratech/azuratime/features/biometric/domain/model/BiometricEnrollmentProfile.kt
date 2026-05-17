@@ -10,5 +10,5 @@ data class BiometricEnrollmentProfile(
     val studentName: String,
     val photoUri: String?,
     val enrollmentDate: Long,
-    val syncStatus: SyncStatus
+    val syncStatus: SyncStatus,
 )

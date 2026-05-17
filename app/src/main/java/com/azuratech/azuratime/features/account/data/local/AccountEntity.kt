@@ -19,5 +19,5 @@ data class AccountEntity(
     val schoolName: String? = null,
     val memberships: Map<String, Membership> = emptyMap(),
     val createdAt: Long = System.currentTimeMillis(),
-    val syncStatus: String = "SYNCED"
+    val syncStatus: String = "SYNCED",
 )

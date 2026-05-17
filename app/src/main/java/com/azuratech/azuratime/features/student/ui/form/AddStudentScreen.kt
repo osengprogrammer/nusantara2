@@ -1,8 +1,6 @@
 package com.azuratech.azuratime.features.student.ui.form
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -21,11 +19,11 @@ import com.google.accompanist.permissions.rememberPermissionState
 @Composable
 fun AddStudentScreen(
     onNavigateBack: () -> Unit,
-    viewModel: StudentFormViewModel = hiltViewModel()
+    viewModel: StudentFormViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateStateFlow.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    
+
     var showCamera by remember { mutableStateOf(false) }
     var captureMode by remember { mutableStateOf("EMBEDDING") } // "EMBEDDING" or "PHOTO"
     var triggerCapture by remember { mutableStateOf(false) }
@@ -53,13 +51,13 @@ fun AddStudentScreen(
     AzuraScreen(
         title = "Tambah Siswa Baru",
         onBack = onNavigateBack,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(AzuraSpacing.md)
+                    .padding(AzuraSpacing.md),
             ) {
                 AzuraUserFormContent(
                     name = uiState.name,
@@ -68,15 +66,15 @@ fun AddStudentScreen(
                     onfaceIdChange = { viewModel.onStudentIdChange(it) },
                     embedding = uiState.embedding,
                     capturedBitmap = uiState.capturedBitmap,
-                    onCaptureEmbedding = { 
+                    onCaptureEmbedding = {
                         captureMode = "EMBEDDING"
-                        showCamera = true 
+                        showCamera = true
                         triggerCapture = false
                         embeddingReceived = false
                     },
-                    onCapturePhoto = { 
+                    onCapturePhoto = {
                         captureMode = "PHOTO"
-                        showCamera = true 
+                        showCamera = true
                         triggerCapture = false
                         photoReceived = false
                     },
@@ -96,9 +94,9 @@ fun AddStudentScreen(
                             onOptionSelected = { classModel ->
                                 viewModel.onClassSelected(classModel.id, classModel.name)
                             },
-                            getOptionLabel = { it.name }
+                            getOptionLabel = { it.name },
                         )
-                    }
+                    },
                 )
             }
 
@@ -125,22 +123,22 @@ fun AddStudentScreen(
                                     showCamera = false
                                 }
                             },
-                            onLivenessStatus = { }
+                            onLivenessStatus = { },
                         )
                     }
 
                     Box(modifier = Modifier.fillMaxSize()) {
                         CoreFaceCamera(
                             analyzer = analyzer,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
                         )
-                        
+
                         Button(
                             onClick = { triggerCapture = true },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(AzuraSpacing.lg)
-                                .align(androidx.compose.ui.Alignment.BottomCenter)
+                                .align(androidx.compose.ui.Alignment.BottomCenter),
                         ) {
                             Text("Ambil ${if (captureMode == "EMBEDDING") "Wajah" else "Foto"}")
                         }

@@ -6,17 +6,17 @@ import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 
 fun NavGraphBuilder.attendanceGraph(
-    navController: androidx.navigation.NavController
+    navController: androidx.navigation.NavController,
 ) {
     navigation(
         startDestination = NavigationRoutes.ATTENDANCE_CAPTURE,
-        route = NavigationRoutes.ATTENDANCE_GRAPH
+        route = NavigationRoutes.ATTENDANCE_GRAPH,
     ) {
         composable(NavigationRoutes.ATTENDANCE_CAPTURE) {
             com.azuratech.azuratime.features.attendance.ui.components.AttendanceCaptureScreen(
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onBarcodeScanClick = { navController.navigate(NavigationRoutes.BARCODE_SCAN) },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 
@@ -32,7 +32,7 @@ fun NavGraphBuilder.attendanceGraph(
                 attendanceViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 userViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
     }

@@ -11,7 +11,7 @@ fun ClassDetailScreen(
     @Suppress("UNUSED_PARAMETER") classViewModel: ViewModel,
     @Suppress("UNUSED_PARAMETER") biometricViewModel: ViewModel,
     onNavigateBack: () -> Unit,
-    @Suppress("UNUSED_PARAMETER") onAddStudent: () -> Unit
+    @Suppress("UNUSED_PARAMETER") onAddStudent: () -> Unit,
 ) {
     AzuraScreen(title = "Detail Kelas: $className", onBack = onNavigateBack) {
         // Placeholder

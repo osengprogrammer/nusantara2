@@ -21,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class BiometricViewModel @Inject constructor(
     private val biometricRepository: StudentBiometricRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -31,15 +31,18 @@ class BiometricViewModel @Inject constructor(
     val searchQuery = _searchQuery.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val enrollmentList: StateFlow<List<BiometricEnrollmentProfile>> = 
+    val enrollmentList: StateFlow<List<BiometricEnrollmentProfile>> =
         sessionManager.activeSchoolIdFlow.filterNotNull()
-            .flatMapLatest { schoolId -> 
+            .flatMapLatest { schoolId ->
                 biometricRepository.observeEnrollmentsBySchool(schoolId)
                     .map { entities -> entities.map { it.toProfile() } }
             }
             .combine(_searchQuery.debounce(300)) { list, query ->
-                if (query.isBlank()) list
-                else list.filter { it.studentName.contains(query, ignoreCase = true) }
+                if (query.isBlank()) {
+                    list
+                } else {
+                    list.filter { it.studentName.contains(query, ignoreCase = true) }
+                }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -57,7 +60,7 @@ class BiometricViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun deleteEnrollment(studentId: String) {
         viewModelScope.launch {
             val result = biometricRepository.deleteEnrollment(studentId)

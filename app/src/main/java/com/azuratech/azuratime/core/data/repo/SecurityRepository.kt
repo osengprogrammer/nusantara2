@@ -39,7 +39,7 @@ class SecurityRepository @Inject constructor(private val session: SessionManager
                 session.getExpireDate(),
                 session.getUserStatus(),
                 session.getHardwareId(),
-                session.getCloudKey()
+                session.getCloudKey(),
             )
 
             Log.d("AZURA_SEC", "Native Validation Result: $result")
@@ -60,7 +60,7 @@ class SecurityRepository @Inject constructor(private val session: SessionManager
             val result = functions
                 .getHttpsCallable("getSecurityIsoKey")
                 .call(hashMapOf("hardwareId" to session.getHardwareId()))
-                .await() 
+                .await()
 
             val response = result.data as? Map<*, *>
             val isoKey = response?.get("isoKey") as? String ?: ""

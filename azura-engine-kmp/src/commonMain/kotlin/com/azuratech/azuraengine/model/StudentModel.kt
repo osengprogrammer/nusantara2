@@ -10,5 +10,5 @@ data class StudentModel(
     val studentCode: String? = null,
     val classId: String? = null,
     val createdAt: Long = 0L,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

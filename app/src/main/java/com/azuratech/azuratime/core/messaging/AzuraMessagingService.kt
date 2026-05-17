@@ -42,15 +42,17 @@ class AzuraMessagingService : FirebaseMessagingService() {
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
-        
+
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
         )
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             // Ganti icon ini dengan icon logo Azura Parent kamu
-            .setSmallIcon(android.R.drawable.ic_dialog_info) 
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)
             .setAutoCancel(true)
@@ -64,7 +66,7 @@ class AzuraMessagingService : FirebaseMessagingService() {
             val channel = NotificationChannel(
                 channelId,
                 "Notifikasi Kehadiran Anak",
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_HIGH,
             )
             notificationManager.createNotificationChannel(channel)
         }

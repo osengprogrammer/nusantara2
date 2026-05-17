@@ -34,10 +34,13 @@ class ZoharAssistantViewModel(application: Application) : AndroidViewModel(appli
             try {
                 // 🔥 FIXED: Passed schoolId to Zohar's memory fetch!
                 val recentLogs = attendanceRecordDao.getAllRecords(schoolId).first().take(10)
-                val contextData = if (recentLogs.isEmpty()) "Belum ada data absensi."
-                                 else recentLogs.joinToString("\n") {
-                                     "${it.name} status ${it.status} pada ${it.attendanceDate}"
-                                 }
+                val contextData = if (recentLogs.isEmpty()) {
+                    "Belum ada data absensi."
+                } else {
+                    recentLogs.joinToString("\n") {
+                        "${it.name} status ${it.status} pada ${it.attendanceDate}"
+                    }
+                }
 
                 val fullPrompt = """
                     Data Absensi Terbaru:

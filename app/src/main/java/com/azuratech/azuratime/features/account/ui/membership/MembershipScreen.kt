@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,13 +35,15 @@ fun MembershipScreen(
     email: String,
     displayName: String? = null,
     onApprovedClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
 ) {
     val membershipViewModel: MembershipViewModel = hiltViewModel()
     val bootViewModel: BootViewModel = hiltViewModel()
 
     val state by membershipViewModel.state.collectAsStateWithLifecycle()
-    @Suppress("UNUSED_VARIABLE") val memberships by membershipViewModel.memberships.collectAsStateWithLifecycle()
+
+    @Suppress("UNUSED_VARIABLE")
+    val memberships by membershipViewModel.memberships.collectAsStateWithLifecycle()
     val accessRequests by membershipViewModel.accessRequests.collectAsStateWithLifecycle()
 
     LaunchedEffect(email) {
@@ -60,19 +61,19 @@ fun MembershipScreen(
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             val currentState = state
-            
+
             if (currentState is MembershipState.Loading) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             } else {
                 when (currentState) {
                     is MembershipState.Pending -> {
                         PendingView(
-                            email = email, 
+                            email = email,
                             accessRequests = accessRequests,
-                            onLogoutClick = onLogoutClick
+                            onLogoutClick = onLogoutClick,
                         )
                     }
                     is MembershipState.Rejected -> {
@@ -82,15 +83,15 @@ fun MembershipScreen(
                         ErrorView(
                             message = currentState.message,
                             onRetry = { membershipViewModel.checkMembership(email, displayName) },
-                            onLogoutClick = onLogoutClick
+                            onLogoutClick = onLogoutClick,
                         )
                     }
                     else -> {
                         // For Approved or Idle state when we have data
-                         PendingView(
-                            email = email, 
+                        PendingView(
+                            email = email,
                             accessRequests = accessRequests,
-                            onLogoutClick = onLogoutClick
+                            onLogoutClick = onLogoutClick,
                         )
                     }
                 }
@@ -105,13 +106,13 @@ fun MembershipScreen(
 
 @Composable
 fun PendingView(
-    email: String, 
+    email: String,
     accessRequests: List<AccessRequestProfile>,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(AzuraSpacing.xl))
         Icon(Icons.Default.HourglassEmpty, null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.primary)
@@ -128,18 +129,18 @@ fun PendingView(
         }
 
         Spacer(modifier = Modifier.height(AzuraSpacing.xl))
-        
+
         if (accessRequests.isNotEmpty()) {
             Text(
-                "Permintaan Bergabung:", 
-                style = MaterialTheme.typography.titleSmall, 
+                "Permintaan Bergabung:",
+                style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Start
+                textAlign = TextAlign.Start,
             )
             Spacer(modifier = Modifier.height(AzuraSpacing.sm))
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
             ) {
                 items(accessRequests) { request ->
                     AccessRequestItem(request)
@@ -164,12 +165,12 @@ fun AccessRequestItem(request: AccessRequestProfile) {
         modifier = Modifier.fillMaxWidth(),
         shape = AzuraShapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        ),
     ) {
         Row(
             modifier = Modifier.padding(AzuraSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Default.Business, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
@@ -189,7 +190,7 @@ fun RejectedView(reason: String?, onLogoutClick: () -> Unit) {
     Column(
         modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(Icons.Default.Block, null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.error)
         Spacer(modifier = Modifier.height(AzuraSpacing.lg))
@@ -211,7 +212,7 @@ fun ErrorView(message: String, onRetry: () -> Unit, onLogoutClick: () -> Unit) {
     Column(
         modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(Icons.Default.ErrorOutline, null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.error)
         Spacer(modifier = Modifier.height(AzuraSpacing.lg))

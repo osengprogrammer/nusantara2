@@ -24,28 +24,28 @@ fun AzuraDatePickerButton(
     label: String,
     selectedDate: LocalDate?,
     onDateSelected: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var showPicker by remember { mutableStateOf(false) }
-    
+
     // Initialize the date picker state with the currently selected date (if any)
     val dateState = rememberDatePickerState(
-        initialSelectedDateMillis = selectedDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+        initialSelectedDateMillis = selectedDate?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
     )
 
     OutlinedButton(
-        modifier = modifier, 
+        modifier = modifier,
         shape = AzuraShapes.medium, // 🔥 System Shapes for consistent borders
-        onClick = { showPicker = true }
+        onClick = { showPicker = true },
     ) {
         // 🔥 Added a calendar icon for a much better UX
         Icon(
-            imageVector = Icons.Default.CalendarToday, 
+            imageVector = Icons.Default.CalendarToday,
             contentDescription = "Select Date",
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(18.dp),
         )
         Spacer(modifier = Modifier.width(AzuraSpacing.sm)) // 🔥 System Spacing
-        
+
         Text(selectedDate?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) ?: label)
     }
 
@@ -63,14 +63,14 @@ fun AzuraDatePickerButton(
                             onDateSelected(localDate)
                         }
                         showPicker = false
-                    }
+                    },
                 ) { Text("OK") }
             },
             dismissButton = {
                 TextButton(onClick = { showPicker = false }) { Text("Cancel") }
-            }
-        ) { 
-            DatePicker(state = dateState) 
+            },
+        ) {
+            DatePicker(state = dateState)
         }
     }
 }

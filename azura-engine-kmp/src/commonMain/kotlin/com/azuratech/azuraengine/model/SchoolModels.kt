@@ -10,7 +10,7 @@ data class School(
     val timezone: String,
     val status: String = "ACTIVE",
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
 )
 
 @Serializable
@@ -21,5 +21,5 @@ data class ClassModel(
     val grade: String,
     val teacherId: String?,
     val studentCount: Int = 0,
-    val createdAt: Long
+    val createdAt: Long,
 )

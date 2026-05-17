@@ -14,29 +14,29 @@ import java.time.LocalDateTime
 
 /**
  * Centralized Mock Data for Compose Previews.
- * Prevents repetitive boilerplate and ensures consistent test data 
+ * Prevents repetitive boilerplate and ensures consistent test data
  * across the entire application's preview suite.
  */
 object PreviewMocks {
-    
+
     val mockUser = AccountEntity(
         accountId = "usr_123",
         email = "admin@azuratech.com",
         name = "Azura Admin",
         activeSchoolId = "sch_1",
-        activeClassId = "cls_1"
+        activeClassId = "cls_1",
     )
 
     val mockClasses = listOf(
         ClassModel(id = "cls_1", schoolId = "sch_1", name = "Kelas 10A", grade = "10", teacherId = null, studentCount = 0, createdAt = 0L),
         ClassModel(id = "cls_2", schoolId = "sch_1", name = "Kelas 10B", grade = "10", teacherId = null, studentCount = 0, createdAt = 0L),
-        ClassModel(id = "cls_3", schoolId = "sch_1", name = "Garmen Shift Pagi", grade = "N/A", teacherId = null, studentCount = 0, createdAt = 0L)
+        ClassModel(id = "cls_3", schoolId = "sch_1", name = "Garmen Shift Pagi", grade = "N/A", teacherId = null, studentCount = 0, createdAt = 0L),
     )
 
     val mockStudents = listOf(
         StudentBiometricEntity(studentId = "face_1", name = "Budi Santoso", embedding = null),
         StudentBiometricEntity(studentId = "face_2", name = "Siti Aminah", embedding = null),
-        StudentBiometricEntity(studentId = "face_3", name = "Agus Setiawan", embedding = null)
+        StudentBiometricEntity(studentId = "face_3", name = "Agus Setiawan", embedding = null),
     )
 
     val mockRecentRecords = listOf(
@@ -52,7 +52,7 @@ object PreviewMocks {
             accountEmail = "admin@azuratech.com",
             schoolId = "sch_1",
             isSynced = true,
-            timestamp = System.currentTimeMillis() - 300000
+            timestamp = System.currentTimeMillis() - 300000,
         ),
         AttendanceRecordEntity(
             id = "2",
@@ -66,8 +66,8 @@ object PreviewMocks {
             accountEmail = "admin@azuratech.com",
             schoolId = "sch_1",
             isSynced = true,
-            timestamp = System.currentTimeMillis() - 720000
-        )
+            timestamp = System.currentTimeMillis() - 720000,
+        ),
     )
 
     val mockDashboardStateSuccess = DashboardUiState(
@@ -83,9 +83,9 @@ object PreviewMocks {
         totalStudents = 145,
         unassignedStudents = 3,
         brokenAssignments = 0,
-        unsyncedRecords = 12
+        unsyncedRecords = 12,
     )
-    
+
     val mockDashboardStateLoading = DashboardUiState(user = null, isReady = false)
 
     val mockMatrixRows = listOf(
@@ -96,14 +96,14 @@ object PreviewMocks {
             cells = listOf(
                 MatrixCellModel("H", Color(0xFF2E7D32), Color(0xFFE8F5E9), true),
                 MatrixCellModel("A", Color(0xFFC62828), Color(0xFFFFEBEE), true),
-                MatrixCellModel("S", Color(0xFFF9A825), Color(0xFFFFF9C4), false)
+                MatrixCellModel("S", Color(0xFFF9A825), Color(0xFFFFF9C4), false),
             ),
             totalHours = "16j 0m",
             summaryH = "1",
             summaryS = "1",
             summaryI = "0",
             summaryA = "1",
-            estimatedSalary = "Rp 0"
+            estimatedSalary = "Rp 0",
         ),
         MatrixRowModel(
             studentId = "face_2",
@@ -112,15 +112,15 @@ object PreviewMocks {
             cells = listOf(
                 MatrixCellModel("H", Color(0xFF2E7D32), Color(0xFFE8F5E9), true),
                 MatrixCellModel("H", Color(0xFF2E7D32), Color(0xFFE8F5E9), true),
-                MatrixCellModel("H", Color(0xFF2E7D32), Color(0xFFE8F5E9), true)
+                MatrixCellModel("H", Color(0xFF2E7D32), Color(0xFFE8F5E9), true),
             ),
             totalHours = "24j 0m",
             summaryH = "3",
             summaryS = "0",
             summaryI = "0",
             summaryA = "0",
-            estimatedSalary = "Rp 0"
-        )
+            estimatedSalary = "Rp 0",
+        ),
     )
 
     val mockMatrixData = com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixData(
@@ -131,13 +131,13 @@ object PreviewMocks {
         startDate = LocalDate.now().minusDays(2),
         endDate = LocalDate.now(),
         selectedClassId = "cls_1",
-        policy = "SCHOOL"
+        policy = "SCHOOL",
     )
 
     val mockMatrixStateSuccess = com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState.Success(
-        mockMatrixData
+        mockMatrixData,
     )
-    
+
     val mockMatrixStateLoading = com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState.Loading
 
     // For FaceList
@@ -150,10 +150,10 @@ object PreviewMocks {
                 classIds = listOf("cls_1"),
                 faceId = "face_1",
                 photoUrl = null,
-                syncStatus = com.azuratech.azuratime.core.domain.model.SyncStatus.SYNCED
+                syncStatus = com.azuratech.azuratime.core.domain.model.SyncStatus.SYNCED,
             ),
             assignedClassNames = "Kelas 10A",
-            isBiometricReady = true
+            isBiometricReady = true,
         ),
         com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem(
             profile = com.azuratech.azuratime.features.student.domain.model.StudentProfile(
@@ -163,11 +163,11 @@ object PreviewMocks {
                 classIds = listOf("cls_2"),
                 faceId = "face_2",
                 photoUrl = null,
-                syncStatus = com.azuratech.azuratime.core.domain.model.SyncStatus.SYNCED
+                syncStatus = com.azuratech.azuratime.core.domain.model.SyncStatus.SYNCED,
             ),
             assignedClassNames = "Kelas 10B",
-            isBiometricReady = false
-        )
+            isBiometricReady = false,
+        ),
     )
 
     val mockStudentRosterData = com.azuratech.azuratime.features.student.ui.roster.StudentRosterData(
@@ -176,11 +176,11 @@ object PreviewMocks {
         students = mockStudentDisplayItems,
         allClasses = mockClasses,
         studentForClassAssignment = null,
-        studentForQuickEdit = null
+        studentForQuickEdit = null,
     )
 
     val mockStudentRosterStateSuccess = com.azuratech.azuratime.features.student.ui.roster.StudentRosterUiState.Success(
-        mockStudentRosterData
+        mockStudentRosterData,
     )
 
     val mockStudentRosterStateLoading = com.azuratech.azuratime.features.student.ui.roster.StudentRosterUiState.Loading
