@@ -16,8 +16,8 @@ import androidx.hilt.navigation.compose.hiltViewModel // 🔥 Gunakan Hilt
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // 🔥 Custom Components & Utils
-import com.azuratech.azuratime.features.attendance.ui.components.ScannerViewModel
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceUiState
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCaptureViewModel
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCaptureUiEvent
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
 import com.azuratech.azuratime.features.attendance.ui.components.MatchResultLabel
 import com.azuratech.azuratime.features.attendance.ui.components.StatusLabel
@@ -28,14 +28,13 @@ import androidx.compose.foundation.layout.Column
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 
-
 @Composable
 fun BarcodeScreen(
     accountEmail: String,
-    viewModel: ScannerViewModel = hiltViewModel()
+    viewModel: AttendanceCaptureViewModel = hiltViewModel(),
 ) {
     val voiceAssistant = rememberVoiceAssistant()
-    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var currentCameraIsBack by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -48,23 +47,23 @@ fun BarcodeScreen(
     }
 
     LaunchedEffect(accountEmail) {
-        viewModel.startScannerSession(accountEmail)
+        viewModel.onEvent(AttendanceCaptureUiEvent.StartScan(accountEmail))
     }
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         BarcodeScanner(
             useBackCamera = currentCameraIsBack,
             shape = RectangleShape,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) { barcodeValue ->
-            if (uiState !is AttendanceUiState.Processing) {
-                viewModel.processScannedBarcode(barcodeValue)
+            if (!uiState.isLoading) {
+                viewModel.onEvent(AttendanceCaptureUiEvent.BarcodeDetected(barcodeValue))
             }
         }
 
         HeaderOverlayBarcode(
-            activeClass = viewModel.activeClassName,
-            onFlipCamera = { currentCameraIsBack = !currentCameraIsBack }
+            activeClass = uiState.activeClassName,
+            onFlipCamera = { currentCameraIsBack = !currentCameraIsBack },
         )
 
         Column(
@@ -72,24 +71,21 @@ fun BarcodeScreen(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 140.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
-            when (val state = uiState) {
-                is AttendanceUiState.Success -> {
-                    MatchResultLabel(
-                        name = state.name,
-                        isAlreadyIn = state.alreadyCheckedIn,
-                        primaryColor = MaterialTheme.colorScheme.primary
-                    )
-                }
-                is AttendanceUiState.Error -> {
-                    StatusLabel(text = "⛔ ${state.message}", color = MaterialTheme.colorScheme.error)
-                }
-                else -> {}
+            uiState.studentProfile?.let { profile ->
+                MatchResultLabel(
+                    name = profile.name,
+                    isAlreadyIn = profile.alreadyCheckedIn,
+                    primaryColor = MaterialTheme.colorScheme.primary,
+                )
+            }
+            uiState.error?.let { error ->
+                StatusLabel(text = "⛔ $error", color = MaterialTheme.colorScheme.error)
             }
         }
 
-        if (uiState is AttendanceUiState.Processing) {
+        if (uiState.isLoading) {
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f))) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             }
@@ -105,34 +101,34 @@ private fun HeaderOverlayBarcode(activeClass: String, onFlipCamera: () -> Unit) 
             .statusBarsPadding()
             .padding(AzuraSpacing.md),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
-            color = Color.Black.copy(alpha = 0.7f), 
+            color = Color.Black.copy(alpha = 0.7f),
             shape = AzuraShapes.medium,
-            border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.2f))
+            border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.2f)),
         ) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Text(
-                    "AZURA TIME: BARCODE", 
+                    "AZURA TIME: BARCODE",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Black
-                    )
+                        fontWeight = FontWeight.Black,
+                    ),
                 )
                 val display = if (activeClass.isBlank()) "SCAN BEBAS" else activeClass.uppercase()
                 Text(
-                    display, 
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.White)
+                    display,
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.White),
                 )
             }
         }
-        
+
         FilledIconButton(
             onClick = onFlipCamera,
             colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = Color.Black.copy(alpha = 0.7f)
-            )
+                containerColor = Color.Black.copy(alpha = 0.7f),
+            ),
         ) {
             Icon(Icons.Default.Cameraswitch, contentDescription = "Flip Camera", tint = Color.White)
         }

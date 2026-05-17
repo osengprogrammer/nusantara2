@@ -12,7 +12,6 @@ import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAtte
 import com.azuratech.azuratime.features.school.data.repo.SchoolRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
-import com.azuratech.azuratime.core.ui.util.UiState
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.domain.sync.ExportUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,7 +28,7 @@ class AttendanceViewModel @Inject constructor(
     private val repository: AttendanceRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
-    private val exportUtils: ExportUtils
+    private val exportUtils: ExportUtils,
 ) : AndroidViewModel(application) {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
@@ -39,7 +38,7 @@ class AttendanceViewModel @Inject constructor(
         val name: String = "",
         val startDate: LocalDate? = null,
         val endDate: LocalDate? = null,
-        val classId: String? = null
+        val classId: String? = null,
     )
 
     private val _filterParams = MutableStateFlow(FilterParams())
@@ -54,7 +53,7 @@ class AttendanceViewModel @Inject constructor(
 
     val attendanceRecords = combine(
         sessionManager.activeSchoolIdFlow.filterNotNull(),
-        _filterParams
+        _filterParams,
     ) { schoolId, params ->
         repository.getAttendanceRecords(
             name = params.name,
@@ -63,7 +62,7 @@ class AttendanceViewModel @Inject constructor(
             accountId = null,
             classId = params.classId,
             assignedIds = emptyList(),
-            schoolId = schoolId
+            schoolId = schoolId,
         ).map { entities -> entities.map { it.toDomain() } }
     }.flattenMerge().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -91,11 +90,11 @@ class AttendanceViewModel @Inject constructor(
                     studentName = studentName,
                     accountEmail = accountEmail,
                     activeClassId = currentSessionId,
-                    studentClassIds = studentClasses
+                    studentClassIds = studentClasses,
                 )
 
                 val result = repository.processAttendance(params)
-                
+
                 withContext(Dispatchers.Main) {
                     when (result) {
                         is Result.Success<AttendanceResult> -> {
@@ -119,8 +118,8 @@ class AttendanceViewModel @Inject constructor(
     fun deleteRecord(record: AttendanceRecord) {
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
-            repository.deleteRecord(record.recordId, schoolId) 
-        } 
+            repository.deleteRecord(record.recordId, schoolId)
+        }
     }
 
     fun addRecord(record: AttendanceRecord) {

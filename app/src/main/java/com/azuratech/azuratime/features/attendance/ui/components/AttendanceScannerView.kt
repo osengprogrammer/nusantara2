@@ -11,8 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.attendance.ui.components.LivenessLabel
-
 
 /**
  * A stateful component that encapsulates the high-frequency state updates
@@ -24,7 +22,7 @@ fun AttendanceScannerView(
     useBackCamera: Boolean,
     onFaceEmbeddingReady: (embedding: FloatArray) -> Unit,
     modifier: Modifier = Modifier,
-    showLivenessLabel: Boolean
+    showLivenessLabel: Boolean,
 ) {
     var livenessInstruction by remember { mutableStateOf("Mencari Wajah...") }
 
@@ -33,7 +31,7 @@ fun AttendanceScannerView(
             useBackCamera = useBackCamera,
             shape = RectangleShape,
             modifier = Modifier.fillMaxSize(),
-            onLivenessStatus = { status -> livenessInstruction = status }
+            onLivenessStatus = { status -> livenessInstruction = status },
         ) { _, embedding ->
             // The onFaceDetected lambda from FaceScanner
             onFaceEmbeddingReady(embedding)
@@ -46,7 +44,7 @@ fun AttendanceScannerView(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 140.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 LivenessLabel(text = livenessInstruction)
             }

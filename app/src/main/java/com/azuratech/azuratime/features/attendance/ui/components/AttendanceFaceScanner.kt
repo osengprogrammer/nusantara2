@@ -15,11 +15,11 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
  */
 @Composable
 fun FaceScanner(
-    useBackCamera: Boolean = false, 
+    useBackCamera: Boolean = false,
     shape: Shape = AzuraShapes.large,
     modifier: Modifier = Modifier,
     onLivenessStatus: (String) -> Unit, // 🔥 Status instruksi: "Silakan Berkedip", dsb.
-    onFaceEmbedding: (Rect, FloatArray) -> Unit // Hasil embedding wajah
+    onFaceEmbedding: (Rect, FloatArray) -> Unit, // Hasil embedding wajah
 ) {
     // 1. Inisialisasi Analyzer secara reaktif terhadap pergantian kamera (Flip)
     val analyzer = remember(useBackCamera) {
@@ -28,14 +28,14 @@ fun FaceScanner(
             bypassLiveness = false, // 🔥 Untuk absen, liveness HARUS aktif (false)
             onFaceEmbedding = onFaceEmbedding,
             onFaceCaptured = null,
-            onLivenessStatus = onLivenessStatus
+            onLivenessStatus = onLivenessStatus,
         )
     }
-    
+
     // 2. Lifecycle Management: Pastikan kamera & detektor ditutup saat pindah layar
     DisposableEffect(analyzer) {
-        onDispose { 
-            analyzer.close() 
+        onDispose {
+            analyzer.close()
         }
     }
 
@@ -44,6 +44,6 @@ fun FaceScanner(
         analyzer = analyzer,
         useFrontCamera = !useBackCamera,
         shape = shape,
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
     )
 }
