@@ -25,7 +25,8 @@ fun ManualAttendanceScreen(
     val faces by biometricViewModel.studentRosterFlow.collectAsStateWithLifecycle()
     val currentUser by userViewModel.currentUser.collectAsStateWithLifecycle()
     val assignedIds by userViewModel.assignedClassIds.collectAsStateWithLifecycle()
-    val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
+    val classUiState by classViewModel.uiState.collectAsStateWithLifecycle()
+    val globalClasses = classUiState.classes
 
     // Role-Based Class Access
     val isAdmin = currentUser?.memberships?.get(currentUser?.activeSchoolId)?.role == "ADMIN"

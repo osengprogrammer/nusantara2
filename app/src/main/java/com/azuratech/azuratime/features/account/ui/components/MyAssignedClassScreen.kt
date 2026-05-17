@@ -38,7 +38,8 @@ fun MyAssignedClassScreen(
         }
         )
         .collectAsStateWithLifecycle()
-    val allClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
+    val classUiState by classViewModel.uiState.collectAsStateWithLifecycle()
+    val allClasses = classUiState.classes
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()
     val targetUser by userViewModel.selectedTargetUser.collectAsStateWithLifecycle()
 

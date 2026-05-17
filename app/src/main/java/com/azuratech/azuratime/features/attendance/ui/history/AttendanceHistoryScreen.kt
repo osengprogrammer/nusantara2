@@ -34,7 +34,8 @@ fun AttendanceHistoryScreen(
     classViewModel: ClassViewModel,
 ) {
     // 1. Observation
-    val globalClasses by classViewModel.classesStateFlow.collectAsStateWithLifecycle()
+    val classUiState by classViewModel.uiState.collectAsStateWithLifecycle()
+    val globalClasses = classUiState.classes
     val user by userViewModel.currentUser.collectAsStateWithLifecycle()
     val records by attendanceViewModel.attendanceRecords.collectAsStateWithLifecycle()
     val filterParams by attendanceViewModel.filterParams.collectAsStateWithLifecycle()

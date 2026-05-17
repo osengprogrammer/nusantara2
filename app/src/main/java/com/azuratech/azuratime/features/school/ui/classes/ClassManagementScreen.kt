@@ -18,7 +18,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.util.UiState
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuraengine.model.ClassModel
 
@@ -28,9 +27,7 @@ fun ClassManagementScreen(
     onNavigateBack: () -> Unit,
     viewModel: ClassViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiStateStateFlow.collectAsStateWithLifecycle()
-    val availableClasses by viewModel.availableClassesStateFlow.collectAsStateWithLifecycle()
-    var showAddDialog by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -46,29 +43,35 @@ fun ClassManagementScreen(
         onBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
         actions = {
-            IconButton(onClick = { viewModel.syncClasses() }) {
+            IconButton(
+                onClick = { viewModel.onEvent(ClassUiEvent.SyncClasses) },
+                enabled = !uiState.isLoading,
+            ) {
                 Icon(Icons.Default.Refresh, contentDescription = "Sinkronkan Kelas")
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
+            FloatingActionButton(onClick = { viewModel.onEvent(ClassUiEvent.ShowAddDialog) }) {
                 Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
             }
         },
     ) {
-        when (val state = uiState) {
-            is UiState.Loading -> {
+        Column(modifier = Modifier.fillMaxSize()) {
+            if (uiState.isLoading && uiState.classes.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            }
-            is UiState.Success -> {
+            } else if (uiState.classes.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Belum ada kelas yang terdaftar.")
+                }
+            } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(AzuraSpacing.md),
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
                 ) {
-                    items(state.data) { classModel ->
+                    items(uiState.classes) { classModel ->
                         ClassItem(
                             classModel = classModel,
                             onClick = { onClassSelected(classModel.id, classModel.name) },
@@ -76,26 +79,15 @@ fun ClassManagementScreen(
                     }
                 }
             }
-            is UiState.Empty -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Belum ada kelas yang terdaftar.")
-                }
-            }
-            is UiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = state.message ?: "Terjadi kesalahan", color = MaterialTheme.colorScheme.error)
-                }
-            }
         }
     }
 
-    if (showAddDialog) {
+    if (uiState.isAddDialogVisible) {
         AddClassDialog(
-            availableClasses = availableClasses,
-            onDismissRequest = { showAddDialog = false },
+            availableClasses = uiState.availableClasses,
+            onDismissRequest = { viewModel.onEvent(ClassUiEvent.DismissAddDialog) },
             onConfirmClick = { name ->
-                viewModel.createClass(name)
-                showAddDialog = false
+                viewModel.onEvent(ClassUiEvent.CreateClass(name))
             },
         )
     }
@@ -109,7 +101,7 @@ fun ClassItem(classModel: ClassModel, onClick: () -> Unit) {
             .clickable { onClick() },
     ) {
         Row(
-            modifier = Modifier.padding(AzuraSpacing.sm), // Inner padding because AzuraCard already has padding
+            modifier = Modifier.padding(AzuraSpacing.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Default.Class, contentDescription = null, modifier = Modifier.size(32.dp))
