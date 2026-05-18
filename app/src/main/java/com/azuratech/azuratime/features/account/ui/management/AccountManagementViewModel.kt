@@ -220,7 +220,7 @@ class AccountManagementViewModel @Inject constructor(
         }
     }
 
-    fun refreshCurrentUserFromCloud() {
+    fun refreshCurrentAccountFromCloud() {
         onEvent(AccountUiEvent.LoadProfile)
     }
 }

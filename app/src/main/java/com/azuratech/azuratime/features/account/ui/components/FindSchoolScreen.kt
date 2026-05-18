@@ -40,33 +40,33 @@ fun FindSchoolScreen(
     workspaceViewModel: WorkspaceViewModel,
     currentAccount: AccountEntity?,
 ) {
-    val searchQuery by workspaceViewModel.searchQueryFlow.collectAsStateWithLifecycle()
-    val searchResults by workspaceViewModel.schoolSearchResultsFlow.collectAsStateWithLifecycle()
-    val accessRequests by workspaceViewModel.accessRequestsFlow.collectAsStateWithLifecycle()
     val uiState by workspaceViewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val searchQuery = uiState.searchQuery
+    val searchResults = uiState.searchResults
+    val accessRequests = uiState.accessRequests
     val focusManager = LocalFocusManager.current
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope() // 🔥 Needed for non-blocking snackbars
 
     // 🔥 FIXED: Wrapped snackbar calls in scope.launch to prevent blocking the LaunchedEffect
-    LaunchedEffect(uiState) {
-        when (val currentState = uiState) {
-            is WorkspaceViewModel.WorkspaceState.Success -> {
+    LaunchedEffect(uiState.status) {
+        when (val currentStatus = uiState.status) {
+            is WorkspaceStatus.Success -> {
                 scope.launch { snackbarHostState.showSnackbar("Berhasil!") }
-                workspaceViewModel.resetState()
+                workspaceViewModel.onEvent(WorkspaceUiEvent.ResetState)
             }
-            is WorkspaceViewModel.WorkspaceState.RequestSent -> {
-                scope.launch { snackbarHostState.showSnackbar("Permintaan bergabung ke ${currentState.schoolName} telah dikirim!") }
-                workspaceViewModel.resetState()
+            is WorkspaceStatus.RequestSent -> {
+                scope.launch { snackbarHostState.showSnackbar("Permintaan bergabung ke ${currentStatus.schoolName} telah dikirim!") }
+                workspaceViewModel.onEvent(WorkspaceUiEvent.ResetState)
             }
-            is WorkspaceViewModel.WorkspaceState.RequestFailed -> {
-                scope.launch { snackbarHostState.showSnackbar(currentState.message ?: "Gagal mengirim permintaan") }
-                workspaceViewModel.resetState()
+            is WorkspaceStatus.RequestFailed -> {
+                scope.launch { snackbarHostState.showSnackbar(currentStatus.message ?: "Gagal mengirim permintaan") }
+                workspaceViewModel.onEvent(WorkspaceUiEvent.ResetState)
             }
-            is WorkspaceViewModel.WorkspaceState.Error -> {
-                scope.launch { snackbarHostState.showSnackbar(currentState.message) }
-                workspaceViewModel.resetState()
+            is WorkspaceStatus.Error -> {
+                scope.launch { snackbarHostState.showSnackbar(currentStatus.message) }
+                workspaceViewModel.onEvent(WorkspaceUiEvent.ResetState)
             }
             else -> {}
         }
@@ -89,7 +89,7 @@ fun FindSchoolScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = {
-                        workspaceViewModel.updateSearchQuery(it)
+                        workspaceViewModel.onEvent(WorkspaceUiEvent.UpdateSearchQuery(it))
                     },
                     label = { Text("Cari Nama Sekolah atau ID...") },
                     modifier = Modifier.fillMaxWidth(),
@@ -137,10 +137,10 @@ fun FindSchoolScreen(
                                     status = status,
                                     isFollowing = isFollowing,
                                     isSynced = isSynced,
-                                    isLoading = uiState is WorkspaceViewModel.WorkspaceState.Switching,
+                                    isLoading = uiState.status is WorkspaceStatus.Switching,
                                     onFollowClick = {
                                         if (currentAccount != null) {
-                                            workspaceViewModel.sendJoinRequest(currentAccount.accountId, schoolId, schoolName)
+                                            workspaceViewModel.onEvent(WorkspaceUiEvent.SendJoinRequest(currentAccount.accountId, schoolId, schoolName))
                                         }
                                     },
                                 )

@@ -3,12 +3,12 @@ package com.azuratech.azuratime.features.attendance.data.repo
 import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.ml.matcher.NativeSecurityVault
 import com.azuratech.azuratime.core.data.local.BiometricCache
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.attendance.domain.repository.BiometricScannerRepository
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.ml.matcher.FaceEngine
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -59,18 +59,15 @@ class BiometricScannerRepositoryImpl @Inject constructor(
         try {
             if (gallery.isEmpty()) return@withContext Result.Success(null)
 
-            var bestMatchId: String? = null
-            var minDistance = 0.8f // FaceNet Threshold
+            // 🔥 FIX: Use centralized FaceEngine with stricter thresholds (0.35f)
+            val matchResult = FaceEngine.findBestMatch(embedding, gallery)
 
-            for (item in gallery) {
-                val distance = NativeSecurityVault.calculateDistanceNative(embedding, item.second)
-                if (distance < minDistance) {
-                    minDistance = distance
-                    bestMatchId = item.first
-                }
+            val studentId = when (matchResult) {
+                is FaceEngine.MatchResult.Success -> matchResult.name
+                else -> null
             }
 
-            Result.Success(if (minDistance < 0.8f) bestMatchId else null)
+            Result.Success(studentId)
         } catch (e: Exception) {
             Result.Failure(AppError.BusinessRule(e.message))
         }

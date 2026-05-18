@@ -49,7 +49,7 @@ class ZoharBrain(apiKey: String) {
             val response = model.generateContent(prompt)
             val responseText = response.text ?: return@withContext "Maaf Brother, Zohar sedang merenung. Coba tanya lagi nanti."
 
-            // Mencoba mendeteksi jika response adalah JSON (opsional, sesuai kebutuhan user)
+            // Mencoba mendeteksi jika response adalah JSON (opsional, sesuai kebutuhan account)
             if (responseText.trim().startsWith("{")) {
                 try {
                     val parsed = json.decodeFromString<ZoharResponse>(responseText)

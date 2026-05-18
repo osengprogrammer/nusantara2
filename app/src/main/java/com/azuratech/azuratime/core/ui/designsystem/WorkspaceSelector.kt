@@ -94,7 +94,7 @@ fun WorkspaceSelector(
     }
 
     // ⏳ Blocking loading overlay while the switch is in progress
-    if (workspaceUiState is WorkspaceViewModel.WorkspaceState.Switching) {
+    if (workspaceUiState.status is com.azuratech.azuratime.features.account.ui.components.WorkspaceStatus.Switching) {
         Dialog(onDismissRequest = { /* Prevent dismiss during switch */ }) {
             Card(
                 modifier = Modifier.padding(16.dp),
@@ -119,11 +119,11 @@ fun WorkspaceSelector(
     }
 
     // 🛠 Reset state once done
-    LaunchedEffect(workspaceUiState) {
-        when (workspaceUiState) {
-            is WorkspaceViewModel.WorkspaceState.Success,
-            is WorkspaceViewModel.WorkspaceState.Error,
-            -> workspaceViewModel.resetState()
+    LaunchedEffect(workspaceUiState.status) {
+        when (workspaceUiState.status) {
+            is com.azuratech.azuratime.features.account.ui.components.WorkspaceStatus.Success,
+            is com.azuratech.azuratime.features.account.ui.components.WorkspaceStatus.Error,
+            -> workspaceViewModel.onEvent(com.azuratech.azuratime.features.account.ui.components.WorkspaceUiEvent.ResetState)
             else -> {}
         }
     }

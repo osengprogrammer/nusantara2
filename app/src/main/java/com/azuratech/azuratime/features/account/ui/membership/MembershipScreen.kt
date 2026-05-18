@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuratime.core.boot.BootUiEvent
 import com.azuratech.azuratime.core.boot.BootViewModel
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
@@ -40,20 +41,16 @@ fun MembershipScreen(
     val membershipViewModel: MembershipViewModel = hiltViewModel()
     val bootViewModel: BootViewModel = hiltViewModel()
 
-    val state by membershipViewModel.stateFlow.collectAsStateWithLifecycle()
-
-    @Suppress("UNUSED_VARIABLE")
-    val memberships by membershipViewModel.membershipsFlow.collectAsStateWithLifecycle()
-    val accessRequests by membershipViewModel.accessRequestsFlow.collectAsStateWithLifecycle()
+    val uiState by membershipViewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     LaunchedEffect(email) {
-        membershipViewModel.checkMembership(email, displayName)
+        membershipViewModel.onEvent(MembershipUiEvent.CheckMembership(email, displayName))
     }
 
-    LaunchedEffect(state) {
-        if (state is MembershipState.Approved) {
-            membershipViewModel.activateMembership()
-            bootViewModel.recheck()
+    LaunchedEffect(uiState.status) {
+        if (uiState.status is MembershipStatus.Approved) {
+            membershipViewModel.onEvent(MembershipUiEvent.ActivateMembership)
+            bootViewModel.onEvent(BootUiEvent.Recheck)
             onApprovedClick()
         }
     }
@@ -63,37 +60,32 @@ fun MembershipScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            val currentState = state
-
-            if (currentState is MembershipState.Loading) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            } else {
-                when (currentState) {
-                    is MembershipState.Pending -> {
-                        PendingView(
-                            email = email,
-                            accessRequests = accessRequests,
-                            onLogoutClick = onLogoutClick,
-                        )
-                    }
-                    is MembershipState.Rejected -> {
-                        RejectedView(reason = currentState.reason, onLogoutClick = onLogoutClick)
-                    }
-                    is MembershipState.Error -> {
-                        ErrorView(
-                            message = currentState.message,
-                            onRetry = { membershipViewModel.checkMembership(email, displayName) },
-                            onLogoutClick = onLogoutClick,
-                        )
-                    }
-                    else -> {
-                        // For Approved or Idle state when we have data
-                        PendingView(
-                            email = email,
-                            accessRequests = accessRequests,
-                            onLogoutClick = onLogoutClick,
-                        )
-                    }
+            when (val status = uiState.status) {
+                is MembershipStatus.Loading -> {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+                is MembershipStatus.Pending -> {
+                    PendingView(
+                        email = email,
+                        accessRequests = uiState.accessRequests,
+                        onLogoutClick = onLogoutClick,
+                        onRefresh = { membershipViewModel.onEvent(MembershipUiEvent.CheckMembership(email, displayName)) },
+                    )
+                }
+                is MembershipStatus.Rejected -> {
+                    RejectedView(reason = status.message, onLogoutClick = onLogoutClick)
+                }
+                is MembershipStatus.Idle -> {
+                    // Fallback to pending if idle
+                    PendingView(
+                        email = email,
+                        accessRequests = uiState.accessRequests,
+                        onLogoutClick = onLogoutClick,
+                        onRefresh = { membershipViewModel.onEvent(MembershipUiEvent.CheckMembership(email, displayName)) },
+                    )
+                }
+                else -> {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
@@ -109,6 +101,7 @@ fun PendingView(
     email: String,
     accessRequests: List<AccessRequestProfile>,
     onLogoutClick: () -> Unit,
+    onRefresh: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(AzuraSpacing.xl).fillMaxSize(),
@@ -147,9 +140,8 @@ fun PendingView(
                 }
             }
         } else {
-            val membershipViewModel: MembershipViewModel = hiltViewModel()
             Button(
-                onClick = { membershipViewModel.checkMembership(email) },
+                onClick = onRefresh,
                 modifier = Modifier.padding(vertical = AzuraSpacing.md),
                 shape = AzuraShapes.medium,
             ) {

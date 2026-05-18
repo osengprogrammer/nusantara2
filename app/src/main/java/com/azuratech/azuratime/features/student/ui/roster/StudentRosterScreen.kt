@@ -6,17 +6,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
 
@@ -40,20 +42,110 @@ fun StudentRosterScreen(
     AzuraScreen(
         title = "Roster Siswa",
         onBack = onNavigateBack,
-        actions = {
-            IconButton(
-                onClick = { viewModel.onEvent(StudentRosterUiEvent.SyncStudents) },
-                enabled = !uiState.isLoading,
-            ) {
-                Icon(
-                    Icons.Default.Refresh,
-                    contentDescription = "Sync",
-                    modifier = if (uiState.isLoading) Modifier.rotate(rotation.value) else Modifier,
-                )
-            }
-        },
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // --- 1. SLEEK SEARCH BAR ---
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
+            ) {
+                OutlinedTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = { viewModel.onEvent(StudentRosterUiEvent.UpdateSearch(it)) },
+                    placeholder = { Text("Cari nama siswa atau ID...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = AzuraShapes.medium,
+                    leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary) },
+                    trailingIcon = {
+                        if (uiState.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.onEvent(StudentRosterUiEvent.UpdateSearch("")) }) {
+                                Icon(Icons.Default.Close, null)
+                            }
+                        }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    ),
+                    singleLine = true,
+                )
+            }
+
+            // --- 2. ACTION ROW (Sync, Filter Summary) ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // 🔥 Sync Roster Button
+                Surface(
+                    onClick = { viewModel.onEvent(StudentRosterUiEvent.SyncStudents) },
+                    modifier = Modifier.weight(1f),
+                    enabled = !uiState.isLoading,
+                    shape = AzuraShapes.medium,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    tonalElevation = 2.dp,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        if (uiState.isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        } else {
+                            Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Sync Roster", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                // Info Badge
+                Surface(
+                    shape = AzuraShapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.height(40.dp),
+                ) {
+                    Box(modifier = Modifier.padding(horizontal = AzuraSpacing.md), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "${uiState.students.size} Siswa",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(AzuraSpacing.sm))
+
+            // --- 3. CLASS FILTER (Horizontal Chips) ---
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = AzuraSpacing.md),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+            ) {
+                item {
+                    FilterChip(
+                        selected = uiState.selectedClassId == null,
+                        onClick = { viewModel.onEvent(StudentRosterUiEvent.SelectClass(null)) },
+                        label = { Text("Semua Kelas") },
+                        shape = AzuraShapes.medium,
+                    )
+                }
+                items(uiState.allClasses) { classModel ->
+                    FilterChip(
+                        selected = uiState.selectedClassId == classModel.id,
+                        onClick = { viewModel.onEvent(StudentRosterUiEvent.SelectClass(classModel.id)) },
+                        label = { Text(classModel.name) },
+                        shape = AzuraShapes.medium,
+                    )
+                }
+            }
+
             // Error Banner
             uiState.error?.let { errorMsg ->
                 Card(
@@ -75,39 +167,6 @@ fun StudentRosterScreen(
                             Text("OK")
                         }
                     }
-                }
-            }
-
-            // Search Bar
-            AzuraTextField(
-                value = uiState.searchQuery,
-                onValueChange = { viewModel.onEvent(StudentRosterUiEvent.UpdateSearch(it)) },
-                label = "Cari Siswa / ID",
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
-            )
-
-            // Class Filter
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = AzuraSpacing.md),
-                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-            ) {
-                item {
-                    FilterChip(
-                        selected = uiState.selectedClassId == null,
-                        onClick = { viewModel.onEvent(StudentRosterUiEvent.SelectClass(null)) },
-                        label = { Text("Semua") },
-                    )
-                }
-                items(uiState.allClasses) { classModel ->
-                    FilterChip(
-                        selected = uiState.selectedClassId == classModel.id,
-                        onClick = { viewModel.onEvent(StudentRosterUiEvent.SelectClass(classModel.id)) },
-                        label = { Text(classModel.name) },
-                    )
                 }
             }
 

@@ -207,43 +207,58 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override suspend fun syncRecords(): Result<Unit> = withContext(Dispatchers.IO) {
         val schoolId = sessionManager.getActiveSchoolId() ?: ""
-        if (schoolId.isBlank()) return@withContext Result.Success(Unit)
+        if (schoolId.isBlank()) {
+            android.util.Log.w("AttendanceRepo", "⚠️ Aborting sync: No active school ID.")
+            return@withContext Result.Success(Unit)
+        }
 
         // 1. PUSH PHASE: Upload local changes to cloud
         try {
             val unsyncedResult = getUnsyncedRecords(schoolId)
             if (unsyncedResult is Result.Success) {
-                for (record in unsyncedResult.data) {
-                    val syncRes = syncRecord(record)
-                    if (syncRes is Result.Failure) {
-                        if (syncRes.error is AppError.Network) {
+                val records = unsyncedResult.data
+                if (records.isNotEmpty()) {
+                    android.util.Log.d("AttendanceRepo", "📤 Pushing ${records.size} unsynced records...")
+                    for (record in records) {
+                        val syncRes = syncRecord(record)
+                        if (syncRes is Result.Failure && syncRes.error is AppError.Network) {
                             return@withContext Result.Failure(syncRes.error)
                         }
                     }
                 }
             }
         } catch (e: Exception) {
-            println("ERROR: [AttendanceRepository] Error during push phase: ${e.message}")
+            android.util.Log.e("AttendanceRepo", "❌ Error during push phase: ${e.message}")
         }
 
         // 2. PULL PHASE: Delta sync from cloud to local
         val lastSync = sessionManager.getLastRecordsSyncTime()
+        android.util.Log.d("AttendanceRepo", "📥 Starting Pull Phase (lastSync: $lastSync)...")
+
         try {
             val syncResult = getRecordUpdates(schoolId, lastSync)
             if (syncResult is Result.Success) {
-                val records = syncResult.data
-                if (records.isNotEmpty()) {
-                    records.forEach { record ->
-                        saveRecord(record)
-                    }
+                val remoteRecords = syncResult.data
+                if (remoteRecords.isNotEmpty()) {
+                    android.util.Log.i("AttendanceRepo", "✅ Pulled ${remoteRecords.size} records from Firestore.")
+
+                    // Bulk insert using DAO directly
+                    val entities = remoteRecords.map { AttendanceRecordEntity.fromDomain(it) }
+                    attendanceRecordDao.insertAll(entities)
+
                     sessionManager.saveLastRecordsSyncTime()
-                    println("[AttendanceRepository]  Delta Sync: Pulled ${records.size} records")
+                    android.util.Log.d("AttendanceRepo", "💾 Successfully persisted ${entities.size} pulled records to Room.")
+                } else {
+                    android.util.Log.d("AttendanceRepo", "📭 No new records found in Firestore.")
                 }
                 Result.Success(Unit)
             } else {
-                syncResult as Result.Failure
+                val error = (syncResult as Result.Failure).error
+                android.util.Log.e("AttendanceRepo", "❌ Pull failed: ${error.message}")
+                syncResult
             }
         } catch (e: Exception) {
+            android.util.Log.e("AttendanceRepo", "❌ Unexpected error during pull: ${e.message}")
             Result.Failure(AppError.Network(e.message))
         }
     }

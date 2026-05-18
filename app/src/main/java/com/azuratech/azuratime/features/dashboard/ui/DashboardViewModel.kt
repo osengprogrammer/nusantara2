@@ -30,7 +30,7 @@ import javax.inject.Inject
 
 /**
  * 🏠 DASHBOARD VIEW MODEL (v3.2.0-ai-native)
- * Entry point for Teachers and Admins.
+ * Entry point for Accounts (Admins and Members).
  */
 @HiltViewModel
 class DashboardViewModel @Inject constructor(

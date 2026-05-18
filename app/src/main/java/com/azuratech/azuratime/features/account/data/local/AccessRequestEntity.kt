@@ -8,7 +8,7 @@ import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfil
 
 /**
  * 🎫 Access Request Entity
- * Represents a request made by a user to join or leave a school.
+ * Represents a request made by an account to join or leave a school.
  * Follows SSOT: Local-first source for access management.
  */
 @Entity(tableName = "access_requests")

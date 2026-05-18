@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 🔐 AUTH VIEW MODEL (v3.2.0-ai-native)
+ */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     application: Application,
@@ -33,7 +36,7 @@ class AuthViewModel @Inject constructor(
             is AuthUiEvent.RegisterSchool -> registerNewSchool()
             is AuthUiEvent.SignInWithGoogle -> loginWithGoogle(event.idToken)
             is AuthUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
-            is AuthUiEvent.Logout -> logout()
+            is AuthUiEvent.Logout -> logout(event.onComplete)
             is AuthUiEvent.NavigateToDashboard -> { /* Managed by screen */ }
         }
     }
@@ -136,7 +139,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun logout(onComplete: () -> Unit = {}) {
+    private fun logout(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             repository.clearAllDataAndSignOut()
             _uiStateFlow.value = AuthUiState()

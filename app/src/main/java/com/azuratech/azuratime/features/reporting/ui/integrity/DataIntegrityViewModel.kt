@@ -18,6 +18,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 🚀 DATA INTEGRITY VIEW MODEL (v3.2.0-ai-native)
+ * Central hub for monitoring system health and resolving data collisions.
+ */
 @HiltViewModel
 class DataIntegrityViewModel @Inject constructor(
     private val repository: DataIntegrityRepository,

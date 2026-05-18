@@ -12,6 +12,7 @@ sealed class AttendanceUiEvent {
     data class SelectClass(val classId: String?) : AttendanceUiEvent()
     data class UpdateSearchQuery(val query: String) : AttendanceUiEvent()
     data object Refresh : AttendanceUiEvent()
+    data object SyncHistory : AttendanceUiEvent()
     data object ClearError : AttendanceUiEvent()
 
     // Actions

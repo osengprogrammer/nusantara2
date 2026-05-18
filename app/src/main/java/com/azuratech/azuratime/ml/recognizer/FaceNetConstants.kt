@@ -14,8 +14,8 @@ object FaceNetConstants {
     const val IMAGE_STD = 128f
 
     // 🔥 FIXED: Safer thresholds for high-dimensional (512) Cosine Distance
-    const val DUPLICATE_THRESHOLD = 0.25f
-    const val RECOGNITION_THRESHOLD = 0.45f
+    const val DUPLICATE_THRESHOLD = 0.20f
+    const val RECOGNITION_THRESHOLD = 0.35f
 
     const val DEFAULT_FACE_PADDING = 0.1f
 

@@ -109,24 +109,56 @@ data class AttendanceRecordEntity(
  */
 fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(schoolId: String): AttendanceRecordEntity? {
     return try {
-        val dateStr = getString("attendanceDate") ?: java.time.LocalDate.now().toString()
-        val timeStr = getString("attendanceTime") ?: getString("checkInTime")
+        // 1. Identify primary timestamp
+        val rawTimestamp = getTimestamp("timestamp") ?: getTimestamp("createdAt")
+        val longTimestamp = getLong("createdAt") ?: getLong("timestamp")
+
+        val finalTimestamp = rawTimestamp?.toDate()?.time
+            ?: longTimestamp
+            ?: System.currentTimeMillis()
+
+        // 2. Parse Date & Time (Resilient)
+        val dateStr = getString("attendanceDate") ?: getString("date")
+        val timeStr = getString("attendanceTime") ?: getString("checkInTime") ?: getString("time")
+
+        val parsedDate = try {
+            if (dateStr != null) {
+                LocalDate.parse(dateStr)
+            } else {
+                val instant = Instant.ofEpochMilli(finalTimestamp)
+                LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).toLocalDate()
+            }
+        } catch (e: Exception) {
+            LocalDate.now()
+        }
+
+        val parsedTime = try {
+            if (timeStr != null) {
+                LocalDateTime.parse(timeStr)
+            } else {
+                val instant = Instant.ofEpochMilli(finalTimestamp)
+                LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+            }
+        } catch (e: Exception) {
+            null
+        }
 
         AttendanceRecordEntity(
             id = id,
-            schoolId = schoolId,
+            schoolId = getString("schoolId") ?: schoolId,
             studentId = getString("studentId") ?: getString("faceId") ?: "",
-            name = getString("name") ?: "Siswa",
-            accountEmail = getString("accountEmail") ?: getString("accountEmail") ?: getString("accountId") ?: "",
-            status = getString("status") ?: "Hadir",
-            attendanceDate = java.time.LocalDate.parse(dateStr),
-            attendanceTime = timeStr?.let { java.time.LocalDateTime.parse(it) },
+            name = getString("name") ?: getString("studentName") ?: "Siswa",
+            accountEmail = getString("accountEmail") ?: getString("accountId") ?: "unknown",
+            status = getString("status") ?: "H",
+            attendanceDate = parsedDate,
+            attendanceTime = parsedTime,
             classId = getString("classId"),
             className = getString("className"),
             isSynced = true,
-            timestamp = getTimestamp("createdAt")?.toDate()?.time ?: getLong("createdAt") ?: System.currentTimeMillis(),
+            timestamp = finalTimestamp,
         )
     } catch (e: Exception) {
+        android.util.Log.e("AttendanceEntity", "❌ Error parsing snapshot: ${e.message}")
         null
     }
 }

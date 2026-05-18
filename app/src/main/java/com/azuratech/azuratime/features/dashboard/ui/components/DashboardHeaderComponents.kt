@@ -54,7 +54,7 @@ fun DashboardSyncButton(isSyncing: Boolean, onSyncClick: () -> Unit) {
 
 /**
  * 👤 PROFILE HEADER
- * Displaying user identity and the active school workspace.
+ * Displaying account identity and the active school workspace.
  */
 @Composable
 fun ProfileHeader(

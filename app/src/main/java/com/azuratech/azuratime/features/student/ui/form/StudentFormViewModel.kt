@@ -28,6 +28,10 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
+/**
+ * 🚀 STUDENT FORM VIEW MODEL (v3.2.0-ai-native)
+ * Manages student registration and biometric enrollment.
+ */
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
