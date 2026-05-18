@@ -1,61 +1,79 @@
 package com.azuratech.azuratime.features.ai.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.BuildConfig
-import com.azuratech.azuratime.core.data.local.AppDatabase
+import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.features.ai.domain.repository.ZoharRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ZoharAssistantViewModel(application: Application) : AndroidViewModel(application) {
+/**
+ * 🤖 ZOHAR ASSISTANT VIEW MODEL (v3.2.0-ai-native)
+ * Integrated with ZoharRepository and strict MVI pattern.
+ */
+@HiltViewModel
+class ZoharAssistantViewModel @Inject constructor(
+    private val zoharRepository: ZoharRepository,
+    private val sessionManager: SessionManager,
+) : ViewModel() {
 
-    private val attendanceRecordDao by lazy { AppDatabase.Companion.getInstance(application).attendanceRecordDao() }
+    private val _uiStateFlow = MutableStateFlow(ZoharUiState())
+    val uiStateFlow: StateFlow<ZoharUiState> = _uiStateFlow.asStateFlow()
 
-    // 🔥 Added SessionManager to get schoolId
-    private val schoolId: String get() = SessionManager.Companion.getInstance(getApplication()).getActiveSchoolId() ?: ""
+    fun onEvent(event: ZoharUiEvent) {
+        when (event) {
+            is ZoharUiEvent.AskZohar -> handleAskZohar(event.query)
+            ZoharUiEvent.ClearChat -> handleClearChat()
+            ZoharUiEvent.Retry -> {
+                val lastQuery = _uiStateFlow.value.query
+                if (lastQuery.isNotBlank()) handleAskZohar(lastQuery)
+            }
+            ZoharUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
+        }
+    }
 
-    private val zoharBrain = ZoharBrain(apiKey = BuildConfig.GEMINI_API_KEY)
-
-    private val _zoharResponseFlow =
-        MutableStateFlow("Halo Brother! Zohar siap mengawal Azura Ecosystem. Ada yang bisa Zohar bantu? Joss Gandos!")
-    val zoharResponseFlow: StateFlow<String> = _zoharResponseFlow
-
-    private val _isLoadingFlow = MutableStateFlow(false)
-    val isLoadingFlow: StateFlow<Boolean> = _isLoadingFlow
-
-    fun askZohar(userQuestion: String) {
+    private fun handleAskZohar(userQuestion: String) {
         viewModelScope.launch {
-            _isLoadingFlow.value = true
+            _uiStateFlow.update {
+                it.copy(
+                    query = userQuestion,
+                    isLoading = true,
+                    error = null,
+                    conversationHistory = it.conversationHistory + ChatMessage(ChatRole.USER, userQuestion),
+                )
+            }
 
-            try {
-                // 🔥 FIXED: Passed schoolId to Zohar's memory fetch!
-                val recentLogs = attendanceRecordDao.getAllRecords(schoolId).first().take(10)
-                val contextData = if (recentLogs.isEmpty()) {
-                    "Belum ada data absensi."
-                } else {
-                    recentLogs.joinToString("\n") {
-                        "${it.name} status ${it.status} pada ${it.attendanceDate}"
+            val schoolId = sessionManager.getActiveSchoolId() ?: ""
+
+            zoharRepository.askZohar(userQuestion, schoolId)
+                .onSuccess { response ->
+                    _uiStateFlow.update {
+                        it.copy(
+                            response = response,
+                            isLoading = false,
+                            conversationHistory = it.conversationHistory + ChatMessage(ChatRole.ZOHAR, response),
+                        )
                     }
                 }
-
-                val fullPrompt = """
-                    Data Absensi Terbaru:
-                    $contextData
-                    
-                    Pertanyaan Owner:
-                    $userQuestion
-                """.trimIndent()
-
-                _zoharResponseFlow.value = zoharBrain.think(fullPrompt)
-            } catch (e: Exception) {
-                _zoharResponseFlow.value = "Zohar mengalami gangguan koneksi: ${e.message}"
-            } finally {
-                _isLoadingFlow.value = false
-            }
+                .onFailure { error ->
+                    _uiStateFlow.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Zohar mengalami gangguan koneksi: ${error.message}",
+                        )
+                    }
+                }
         }
+    }
+
+    private fun handleClearChat() {
+        _uiStateFlow.value = ZoharUiState()
     }
 }

@@ -10,7 +10,7 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuraengine.result.Result as DomainResult
-import com.azuratech.azuratime.core.data.repo.SecurityRepository
+import com.azuratech.azuratime.core.domain.repository.SecurityRepository
 import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -122,14 +122,19 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun clearAllDataAndSignOut() = withContext(Dispatchers.IO) {
-        database.clearAllTables()
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(application.getString(R.string.my_web_client_id))
-            .requestEmail()
-            .build()
-        GoogleSignIn.getClient(application, gso).signOut().await()
-        sessionManager.clearSession()
-        firebaseAuth.signOut()
+    override suspend fun clearAllDataAndSignOut(): DomainResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            database.clearAllTables()
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(application.getString(R.string.my_web_client_id))
+                .requestEmail()
+                .build()
+            GoogleSignIn.getClient(application, gso).signOut().await()
+            sessionManager.clearSession()
+            firebaseAuth.signOut()
+            DomainResult.Success(Unit)
+        } catch (e: Exception) {
+            DomainResult.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule(e.message))
+        }
     }
 }

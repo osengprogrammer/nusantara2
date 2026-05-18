@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -38,12 +39,18 @@ class BiometricEnrollmentViewModel @Inject constructor(
 
     val enrollmentListFlow: StateFlow<List<BiometricEnrollmentProfile>> =
         biometricRepository.observeEnrollments()
+            .map { result: com.azuratech.azuraengine.result.Result<List<BiometricEnrollmentProfile>> ->
+                result.getOrNull() ?: emptyList()
+            }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val studentRosterFlow: StateFlow<List<com.azuratech.azuratime.core.data.local.StudentBiometricDetails>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> biometricRepository.getStudentsWithDetailsFlow(schoolId) }
+        .map { result: com.azuratech.azuraengine.result.Result<List<com.azuratech.azuratime.core.data.local.StudentBiometricDetails>> ->
+            result.getOrNull() ?: emptyList()
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -54,6 +61,9 @@ class BiometricEnrollmentViewModel @Inject constructor(
     val enrolledStudentFlow: StateFlow<List<com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> biometricRepository.getEnrolledStudentsFlow(schoolId) }
+        .map { result: com.azuratech.azuraengine.result.Result<List<com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity>> ->
+            result.getOrNull() ?: emptyList()
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -138,6 +148,9 @@ class BiometricEnrollmentViewModel @Inject constructor(
 
     fun getStudentsInClassFlow(classId: String): kotlinx.coroutines.flow.Flow<List<com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity>> =
         biometricRepository.getStudentsInClassFlow(classId, sessionManager.getActiveSchoolId() ?: "")
+            .map { result: com.azuratech.azuraengine.result.Result<List<com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity>> ->
+                result.getOrNull() ?: emptyList()
+            }
 
     fun updateStudentClass(studentId: String, classId: String?) {
         viewModelScope.launch {

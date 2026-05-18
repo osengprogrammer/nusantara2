@@ -54,8 +54,10 @@ class SchoolRepositoryImpl @Inject constructor(
                 emit(Result.Failure(AppError.LocalDB(e.message)))
             }
 
-    override fun observeSchoolById(id: String): Flow<School?> =
-        dao.observeSchoolById(id).map { it?.toDomain() }
+    override fun observeSchoolById(id: String): Flow<Result<School?>> =
+        dao.observeSchoolById(id)
+            .map { Result.Success(it?.toDomain()) as Result<School?> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
 
     override fun observeAllSchools(): Flow<Result<List<School>>> =
         dao.observeAllSchools()
@@ -144,19 +146,24 @@ class SchoolRepositoryImpl @Inject constructor(
         Result.Failure(AppError.LocalDB(e.message))
     }
 
-    override suspend fun saveSchoolLocally(school: School) {
-        dao.upsertSchool(
-            SchoolEntity(
-                id = school.id,
-                accountId = school.accountId,
-                name = school.name,
-                timezone = school.timezone,
-                status = school.status,
-                createdAt = school.createdAt,
-                updatedAt = System.currentTimeMillis(),
-                syncStatus = SyncStatus.SYNCED.name,
-            ),
-        )
+    override suspend fun saveSchoolLocally(school: School): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            dao.upsertSchool(
+                SchoolEntity(
+                    id = school.id,
+                    accountId = school.accountId,
+                    name = school.name,
+                    timezone = school.timezone,
+                    status = school.status,
+                    createdAt = school.createdAt,
+                    updatedAt = System.currentTimeMillis(),
+                    syncStatus = SyncStatus.SYNCED.name,
+                ),
+            )
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
     }
 
     override suspend fun getSchoolById(id: String): Result<School> = try {
@@ -341,13 +348,19 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveClassLocally(classEntity: ClassEntity) {
-        dao.upsertClass(classEntity)
+    override suspend fun saveClassLocally(classEntity: ClassEntity): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            dao.upsertClass(classEntity)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
     }
 
-    override fun getLocalClasses(schoolId: String): Flow<List<ClassEntity>> {
-        return dao.getClasses(schoolId)
-    }
+    override fun getLocalClasses(schoolId: String): Flow<Result<List<ClassEntity>>> =
+        dao.getClasses(schoolId)
+            .map { Result.Success(it) as Result<List<ClassEntity>> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
 
     override fun observeAllClassesForAccount(accountId: String): Flow<Result<List<ClassModel>>> =
         dao.getAllClasses(accountId).map { entities ->
@@ -370,9 +383,14 @@ class SchoolRepositoryImpl @Inject constructor(
         Result.Failure(AppError.LocalDB(e.message))
     }
 
-    override suspend fun updateClassSchool(classId: String, schoolId: String) {
-        dao.updateClassSchool(classId, schoolId)
-        dao.assignClass(SchoolClassAssignment(schoolId, classId))
+    override suspend fun updateClassSchool(classId: String, schoolId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            dao.updateClassSchool(classId, schoolId)
+            dao.assignClass(SchoolClassAssignment(schoolId, classId))
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
     }
 
     override suspend fun approveSchool(schoolId: String): Result<Unit> = try {

@@ -6,9 +6,8 @@ import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 import kotlinx.coroutines.flow.Flow
 
 interface AccountRepository {
-    fun getAccountDao(): com.azuratech.azuratime.features.account.data.local.AccountDao
     suspend fun getAccountById(id: String): Result<AccountEntity>
-    fun observeAccountEntity(id: String): Flow<AccountEntity?>
+    fun observeAccountEntity(id: String): Flow<Result<AccountEntity?>>
     suspend fun getProfile(accountId: String): Result<AccountProfile>
     suspend fun updateDisplayName(accountId: String, newName: String): Result<Unit>
     suspend fun updatePhoto(accountId: String, photoUrl: String): Result<Unit>

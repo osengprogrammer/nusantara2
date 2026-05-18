@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.attendance.data.repo.BiometricScannerRepository
+import com.azuratech.azuratime.features.attendance.domain.repository.BiometricScannerRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
@@ -160,13 +160,15 @@ class AttendanceCaptureViewModel @Inject constructor(
             return
         }
 
-        val studentBiometric = attendanceRepository.getStudentBiometricById(scannedId, schoolId)
+        val biometricResult = attendanceRepository.getStudentBiometricById(scannedId, schoolId)
+        val studentBiometric = (biometricResult as? Result.Success)?.data
         if (studentBiometric == null) {
             handleUnregistered()
             return
         }
 
-        val studentClassIds = attendanceRepository.getClassIdsForStudent(scannedId, schoolId).firstOrNull() ?: emptyList()
+        val classIdsResult = attendanceRepository.getClassIdsForStudent(scannedId, schoolId).firstOrNull() ?: Result.Success(emptyList())
+        val studentClassIds = if (classIdsResult is Result.Success) classIdsResult.data else emptyList()
 
         val params = ProcessAttendanceParams(
             studentId = scannedId,

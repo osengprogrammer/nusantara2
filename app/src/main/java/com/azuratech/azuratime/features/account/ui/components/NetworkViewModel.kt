@@ -2,95 +2,59 @@ package com.azuratech.azuratime.features.account.ui.components
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// 🚥 Status UI untuk Jaringan Pertemanan
-sealed class NetworkState {
-    object Idle : NetworkState()
-    object Loading : NetworkState()
-    data class Success(val message: String) : NetworkState()
-    data class Error(val message: String) : NetworkState()
-    data class UserFound(val targetAccount: AccountEntity) : NetworkState()
-}
-
+/**
+ * 🚥 NETWORK VIEW MODEL (v3.2.0-ai-native)
+ * Strict MVI implementation for account discovery and connections.
+ */
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
 ) : ViewModel() {
 
-    private val _uiStateFlow = MutableStateFlow<NetworkState>(NetworkState.Idle)
-    val uiStateFlow: StateFlow<NetworkState> = _uiStateFlow.asStateFlow()
+    private val _uiStateFlow = MutableStateFlow(NetworkUiState())
+    val uiStateFlow: StateFlow<NetworkUiState> = _uiStateFlow.asStateFlow()
 
-    fun resetState() {
-        _uiStateFlow.value = NetworkState.Idle
+    fun onEvent(event: NetworkUiEvent) {
+        when (event) {
+            is NetworkUiEvent.SearchByEmail -> handleSearchByEmail(event.email)
+            is NetworkUiEvent.SendFriendRequest -> handleSendFriendRequest(event.targetEmail)
+            NetworkUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
+            NetworkUiEvent.NavigateBack -> { /* Handled by screen navigation */ }
+        }
     }
 
-    // =====================================================
-    // 🔍 1. MANTRA PENCARI TEMAN (Search)
-    // =====================================================
-    fun searchAccountByEmail(email: String) {
+    private fun handleSearchByEmail(email: String) {
         if (email.isBlank()) {
-            _uiStateFlow.value = NetworkState.Error("Email tidak boleh kosong, Dulur.")
+            _uiStateFlow.update { it.copy(error = "Email tidak boleh kosong, Dulur.") }
             return
         }
 
         viewModelScope.launch {
-            _uiStateFlow.value = NetworkState.Loading
-            // searchAccountByEmail needs to be implemented in AccountRepository if used
-            // For now using accountRepository placeholder
-            _uiStateFlow.value = NetworkState.Error("Waduh, guru dengan email $email tidak ditemukan.")
-        }
-    }
-
-    // =====================================================
-    // 📨 2. MANTRA KIRIM UNDANGAN (Add Friend)
-    // =====================================================
-    fun sendFriendRequest(myId: String, myName: String, myEmail: String, targetEmail: String) {
-        viewModelScope.launch {
-            _uiStateFlow.value = NetworkState.Loading
-            try {
-                // Placeholder
-                _uiStateFlow.value = NetworkState.Success("Undangan seduluran berhasil dikirim ke $targetEmail!")
-            } catch (e: Exception) {
-                _uiStateFlow.value = NetworkState.Error("Error jaringan: ${e.message}")
+            _uiStateFlow.update { it.copy(isLoading = true, error = null, searchQuery = email) }
+            // Placeholder: implementation needed in AccountRepository
+            _uiStateFlow.update {
+                it.copy(
+                    isLoading = false,
+                    error = "Waduh, guru dengan email $email tidak ditemukan.",
+                )
             }
         }
     }
 
-    // =====================================================
-    // 🤝 3. MANTRA TERIMA UNDANGAN (Accept)
-    // =====================================================
-    fun acceptFriendRequest(myId: String, friendId: String) {
+    private fun handleSendFriendRequest(targetEmail: String) {
         viewModelScope.launch {
-            _uiStateFlow.value = NetworkState.Loading
-            try {
-                // Placeholder
-                _uiStateFlow.value = NetworkState.Success("Mantap! Kalian sekarang resmi Seduluran.")
-            } catch (e: Exception) {
-                _uiStateFlow.value = NetworkState.Error("Gagal menerima pertemanan: ${e.message}")
-            }
-        }
-    }
-
-    // =====================================================
-    // 🙅 4. MANTRA TOLAK UNDANGAN (Reject/Cancel)
-    // =====================================================
-    fun rejectFriendRequest(myId: String, friendId: String) {
-        viewModelScope.launch {
-            _uiStateFlow.value = NetworkState.Loading
-            try {
-                // Placeholder
-                _uiStateFlow.value = NetworkState.Success("Permintaan dibatalkan/ditolak.")
-            } catch (e: Exception) {
-                _uiStateFlow.value = NetworkState.Error("Gagal menolak pertemanan: ${e.message}")
-            }
+            _uiStateFlow.update { it.copy(isSendingRequest = true) }
+            // Placeholder
+            _uiStateFlow.update { it.copy(isSendingRequest = false) }
         }
     }
 }

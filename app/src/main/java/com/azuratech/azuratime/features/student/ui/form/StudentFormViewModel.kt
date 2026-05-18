@@ -164,24 +164,32 @@ class StudentFormViewModel @Inject constructor(
     fun loadStudentForEdit(studentId: String) {
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            biometricRepository.getStudentWithDetails(studentId, schoolId)?.let { details ->
-                _uiStateFlow.update {
-                    it.copy(
-                        profile = StudentProfile(
-                            studentId = details.biometric.studentId,
-                            name = details.biometric.name,
-                            schoolId = schoolId,
-                            classIds = listOfNotNull(details.classId),
-                            faceId = details.biometric.studentId,
-                            embedding = details.biometric.embedding,
-                            photoUrl = details.biometric.photoUrl,
-                        ),
-                        isEditMode = true,
-                        pageTitle = "Edit Profil Siswa",
-                    )
+            when (val result = biometricRepository.getStudentWithDetails(studentId, schoolId)) {
+                is Result.Success -> {
+                    result.data?.let { details ->
+                        _uiStateFlow.update {
+                            it.copy(
+                                profile = StudentProfile(
+                                    studentId = details.biometric.studentId,
+                                    name = details.biometric.name,
+                                    schoolId = schoolId,
+                                    classIds = listOfNotNull(details.classId),
+                                    faceId = details.biometric.studentId,
+                                    embedding = details.biometric.embedding,
+                                    photoUrl = details.biometric.photoUrl,
+                                ),
+                                isEditMode = true,
+                                pageTitle = "Edit Profil Siswa",
+                            )
+                        }
+                    } ?: run {
+                        _uiStateFlow.update { it.copy(error = "Siswa tidak ditemukan") }
+                    }
                 }
-            } ?: run {
-                _uiStateFlow.update { it.copy(error = "Gagal memuat data siswa") }
+                is Result.Failure -> {
+                    _uiStateFlow.update { it.copy(error = result.error.message) }
+                }
+                else -> {}
             }
         }
     }

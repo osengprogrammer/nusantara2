@@ -176,11 +176,6 @@ class SchoolWorkspaceRepositoryImpl @Inject constructor(
 
     override suspend fun requestToJoinWorkspace(accountId: String, schoolId: String, schoolName: String): Result<Unit> =
         withContext(Dispatchers.IO) {
-            try {
-                accessRequestRepository.submitRequest(accountId, schoolId, schoolName)
-                Result.Success(Unit)
-            } catch (e: Exception) {
-                Result.Failure(AppError.Network(e.message))
-            }
+            accessRequestRepository.submitRequest(accountId, schoolId, schoolName)
         }
 }

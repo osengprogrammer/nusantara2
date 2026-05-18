@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.catch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -77,8 +78,10 @@ class StudentRegistrationRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun processCsv(uri: String, dataType: String): Flow<com.azuratech.azuraengine.model.ProcessResult> = flow {
-        emit(com.azuratech.azuraengine.model.ProcessResult("CSV", "Import", "Started", dataType, "Importing..."))
-        emit(com.azuratech.azuraengine.model.ProcessResult("CSV", "Import", "Success", dataType, "Import complete"))
+    override fun processCsv(uri: String, dataType: String): Flow<Result<com.azuratech.azuraengine.model.ProcessResult>> = flow<Result<com.azuratech.azuraengine.model.ProcessResult>> {
+        emit(Result.Success(com.azuratech.azuraengine.model.ProcessResult("CSV", "Import", "Started", dataType, "Importing...")))
+        emit(Result.Success(com.azuratech.azuraengine.model.ProcessResult("CSV", "Import", "Success", dataType, "Import complete")))
+    }.catch { e ->
+        emit(Result.Failure(AppError.BusinessRule(e.message)))
     }
 }

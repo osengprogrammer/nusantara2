@@ -11,6 +11,8 @@ import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfil
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -67,16 +69,21 @@ class AccessRequestRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeRequestsByAccount(accountId: String): Flow<List<AccessRequestEntity>> {
+    override fun observeRequestsByAccount(accountId: String): Flow<Result<List<AccessRequestEntity>>> {
         return accessRequestDao.observeRequestsByAccount(accountId)
+            .map { Result.Success(it) as Result<List<AccessRequestEntity>> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
     }
 
-    override suspend fun getPendingRequests(schoolId: String): List<AccessRequestProfile> {
-        // Basic implementation, can be refined
-        return emptyList()
+    override suspend fun getPendingRequests(schoolId: String): Result<List<AccessRequestProfile>> {
+        return try {
+            Result.Success(emptyList())
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
     }
 
-    override suspend fun approveRequest(requestId: String): Boolean {
+    override suspend fun approveRequest(requestId: String): Result<Unit> {
         return try {
             val request = accessRequestDao.getRequestById(requestId)
             if (request != null) {
@@ -88,16 +95,16 @@ class AccessRequestRepositoryImpl @Inject constructor(
                     ),
                 )
                 syncManager.enqueueAccessSync(request.accountId)
-                true
+                Result.Success(Unit)
             } else {
-                false
+                Result.Failure(AppError.BusinessRule("Request not found"))
             }
         } catch (e: Exception) {
-            false
+            Result.Failure(AppError.LocalDB(e.message))
         }
     }
 
-    override suspend fun rejectRequest(requestId: String, reason: String): Boolean {
+    override suspend fun rejectRequest(requestId: String, reason: String): Result<Unit> {
         return try {
             val request = accessRequestDao.getRequestById(requestId)
             if (request != null) {
@@ -109,12 +116,12 @@ class AccessRequestRepositoryImpl @Inject constructor(
                     ),
                 )
                 syncManager.enqueueAccessSync(request.accountId)
-                true
+                Result.Success(Unit)
             } else {
-                false
+                Result.Failure(AppError.BusinessRule("Request not found"))
             }
         } catch (e: Exception) {
-            false
+            Result.Failure(AppError.LocalDB(e.message))
         }
     }
 }

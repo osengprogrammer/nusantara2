@@ -11,9 +11,11 @@ import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAtte
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.features.reporting.domain.repository.AuditLogRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
@@ -26,7 +28,7 @@ class AttendanceRepositoryImpl @Inject constructor(
     private val remoteDataSource: AttendanceRemoteDataSource,
     private val syncManager: com.azuratech.azuratime.core.sync.SyncManager,
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
-    private val auditLogRepository: com.azuratech.azuratime.features.reporting.data.repo.AuditLogRepository,
+    private val auditLogRepository: AuditLogRepository,
 ) : AttendanceRepository {
 
     private val attendanceRecordDao = database.attendanceRecordDao()
@@ -42,7 +44,7 @@ class AttendanceRepositoryImpl @Inject constructor(
         classId: String?,
         assignedIds: List<String>,
         schoolId: String,
-    ): Flow<List<AttendanceRecordEntity>> {
+    ): Flow<Result<List<AttendanceRecordEntity>>> {
         return localDataSource.getFilteredRecords(
             name,
             startDate,
@@ -51,7 +53,8 @@ class AttendanceRepositoryImpl @Inject constructor(
             classId,
             assignedIds,
             schoolId,
-        )
+        ).map { Result.Success(it) as Result<List<AttendanceRecordEntity>> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
     }
 
     override suspend fun saveRecord(record: AttendanceRecord): Result<Unit> {
@@ -99,7 +102,7 @@ class AttendanceRepositoryImpl @Inject constructor(
 
             auditLogRepository.logAction(
                 schoolId = schoolId,
-                accountId = sessionManager.getAccountEmail(), // This might need renaming to getAccountEmail() later
+                accountId = sessionManager.getAccountEmail() ?: "unknown",
                 action = "UPDATE_ATTENDANCE",
                 details = "Changed status for ${record.name} to ${status.name}",
             )
@@ -147,32 +150,50 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Int> {
+    override fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Result<Int>> {
         return attendanceRecordDao.getTodayPresentCount(date, schoolId)
+            .map { Result.Success(it) as Result<Int> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
     }
 
-    override fun getUnassignedStudentCount(schoolId: String): Flow<Int> {
+    override fun getUnassignedStudentCount(schoolId: String): Flow<Result<Int>> {
         return assignmentDao.getUnassignedStudentCount(schoolId)
+            .map { Result.Success(it) as Result<Int> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
     }
 
-    override fun getStudentsByClass(classId: String, schoolId: String): Flow<List<StudentBiometricEntity>> {
+    override fun getStudentsByClass(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>> {
         return assignmentDao.getStudentsByClass(classId, schoolId)
+            .map { Result.Success(it) as Result<List<StudentBiometricEntity>> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
     }
 
-    override fun getStudentCountInClass(classId: String, schoolId: String): Flow<Int> {
+    override fun getStudentCountInClass(classId: String, schoolId: String): Flow<Result<Int>> {
         return assignmentDao.getStudentCountInClass(classId, schoolId)
+            .map { Result.Success(it) as Result<Int> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
     }
 
-    override fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<List<String>> {
+    override fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<Result<List<String>>> {
         return assignmentDao.getClassIdsForStudent(studentId, schoolId)
+            .map { Result.Success(it) as Result<List<String>> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
     }
 
-    override suspend fun getStudentBiometricById(studentId: String, schoolId: String): StudentBiometricEntity? {
-        return biometricDao.getStudentBiometricById(studentId, schoolId)
+    override suspend fun getStudentBiometricById(studentId: String, schoolId: String): Result<StudentBiometricEntity?> {
+        return try {
+            Result.Success(biometricDao.getStudentBiometricById(studentId, schoolId))
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
     }
 
-    override suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecord> {
-        return localDataSource.getUnsyncedRecords(schoolId).map { it.toDomain() }
+    override suspend fun getUnsyncedRecords(schoolId: String): Result<List<AttendanceRecord>> {
+        return try {
+            Result.Success(localDataSource.getUnsyncedRecords(schoolId).map { it.toDomain() })
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
     }
 
     override suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecord>> {
@@ -190,12 +211,14 @@ class AttendanceRepositoryImpl @Inject constructor(
 
         // 1. PUSH PHASE: Upload local changes to cloud
         try {
-            val unsyncedRecords = getUnsyncedRecords(schoolId)
-            for (record in unsyncedRecords) {
-                val syncRes = syncRecord(record)
-                if (syncRes is Result.Failure) {
-                    if (syncRes.error is AppError.Network) {
-                        return@withContext Result.Failure(syncRes.error)
+            val unsyncedResult = getUnsyncedRecords(schoolId)
+            if (unsyncedResult is Result.Success) {
+                for (record in unsyncedResult.data) {
+                    val syncRes = syncRecord(record)
+                    if (syncRes is Result.Failure) {
+                        if (syncRes.error is AppError.Network) {
+                            return@withContext Result.Failure(syncRes.error)
+                        }
                     }
                 }
             }

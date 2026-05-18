@@ -3,9 +3,10 @@ package com.azuratech.azuratime.features.reporting.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.reporting.data.repo.ExportRepository
-import com.azuratech.azuratime.features.reporting.data.repo.ReportRepository
+import com.azuratech.azuratime.features.reporting.domain.repository.ExportRepository
+import com.azuratech.azuratime.features.reporting.domain.repository.ReportRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,8 +49,10 @@ class ReportViewModel @Inject constructor(
                 .flatMapLatest { accountId ->
                     exportRepository.observeExportJobs(accountId)
                 }
-                .collect { jobs ->
-                    _uiStateFlow.update { it.copy(exportJobs = jobs) }
+                .collect { result ->
+                    result.onSuccess { jobs ->
+                        _uiStateFlow.update { it.copy(exportJobs = jobs) }
+                    }
                 }
         }
     }

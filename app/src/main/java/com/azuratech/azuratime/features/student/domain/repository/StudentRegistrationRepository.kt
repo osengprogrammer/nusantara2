@@ -13,5 +13,5 @@ interface StudentRegistrationRepository {
     suspend fun getClassByName(name: String): Result<ClassEntity?>
     suspend fun insertClass(classEntity: ClassEntity): Result<Unit>
     suspend fun insertAssignment(assignment: StudentClassAssignmentEntity): Result<Unit>
-    fun processCsv(uri: String, dataType: String): Flow<com.azuratech.azuraengine.model.ProcessResult>
+    fun processCsv(uri: String, dataType: String): Flow<Result<com.azuratech.azuraengine.model.ProcessResult>>
 }

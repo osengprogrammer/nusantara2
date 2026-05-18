@@ -3,7 +3,7 @@ package com.azuratech.azuratime.core.boot
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuratime.core.data.repo.BootRepository
+import com.azuratech.azuratime.core.domain.repository.BootRepository
 import dagger.hilt.android.lifecycle.HiltViewModel // 🔥 Tambahan Import
 import javax.inject.Inject // 🔥 Tambahan Import
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,10 +36,10 @@ class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
             withContext(Dispatchers.IO) {
                 try {
                     delay(600) // Jeda untuk stabilitas pembacaan enkripsi
-                    val currentAccount = repository.getCurrentAccount()
+                    val accountResult = repository.getCurrentAccount()
 
                     withContext(Dispatchers.Main) {
-                        val isLoggedIn = currentAccount != null
+                        val isLoggedIn = accountResult is com.azuratech.azuraengine.result.Result.Success && accountResult.data != null
 
                         if (!isLoggedIn) {
                             _stateFlow.value = BootState.NeedLogin

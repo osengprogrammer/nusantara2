@@ -77,9 +77,15 @@ class AttendanceViewModel @Inject constructor(
                 classId = classId,
                 assignedIds = emptyList(),
                 schoolId = schoolId,
-            ).map { entities -> entities.map { it.toDomain() } }
-        }.onEach { records ->
-            _uiStateFlow.update { it.copy(isLoading = false, records = records) }
+            ).map { result ->
+                result.map { entities -> entities.map { it.toDomain() } }
+            }
+        }.onEach { result ->
+            result.onSuccess { records ->
+                _uiStateFlow.update { it.copy(isLoading = false, records = records) }
+            }.onFailure { error ->
+                _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+            }
         }.launchIn(viewModelScope)
     }
 

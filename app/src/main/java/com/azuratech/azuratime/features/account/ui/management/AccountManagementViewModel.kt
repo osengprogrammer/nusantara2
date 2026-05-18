@@ -45,8 +45,10 @@ class AccountManagementViewModel @Inject constructor(
         sessionManager.currentAccountIdFlow
             .filterNotNull()
             .flatMapLatest { uid -> repository.observeAccountEntity(uid) }
-            .onEach { entity ->
-                _uiStateFlow.update { it.copy(accountProfile = entity?.toProfile(), activeClassId = entity?.activeClassId) }
+            .onEach { result ->
+                result.onSuccess { entity ->
+                    _uiStateFlow.update { it.copy(accountProfile = entity?.toProfile(), activeClassId = entity?.activeClassId) }
+                }
             }
             .launchIn(viewModelScope)
 
@@ -75,7 +77,7 @@ class AccountManagementViewModel @Inject constructor(
         sessionManager.activeSchoolIdFlow
             .filterNotNull()
             .flatMapLatest { schoolId ->
-                repository.getAccountDao().observeAllAccounts().map { accounts ->
+                database.accountDao().observeAllAccounts().map { accounts ->
                     accounts.filter { it.memberships.containsKey(schoolId) }
                 }
             }
@@ -147,7 +149,7 @@ class AccountManagementViewModel @Inject constructor(
         viewModelScope.launch {
             repository.getAccountById(uid).onSuccess { account ->
                 val updated = account.copy(activeClassId = classId)
-                repository.getAccountDao().updateAccount(updated)
+                database.accountDao().updateAccount(updated)
                 repository.pushAccount(uid)
             }
         }

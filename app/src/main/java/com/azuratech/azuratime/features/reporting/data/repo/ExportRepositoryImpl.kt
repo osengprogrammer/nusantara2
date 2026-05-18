@@ -5,23 +5,25 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.reporting.data.local.ExportJobEntity
 import com.azuratech.azuratime.features.reporting.domain.model.ExportJobProfile
+import com.azuratech.azuratime.features.reporting.domain.repository.ExportRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ExportRepository @Inject constructor(
+class ExportRepositoryImpl @Inject constructor(
     private val database: AppDatabase,
-) {
+) : ExportRepository {
     private val exportJobDao = database.exportJobDao()
 
-    fun observeExportJobs(accountId: String): Flow<List<ExportJobProfile>> {
+    override fun observeExportJobs(accountId: String): Flow<Result<List<ExportJobProfile>>> {
         return exportJobDao.observeExportJobsByAccount(accountId).map { entities ->
-            entities.map { entity ->
+            val profiles = entities.map { entity ->
                 ExportJobProfile(
                     jobId = entity.jobId,
                     fileType = entity.fileType,
@@ -34,10 +36,11 @@ class ExportRepository @Inject constructor(
                     },
                 )
             }
-        }
+            Result.Success(profiles) as Result<List<ExportJobProfile>>
+        }.catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
     }
 
-    suspend fun startExport(format: String, accountId: String, schoolId: String): Result<String> = withContext(Dispatchers.IO) {
+    override suspend fun startExport(format: String, accountId: String, schoolId: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             val jobId = UUID.randomUUID().toString()
             val job = ExportJobEntity(
@@ -55,7 +58,12 @@ class ExportRepository @Inject constructor(
         }
     }
 
-    suspend fun clearCompletedJobs(accountId: String) {
-        exportJobDao.clearCompletedJobs(accountId)
+    override suspend fun clearCompletedJobs(accountId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            exportJobDao.clearCompletedJobs(accountId)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
     }
 }

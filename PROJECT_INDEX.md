@@ -6,7 +6,7 @@
 |------|---------|---------------|-------------|
 | `AccountClassAccessEntity.kt` | `core.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 | `AccessRequestEntity.kt` | `features.account.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `AccountEntity.kt` | `features.account.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `AccountEntity.kt" | `features.account.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 | `AttendanceConflictEntity.kt` | `features.attendance.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 | `AttendanceRecordEntity.kt` | `features.attendance.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 | `StudentBiometricEntity.kt` | `features.biometric.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
@@ -41,7 +41,7 @@
 | `DailyDetailViewModel.kt` | `features.reporting.ui.daily` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `ExportViewModel.kt` | `features.reporting.ui.export` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `DataIntegrityViewModel.kt` | `features.reporting.ui.integrity` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `AttendanceMatrixViewModel.kt` | `features.reporting.ui.matrix` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `AttendanceMatrixViewModel.kt" | `features.reporting.ui.matrix` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `ReportViewModel.kt` | `features.reporting.ui` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `PendingSchoolsViewModel.kt` | `features.school.ui.admin` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `ClassViewModel.kt` | `features.school.ui.classes` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
@@ -57,26 +57,25 @@
 ## 🏰 Repositories
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
-| `BootRepository.kt` | `core.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `MainRepository.kt` | `core.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `SecurityRepository.kt` | `core.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `SyncRepository.kt` | `core.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `AccountRepository.kt` | `features.account.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `AdminRepository.kt` | `features.account.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `MembershipRepository.kt` | `features.account.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `SchoolWorkspaceRepository.kt` | `features.account.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `BootRepository.kt` | `core.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `MainRepository.kt` | `core.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `SecurityRepository.kt` | `core.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `SyncRepository.kt` | `core.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `AccountRepository.kt` | `features.account.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `MembershipRepository.kt` | `features.account.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `SchoolWorkspaceRepository.kt` | `features.account.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `AccessRequestRepository.kt` | `features.account.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `ZoharRepository.kt` | `features.ai.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `BiometricScannerRepository.kt` | `features.attendance.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `BiometricScannerRepository.kt` | `features.attendance.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `AttendanceRepository.kt` | `features.attendance.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `AuthRepository.kt` | `features.auth.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `AuthRepository.kt` | `features.auth.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `StudentBiometricRepository.kt` | `features.biometric.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `AuditLogRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `DataIntegrityRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `ExportRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `ReportRepository.kt` | `features.reporting.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
-| `SchoolRepository.kt` | `features.school.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
-| `StudentRegistrationRepository.kt` | `features.student.data.repo` | Mediates between ViewModel and data sources; enforces local-first logic | ⚠️ Legacy |
+| `SchoolRepository.kt` | `features.school.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
+| `StudentRegistrationRepository.kt` | `features.student.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 | `StudentRepository.kt` | `features.student.domain.repository` | Mediates between ViewModel and data sources; enforces local-first logic | ✅ Migrated |
 
 ## 🧩 Managers
@@ -95,13 +94,13 @@
 | `AuthProfile.kt` | `features.auth.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
 | `BiometricEnrollmentProfile.kt` | `features.biometric.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
 | `ExportJobProfile.kt` | `features.reporting.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
-| `StudentProfile.kt` | `features.student.domain.model` | Domain model for UI; decouples presentation from persistence | ⚠️ Legacy |
+| `StudentProfile.kt` | `features.student.domain.model` | Domain model for UI; decouples presentation from persistence | ✅ Migrated |
 
 ## ⚙️ Workers
 | File | Package | Responsibility | SSOT Status |
 |------|---------|---------------|-------------|
 | `AccessSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
-| `ProfileSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
+| `ProfileSyncWorker.kt" | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
 | `SchoolSyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
 | `SyncWorker.kt` | `core.sync` | Background job logic; handles sync, retry, WorkManager integration | ✅ Migrated |
 
@@ -140,7 +139,7 @@
 | `BulkRegistrationScreen.kt` | `features.student.ui.bulk` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `AddStudentScreen.kt` | `features.student.ui.form` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `EditStudentScreen.kt` | `features.student.ui.form` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
-| `RegistrationMenuScreen.kt` | `features.student.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `RegistrationMenuScreen.kt" | `features.student.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `StudentRosterBarcodeScreen.kt` | `features.student.ui.roster` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `StudentRosterScreen.kt` | `features.student.ui.roster` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 
@@ -161,4 +160,3 @@
 | `SchoolClassDao.kt` | `features.school.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
 | `SchoolDao.kt` | `features.school.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
 | `StudentDao.kt` | `features.student.data.local` | Room database access layer; defines SQL queries | ✅ Migrated |
-

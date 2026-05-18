@@ -31,9 +31,9 @@ class StudentBiometricRepositoryImpl @Inject constructor(
 
     // --- BiometricRepository Interface Implementation ---
 
-    override fun observeEnrollments(): Flow<List<BiometricEnrollmentProfile>> =
+    override fun observeEnrollments(): Flow<Result<List<BiometricEnrollmentProfile>>> =
         localDataSource.getAllStudentsFlow(schoolId).map { entities ->
-            entities.map { it.toProfile() }
+            Result.Success(entities.map { it.toProfile() })
         }
 
     override suspend fun enrollStudent(studentId: String, embedding: FloatArray): Result<Unit> {
@@ -106,16 +106,53 @@ class StudentBiometricRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAllStudentsFlow(schoolId: String) = localDataSource.getAllStudentsFlow(schoolId)
-    override fun getEnrolledStudentsFlow(schoolId: String) = localDataSource.getAllStudentsForScanningFlow(schoolId)
-    override fun getStudentsInClassFlow(classId: String, schoolId: String) = localDataSource.getStudentsInClassFlow(classId, schoolId)
-    override fun getStudentsWithDetailsFlow(schoolId: String) = localDataSource.getAllStudentsWithDetailsFlow(schoolId)
-    override fun getAllAssignmentsFlow(schoolId: String) = localDataSource.getAllAssignmentsFlow(schoolId)
-    override suspend fun getStudentWithDetails(studentId: String, schoolId: String) = localDataSource.getStudentWithDetails(studentId, schoolId)
-    override suspend fun getClassIdsForStudent(studentId: String, schoolId: String) = localDataSource.getClassIdsForStudent(studentId, schoolId)
-    override suspend fun deleteAssignmentsByStudent(studentId: String, schoolId: String) = localDataSource.deleteAssignmentsByStudent(studentId, schoolId)
-    override suspend fun insertAssignment(assignment: StudentClassAssignmentEntity) = localDataSource.insertAssignment(assignment)
-    override suspend fun upsertStudentBiometric(studentBiometric: StudentBiometricEntity) = localDataSource.upsertStudentFace(studentBiometric)
+    override fun getAllStudentsFlow(schoolId: String): Flow<Result<List<StudentBiometricEntity>>> =
+        localDataSource.getAllStudentsFlow(schoolId).map { Result.Success(it) }
+
+    override fun getEnrolledStudentsFlow(schoolId: String): Flow<Result<List<StudentBiometricEntity>>> =
+        localDataSource.getAllStudentsForScanningFlow(schoolId).map { Result.Success(it) }
+
+    override fun getStudentsInClassFlow(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>> =
+        localDataSource.getStudentsInClassFlow(classId, schoolId).map { Result.Success(it) }
+
+    override fun getStudentsWithDetailsFlow(schoolId: String): Flow<Result<List<com.azuratech.azuratime.core.data.local.StudentBiometricDetails>>> =
+        localDataSource.getAllStudentsWithDetailsFlow(schoolId).map { Result.Success(it) }
+
+    override fun getAllAssignmentsFlow(schoolId: String): Flow<Result<List<StudentClassAssignmentEntity>>> =
+        localDataSource.getAllAssignmentsFlow(schoolId).map { Result.Success(it) }
+
+    override suspend fun getStudentWithDetails(studentId: String, schoolId: String): Result<com.azuratech.azuratime.core.data.local.StudentBiometricDetails?> = try {
+        Result.Success(localDataSource.getStudentWithDetails(studentId, schoolId))
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
+
+    override suspend fun getClassIdsForStudent(studentId: String, schoolId: String): Result<List<String>> = try {
+        Result.Success(localDataSource.getClassIdsForStudent(studentId, schoolId))
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
+
+    override suspend fun deleteAssignmentsByStudent(studentId: String, schoolId: String): Result<Unit> = try {
+        localDataSource.deleteAssignmentsByStudent(studentId, schoolId)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
+
+    override suspend fun insertAssignment(assignment: StudentClassAssignmentEntity): Result<Unit> = try {
+        localDataSource.insertAssignment(assignment)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
+
+    override suspend fun upsertStudentBiometric(studentBiometric: StudentBiometricEntity): Result<Unit> = try {
+        localDataSource.upsertStudentFace(studentBiometric)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+    }
 
     override suspend fun assignStudentToClass(studentId: String, classId: String): Result<Unit> = try {
         localDataSource.insertAssignment(StudentClassAssignmentEntity(studentId, classId, schoolId))

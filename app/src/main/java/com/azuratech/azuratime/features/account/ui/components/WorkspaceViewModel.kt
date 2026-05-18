@@ -150,15 +150,14 @@ class WorkspaceViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Observe Access Requests for the current account (SSOT Stream)
-     */
     @OptIn(ExperimentalCoroutinesApi::class)
     val accessRequestsFlow: StateFlow<List<AccessRequestProfile>> =
         sessionManager.currentAccountIdFlow.filterNotNull()
             .flatMapLatest { accountId ->
                 accessRequestRepository.observeRequestsByAccount(accountId)
-                    .map { entities -> entities.map { it.toProfile() } }
+                    .map { result ->
+                        result.getOrNull()?.map { it.toProfile() } ?: emptyList()
+                    }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }
