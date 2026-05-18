@@ -1,4 +1,5 @@
 import {onDocumentUpdated, onDocumentCreated} from "firebase-functions/v2/firestore";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 
@@ -8,6 +9,11 @@ if (admin.apps.length === 0) {
 
 const SERVER_SECRET = "AZURA_ULTIMATE_PROTECTION_GUARD_2026_PROD";
 
+/**
+ * 👑 ON REGISTRATION APPROVED
+ * Triggered when a membership status is set to ACTIVE.
+ * Sets up whitelisted_accounts, main account, and school data.
+ */
 export const onregistrationapproved = onDocumentUpdated(
     "memberships/{uid}", 
     async (event) => {
@@ -36,7 +42,8 @@ export const onregistrationapproved = onDocumentUpdated(
         const expireDate = Date.now() + 365 * 24 * 60 * 60 * 1000;
 
         const batch = db.batch();
-        const whitelistRef = db.collection("whitelisted_users").doc(uid);
+        // 🔥 Unified Collection Name: whitelisted_accounts
+        const whitelistRef = db.collection("whitelisted_accounts").doc(uid);
         const accountRef = db.collection("accounts").doc(uid);
 
         batch.set(whitelistRef, {
@@ -69,10 +76,17 @@ export const onregistrationapproved = onDocumentUpdated(
 
         try {
             await batch.commit();
-        } catch (err) {}
+        } catch (err) {
+            console.error("❌ Batch commit failed:", err);
+        }
     }
 );
 
+/**
+ * 🔔 SEND PARENT NOTIFICATION
+ * Triggered when a new attendance record is pushed.
+ * Uses studentId (Unified Identity).
+ */
 export const sendparentnotification = onDocumentCreated(
     "attendance_logs/{logId}",
     async (event) => {
@@ -80,35 +94,107 @@ export const sendparentnotification = onDocumentCreated(
         if (!snap) return;
         const data = snap.data();
         const schoolId = data.schoolId;
-        const faceId = data.faceId;
+        // 🔥 Unified Identity: Handle studentId (new) and faceId (legacy)
+        const studentId = data.studentId || data.faceId;
         const studentName = data.name;
         const status = data.status; 
 
-        if (!schoolId || !faceId) return;
+        if (!schoolId || !studentId) {
+            console.log("⚠️ Missing schoolId or studentId, skipping notification.");
+            return;
+        }
 
         try {
-            const linksSnapshot = await admin.firestore().collection('schools').doc(schoolId).collection('parent_links').where('faceId', '==', faceId).where('status', '==', 'APPROVED').get();
-            if (linksSnapshot.empty) return;
+            // 🔥 Query parent_links using studentId
+            const linksSnapshot = await admin.firestore().collection('schools').doc(schoolId)
+                .collection('parent_links')
+                .where('studentId', '==', studentId)
+                .where('status', '==', 'APPROVED')
+                .get();
 
-            const promises: Promise<any>[] = [];
-            linksSnapshot.forEach(doc => {
-                const parentEmail = doc.data().parentEmail;
-                const p = admin.firestore().collection('parent_users').doc(parentEmail).get().then(parentDoc => {
-                    if (parentDoc.exists) {
-                        const fcmToken = parentDoc.data()?.fcmToken;
-                        if (fcmToken) {
-                            let statusText = "Hadir";
-                            if (status === "A" || status === "ALPA") statusText = "Alpa (Tanpa Keterangan)";
-                            else if (status === "S" || status === "SAKIT") statusText = "Sakit";
-                            else if (status === "I" || status === "IZIN") statusText = "Izin";
-                            return admin.messaging().send({ notification: { title: 'Azura Time: Info Kehadiran', body: `${studentName} telah melakukan presensi (${statusText}).` }, token: fcmToken });
-                        }
-                    }
-                    return null;
-                });
-                promises.push(p);
-            });
-            await Promise.all(promises);
-        } catch (error) {}
+            if (linksSnapshot.empty) {
+                // Fallback to legacy faceId if no links found with studentId
+                const legacySnapshot = await admin.firestore().collection('schools').doc(schoolId)
+                    .collection('parent_links')
+                    .where('faceId', '==', studentId)
+                    .where('status', '==', 'APPROVED')
+                    .get();
+                
+                if (legacySnapshot.empty) return;
+                
+                await sendToFCM(legacySnapshot, studentName, status);
+            } else {
+                await sendToFCM(linksSnapshot, studentName, status);
+            }
+        } catch (error) {
+            console.error("❌ Notification error:", error);
+        }
     }
 );
+
+/**
+ * 🛡️ GET SECURITY ISO KEY
+ * Https Callable function for the app to refresh its security key.
+ */
+export const getsecurityisokey = onCall(async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+        throw new HttpsError("unauthenticated", "User must be logged in.");
+    }
+
+    const hardwareId = request.data.hardwareId;
+    if (!hardwareId) {
+        throw new HttpsError("invalid-argument", "Hardware ID is required.");
+    }
+
+    const db = admin.firestore();
+    const doc = await db.collection("whitelisted_accounts").doc(uid).get();
+
+    if (!doc.exists) {
+        throw new HttpsError("permission-denied", "User is not whitelisted.");
+    }
+
+    const data = doc.data();
+    if (data?.status !== "ACTIVE") {
+        throw new HttpsError("permission-denied", "Account is not active.");
+    }
+
+    if (data.hardwareId !== hardwareId) {
+        throw new HttpsError("permission-denied", "Hardware ID mismatch.");
+    }
+
+    return {
+        isoKey: data.secureIsoKey,
+        expireDate: data.expireDate
+    };
+});
+
+async function sendToFCM(snapshot: admin.firestore.QuerySnapshot, studentName: string, status: string) {
+    const promises: Promise<any>[] = [];
+    snapshot.forEach(doc => {
+        const parentEmail = doc.data().parentEmail;
+        const p = admin.firestore().collection('parent_users').doc(parentEmail).get().then(parentDoc => {
+            if (parentDoc.exists) {
+                const fcmToken = parentDoc.data()?.fcmToken;
+                if (fcmToken) {
+                    let statusText = "Hadir";
+                    const s = (status || "").toUpperCase();
+                    if (s === "A" || s === "ALPA") statusText = "Alpa (Tanpa Keterangan)";
+                    else if (s === "S" || s === "SAKIT") statusText = "Sakit";
+                    else if (s === "I" || s === "IZIN") statusText = "Izin";
+                    
+                    return admin.messaging().send({ 
+                        notification: { 
+                            title: 'Azura Time: Info Kehadiran', 
+                            body: `${studentName} telah melakukan presensi (${statusText}).` 
+                        }, 
+                        token: fcmToken 
+                    });
+                }
+            }
+            return null;
+        });
+        promises.push(p);
+    });
+    await Promise.all(promises);
+}
