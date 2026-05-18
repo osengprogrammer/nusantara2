@@ -122,8 +122,8 @@ fun ManualAttendanceContent(
                     enabled = selectedFace != null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(bottom = AzuraSpacing.lg),
+                        .padding(bottom = AzuraSpacing.lg)
+                        .height(56.dp),
                     shape = AzuraShapes.medium,
                 ) {
                     Text("Simpan Kehadiran", style = MaterialTheme.typography.titleMedium)
