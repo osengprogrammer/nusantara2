@@ -325,7 +325,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                 classId = params.activeClassId ?: params.studentClassIds.firstOrNull() ?: "UNASSIGNED",
                 className = "Auto",
                 timestamp = System.currentTimeMillis(),
-                status = AttendanceStatus.PRESENT,
+                status = params.status,
                 accountEmail = params.accountEmail,
             )
 

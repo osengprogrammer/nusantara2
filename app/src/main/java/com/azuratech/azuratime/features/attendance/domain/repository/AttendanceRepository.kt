@@ -13,6 +13,7 @@ data class ProcessAttendanceParams(
     val accountEmail: String,
     val activeClassId: String?,
     val studentClassIds: List<String>,
+    val status: com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus = com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus.PRESENT,
 )
 
 /**

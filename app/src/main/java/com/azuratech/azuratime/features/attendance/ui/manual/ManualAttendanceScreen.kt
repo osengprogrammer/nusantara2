@@ -77,6 +77,7 @@ fun ManualAttendanceScreen(
                     scannedStudentId = face.biometric.studentId,
                     studentName = face.biometric.name,
                     studentClasses = face.classIds,
+                    status = AttendanceStatus.fromCode(selectedStatus),
                 ) { _, _ ->
                     onNavigateBack()
                 }

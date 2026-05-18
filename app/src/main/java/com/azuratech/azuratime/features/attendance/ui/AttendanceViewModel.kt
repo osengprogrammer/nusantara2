@@ -121,7 +121,7 @@ class AttendanceViewModel @Inject constructor(
         syncManager.enqueueSync() // Just trigger the worker, observation handles the rest
     }
 
-    fun processManualAttendance(scannedStudentId: String, studentName: String, studentClasses: List<String>, onResult: (Boolean, String) -> Unit) {
+    fun processManualAttendance(scannedStudentId: String, studentName: String, studentClasses: List<String>, status: AttendanceStatus, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             val accountEmail = sessionManager.getAccountEmail() ?: "unknown@azuratech.com"
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
@@ -133,6 +133,7 @@ class AttendanceViewModel @Inject constructor(
                 accountEmail = accountEmail,
                 activeClassId = currentSessionId,
                 studentClassIds = studentClasses,
+                status = status,
             )
 
             attendanceRepository.processAttendance(params)
