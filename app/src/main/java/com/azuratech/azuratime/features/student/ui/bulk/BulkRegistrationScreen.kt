@@ -21,7 +21,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.hilt.navigation.compose.hiltViewModel // 🔥 FIX: Import Hilt
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.io.File
 
 // 🔥 Utils & ViewModels
@@ -37,11 +38,10 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 @Composable
 fun BulkRegistrationScreen(
     onNavigateBack: () -> Unit,
-    // 🔥 FIX: Menggunakan hiltViewModel() agar otomatis terinjeksi oleh Hilt
     bulkViewModel: RegisterViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val bulkState by bulkViewModel.uiStateFlow.collectAsState()
+    val bulkState by bulkViewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     var fileUri by remember { mutableStateOf<Uri?>(null) }
     var fileName by remember { mutableStateOf<String?>(null) }
@@ -79,7 +79,7 @@ fun BulkRegistrationScreen(
             if (mimeType.contains("csv") || pickedName?.endsWith(".csv") == true) {
                 fileUri = it
                 fileName = pickedName ?: "data.csv"
-                bulkViewModel.resetState()
+                bulkViewModel.onEvent(RegisterUiEvent.ResetState)
             } else {
                 context.showToast("Hanya file .CSV yang didukung")
             }
@@ -143,7 +143,7 @@ fun BulkRegistrationScreen(
                         Spacer(Modifier.height(16.dp))
                         Button(
                             onClick = {
-                                bulkViewModel.processCsvFile(fileUri!!, "FACES")
+                                bulkViewModel.onEvent(RegisterUiEvent.ProcessCsv(fileUri!!, "FACES"))
                             },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = AzuraShapes.medium,

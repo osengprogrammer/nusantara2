@@ -26,7 +26,7 @@ fun ConflictResolverDialog(
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
     AlertDialog(
-        onDismissRequest = { /* Paksa user memilih, jangan biarkan dismiss klik luar */ },
+        onDismissRequest = { /* Paksa Account memilih, jangan biarkan dismiss klik luar */ },
         icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFFF9800)) },
         title = {
             Text(

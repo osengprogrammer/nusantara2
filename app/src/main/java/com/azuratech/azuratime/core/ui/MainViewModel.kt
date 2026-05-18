@@ -3,61 +3,79 @@ package com.azuratech.azuratime.core.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.domain.repository.MainRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
- * 🛠️ MAIN VIEW MODEL
- * Entry point aplikasi. Sangat bersih, mendelegasikan listener & AI ke MainRepository.
- * 🔥 Sudah menggunakan Hilt Dependency Injection.
+ * 🛠️ MAIN VIEW MODEL (v3.2.0-ai-native)
+ * Application entry point. Strict MVI implementation.
  */
 @HiltViewModel
-class MainViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
+class MainViewModel @Inject constructor(
     application: Application,
-    private val repository: MainRepository, // 🔥 FIX: Repositori disuntikkan secara otomatis
+    private val repository: MainRepository,
 ) : AndroidViewModel(application) {
 
-    private val _isRevokedFlow = MutableStateFlow(false)
-    val isRevokedFlow: StateFlow<Boolean> = _isRevokedFlow.asStateFlow()
+    private val _uiStateFlow = MutableStateFlow(MainUiState())
+    val uiStateFlow: StateFlow<MainUiState> = _uiStateFlow.asStateFlow()
 
-    private var isInitialized = false
     private var revokeJob: Job? = null
 
-    fun getCurrentEmail(): String = when (val result = repository.getCurrentEmail()) {
-        is com.azuratech.azuraengine.result.Result.Success -> result.data
-        else -> ""
+    init {
+        loadInitialData()
     }
 
-    fun initializeApp() {
-        if (isInitialized) return
-        isInitialized = true
+    fun onEvent(event: MainUiEvent) {
+        when (event) {
+            MainUiEvent.InitializeApp -> initializeApp()
+            is MainUiEvent.HandleRevoke -> {
+                if (event.isRevoked) {
+                    repository.executeRevocationCleanup()
+                    _uiStateFlow.update { it.copy(isRevoked = true) }
+                }
+            }
+        }
+    }
 
-        // 1. HIDUPKAN OTAK AI SECARA BACKGROUND
+    private fun loadInitialData() {
+        val email = when (val result = repository.getCurrentEmail()) {
+            is Result.Success -> result.data
+            else -> ""
+        }
+        _uiStateFlow.update { it.copy(currentEmail = email) }
+    }
+
+    private fun initializeApp() {
+        if (_uiStateFlow.value.isInitialized) return
+        _uiStateFlow.update { it.copy(isInitialized = true) }
+
+        // 1. Awake AI Brain (Background)
         viewModelScope.launch {
             repository.initializeAiBrain(getApplication())
         }
 
-        // 2. JALANKAN SECURITY CLOUD (Background)
+        // 2. Security Cloud (Background)
         val uidResult = repository.getCurrentUid()
-        if (uidResult is com.azuratech.azuraengine.result.Result.Success && uidResult.data != null) {
+        if (uidResult is Result.Success && uidResult.data != null) {
             startRealtimeRevokeListener(uidResult.data!!)
         }
     }
 
     private fun startRealtimeRevokeListener(uid: String) {
-        revokeJob?.cancel() // Bersihkan job lama jika ada
+        revokeJob?.cancel()
 
         revokeJob = viewModelScope.launch {
             repository.observeRevokeStatus(uid).collect { result ->
-                if (result is com.azuratech.azuraengine.result.Result.Success && result.data) {
-                    repository.executeRevocationCleanup()
-                    _isRevokedFlow.value = true
+                if (result is Result.Success && result.data) {
+                    onEvent(MainUiEvent.HandleRevoke(true))
                 }
             }
         }
@@ -65,8 +83,6 @@ class MainViewModel @Inject constructor( // 🔥 FIX: Gunakan Hilt Inject
 
     override fun onCleared() {
         super.onCleared()
-        // Job Flow otomatis berhenti saat ViewModel hancur, memory leak dicegah!
         revokeJob?.cancel()
     }
 }
-// 🔥 FIX: MainViewModelFactory DIHAPUS. Hilt sudah menanganinya.

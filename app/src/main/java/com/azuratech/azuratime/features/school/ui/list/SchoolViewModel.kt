@@ -7,6 +7,7 @@ import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
@@ -17,6 +18,10 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 🚀 SCHOOL VIEW MODEL (v3.2.0-ai-native)
+ * Manages school list and workspace switching.
+ */
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class SchoolViewModel @Inject constructor(
@@ -25,6 +30,7 @@ class SchoolViewModel @Inject constructor(
     private val schoolRepository: SchoolRepository,
     private val workspaceRepository: SchoolWorkspaceRepository,
     private val accountRepository: AccountRepository,
+    private val syncManager: SyncManager,
 ) : ViewModel() {
 
     private val _uiEventFlow = MutableSharedFlow<UiEvent>()
@@ -107,6 +113,7 @@ class SchoolViewModel @Inject constructor(
             if (currentAccountId.isEmpty()) return@launch
 
             sessionManager.saveActiveSchoolId(school.id)
+            syncManager.enqueueSync() // 🔥 Trigger immediate sync for history & biometrics
             // Error handling handled downstream or ignored if it's just a local switch preference
             runCatching { workspaceRepository.switchWorkspace(currentAccountId, school.id) }
         }

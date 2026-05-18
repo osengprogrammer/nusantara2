@@ -10,6 +10,8 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 object AttendancePreviewMocks {
     fun loading(): AttendanceUiState = AttendanceUiState(isLoading = true)
 
+    fun syncing(): AttendanceUiState = AttendanceUiState(isSyncing = true, records = success().records)
+
     fun empty(): AttendanceUiState = AttendanceUiState(records = emptyList())
 
     fun success(): AttendanceUiState = AttendanceUiState(

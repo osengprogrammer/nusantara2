@@ -19,6 +19,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 🚀 REPORT VIEW MODEL (v3.2.0-ai-native)
+ * Manages report dashboards, audit logs, and export tasks.
+ */
 @HiltViewModel
 class ReportViewModel @Inject constructor(
     private val reportRepository: ReportRepository,

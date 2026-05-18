@@ -12,6 +12,9 @@ interface AttendanceRecordDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(record: AttendanceRecordEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(records: List<AttendanceRecordEntity>)
+
     @Update
     suspend fun update(record: AttendanceRecordEntity)
 

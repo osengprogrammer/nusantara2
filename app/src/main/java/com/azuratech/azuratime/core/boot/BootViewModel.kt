@@ -3,69 +3,66 @@ package com.azuratech.azuratime.core.boot
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.domain.repository.BootRepository
-import dagger.hilt.android.lifecycle.HiltViewModel // 🔥 Tambahan Import
-import javax.inject.Inject // 🔥 Tambahan Import
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.delay
+import javax.inject.Inject
 
-@HiltViewModel // 🔥 1. Tandai sebagai ViewModel Hilt
-class BootViewModel @Inject constructor( // 🔥 2. Inject BootRepository
+/**
+ * 🚀 BOOT VIEW MODEL (v3.2.0-ai-native)
+ * First gate of the application. Strict MVI implementation.
+ */
+@HiltViewModel
+class BootViewModel @Inject constructor(
     application: Application,
-    private val repository: BootRepository, // 🔥 Disuplai otomatis oleh Hilt
+    private val repository: BootRepository,
 ) : AndroidViewModel(application) {
 
-    // ❌ HAPUS inisialisasi manual repository lama
-
-    private val _stateFlow = MutableStateFlow<BootState>(BootState.Loading)
-    val stateFlow: StateFlow<BootState> = _stateFlow.asStateFlow()
+    private val _uiStateFlow = MutableStateFlow<BootUiState>(BootUiState.Loading)
+    val uiStateFlow: StateFlow<BootUiState> = _uiStateFlow.asStateFlow()
 
     init {
-        checkAuthStatus()
+        onEvent(BootUiEvent.CheckAuthStatus)
     }
 
-    fun checkAuthStatus() {
+    fun onEvent(event: BootUiEvent) {
+        when (event) {
+            BootUiEvent.CheckAuthStatus -> handleCheckAuthStatus()
+            BootUiEvent.Recheck -> handleCheckAuthStatus()
+        }
+    }
+
+    private fun handleCheckAuthStatus() {
         viewModelScope.launch {
-            _stateFlow.value = BootState.Loading
+            _uiStateFlow.value = BootUiState.Loading
 
             withContext(Dispatchers.IO) {
-                try {
-                    delay(600) // Jeda untuk stabilitas pembacaan enkripsi
-                    val accountResult = repository.getCurrentAccount()
+                delay(600) // For encryption stability
+                val accountResult = repository.getCurrentAccount()
 
-                    withContext(Dispatchers.Main) {
-                        val isLoggedIn = accountResult is com.azuratech.azuraengine.result.Result.Success && accountResult.data != null
+                val isLoggedIn = accountResult is Result.Success && accountResult.data != null
 
-                        if (!isLoggedIn) {
-                            _stateFlow.value = BootState.NeedLogin
-                        } else {
-                            viewModelScope.launch {
-                                when (val result = repository.isSessionActive()) {
-                                    is com.azuratech.azuraengine.result.Result.Success -> {
-                                        _stateFlow.value = if (result.data) BootState.Ready else BootState.NeedActivation
-                                    }
-                                    else -> {
-                                        _stateFlow.value = BootState.Error("Gagal memuat sesi")
-                                    }
-                                }
-                            }
+                if (!isLoggedIn) {
+                    _uiStateFlow.value = BootUiState.NeedLogin
+                } else {
+                    when (val result = repository.isSessionActive()) {
+                        is Result.Success -> {
+                            _uiStateFlow.value = if (result.data) BootUiState.Ready else BootUiState.NeedActivation
                         }
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        _stateFlow.value = BootState.Error("Gagal memuat sesi")
+                        is Result.Failure -> {
+                            _uiStateFlow.value = BootUiState.Error(result.error.message ?: "Gagal memuat sesi")
+                        }
+                        else -> {}
                     }
                 }
             }
         }
-    }
-
-    fun recheck() {
-        checkAuthStatus()
     }
 }

@@ -58,7 +58,7 @@ class SessionManager private constructor(private val context: Context) {
         }
     }
 
-    // 🔥 REACTIVE TRIGGER: SSOT flows for user and school context
+    // 🔥 REACTIVE TRIGGER: SSOT flows for account and school context
     private val _activeSchoolIdFlow = MutableStateFlow<String?>(getActiveSchoolId())
     val activeSchoolIdFlow: StateFlow<String?> = _activeSchoolIdFlow.asStateFlow()
 

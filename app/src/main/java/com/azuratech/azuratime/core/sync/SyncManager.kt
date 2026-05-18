@@ -18,7 +18,7 @@ class SyncManager @Inject constructor(
     private val workManager = WorkManager.getInstance(context)
 
     /**
-     * Enqueue a one-time profile synchronization for the specified user.
+     * Enqueue a one-time profile synchronization for the specified account.
      */
     fun enqueueProfileSync(accountId: String) {
         val data = workDataOf("accountId" to accountId)
@@ -113,11 +113,11 @@ class SyncManager @Inject constructor(
             .build()
 
         workManager.enqueueUniqueWork(
-            "AzuraManualSync",
+            "AZURA_SYNC_WORK",
             ExistingWorkPolicy.REPLACE,
             request,
         )
 
-        android.util.Log.d("SyncManager", "Enqueued global manual sync")
+        android.util.Log.d("SyncManager", "Enqueued global manual sync (AZURA_SYNC_WORK)")
     }
 }

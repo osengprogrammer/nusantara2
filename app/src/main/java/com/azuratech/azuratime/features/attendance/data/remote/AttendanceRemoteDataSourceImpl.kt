@@ -17,11 +17,16 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecordEntity>> {
         return try {
-            val lastTimestamp = com.google.firebase.Timestamp(java.util.Date(lastSync))
-            val snapshot = db.collection("schools").document(schoolId)
+            val query = db.collection("schools").document(schoolId)
                 .collection("checkin_records")
-                .whereGreaterThan("lastUpdated", lastTimestamp)
-                .get().await()
+
+            val snapshot = if (lastSync > 0) {
+                val lastTimestamp = com.google.firebase.Timestamp(java.util.Date(lastSync))
+                query.whereGreaterThan("lastUpdated", lastTimestamp).get().await()
+            } else {
+                // 🔥 Recovery Mode: Fetch all history if lastSync is 0 (first sync after login)
+                query.get().await()
+            }
 
             val records = snapshot.documents.mapNotNull { doc ->
                 doc.toAttendanceRecordEntity(schoolId)

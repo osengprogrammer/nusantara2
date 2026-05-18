@@ -13,6 +13,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 🚀 ATTENDANCE HISTORY VIEW MODEL (v3.2.0-ai-native)
+ * Manages historical attendance records.
+ */
 @HiltViewModel
 class AttendanceHistoryViewModel @Inject constructor(
     private val repository: AttendanceRepository,

@@ -12,6 +12,6 @@ sealed class AuthUiEvent {
     object RegisterSchool : AuthUiEvent()
     data class SignInWithGoogle(val idToken: String) : AuthUiEvent()
     object ClearError : AuthUiEvent()
-    object Logout : AuthUiEvent()
+    data class Logout(val onComplete: () -> Unit = {}) : AuthUiEvent()
     object NavigateToDashboard : AuthUiEvent()
 }

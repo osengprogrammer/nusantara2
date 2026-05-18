@@ -23,6 +23,10 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
+/**
+ * 🚀 ATTENDANCE CAPTURE VIEW MODEL (v3.2.0-ai-native)
+ * Manages biometric and barcode attendance check-in.
+ */
 @HiltViewModel
 class AttendanceCaptureViewModel @Inject constructor(
     application: Application,

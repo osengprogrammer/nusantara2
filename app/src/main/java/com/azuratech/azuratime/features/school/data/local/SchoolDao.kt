@@ -20,7 +20,7 @@ interface SchoolDao {
     @Query("SELECT * FROM schools WHERE id = :schoolId LIMIT 1")
     fun observeSchoolById(schoolId: String): Flow<SchoolEntity?>
 
-    // Useful if a user is an admin of multiple schools
+    // Useful if an account is an admin of multiple schools
     @Query("SELECT * FROM schools ORDER BY name ASC")
     fun observeAllSchools(): Flow<List<SchoolEntity>>
 

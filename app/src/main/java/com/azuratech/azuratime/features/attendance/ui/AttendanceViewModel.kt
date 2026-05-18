@@ -15,6 +15,8 @@ import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.domain.sync.ExportUtils
+import com.azuratech.azuratime.core.domain.repository.SyncRepository
+import com.azuratech.azuratime.core.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -31,6 +33,8 @@ class AttendanceViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
+    private val syncRepository: SyncRepository,
+    private val syncManager: SyncManager,
     private val exportUtils: ExportUtils,
 ) : AndroidViewModel(application) {
 
@@ -87,6 +91,14 @@ class AttendanceViewModel @Inject constructor(
                 _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
             }
         }.launchIn(viewModelScope)
+
+        // 3. Observe Global Sync Status
+        syncRepository.isSyncingFlow
+            .onEach { result ->
+                val isSyncing = result.getOrNull() ?: false
+                _uiStateFlow.update { it.copy(isSyncing = isSyncing) }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun onEvent(event: AttendanceUiEvent) {
@@ -101,7 +113,12 @@ class AttendanceViewModel @Inject constructor(
             is AttendanceUiEvent.UpdateRecordStatus -> updateRecordStatus(event.record, event.status)
             is AttendanceUiEvent.UpdateRecordClass -> updateRecordClass(event.record, event.classModel)
             is AttendanceUiEvent.ExportRecords -> exportRecords(event.records)
+            AttendanceUiEvent.SyncHistory -> syncHistory()
         }
+    }
+
+    private fun syncHistory() {
+        syncManager.enqueueSync() // Just trigger the worker, observation handles the rest
     }
 
     fun processManualAttendance(scannedStudentId: String, studentName: String, studentClasses: List<String>, onResult: (Boolean, String) -> Unit) {

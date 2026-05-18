@@ -4,7 +4,7 @@ import com.azuratech.azuratime.core.domain.model.SyncStatus
 
 /**
  * 🎫 Access Request Profile (Domain Model)
- * Represents a request made by a user to join or leave a school.
+ * Represents a request made by an account to join or leave a school.
  */
 data class AccessRequestProfile(
     val requestId: String,
