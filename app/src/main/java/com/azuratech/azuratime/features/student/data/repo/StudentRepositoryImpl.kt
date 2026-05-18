@@ -41,14 +41,15 @@ class StudentRepositoryImpl @Inject constructor(
     private val assignmentDao = database.studentClassAssignmentDao()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    override fun getStudentProfiles(): Flow<List<StudentProfile>> {
+    override fun getStudentProfiles(): Flow<Result<List<StudentProfile>>> {
         return sessionManager.activeSchoolIdFlow
             .flatMapLatest { schoolId ->
                 if (schoolId.isNullOrBlank()) {
-                    flowOf(emptyList())
+                    flowOf(Result.Success(emptyList()))
                 } else {
                     studentDao.getStudentProfilesFlow(schoolId)
-                        .map { list -> list.map { it.toDomain() } }
+                        .map { list -> Result.Success(list.map { it.toDomain() }) as Result<List<StudentProfile>> }
+                        .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
                 }
             }
     }
@@ -61,8 +62,12 @@ class StudentRepositoryImpl @Inject constructor(
             }
             // We can't easily convert Flow to List without a non-flow DAO method or .first()
             // Let's use .first() on the existing flow for SSOT consistency
-            val profiles = getStudentProfiles().first()
-            Result.Success(profiles)
+            val result = getStudentProfiles().first()
+            if (result is Result.Success) {
+                Result.Success(result.data)
+            } else {
+                result
+            }
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
         }

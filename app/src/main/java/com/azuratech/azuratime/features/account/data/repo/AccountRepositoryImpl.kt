@@ -7,7 +7,11 @@ import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.toProfile
 import com.azuratech.azuratime.features.account.data.local.Membership
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,7 +21,6 @@ class AccountRepositoryImpl @Inject constructor(
     private val accountDao: AccountDao,
     private val db: FirebaseFirestore,
 ) : AccountRepository {
-    override fun getAccountDao() = accountDao
 
     override suspend fun getAccountById(id: String): Result<AccountEntity> {
         return try {
@@ -32,9 +35,12 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeAccountEntity(id: String) = accountDao.observeAccountById(id)
+    override fun observeAccountEntity(id: String): Flow<Result<AccountEntity?>> =
+        accountDao.observeAccountById(id)
+            .map { Result.Success(it) as Result<AccountEntity?> }
+            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
 
-    override suspend fun getProfile(accountId: String): Result<com.azuratech.azuratime.features.account.domain.model.AccountProfile> {
+    override suspend fun getProfile(accountId: String): Result<AccountProfile> {
         return syncAccount(accountId).map { it.toProfile() }
     }
 

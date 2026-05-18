@@ -10,13 +10,13 @@ sealed class MembershipDocUpdate {
 }
 
 interface MembershipRepository {
-    fun getCurrentUid(): String?
+    fun getCurrentUid(): Result<String?>
     suspend fun checkWhitelisted(uid: String): Result<Map<String, Any>?>
     suspend fun checkMembershipExists(uid: String): Result<Boolean>
     suspend fun createPendingAccount(uid: String, email: String, displayName: String?): Result<Unit>
-    fun savePendingStatus()
+    fun savePendingStatus(): Result<Unit>
     fun activateSession(data: Map<String, Any>?): Result<Boolean>
-    fun observeMemberships(uid: String): Flow<List<Membership>>
-    fun observeMembershipFlow(uid: String): Flow<MembershipDocUpdate>
+    fun observeMemberships(uid: String): Flow<Result<List<Membership>>>
+    fun observeMembershipFlow(uid: String): Flow<Result<MembershipDocUpdate>>
     suspend fun pollWhitelistedFinal(uid: String): Result<Map<String, Any>?>
 }

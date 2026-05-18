@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.domain.model.toAccountRole
 import com.azuratech.azuratime.core.session.SessionManager
@@ -14,43 +14,35 @@ import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 🏠 DASHBOARD VIEW MODEL (v3.2.0-ai-native)
+ * Entry point for Teachers and Admins.
+ */
 @HiltViewModel
-@OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
-    private val biometricRepository: BiometricRepository,
-    private val studentRepository: com.azuratech.azuratime.features.student.domain.repository.StudentRepository,
-    private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: SchoolRepository,
     private val workspaceRepository: SchoolWorkspaceRepository,
     private val authRepository: AuthRepository,
+    private val attendanceRepository: AttendanceRepository,
+    private val biometricRepository: BiometricRepository,
+    private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager,
+    private val database: AppDatabase,
 ) : ViewModel() {
 
     private val _uiEventFlow = MutableSharedFlow<UiEvent>()
@@ -58,17 +50,22 @@ class DashboardViewModel @Inject constructor(
 
     private val _refreshTriggerFlow = MutableStateFlow(0)
 
-    private val _accountFlow = sessionManager.currentAccountIdFlow
+    private val _accountFlow: StateFlow<AccountEntity?> = sessionManager.currentAccountIdFlow
         .flatMapLatest { accountId ->
-            if (accountId != null) accountRepository.observeAccountEntity(accountId) else flowOf(null)
-        }
+            if (accountId != null) {
+                accountRepository.observeAccountEntity(accountId).map { it.getOrNull() }
+            } else {
+                flowOf(null)
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _activeSchoolIdFlow = sessionManager.activeSchoolIdFlow
 
     private val _recentRecordsFlow = _activeSchoolIdFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
-                attendanceRepository.getAttendanceRecords("", null, null, null, null, emptyList(), schoolId).map { it.take(5) }
+                attendanceRepository.getAttendanceRecords("", null, null, null, null, emptyList(), schoolId)
+                    .map { result -> result.getOrNull()?.take(5) ?: emptyList() }
             } else {
                 flowOf(emptyList())
             }
@@ -78,7 +75,7 @@ class DashboardViewModel @Inject constructor(
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
                 schoolRepository.observeClasses(schoolId).map { result ->
-                    if (result is Result.Success) result.data else emptyList()
+                    result.getOrNull() ?: emptyList()
                 }
             } else {
                 flowOf(emptyList())
@@ -93,7 +90,7 @@ class DashboardViewModel @Inject constructor(
     }.flatMapLatest { (schoolId, account) ->
         if (schoolId != null && account != null) {
             schoolRepository.observeClasses(schoolId).map { result ->
-                val allClasses = if (result is Result.Success) result.data else emptyList()
+                val allClasses = result.getOrNull() ?: emptyList()
                 val membership = account.memberships[schoolId]
                 if (membership?.role.toAccountRole() == AccountRole.ADMIN) {
                     allClasses
@@ -113,6 +110,7 @@ class DashboardViewModel @Inject constructor(
             val schoolId = account?.activeSchoolId
             if (activeClassId != null && schoolId != null) {
                 biometricRepository.getStudentsInClassFlow(activeClassId, schoolId)
+                    .map { it.getOrNull() ?: emptyList() }
             } else {
                 flowOf(emptyList())
             }
@@ -120,7 +118,13 @@ class DashboardViewModel @Inject constructor(
 
     private val _activeSchoolFlow = _activeSchoolIdFlow
         .flatMapLatest { id ->
-            if (id != null) schoolRepository.observeSchoolById(id) else flowOf<School?>(null)
+            if (id != null) {
+                schoolRepository.observeSchoolById(id).map { result ->
+                    result.getOrNull()
+                }
+            } else {
+                flowOf<School?>(null)
+            }
         }
 
     val uiStateFlow: StateFlow<DashboardUiState> = combine(
@@ -148,7 +152,7 @@ class DashboardViewModel @Inject constructor(
         val activeSchool = flows[5] as School?
 
         val activeSchoolId = activeSchool?.id
-        val membershipRole = account?.memberships?.get(activeSchoolId)?.role
+        val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
         val effectiveRole = membershipRole ?: account?.role ?: "MEMBER"
         val isReady = account != null
 
@@ -244,7 +248,7 @@ class DashboardViewModel @Inject constructor(
     private fun selectActiveClass(classId: String?) {
         viewModelScope.launch {
             val account = uiStateFlow.value.account ?: return@launch
-            accountRepository.getAccountDao().updateAccount(account.copy(activeClassId = classId))
+            database.accountDao().updateAccount(account.copy(activeClassId = classId))
         }
     }
 

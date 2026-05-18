@@ -40,7 +40,11 @@ class StudentAssignmentViewModel @Inject constructor(
         // 1. Observe Roster
         schoolIdFlow
             .flatMapLatest { schoolId -> biometricRepository.getStudentsWithDetailsFlow(schoolId) }
-            .onEach { roster -> _uiStateFlow.update { it.copy(roster = roster) } }
+            .onEach { result ->
+                result.onSuccess { roster ->
+                    _uiStateFlow.update { it.copy(roster = roster) }
+                }
+            }
             .launchIn(viewModelScope)
 
         // 2. Observe Available Classes
@@ -62,12 +66,16 @@ class StudentAssignmentViewModel @Inject constructor(
             schoolId to availableClasses
         }.flatMapLatest { (schoolId, availableClasses) ->
             val classMap = availableClasses.associateBy { it.id }
-            biometricRepository.getAllAssignmentsFlow(schoolId).map { assignments ->
-                assignments.groupBy { it.studentId }
-                    .mapValues { entry -> entry.value.mapNotNull { classMap[it.classId] } }
+            biometricRepository.getAllAssignmentsFlow(schoolId).map { result ->
+                result.map { assignments ->
+                    assignments.groupBy { it.studentId }
+                        .mapValues { entry -> entry.value.mapNotNull { classMap[it.classId] } }
+                }
             }
-        }.onEach { assignedMap ->
-            _uiStateFlow.update { it.copy(assignedClasses = assignedMap) }
+        }.onEach { result ->
+            result.onSuccess { assignedMap ->
+                _uiStateFlow.update { it.copy(assignedClasses = assignedMap) }
+            }
         }.launchIn(viewModelScope)
     }
 

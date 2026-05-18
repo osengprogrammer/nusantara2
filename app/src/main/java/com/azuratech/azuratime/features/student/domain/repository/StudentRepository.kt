@@ -13,7 +13,7 @@ interface StudentRepository {
     /**
      * Observe all active student profiles for the current school.
      */
-    fun getStudentProfiles(): Flow<List<StudentProfile>>
+    fun getStudentProfiles(): Flow<Result<List<StudentProfile>>>
 
     /**
      * 🔥 One-shot fetch: Get all active student profiles for the current school.

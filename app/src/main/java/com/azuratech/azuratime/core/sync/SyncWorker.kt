@@ -83,7 +83,10 @@ class SyncWorker @AssistedInject constructor(
                 accountRepository.syncAccount(currentAccountId)
             }
             schoolRepository.syncClasses(currentAccountId, schoolId)
-            biometricRepository.syncAssignments()
+            val assignmentResult = biometricRepository.syncAssignments()
+            if (assignmentResult is DomainResult.Failure) {
+                handleSyncError(assignmentResult.error, "AssignmentSync")
+            }
         } catch (e: Exception) {
             Log.w("AZURA_SYNC", "Repository sync failed: ${e.message}")
         }

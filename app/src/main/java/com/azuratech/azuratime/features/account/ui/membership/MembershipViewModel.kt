@@ -2,6 +2,9 @@ package com.azuratech.azuratime.features.account.ui.membership
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
@@ -35,6 +38,7 @@ class MembershipViewModel @Inject constructor(
     private val membershipRepository: MembershipRepository,
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
+    private val database: AppDatabase,
 ) : ViewModel() {
 
     // =====================================================
@@ -44,7 +48,11 @@ class MembershipViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val accountFlow: StateFlow<AccountEntity?> = sessionManager.currentAccountIdFlow
         .filterNotNull()
-        .flatMapLatest { uid -> accountRepository.observeAccountEntity(uid) }
+        .flatMapLatest { uid ->
+            accountRepository.observeAccountEntity(uid).map { result ->
+                result.getOrNull()
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -52,7 +60,9 @@ class MembershipViewModel @Inject constructor(
         .filterNotNull()
         .flatMapLatest { uid ->
             accessRequestRepository.observeRequestsByAccount(uid)
-                .map { entities -> entities.map { it.toProfile() } }
+                .map { result ->
+                    result.getOrNull()?.map { it.toProfile() } ?: emptyList()
+                }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -71,7 +81,7 @@ class MembershipViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MembershipState.Loading)
 
-    val membershipsFlow: StateFlow<List<com.azuratech.azuratime.features.account.data.local.Membership>> = accountFlow.map {
+    val membershipsFlow: StateFlow<List<Membership>> = accountFlow.map {
         it?.memberships?.values?.toList() ?: emptyList()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -95,11 +105,15 @@ class MembershipViewModel @Inject constructor(
                     startPollingStatus(uid)
                 }
             } else {
-                // Cloud pull failed. Check local stateFlow.
-                val localAccount = accountRepository.getAccountDao().getAccountById(uid)
-
-                // If account doesn't exist locally OR they are stuck in PENDING, push to the membershipsFlow collection
-                if (localAccount == null || localAccount.status == "PENDING") {
+                // Cloud pull failed. Check local state.
+                accountRepository.getAccountById(uid).onSuccess { localAccount ->
+                    // If account exists locally AND they are stuck in PENDING, push to the memberships collection
+                    if (localAccount.status == "PENDING") {
+                        membershipRepository.createPendingAccount(uid, email, displayName)
+                        startPollingStatus(uid)
+                    }
+                }.onFailure {
+                    // Truly new user
                     membershipRepository.createPendingAccount(uid, email, displayName)
                     startPollingStatus(uid)
                 }
@@ -128,14 +142,13 @@ class MembershipViewModel @Inject constructor(
     fun activateMembership() {
         viewModelScope.launch {
             val uid = sessionManager.getCurrentAccountId() ?: return@launch
-            val accountEntity = accountRepository.getAccountDao().getAccountById(uid)
-            accountEntity?.let {
+            accountRepository.getAccountById(uid).onSuccess { entity ->
                 val data = mapOf(
-                    "accountId" to it.accountId,
-                    "status" to it.status,
-                    "activeSchoolId" to (it.activeSchoolId ?: ""),
-                    "role" to it.role,
-                    "membershipsFlow" to it.memberships,
+                    "accountId" to entity.accountId,
+                    "status" to entity.status,
+                    "activeSchoolId" to (entity.activeSchoolId ?: ""),
+                    "role" to entity.role,
+                    "memberships" to entity.memberships,
                 )
                 membershipRepository.activateSession(data)
             }

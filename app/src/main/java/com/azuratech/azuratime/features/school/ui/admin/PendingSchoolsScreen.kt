@@ -29,7 +29,7 @@ fun PendingSchoolsScreen(
     onBack: () -> Unit,
     viewModel: PendingSchoolsViewModel = hiltViewModel(),
 ) {
-    val pendingSchools by viewModel.pendingSchoolsFlow.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var schoolToReject by remember { mutableStateOf<School?>(null) }
     var rejectionReason by remember { mutableStateOf("") }
@@ -48,7 +48,11 @@ fun PendingSchoolsScreen(
         onBack = onBack,
         snackbarHostState = snackbarHostState,
     ) {
-        if (pendingSchools.isEmpty()) {
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (uiState.pendingSchools.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "Tidak ada sekolah yang menunggu persetujuan.",
@@ -62,10 +66,10 @@ fun PendingSchoolsScreen(
                 contentPadding = PaddingValues(AzuraSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
-                items(pendingSchools, key = { it.id }) { school ->
+                items(uiState.pendingSchools, key = { it.id }) { school ->
                     SchoolApprovalCard(
                         school = school,
-                        onApprove = { viewModel.approve(school.id) },
+                        onApprove = { viewModel.onEvent(PendingSchoolsUiEvent.ApproveSchool(school.id)) },
                         onReject = { schoolToReject = school },
                     )
                 }
@@ -96,7 +100,7 @@ fun PendingSchoolsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        schoolToReject?.let { viewModel.reject(it.id, rejectionReason) }
+                        schoolToReject?.let { viewModel.onEvent(PendingSchoolsUiEvent.RejectSchool(it.id, rejectionReason)) }
                         schoolToReject = null
                         rejectionReason = ""
                     },

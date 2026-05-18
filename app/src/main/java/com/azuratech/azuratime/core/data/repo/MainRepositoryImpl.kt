@@ -2,9 +2,12 @@ package com.azuratech.azuratime.core.data.repo
 
 import android.content.Context
 import android.util.Log
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
+import com.azuratech.azuratime.core.domain.repository.MainRepository
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -15,69 +18,53 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * 🏰 MAIN REPOSITORY
- * Pusat inisialisasi aplikasi, AI Brain, dan Security Cloud Listener.
- * 🔥 Sudah menggunakan Hilt Dependency Injection.
- */
 @Singleton
-class MainRepository @Inject constructor( // 🔥 FIX: Tambahkan Inject Constructor
+class MainRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
     private val sessionManager: SessionManager,
-) {
-    fun getCurrentUid(): String? = firebaseAuth.currentUser?.uid
+) : MainRepository {
+    override fun getCurrentUid(): Result<String?> = Result.Success(firebaseAuth.currentUser?.uid)
 
-    fun getCurrentEmail(): String = firebaseAuth.currentUser?.email ?: ""
+    override fun getCurrentEmail(): Result<String> = Result.Success(firebaseAuth.currentUser?.email ?: "")
 
-    // =====================================================
-    // 🧠 AI INITIALIZATION
-    // =====================================================
-    suspend fun initializeAiBrain(context: Context): com.azuratech.azuraengine.result.Result<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun initializeAiBrain(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             FaceRecognizer.initialize(context)
             Log.d("MainRepository", "✅ AI Brain Awakened in Background!")
-            com.azuratech.azuraengine.result.Result.Success(Unit)
+            Result.Success(Unit)
         } catch (e: Exception) {
             Log.e("MainRepository", "❌ AI Init Error: ${e.message}")
-            com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule(e.message))
+            Result.Failure(AppError.BusinessRule(e.message))
         }
     }
 
-    // =====================================================
-    // 🛡️ SECURITY & REVOKE LISTENER
-    // =====================================================
-
-    fun observeRevokeStatus(uid: String): Flow<Boolean> = callbackFlow {
+    override fun observeRevokeStatus(uid: String): Flow<Result<Boolean>> = callbackFlow {
         val listener = firestore.collection("whitelisted_accounts")
             .document(uid)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.e("MainRepository", "❌ Revoke Listener Error: ${error.message}")
+                    trySend(Result.Failure(AppError.Network(error.message)))
                     return@addSnapshotListener
                 }
 
                 val cloudStatus = snapshot?.getString("status") ?: ""
-
-                if (cloudStatus == "REVOKED") {
-                    trySend(true)
-                } else {
-                    trySend(false)
-                }
+                trySend(Result.Success(cloudStatus == "REVOKED"))
             }
 
         awaitClose { listener.remove() }
     }
 
-    fun executeRevocationCleanup(): com.azuratech.azuraengine.result.Result<Unit> {
+    override fun executeRevocationCleanup(): Result<Unit> {
         return try {
             Log.w("MainRepository", "🚨 AKSES DICABUT OLEH ADMIN! Membersihkan sesi...")
             sessionManager.clearSession()
             firebaseAuth.signOut()
             AppDatabase.destroyInstance()
-            com.azuratech.azuraengine.result.Result.Success(Unit)
+            Result.Success(Unit)
         } catch (e: Exception) {
-            com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.LocalDB(e.message))
+            Result.Failure(AppError.LocalDB(e.message))
         }
     }
 }

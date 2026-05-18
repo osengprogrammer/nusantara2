@@ -1,6 +1,9 @@
 package com.azuratech.azuratime.core.data.repo
 
 import android.util.Log
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.domain.repository.SecurityRepository
 import com.azuratech.azuratime.core.security.SecurityVault
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.functions.FirebaseFunctions
@@ -10,28 +13,20 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * 🛡️ AZURA SECURITY REPOSITORY
- * Satu file, satu tugas: Jembatan antara Session (Data) dan JNI C++ (Hardware Check).
- * Menjamin validasi berjalan di Background Thread agar UI tidak freeze.
- */
 @Singleton
-class SecurityRepository @Inject constructor(private val session: SessionManager) {
+class SecurityRepositoryImpl @Inject constructor(
+    private val session: SessionManager,
+) : SecurityRepository {
 
-    // Library JNI C++ hanya akan di-load saat fungsi ini dipanggil pertama kali
     private val vault by lazy { SecurityVault() }
 
-    /**
-     * Memeriksa integritas sistem (HMAC, Hardware ID, Time Tampering).
-     * @return Result<Int> 1 (Valid), < 0 (Security Compromised)
-     */
-    suspend fun validateSecurityEnvelope(): com.azuratech.azuraengine.result.Result<Int> = withContext(Dispatchers.IO) {
+    override suspend fun validateSecurityEnvelope(): Result<Int> = withContext(Dispatchers.IO) {
         try {
             Log.d("AZURA_SEC", "Initiating Native Security Check...")
 
             if (!SecurityVault.isNativeReady) {
                 Log.e("AZURA_SEC", "Native SecurityVault library is not ready!")
-                return@withContext com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule("Native library not ready"))
+                return@withContext Result.Failure(AppError.BusinessRule("Native library not ready"))
             }
 
             val result = vault.checkAccessStatus(
@@ -43,19 +38,16 @@ class SecurityRepository @Inject constructor(private val session: SessionManager
             )
 
             Log.d("AZURA_SEC", "Native Validation Result: $result")
-            com.azuratech.azuraengine.result.Result.Success(result)
+            Result.Success(result)
         } catch (e: Exception) {
             Log.e("AZURA_SEC", "Critical JNI Error: ${e.message}")
-            com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule(e.message))
+            Result.Failure(AppError.BusinessRule(e.message))
         }
     }
 
-    /**
-     * 🔥 SSOT: Refresh security ISO key from Cloud.
-     */
-    suspend fun refreshIsoKeyFromServer(): com.azuratech.azuraengine.result.Result<String> = withContext(Dispatchers.IO) {
+    override suspend fun refreshIsoKeyFromServer(): Result<String> = withContext(Dispatchers.IO) {
         try {
-            val functions = com.google.firebase.functions.FirebaseFunctions.getInstance("us-central1")
+            val functions = FirebaseFunctions.getInstance("us-central1")
 
             val result = functions
                 .getHttpsCallable("getSecurityIsoKey")
@@ -68,14 +60,14 @@ class SecurityRepository @Inject constructor(private val session: SessionManager
 
             if (isoKey.isNotBlank() && expireDate > System.currentTimeMillis()) {
                 session.injectSecurityEnvelope(isoKey, expireDate)
-                com.azuratech.azuraengine.result.Result.Success(isoKey)
+                Result.Success(isoKey)
             } else {
                 Log.w("AZURA_SEC", "Refresh IsoKey gagal: Data tidak valid atau sudah expired.")
-                com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule("Invalid or expired key"))
+                Result.Failure(AppError.BusinessRule("Invalid or expired key"))
             }
         } catch (e: Exception) {
             Log.e("AZURA_SEC", "Refresh error: ${e.message}")
-            com.azuratech.azuraengine.result.Result.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))
+            Result.Failure(AppError.Network(e.message))
         }
     }
 }

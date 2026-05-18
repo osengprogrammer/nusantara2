@@ -12,7 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.features.ai.ui.ZoharAssistantViewModel
+import com.azuratech.azuratime.features.ai.ui.ZoharUiEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,8 +22,7 @@ fun ZoharChatSheet(
     viewModel: ZoharAssistantViewModel,
     onDismiss: () -> Unit,
 ) {
-    val zoharResponse by viewModel.zoharResponseFlow.collectAsState()
-    val isLoading by viewModel.isLoadingFlow.collectAsState()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState()
 
@@ -53,11 +54,11 @@ fun ZoharChatSheet(
             ) {
                 LazyColumn(modifier = Modifier.padding(AzuraSpacing.md)) {
                     item {
-                        if (isLoading) {
+                        if (uiState.isLoading) {
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                             Text("Zohar sedang menganalisis data Azura...", style = MaterialTheme.typography.bodySmall)
                         } else {
-                            Text(text = zoharResponse, style = MaterialTheme.typography.bodyMedium)
+                            Text(text = uiState.response, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
@@ -76,11 +77,11 @@ fun ZoharChatSheet(
                     IconButton(
                         onClick = {
                             if (query.isNotBlank()) {
-                                viewModel.askZohar(query)
+                                viewModel.onEvent(ZoharUiEvent.AskZohar(query))
                                 query = ""
                             }
                         },
-                        enabled = !isLoading,
+                        enabled = !uiState.isLoading,
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = MaterialTheme.colorScheme.primary)
                     }

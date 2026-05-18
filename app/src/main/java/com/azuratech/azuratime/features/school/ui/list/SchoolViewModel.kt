@@ -64,6 +64,7 @@ class SchoolViewModel @Inject constructor(
         // 🔥 REACTIVE SSOT: Observe account memberships and schools in a unified flow
         viewModelScope.launch {
             accountRepository.observeAccountEntity(accountId)
+                .map { it.getOrNull() }
                 .filterNotNull()
                 .distinctUntilChangedBy { it.memberships.keys }
                 .flatMapLatest { account ->

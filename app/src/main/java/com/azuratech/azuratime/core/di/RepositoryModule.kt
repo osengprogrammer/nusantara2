@@ -24,6 +24,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun provideBiometricScannerRepository(
+        impl: com.azuratech.azuratime.features.attendance.data.repo.BiometricScannerRepositoryImpl,
+    ): com.azuratech.azuratime.features.attendance.domain.repository.BiometricScannerRepository
+
+    @Binds
+    @Singleton
     abstract fun provideAccessRequestRepository(
         impl: com.azuratech.azuratime.features.account.data.repo.AccessRequestRepositoryImpl,
     ): com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
@@ -69,6 +75,60 @@ abstract class RepositoryModule {
     abstract fun provideBiometricRepository(
         impl: com.azuratech.azuratime.features.biometric.data.repo.StudentBiometricRepositoryImpl,
     ): com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideBootRepository(
+        impl: com.azuratech.azuratime.core.data.repo.BootRepositoryImpl,
+    ): com.azuratech.azuratime.core.domain.repository.BootRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideMainRepository(
+        impl: com.azuratech.azuratime.core.data.repo.MainRepositoryImpl,
+    ): com.azuratech.azuratime.core.domain.repository.MainRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideSecurityRepository(
+        impl: com.azuratech.azuratime.core.data.repo.SecurityRepositoryImpl,
+    ): com.azuratech.azuratime.core.domain.repository.SecurityRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideSyncRepository(
+        impl: com.azuratech.azuratime.core.data.repo.SyncRepositoryImpl,
+    ): com.azuratech.azuratime.core.domain.repository.SyncRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideAuditLogRepository(
+        impl: com.azuratech.azuratime.features.reporting.data.repo.AuditLogRepositoryImpl,
+    ): com.azuratech.azuratime.features.reporting.domain.repository.AuditLogRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideExportRepository(
+        impl: com.azuratech.azuratime.features.reporting.data.repo.ExportRepositoryImpl,
+    ): com.azuratech.azuratime.features.reporting.domain.repository.ExportRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideDataIntegrityRepository(
+        impl: com.azuratech.azuratime.features.reporting.data.repo.DataIntegrityRepositoryImpl,
+    ): com.azuratech.azuratime.features.reporting.domain.repository.DataIntegrityRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideReportRepository(
+        impl: com.azuratech.azuratime.features.reporting.data.repo.ReportRepositoryImpl,
+    ): com.azuratech.azuratime.features.reporting.domain.repository.ReportRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideZoharRepository(
+        impl: com.azuratech.azuratime.features.ai.data.repo.ZoharRepositoryImpl,
+    ): com.azuratech.azuratime.features.ai.domain.repository.ZoharRepository
 
     @Binds
     @Singleton

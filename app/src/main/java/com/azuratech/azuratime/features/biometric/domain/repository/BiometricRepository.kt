@@ -14,7 +14,7 @@ interface BiometricRepository {
     /**
      * Observe all biometric enrollments for the current school.
      */
-    fun observeEnrollments(): Flow<List<BiometricEnrollmentProfile>>
+    fun observeEnrollments(): Flow<Result<List<BiometricEnrollmentProfile>>>
 
     /**
      * 🔥 One-shot enroll: Save student biometric embedding.
@@ -37,20 +37,20 @@ interface BiometricRepository {
     suspend fun syncBiometrics(): Result<Unit>
 
     // --- Legacy & Extended Methods used by ViewModels ---
-    fun getAllStudentsFlow(schoolId: String): Flow<List<StudentBiometricEntity>>
-    fun getStudentsInClassFlow(classId: String, schoolId: String): Flow<List<StudentBiometricEntity>>
+    fun getAllStudentsFlow(schoolId: String): Flow<Result<List<StudentBiometricEntity>>>
+    fun getStudentsInClassFlow(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>>
     suspend fun updateStudentClass(studentId: String, classId: String?): Result<Unit>
     suspend fun saveStudentProfile(profile: StudentProfile, photoBytes: ByteArray? = null): Result<Unit>
     suspend fun syncAssignments(): Result<Unit>
     suspend fun removeAllAssignmentsForStudent(studentId: String): Result<Unit>
     suspend fun assignStudentToClass(studentId: String, classId: String): Result<Unit>
     suspend fun removeStudentFromClass(studentId: String, classId: String): Result<Unit>
-    suspend fun insertAssignment(assignment: StudentClassAssignmentEntity)
-    suspend fun deleteAssignmentsByStudent(studentId: String, schoolId: String)
-    suspend fun getStudentWithDetails(studentId: String, schoolId: String): com.azuratech.azuratime.core.data.local.StudentBiometricDetails?
-    suspend fun getClassIdsForStudent(studentId: String, schoolId: String): List<String>
-    fun getEnrolledStudentsFlow(schoolId: String): Flow<List<StudentBiometricEntity>>
-    fun getStudentsWithDetailsFlow(schoolId: String): Flow<List<com.azuratech.azuratime.core.data.local.StudentBiometricDetails>>
-    fun getAllAssignmentsFlow(schoolId: String): Flow<List<StudentClassAssignmentEntity>>
-    suspend fun upsertStudentBiometric(studentBiometric: StudentBiometricEntity)
+    suspend fun insertAssignment(assignment: StudentClassAssignmentEntity): Result<Unit>
+    suspend fun deleteAssignmentsByStudent(studentId: String, schoolId: String): Result<Unit>
+    suspend fun getStudentWithDetails(studentId: String, schoolId: String): Result<com.azuratech.azuratime.core.data.local.StudentBiometricDetails?>
+    suspend fun getClassIdsForStudent(studentId: String, schoolId: String): Result<List<String>>
+    fun getEnrolledStudentsFlow(schoolId: String): Flow<Result<List<StudentBiometricEntity>>>
+    fun getStudentsWithDetailsFlow(schoolId: String): Flow<Result<List<com.azuratech.azuratime.core.data.local.StudentBiometricDetails>>>
+    fun getAllAssignmentsFlow(schoolId: String): Flow<Result<List<StudentClassAssignmentEntity>>>
+    suspend fun upsertStudentBiometric(studentBiometric: StudentBiometricEntity): Result<Unit>
 }

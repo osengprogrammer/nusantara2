@@ -29,7 +29,7 @@ class MembershipRepositoryImpl @Inject constructor(
     private val syncManager: SyncManager,
     private val accountRepository: com.azuratech.azuratime.features.account.domain.repository.AccountRepository,
 ) : MembershipRepository {
-    override fun getCurrentUid(): String? = firebaseAuth.currentUser?.uid
+    override fun getCurrentUid(): Result<String?> = Result.Success(firebaseAuth.currentUser?.uid)
 
     override suspend fun checkWhitelisted(uid: String): Result<Map<String, Any>?> = withContext(Dispatchers.IO) {
         try {
@@ -92,8 +92,13 @@ class MembershipRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun savePendingStatus() {
-        sessionManager.saveAccountStatus(SessionManager.STATUS_PENDING)
+    override fun savePendingStatus(): Result<Unit> {
+        return try {
+            sessionManager.saveAccountStatus(SessionManager.STATUS_PENDING)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.BusinessRule(e.message))
+        }
     }
 
     override fun activateSession(data: Map<String, Any>?): Result<Boolean> {
@@ -119,18 +124,18 @@ class MembershipRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeMemberships(uid: String): Flow<List<Membership>> {
+    override fun observeMemberships(uid: String): Flow<Result<List<Membership>>> {
         return accountDao.observeAccountById(uid).map { account ->
-            account?.memberships?.values?.toList() ?: emptyList()
+            Result.Success(account?.memberships?.values?.toList() ?: emptyList())
         }
     }
 
-    override fun observeMembershipFlow(uid: String): Flow<MembershipDocUpdate> {
+    override fun observeMembershipFlow(uid: String): Flow<Result<MembershipDocUpdate>> {
         return accountDao.observeAccountById(uid).map { account ->
             if (account == null) {
-                MembershipDocUpdate.DocumentMissing
+                Result.Success(MembershipDocUpdate.DocumentMissing)
             } else {
-                MembershipDocUpdate.StatusChanged(account.status, accountToMap(account), null)
+                Result.Success(MembershipDocUpdate.StatusChanged(account.status, accountToMap(account), null))
             }
         }
     }

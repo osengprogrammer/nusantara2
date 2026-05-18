@@ -28,7 +28,7 @@ interface AttendanceRepository {
         classId: String?,
         assignedIds: List<String>,
         schoolId: String,
-    ): Flow<List<AttendanceRecordEntity>>
+    ): Flow<Result<List<AttendanceRecordEntity>>>
 
     suspend fun saveRecord(record: AttendanceRecord): Result<Unit>
     suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit>
@@ -38,13 +38,13 @@ interface AttendanceRepository {
 
     //  SYNC & MISC
     suspend fun syncRecord(record: AttendanceRecord): Result<Unit>
-    fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Int>
-    fun getUnassignedStudentCount(schoolId: String): Flow<Int>
-    fun getStudentsByClass(classId: String, schoolId: String): Flow<List<StudentBiometricEntity>>
-    fun getStudentCountInClass(classId: String, schoolId: String): Flow<Int>
-    fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<List<String>>
-    suspend fun getStudentBiometricById(studentId: String, schoolId: String): StudentBiometricEntity?
-    suspend fun getUnsyncedRecords(schoolId: String): List<AttendanceRecord>
+    fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Result<Int>>
+    fun getUnassignedStudentCount(schoolId: String): Flow<Result<Int>>
+    fun getStudentsByClass(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>>
+    fun getStudentCountInClass(classId: String, schoolId: String): Flow<Result<Int>>
+    fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<Result<List<String>>>
+    suspend fun getStudentBiometricById(studentId: String, schoolId: String): Result<StudentBiometricEntity?>
+    suspend fun getUnsyncedRecords(schoolId: String): Result<List<AttendanceRecord>>
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecord>>
     suspend fun syncRecords(): Result<Unit>
     suspend fun resolveConflict(conflictId: String, useCloud: Boolean): Result<Unit>

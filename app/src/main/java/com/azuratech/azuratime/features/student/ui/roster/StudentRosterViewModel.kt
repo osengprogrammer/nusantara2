@@ -104,7 +104,8 @@ class StudentRosterViewModel @Inject constructor(
             _allClassesFlow,
             _searchQueryFlow,
             _selectedClassIdFlow,
-        ) { profiles, classes, query, classId ->
+        ) { profilesResult, classes, query, classId ->
+            val profiles = profilesResult.getOrNull() ?: emptyList()
             val classMap = classes.associateBy { it.id }
 
             val displayItems = profiles
