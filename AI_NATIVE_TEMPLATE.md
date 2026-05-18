@@ -29,6 +29,7 @@ sealed class FeatureUiEvent {
 ```
 
 ## 4. ViewModel (`*ViewModel.kt`)
+- MUST include the exact header: `* 🚀 FEATURE NAME VIEW MODEL (v3.2.0-ai-native)` in the KDoc class comment.
 - Expose a single `val uiState: StateFlow<FeatureUiState>`.
 - Provide a single `fun onEvent(event: FeatureUiEvent)` entry point with a `when(event)` block.
 - Handle `Result` using `.onSuccess` and `.onFailure` explicitly.

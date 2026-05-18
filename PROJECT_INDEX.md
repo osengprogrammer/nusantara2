@@ -23,7 +23,7 @@
 |------|---------|---------------|-------------|
 | `BootViewModel.kt` | `core.boot` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `MainViewModel.kt` | `core.ui` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
-| `SyncViewModel.kt` | `core.ui.sync` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
+| `SyncViewModel.kt` | `core.ui.sync` | Exposes reactive UI state via StateFlow; handles user actions | ✅ UI Bound |
 | `AdminViewModel.kt` | `features.account.ui.components` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `NetworkViewModel.kt` | `features.account.ui.components` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
 | `WorkspaceViewModel.kt` | `features.account.ui.components` | Exposes reactive UI state via StateFlow; handles user actions | ✅ Migrated |
