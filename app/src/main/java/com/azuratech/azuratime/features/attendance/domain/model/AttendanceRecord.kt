@@ -21,23 +21,26 @@ data class AttendanceRecord(
 enum class AttendanceStatus {
     PRESENT,
     LATE,
-    ABSENT,
+    SICK,
     EXCUSED,
+    ABSENT,
     ;
 
     fun toCode(): String = when (this) {
         PRESENT -> "H"
         LATE -> "T"
+        SICK -> "S"
+        EXCUSED -> "I"
         ABSENT -> "A"
-        EXCUSED -> "S"
     }
 
     companion object {
-        fun fromCode(code: String): AttendanceStatus = when (code) {
+        fun fromCode(code: String): AttendanceStatus = when (code.uppercase()) {
             "H" -> PRESENT
             "T" -> LATE
+            "S" -> SICK
+            "I" -> EXCUSED
             "A" -> ABSENT
-            "S" -> EXCUSED
             else -> PRESENT
         }
     }

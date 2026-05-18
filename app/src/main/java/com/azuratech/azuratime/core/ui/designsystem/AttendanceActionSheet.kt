@@ -57,11 +57,17 @@ fun AttendanceActionSheet(
             Text("Ubah Status:", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(AzuraSpacing.sm))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
+            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            androidx.compose.foundation.layout.FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+            ) {
                 AttendanceStatus.values().forEach { status ->
                     val label = when (status) {
                         AttendanceStatus.PRESENT -> "Hadir"
                         AttendanceStatus.LATE -> "Terlambat"
+                        AttendanceStatus.SICK -> "Sakit"
                         AttendanceStatus.EXCUSED -> "Izin"
                         AttendanceStatus.ABSENT -> "Alpa"
                     }
@@ -71,8 +77,7 @@ fun AttendanceActionSheet(
                             onUpdateStatus(record, status)
                             onDismiss()
                         },
-                        label = { Text(label, modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
-                        modifier = Modifier.weight(1f),
+                        label = { Text(label, textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
                         shape = AzuraShapes.small,
                     )
                 }
