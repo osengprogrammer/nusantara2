@@ -91,13 +91,17 @@ fun ManualAttendanceContent(
 
                 // 3. Attendance Status
                 Text("Status Kehadiran", style = MaterialTheme.typography.labelLarge)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
-                    listOf("H" to "Hadir", "S" to "Sakit", "I" to "Izin", "A" to "Alpa").forEach { (code, label) ->
+                @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                androidx.compose.foundation.layout.FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                ) {
+                    listOf("H" to "Hadir", "T" to "Terlambat", "S" to "Sakit", "I" to "Izin", "A" to "Alpa").forEach { (code, label) ->
                         FilterChip(
                             selected = selectedStatus == code,
                             onClick = { onStatusSelected(code) },
-                            label = { Text(label, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                            modifier = Modifier.weight(1f),
+                            label = { Text(label, textAlign = TextAlign.Center) },
                             shape = AzuraShapes.small,
                         )
                     }

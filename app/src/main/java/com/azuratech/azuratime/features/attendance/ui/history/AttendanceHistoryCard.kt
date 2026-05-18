@@ -38,6 +38,7 @@ fun AttendanceHistoryCard(
     val statusColor = when (record.status) {
         AttendanceStatus.PRESENT -> MaterialTheme.colorScheme.primary
         AttendanceStatus.LATE -> MaterialTheme.colorScheme.tertiary
+        AttendanceStatus.SICK -> MaterialTheme.colorScheme.secondary
         AttendanceStatus.EXCUSED -> MaterialTheme.colorScheme.secondary
         AttendanceStatus.ABSENT -> MaterialTheme.colorScheme.error
     }
@@ -68,8 +69,15 @@ fun AttendanceHistoryCard(
                     color = statusColor.copy(alpha = 0.1f),
                     shape = AzuraShapes.small,
                 ) {
+                    val statusText = when (record.status) {
+                        AttendanceStatus.PRESENT -> "HADIR"
+                        AttendanceStatus.LATE -> "TERLAMBAT"
+                        AttendanceStatus.SICK -> "SAKIT"
+                        AttendanceStatus.EXCUSED -> "IZIN"
+                        AttendanceStatus.ABSENT -> "ALPA"
+                    }
                     Text(
-                        text = record.status.name,
+                        text = statusText,
                         modifier = Modifier.padding(horizontal = AzuraSpacing.sm, vertical = AzuraSpacing.xs),
                         style = MaterialTheme.typography.labelMedium,
                         color = statusColor,
