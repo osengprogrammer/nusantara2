@@ -68,6 +68,7 @@ fun MatrixTableView(
                             }
 
                             MatrixDataCell(text = row.summaryH, width = 50.dp)
+                            MatrixDataCell(text = row.summaryT, width = 50.dp)
                             MatrixDataCell(text = row.summaryS, width = 50.dp)
                             MatrixDataCell(text = row.summaryI, width = 50.dp)
                             MatrixDataCell(text = row.summaryA, width = 50.dp)
