@@ -12,20 +12,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * AZURA CSV IMPORT UTILS
- * Mesin pembaca data massal yang tahan banting terhadap berbagai format Excel/CSV.
+ * 📝 AZURA CSV IMPORT UTILS (v3.2.0-ai-native)
+ * Optimized bulk data engine with standardized terminology and flexible parsing.
  */
 @Singleton
 class CsvImportUtils @Inject constructor(
     private val storageProvider: StorageProvider,
 ) {
 
-    // 🔥 JEMBATAN KE VIEWMODEL: Memastikan sinkron dengan RegisterViewModel
     suspend fun parseCsvToStudentData(uriString: String): List<CsvStudentData> {
         return parseCsvFile(uriString).students
     }
 
-    // MESIN UTAMA PARSING CSV
     suspend fun parseCsvFile(uriString: String): CsvParseResult = withContext(Dispatchers.IO) {
         val students = mutableListOf<CsvStudentData>()
         val errors = mutableListOf<String>()
@@ -51,7 +49,7 @@ class CsvImportUtils @Inject constructor(
                     val columns = parseCsvLine(currentLine)
                     if (columns.isEmpty()) continue
 
-                    // 🔥 KUNCI PERBAIKAN: Bersihkan spasi, underscore (_), dan BOM
+                    // 🔥 AI Native: Clean headers (lowercase, no spaces, no BOM)
                     if (lineNumber == 1) {
                         headers = columns.map { it.lowercase().replace(" ", "").replace("_", "").replace("\uFEFF", "") }
                         continue
@@ -70,7 +68,7 @@ class CsvImportUtils @Inject constructor(
                             students.add(student)
                             validRows++
                         } else {
-                            errors.add("Baris $lineNumber: ID (face_id) wajib diisi.")
+                            errors.add("Baris $lineNumber: Student ID (student_id) wajib diisi.")
                         }
                     } catch (e: Exception) {
                         errors.add("Baris $lineNumber: Error format (${e.message})")
@@ -84,11 +82,9 @@ class CsvImportUtils @Inject constructor(
         CsvParseResult(students, errors, totalRows, validRows)
     }
 
-    // 🔥 PARSE ROW: Super Fleksibel dengan Alias
     private fun parseStudentRow(headers: List<String>, columns: List<String>): CsvStudentData? {
         val headerMap = headers.mapIndexed { index, h -> h to index }.toMap()
 
-        // Fungsi pencari kolom cerdas (Abaikan spasi, underscore & huruf besar/kecil)
         fun getValue(aliases: List<String>): String {
             for (alias in aliases) {
                 val cleanAlias = alias.lowercase().replace(" ", "").replace("_", "")
@@ -100,35 +96,26 @@ class CsvImportUtils @Inject constructor(
             return ""
         }
 
-        // 1. DATA WAJIB (Sudah mendeteksi face_id dari template)
-        val faceId = getValue(listOf("faceid", "id", "noinduk", "nis", "nisn"))
+        // 1. CANONICAL DATA (Strictly prioritized)
+        val studentId = getValue(listOf("studentid", "id", "faceid", "noinduk", "nis"))
         val name = getValue(listOf("fullname", "name", "nama", "namalengkap"))
 
-        // Jika ID kosong, baris ini diabaikan (invalid)
-        if (faceId.isEmpty()) return null
+        if (studentId.isEmpty()) return null
 
-        // 2. METADATA FLEKSIBEL (Boleh Kosong)
+        // 2. METADATA
         val metadata = mutableMapOf<String, String>()
-        metadata["CLASS"] = getValue(listOf("classid", "class", "kelas", "shift"))
-        metadata["ROLE"] = getValue(listOf("role", "jabatan", "peran"))
-        metadata["GRADE"] = getValue(listOf("grade", "tingkat", "departemen"))
-
-        // 💰 3. SENSOR GAJI (Fokus Garmen / Pabrik)
-        metadata["BASE_SALARY"] = getValue(listOf("gajipokok", "pokok", "basesalary", "gajibulan"))
-        metadata["HOURLY_RATE"] = getValue(listOf("upahperjam", "rate", "gajiperjam", "hourlyrate"))
-        metadata["INCENTIVE"] = getValue(listOf("uangmakan", "makan", "insentif", "hadir"))
-        metadata["TRANSPORT"] = getValue(listOf("uangtransport", "transport", "transportasi"))
+        metadata["CLASS"] = getValue(listOf("classname", "classid", "class", "kelas"))
+        metadata["ROLE"] = getValue(listOf("role", "jabatan"))
+        metadata["GRADE"] = getValue(listOf("grade", "tingkat"))
 
         return CsvStudentData(
-            faceId = faceId,
+            faceId = studentId, // Mapping canonical student_id to internal faceId property
             name = name,
-            // 🔥 Tambahan photourl untuk nangkap dari template
             photoUrl = getValue(listOf("photourl", "photo", "image", "foto", "urlfoto")),
             rawMetadata = metadata,
         )
     }
 
-    // Pemecah baris CSV yang tahan terhadap koma di dalam tanda kutip ("Zohar, S.Kom")
     private fun parseCsvLine(line: String): List<String> {
         val result = mutableListOf<String>()
         val current = StringBuilder()
@@ -161,10 +148,12 @@ class CsvImportUtils @Inject constructor(
         return result
     }
 
-    // Update Sample CSV agar HRD tahu format terlengkapnya
+    /**
+     * 🔥 CANONICAL TEMPLATE: face_id is now student_id
+     */
     fun generateSampleCsv(): String {
-        return "face_id,full_name,class_id,photo_url\n" +
-            "KRY-001,Gus Usman,Shift Pagi,https://link-foto-gus-usman.com/foto.jpg\n" +
-            "KRY-002,Zohar,Shift Malam,https://link-foto-zohar.com/foto.jpg"
+        return "student_id,full_name,class_name,photo_url\n" +
+            "STU-001,Gus Usman,Shift Pagi,https://link-to-photo.com/1.jpg\n" +
+            "STU-002,Zohar,Shift Malam,https://link-to-photo.com/2.jpg"
     }
 }
