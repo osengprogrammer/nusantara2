@@ -113,7 +113,7 @@
 | `RootScreen.kt` | `core.ui` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `FindSchoolScreen.kt` | `features.account.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `MyAssignedClassScreen.kt` | `features.account.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
-| `NetworkScreen.kt` | `features.account.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
+| `FollowingScreen.kt` | `features.account.ui.components` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `DebugScreen.kt` | `features.account.ui.debug` | Composable UI; collects StateFlow, renders state, handles user input | ✅ Migrated |
 | `MembershipScreen.kt` | `features.account.ui.membership` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |
 | `AccountProfileScreen.kt` | `features.account.ui.profile` | Composable UI; collects StateFlow, renders state, handles user input | ✅ UI Bound |

@@ -143,7 +143,7 @@ fun BulkRegistrationScreen(
                         Spacer(Modifier.height(16.dp))
                         Button(
                             onClick = {
-                                bulkViewModel.onEvent(RegisterUiEvent.ProcessCsv(fileUri!!, "FACES"))
+                                bulkViewModel.onEvent(RegisterUiEvent.ProcessCsv(fileUri!!))
                             },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = AzuraShapes.medium,
