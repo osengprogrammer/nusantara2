@@ -1,34 +1,43 @@
 package com.azuratech.azuratime.features.attendance.data.repo
 
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.data.local.AppDatabase
+import com.azuratech.azuratime.core.domain.sync.ExportUtils
+import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.sync.SyncManager
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceLocalDataSource
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSource
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.reporting.domain.repository.AuditLogRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * 🏛️ ATTENDANCE REPOSITORY IMPLEMENTATION (v3.2.0-ai-native)
+ * Unified SSOT for check-in records and export engines.
+ */
 @Singleton
 class AttendanceRepositoryImpl @Inject constructor(
-    private val database: com.azuratech.azuratime.core.data.local.AppDatabase,
+    private val database: AppDatabase,
     private val localDataSource: AttendanceLocalDataSource,
     private val remoteDataSource: AttendanceRemoteDataSource,
-    private val syncManager: com.azuratech.azuratime.core.sync.SyncManager,
-    private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
+    private val syncManager: SyncManager,
+    private val sessionManager: SessionManager,
     private val auditLogRepository: AuditLogRepository,
+    private val exportUtils: ExportUtils,
 ) : AttendanceRepository {
 
     private val attendanceRecordDao = database.attendanceRecordDao()
@@ -102,7 +111,7 @@ class AttendanceRepositoryImpl @Inject constructor(
 
             auditLogRepository.logAction(
                 schoolId = schoolId,
-                accountId = sessionManager.getAccountEmail() ?: "unknown",
+                accountId = sessionManager.getAccountEmail(),
                 action = "UPDATE_ATTENDANCE",
                 details = "Changed status for ${record.name} to ${status.name}",
             )
@@ -296,17 +305,21 @@ class AttendanceRepositoryImpl @Inject constructor(
 
             // 1. 🔥 AI Native: Time-based Duplicate Check
             // We allow re-recording after 10 minutes (600,000 ms)
-            val today = LocalDate.now()
+            val recordTimestamp = params.timestamp ?: System.currentTimeMillis()
+            val logicalDate = java.time.Instant.ofEpochMilli(recordTimestamp)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate()
+
             val latest = localDataSource.getLatestRecordForStudent(
                 studentId = params.studentId,
                 classId = params.activeClassId ?: "",
-                date = today,
+                date = logicalDate,
                 schoolId = schoolId,
             )
 
             if (latest != null) {
-                val timeDiff = System.currentTimeMillis() - latest.timestamp
-                if (timeDiff < 600_000L) { // 10 minute lockout window
+                val timeDiff = recordTimestamp - latest.timestamp
+                if (timeDiff >= 0 && timeDiff < 600_000L) { // 10 minute lockout window
                     return@withContext Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.AlreadyCheckedIn(params.studentName))
                 }
             }
@@ -317,14 +330,25 @@ class AttendanceRepositoryImpl @Inject constructor(
             }
 
             // 3. Save Record
+            // recordTimestamp is already defined above
+
+            // 🔥 AI Native: Robust Class Resolution
+            // 1. Priority: Explicitly selected class (activeClassId)
+            // 2. Secondary: Many-to-Many mapping (studentClassIds)
+            // 3. Fallback: Legacy classId field on the student entity
+            val resolvedClassId = params.activeClassId
+                ?: params.studentClassIds.firstOrNull()
+                ?: database.studentDao().getById(params.studentId, schoolId)?.classId
+                ?: "UNASSIGNED"
+
             val record = AttendanceRecord(
-                recordId = "rec_${System.currentTimeMillis()}",
+                recordId = "rec_${System.currentTimeMillis()}", // ID can use current time to ensure uniqueness
                 studentId = params.studentId,
                 studentName = params.studentName,
                 schoolId = schoolId,
-                classId = params.activeClassId ?: params.studentClassIds.firstOrNull() ?: "UNASSIGNED",
-                className = "Auto",
-                timestamp = System.currentTimeMillis(),
+                classId = resolvedClassId,
+                className = if (resolvedClassId == "UNASSIGNED") "Auto" else "Auto", // Can be improved to fetch name
+                timestamp = recordTimestamp,
                 status = params.status,
                 accountEmail = params.accountEmail,
             )
@@ -342,6 +366,19 @@ class AttendanceRepositoryImpl @Inject constructor(
             Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.Success(params.studentName, "Berhasil Absen"))
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun exportLogs(records: List<AttendanceRecord>): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val path = exportUtils.exportRawLogsToCsv(records)
+            if (path != null) {
+                Result.Success(path)
+            } else {
+                Result.Failure(AppError.BusinessRule("Gagal mengekspor log ke CSV."))
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.BusinessRule(e.message))
         }
     }
 }

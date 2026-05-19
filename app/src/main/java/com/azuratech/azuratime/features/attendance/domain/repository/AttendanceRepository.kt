@@ -1,8 +1,9 @@
 package com.azuratech.azuratime.features.attendance.domain.repository
 
+import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -13,12 +14,13 @@ data class ProcessAttendanceParams(
     val accountEmail: String,
     val activeClassId: String?,
     val studentClassIds: List<String>,
-    val status: com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus = com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus.PRESENT,
+    val status: AttendanceStatus = AttendanceStatus.PRESENT,
+    val timestamp: Long? = null,
 )
 
 /**
- * Repository interface for Check-In operations.
- * Following DIP, the interface lives in the domain layer.
+ * 📝 ATTENDANCE REPOSITORY (v3.2.0-ai-native)
+ * The single source of truth for Check-In operations.
  */
 interface AttendanceRepository {
     fun getAttendanceRecords(
@@ -33,7 +35,7 @@ interface AttendanceRepository {
 
     suspend fun saveRecord(record: AttendanceRecord): Result<Unit>
     suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit>
-    suspend fun updateRecordStatus(recordId: String, status: com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus, schoolId: String): Result<Unit>
+    suspend fun updateRecordStatus(recordId: String, status: AttendanceStatus, schoolId: String): Result<Unit>
     suspend fun deleteRecord(recordId: String, schoolId: String): Result<Unit>
     suspend fun getStudentHistory(studentId: String): Result<List<AttendanceRecord>>
 
@@ -50,4 +52,9 @@ interface AttendanceRepository {
     suspend fun syncRecords(): Result<Unit>
     suspend fun resolveConflict(conflictId: String, useCloud: Boolean): Result<Unit>
     suspend fun processAttendance(params: ProcessAttendanceParams): Result<com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult>
+
+    /**
+     * 🔥 THE EXPORTER: Export raw attendance logs to CSV.
+     */
+    suspend fun exportLogs(records: List<AttendanceRecord>): Result<String>
 }

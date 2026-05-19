@@ -14,7 +14,6 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
-import com.azuratech.azuratime.core.domain.sync.ExportUtils
 import com.azuratech.azuratime.core.domain.repository.SyncRepository
 import com.azuratech.azuratime.core.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +34,6 @@ class AttendanceViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val syncRepository: SyncRepository,
     private val syncManager: SyncManager,
-    private val exportUtils: ExportUtils,
 ) : AndroidViewModel(application) {
 
     private val _uiStateFlow = MutableStateFlow(AttendanceUiState())
@@ -121,9 +119,9 @@ class AttendanceViewModel @Inject constructor(
         syncManager.enqueueSync() // Just trigger the worker, observation handles the rest
     }
 
-    fun processManualAttendance(scannedStudentId: String, studentName: String, studentClasses: List<String>, status: AttendanceStatus, onResult: (Boolean, String) -> Unit) {
+    fun processManualAttendance(scannedStudentId: String, studentName: String, studentClasses: List<String>, status: AttendanceStatus, timestamp: Long, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            val accountEmail = sessionManager.getAccountEmail() ?: "unknown@azuratech.com"
+            val accountEmail = sessionManager.getAccountEmail()
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             val currentSessionId = _uiStateFlow.value.selectedClassId
 
@@ -134,6 +132,7 @@ class AttendanceViewModel @Inject constructor(
                 activeClassId = currentSessionId,
                 studentClassIds = studentClasses,
                 status = status,
+                timestamp = timestamp,
             )
 
             attendanceRepository.processAttendance(params)
@@ -184,6 +183,15 @@ class AttendanceViewModel @Inject constructor(
     }
 
     private fun exportRecords(records: List<AttendanceRecord>) {
-        viewModelScope.launch { exportUtils.exportRawLogsToCsv(records) }
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isExporting = true, exportPath = null, error = null) }
+            attendanceRepository.exportLogs(records)
+                .onSuccess { path ->
+                    _uiStateFlow.update { it.copy(isExporting = false, exportPath = path) }
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isExporting = false, error = error.message) }
+                }
+        }
     }
 }
