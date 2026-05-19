@@ -4,6 +4,7 @@ import com.azuratech.azuraengine.model.ProcessResult
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.data.local.*
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.domain.sync.CsvImportUtils
 import com.azuratech.azuratime.features.school.data.local.*
@@ -22,6 +23,7 @@ import javax.inject.Singleton
 
 /**
  * 🏛️ STUDENT REGISTRATION REPOSITORY IMPLEMENTATION (v3.2.0-ai-native)
+ * Unified engine for student registration with smart class resolution.
  */
 @Singleton
 class StudentRegistrationRepositoryImpl @Inject constructor(
@@ -30,10 +32,12 @@ class StudentRegistrationRepositoryImpl @Inject constructor(
     private val storage: FirebaseStorage,
     private val csvImportUtils: CsvImportUtils,
     private val studentRepository: StudentRepository,
+    private val sessionManager: SessionManager,
 ) : StudentRegistrationRepository {
     private val biometricDao = database.biometricDao()
     private val assignmentDao = database.studentClassAssignmentDao()
     private val classDao = database.classDao()
+    private val schoolClassDao = database.schoolClassDao()
 
     override suspend fun getAllBiometrics(schoolId: String): Result<List<StudentBiometricEntity>> {
         return try {
@@ -89,19 +93,49 @@ class StudentRegistrationRepositoryImpl @Inject constructor(
 
     override fun processCsv(uri: String, schoolId: String): Flow<Result<ProcessResult>> = flow {
         val parseResult = csvImportUtils.parseCsvFile(uri)
+        val accountId = sessionManager.getCurrentAccountId() ?: ""
 
         if (parseResult.students.isEmpty() && parseResult.errors.isNotEmpty()) {
             emit(Result.Failure(AppError.BusinessRule(parseResult.errors.first())))
             return@flow
         }
 
+        // Cache for resolved class names to minimize DB hits during import
+        val classCache = mutableMapOf<String, String>()
+
         parseResult.students.forEach { data ->
+            val rawClassName = data.rawMetadata["CLASS"]
+
+            // 🔥 AI Native: Resolve class name to ID (with auto-creation)
+            val resolvedClassId = if (!rawClassName.isNullOrBlank()) {
+                classCache.getOrPut(rawClassName) {
+                    val existing = classDao.getClassByName(rawClassName)
+                    if (existing != null) {
+                        // Ensure it is mapped to this school
+                        schoolClassDao.assignClass(SchoolClassAssignment(schoolId, existing.id))
+                        existing.id
+                    } else {
+                        // Auto-create missing class
+                        val newClass = ClassEntity(
+                            ownerAccountId = accountId,
+                            schoolId = schoolId,
+                            name = rawClassName,
+                        )
+                        classDao.insert(newClass)
+                        schoolClassDao.assignClass(SchoolClassAssignment(schoolId, newClass.id))
+                        newClass.id
+                    }
+                }
+            } else {
+                null
+            }
+
             val profile = StudentProfile(
                 studentId = data.faceId,
                 schoolId = schoolId,
                 name = data.name,
                 studentCode = data.faceId,
-                classIds = listOfNotNull(data.rawMetadata["CLASS"]),
+                classIds = listOfNotNull(resolvedClassId),
                 photoUrl = data.photoUrl,
                 syncStatus = SyncStatus.PENDING_INSERT,
             )
