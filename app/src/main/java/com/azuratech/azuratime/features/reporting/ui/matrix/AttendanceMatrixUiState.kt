@@ -31,6 +31,7 @@ data class MatrixRowModel(
     val cells: List<MatrixCellModel>,
     val totalHours: String,
     val summaryH: String,
+    val summaryT: String,
     val summaryS: String,
     val summaryI: String,
     val summaryA: String,

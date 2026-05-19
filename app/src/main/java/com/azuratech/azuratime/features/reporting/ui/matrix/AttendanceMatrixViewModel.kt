@@ -207,7 +207,8 @@ class AttendanceMatrixViewModel @Inject constructor(
                 studentClass = student.classIds.firstOrNull() ?: "-",
                 cells = cells,
                 totalHours = "0",
-                summaryH = (summaryH + summaryT).toString(), // Usually LATE counts as PRESENT for Summary H? Or separated?
+                summaryH = summaryH.toString(),
+                summaryT = summaryT.toString(),
                 summaryS = summaryS.toString(),
                 summaryI = summaryI.toString(),
                 summaryA = summaryA.toString(),
