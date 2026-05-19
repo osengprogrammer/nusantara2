@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,6 +26,7 @@ import com.azuratech.azuratime.core.ui.theme.*
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.ui.history.AttendanceHistoryCard
+import com.azuratech.azuratime.core.util.showToast
 
 /**
  * 📝 ATTENDANCE SCREEN (v3.2.0-ai-native)
@@ -41,10 +43,25 @@ fun AttendanceScreen(
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val user by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
     val assignedIds by accountViewModel.assignedClassIdsFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var editingRecord by remember { mutableStateOf<AttendanceRecord?>(null) }
     var showFilters by remember { mutableStateOf(false) }
     var showClassCorrectionDialog by remember { mutableStateOf<AttendanceRecord?>(null) }
+
+    // 🔥 AI Native: Toast Feedback
+    LaunchedEffect(uiState.exportPath) {
+        uiState.exportPath?.let {
+            context.showToast("Berhasil diekspor: $it")
+            viewModel.onEvent(AttendanceUiEvent.ClearError) // Clear the state if needed, or handle path reset
+        }
+    }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            context.showToast("Gagal: $it")
+        }
+    }
 
     // Role helper
     val accountRole = user?.memberships?.get(user?.activeSchoolId)?.role ?: user?.role ?: "MEMBER"
@@ -128,7 +145,7 @@ fun AttendanceScreen(
                 Surface(
                     onClick = { viewModel.onEvent(AttendanceUiEvent.ExportRecords(uiState.records)) },
                     modifier = Modifier.weight(1f),
-                    enabled = uiState.records.isNotEmpty(),
+                    enabled = uiState.records.isNotEmpty() && !uiState.isExporting,
                     shape = AzuraShapes.medium,
                     color = MaterialTheme.colorScheme.secondaryContainer,
                     tonalElevation = 2.dp,
@@ -138,10 +155,14 @@ fun AttendanceScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
                     ) {
-                        Icon(Icons.Default.Description, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        if (uiState.isExporting) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        } else {
+                            Icon(Icons.Default.Description, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
                         Spacer(modifier = Modifier.width(AzuraSpacing.sm))
                         Text(
-                            text = "CSV",
+                            text = if (uiState.isExporting) "Export..." else "CSV",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,

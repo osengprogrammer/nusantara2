@@ -9,6 +9,8 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 data class AttendanceUiState(
     val isLoading: Boolean = false,
     val isSyncing: Boolean = false,
+    val isExporting: Boolean = false,
+    val exportPath: String? = null,
     val records: List<AttendanceRecord> = emptyList(),
     val classes: List<ClassModel> = emptyList(),
     val selectedClassId: String? = null,
