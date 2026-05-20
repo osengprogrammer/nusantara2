@@ -49,17 +49,24 @@ fun AttendanceScreen(
     var showFilters by remember { mutableStateOf(false) }
     var showClassCorrectionDialog by remember { mutableStateOf<AttendanceRecord?>(null) }
 
-    // 🔥 AI Native: Toast Feedback
-    LaunchedEffect(uiState.exportPath) {
-        uiState.exportPath?.let {
-            context.showToast("Berhasil diekspor: $it")
-            viewModel.onEvent(AttendanceUiEvent.ClearError) // Clear the state if needed, or handle path reset
-        }
-    }
-
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let {
-            context.showToast("Gagal: $it")
+    // 🔥 AI Native: Collect and Handle UI Effects
+    LaunchedEffect(Unit) {
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is AttendanceUiEffect.ShowToast -> context.showToast(effect.message)
+                is AttendanceUiEffect.ShowSnackbar -> {
+                    // Could trigger scaffold state snackbar if needed
+                }
+                is AttendanceUiEffect.ExportSuccess -> {
+                    context.showToast("Berhasil diekspor: ${effect.path}")
+                }
+                is AttendanceUiEffect.NavigateToDetail -> {
+                    // Navigation logic here
+                }
+                AttendanceUiEffect.NavigateBack -> {
+                    onNavigateBack()
+                }
+            }
         }
     }
 

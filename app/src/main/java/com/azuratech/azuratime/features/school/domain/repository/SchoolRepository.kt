@@ -42,4 +42,6 @@ interface SchoolRepository {
     suspend fun rejectSchool(schoolId: String, reason: String): Result<Unit>
     suspend fun pushSchool(schoolId: String): Result<Unit>
     suspend fun pushAccessRequests(accountId: String): Result<Unit>
+
+    suspend fun getClassById(id: String): Result<ClassModel?>
 }

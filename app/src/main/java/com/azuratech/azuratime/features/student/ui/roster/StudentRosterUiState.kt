@@ -12,7 +12,6 @@ data class StudentRosterUiState(
     val allClasses: List<ClassModel> = emptyList(),
     val selectedClassId: String? = null,
     val searchQuery: String = "",
-    val error: String? = null,
     val isDeleteDialogVisible: Boolean = false,
     val targetStudentId: String? = null,
 )

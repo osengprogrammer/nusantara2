@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.attendance.data.local
 
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,7 +28,14 @@ class AttendanceLocalDataSourceImpl @Inject constructor(
             nameFilter = nameFilter.ifBlank { null },
             accountId = accountId,
             classId = classId,
-        )
+        ).map { records ->
+            records.filter { record ->
+                val recordDate = record.attendanceDate
+                val afterStart = startDate == null || !recordDate.isBefore(startDate)
+                val beforeEnd = endDate == null || !recordDate.isAfter(endDate)
+                afterStart && beforeEnd
+            }
+        }
     }
 
     override suspend fun insert(record: AttendanceRecordEntity) = attendanceRecordDao.insert(record)

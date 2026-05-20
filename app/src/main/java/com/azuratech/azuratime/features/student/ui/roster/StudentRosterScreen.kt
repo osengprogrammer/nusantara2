@@ -21,7 +21,13 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
+import androidx.compose.ui.platform.LocalContext
+import com.azuratech.azuratime.core.util.showToast
 
+/**
+ * 🎓 STUDENT ROSTER SCREEN (v3.2.0-ai-native)
+ * Unified management screen for student profiles.
+ */
 @Composable
 fun StudentRosterScreen(
     onEditStudentClick: (String) -> Unit,
@@ -29,15 +35,19 @@ fun StudentRosterScreen(
     viewModel: StudentRosterViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    val rotation = rememberInfiniteTransition().animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-    )
+    // 🔥 AI Native: Collect and Handle UI Effects
+    LaunchedEffect(Unit) {
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is StudentRosterUiEffect.ShowToast -> context.showToast(effect.message)
+                is StudentRosterUiEffect.NavigateToDetail -> {
+                    onEditStudentClick(effect.studentId)
+                }
+            }
+        }
+    }
 
     AzuraScreen(
         title = "Roster Siswa",
@@ -146,29 +156,7 @@ fun StudentRosterScreen(
                 }
             }
 
-            // Error Banner
-            uiState.error?.let { errorMsg ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(AzuraSpacing.md),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(AzuraSpacing.md),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = errorMsg,
-                            modifier = Modifier.weight(1f),
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                        )
-                        TextButton(onClick = { viewModel.onEvent(StudentRosterUiEvent.ClearError) }) {
-                            Text("OK")
-                        }
-                    }
-                }
-            }
+            Spacer(Modifier.height(AzuraSpacing.sm))
 
             // Student List
             Box(modifier = Modifier.weight(1f)) {
@@ -180,7 +168,7 @@ fun StudentRosterScreen(
                     items(uiState.students, key = { it.profile.studentId }) { item ->
                         StudentRosterItem(
                             item = item,
-                            onEditClick = { onEditStudentClick(item.profile.studentId) },
+                            onEditClick = { viewModel.onEvent(StudentRosterUiEvent.NavigateToDetail(item.profile.studentId)) },
                             onDeleteClick = { viewModel.onEvent(StudentRosterUiEvent.RequestDelete(item.profile.studentId)) },
                         )
                     }

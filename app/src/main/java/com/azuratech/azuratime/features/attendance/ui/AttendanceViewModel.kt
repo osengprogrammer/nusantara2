@@ -39,8 +39,8 @@ class AttendanceViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(AttendanceUiState())
     val uiStateFlow: StateFlow<AttendanceUiState> = _uiStateFlow.asStateFlow()
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<AttendanceUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     private val _refreshTriggerFlow = MutableStateFlow(0)
 
@@ -86,7 +86,8 @@ class AttendanceViewModel @Inject constructor(
             result.onSuccess { records ->
                 _uiStateFlow.update { it.copy(isLoading = false, records = records) }
             }.onFailure { error ->
-                _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+                _uiStateFlow.update { it.copy(isLoading = false) }
+                _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal memuat data: ${error.message}"))
             }
         }.launchIn(viewModelScope)
 
@@ -105,7 +106,6 @@ class AttendanceViewModel @Inject constructor(
             is AttendanceUiEvent.SelectClass -> _uiStateFlow.update { it.copy(selectedClassId = event.classId) }
             is AttendanceUiEvent.UpdateSearchQuery -> _uiStateFlow.update { it.copy(searchQuery = event.query) }
             AttendanceUiEvent.Refresh -> _refreshTriggerFlow.value++
-            AttendanceUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
 
             is AttendanceUiEvent.DeleteRecord -> deleteRecord(event.record)
             is AttendanceUiEvent.UpdateRecordStatus -> updateRecordStatus(event.record, event.status)
@@ -122,7 +122,6 @@ class AttendanceViewModel @Inject constructor(
     fun processManualAttendance(scannedStudentId: String, studentName: String, studentClasses: List<String>, status: AttendanceStatus, timestamp: Long, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             val accountEmail = sessionManager.getAccountEmail()
-            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             val currentSessionId = _uiStateFlow.value.selectedClassId
 
             val params = ProcessAttendanceParams(
@@ -154,9 +153,16 @@ class AttendanceViewModel @Inject constructor(
     private fun deleteRecord(record: AttendanceRecord) {
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
+            _uiStateFlow.update { it.copy(isLoading = true) }
             attendanceRepository.deleteRecord(record.recordId, schoolId)
-                .onSuccess { _refreshTriggerFlow.value++ }
-                .onFailure { error -> _uiStateFlow.update { it.copy(error = error.message) } }
+                .onSuccess { 
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Log berhasil dihapus"))
+                    _refreshTriggerFlow.value++ 
+                }
+                .onFailure { error -> 
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))
+                }
         }
     }
 
@@ -171,26 +177,40 @@ class AttendanceViewModel @Inject constructor(
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             attendanceRepository.updateRecordStatus(record.recordId, newStatus, schoolId)
-                .onSuccess { _refreshTriggerFlow.value++ }
+                .onSuccess { 
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Status berhasil diubah"))
+                    _refreshTriggerFlow.value++ 
+                }
+                .onFailure { error ->
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))
+                }
         }
     }
 
     private fun updateRecordClass(record: AttendanceRecord, classModel: ClassModel) {
         viewModelScope.launch {
             attendanceRepository.updateRecord(record.recordId, classModel.id, classModel.name)
-                .onSuccess { _refreshTriggerFlow.value++ }
+                .onSuccess { 
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Kelas berhasil diperbarui"))
+                    _refreshTriggerFlow.value++ 
+                }
+                .onFailure { error ->
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))
+                }
         }
     }
 
     private fun exportRecords(records: List<AttendanceRecord>) {
         viewModelScope.launch {
-            _uiStateFlow.update { it.copy(isExporting = true, exportPath = null, error = null) }
+            _uiStateFlow.update { it.copy(isExporting = true) }
             attendanceRepository.exportLogs(records)
                 .onSuccess { path ->
-                    _uiStateFlow.update { it.copy(isExporting = false, exportPath = path) }
+                    _uiStateFlow.update { it.copy(isExporting = false) }
+                    _uiEffectFlow.emit(AttendanceUiEffect.ExportSuccess(path))
                 }
                 .onFailure { error ->
-                    _uiStateFlow.update { it.copy(isExporting = false, error = error.message) }
+                    _uiStateFlow.update { it.copy(isExporting = false) }
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Ekspor Gagal: ${error.message}"))
                 }
         }
     }

@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 /**
  * 📝 REGISTER VIEW MODEL (v3.2.0-ai-native)
- * Unified View Model for bulk student registration. Strict MVI.
+ * Unified View Model for bulk student registration. Optimized with Effect-Driven MVI.
  * Orchestrates CSV import via StudentRegistrationRepository.
  */
 @HiltViewModel
@@ -24,6 +24,9 @@ class RegisterViewModel @Inject constructor(
 
     private val _uiStateFlow = MutableStateFlow(RegisterUiState())
     val uiStateFlow: StateFlow<RegisterUiState> = _uiStateFlow.asStateFlow()
+
+    private val _uiEffectFlow = MutableSharedFlow<RegisterUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     fun onEvent(event: RegisterUiEvent) {
         when (event) {
@@ -36,7 +39,7 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId()
             if (schoolId == null) {
-                _uiStateFlow.update { it.copy(error = "Sekolah aktif tidak ditemukan.") }
+                _uiEffectFlow.emit(RegisterUiEffect.ShowToast("Sekolah aktif tidak ditemukan."))
                 return@launch
             }
 
@@ -46,7 +49,6 @@ class RegisterViewModel @Inject constructor(
                     status = "Memulai impor massal...",
                     results = emptyList(),
                     progress = 0f,
-                    error = null,
                 )
             }
 
@@ -64,7 +66,8 @@ class RegisterViewModel @Inject constructor(
                             }
                         }
                         is Result.Failure -> {
-                            _uiStateFlow.update { it.copy(isProcessing = false, error = result.error.message) }
+                            _uiStateFlow.update { it.copy(isProcessing = false) }
+                            _uiEffectFlow.emit(RegisterUiEffect.ShowToast("Gagal: ${result.error.message}"))
                         }
                         Result.Loading -> {
                             _uiStateFlow.update { it.copy(status = "Menyiapkan data...") }

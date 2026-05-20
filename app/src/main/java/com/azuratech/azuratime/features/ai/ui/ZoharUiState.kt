@@ -7,7 +7,6 @@ data class ZoharUiState(
     val query: String = "",
     val response: String = "Halo Brother! Zohar siap mengawal Azura Ecosystem. Ada yang bisa Zohar bantu? Joss Gandos!",
     val isLoading: Boolean = false,
-    val error: String? = null,
     val conversationHistory: List<ChatMessage> = emptyList(),
 )
 

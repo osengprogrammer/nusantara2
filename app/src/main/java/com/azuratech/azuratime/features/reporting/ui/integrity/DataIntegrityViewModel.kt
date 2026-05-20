@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.ui.UiEvent
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.reporting.domain.repository.DataIntegrityRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -40,27 +40,28 @@ class DataIntegrityViewModel @Inject constructor(
         repository.missingAssignmentFlow,
         repository.brokenAssignmentsFlow,
         repository.globalUnsyncedCountFlow,
-        repository.conflictsFlow.map { result ->
-            result.getOrNull()?.map { it.toDomain() } ?: emptyList()
-        },
+        repository.conflictsFlow,
         _isLoadingFlow,
         _errorFlow,
-    ) { params: Array<Any?> ->
-        val totalStudentsResult = params[0] as Result<Int>
-        val totalRecordsResult = params[1] as Result<Int>
-        val missingAssignmentResult = params[2] as Result<Int>
-        val brokenAssignmentsResult = params[3] as Result<Int>
-        val globalUnsyncedCountResult = params[4] as Result<Int>
+    ) { params ->
+        val totalStudents = params[0] as Result<Int>
+        val totalRecords = params[1] as Result<Int>
+        val missing = params[2] as Result<Int>
+        val broken = params[3] as Result<Int>
+        val unsynced = params[4] as Result<Int>
+        val conflicts = params[5] as Result<List<AttendanceConflictEntity>>
+        val isLoading = params[6] as Boolean
+        val error = params[7] as? String
 
         DataIntegrityUiState(
-            totalStudents = totalStudentsResult.getOrNull() ?: 0,
-            totalRecords = totalRecordsResult.getOrNull() ?: 0,
-            missingAssignments = missingAssignmentResult.getOrNull() ?: 0,
-            brokenAssignments = brokenAssignmentsResult.getOrNull() ?: 0,
-            unsyncedCount = globalUnsyncedCountResult.getOrNull() ?: 0,
-            conflicts = params[5] as List<com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict>,
-            isLoading = params[6] as Boolean,
-            error = params[7] as? String,
+            totalStudents = totalStudents.getOrNull() ?: 0,
+            totalRecords = totalRecords.getOrNull() ?: 0,
+            missingAssignments = missing.getOrNull() ?: 0,
+            brokenAssignments = broken.getOrNull() ?: 0,
+            unsyncedCount = unsynced.getOrNull() ?: 0,
+            conflicts = conflicts.getOrNull()?.map { it.toDomain() } ?: emptyList(),
+            isLoading = isLoading,
+            error = error,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DataIntegrityUiState())
 

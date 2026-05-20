@@ -11,7 +11,6 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneOffset
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.domain.model.toAccountRole
 
@@ -69,7 +68,8 @@ fun ManualAttendanceScreen(
         isLocked = false,
         onSave = {
             val face = selectedFace ?: return@ManualAttendanceContent
-            val finalDateTime = LocalDateTime.of(selectedDate, selectedTime)
+            val finalDateTime = java.time.LocalDateTime.of(selectedDate, selectedTime)
+            val epochMillis = finalDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
 
             if (selectedClass != null) {
                 // Process through capture engine
@@ -78,6 +78,7 @@ fun ManualAttendanceScreen(
                     studentName = face.biometric.name,
                     studentClasses = face.classIds,
                     status = AttendanceStatus.fromCode(selectedStatus),
+                    timestamp = epochMillis,
                 ) { _, _ ->
                     onNavigateBack()
                 }
@@ -87,12 +88,12 @@ fun ManualAttendanceScreen(
                     recordId = "man_${System.currentTimeMillis()}",
                     studentId = face.biometric.studentId,
                     studentName = face.biometric.name,
-                    classId = "",
+                    classId = face.classIds.firstOrNull() ?: "UNASSIGNED",
                     className = "Manual",
                     schoolId = currentAccount?.activeSchoolId ?: "",
                     accountEmail = currentAccount?.email ?: "admin@azuratech.com",
                     status = AttendanceStatus.fromCode(selectedStatus),
-                    timestamp = finalDateTime.toInstant(ZoneOffset.UTC).toEpochMilli(),
+                    timestamp = epochMillis,
                 )
                 attendanceViewModel.addRecord(newRecord)
                 onNavigateBack()

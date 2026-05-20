@@ -20,9 +20,6 @@ class ReportRepositoryImpl @Inject constructor(
 
     override suspend fun getAuditLogs(startDate: LocalDate, endDate: LocalDate, schoolId: String): Result<List<SystemAuditTrail>> = withContext(Dispatchers.IO) {
         try {
-            val startMs = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val endMs = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
             Result.Success(emptyList()) // Placeholder until DAO updated
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))

@@ -13,4 +13,15 @@ interface AccountRepository {
     suspend fun updatePhoto(accountId: String, photoUrl: String): Result<Unit>
     suspend fun syncAccount(accountId: String): Result<AccountEntity>
     suspend fun pushAccount(accountId: String): Result<Unit>
+    suspend fun searchAccounts(email: String): Result<List<AccountEntity>>
+    suspend fun followAccount(accountId: String, targetAccountId: String): Result<Unit>
+    suspend fun unfollowAccount(accountId: String, targetAccountId: String): Result<Unit>
+    suspend fun updateFcmToken(accountId: String, token: String): Result<Unit>
+    suspend fun sendConnectionRequest(senderId: String, targetId: String): Result<Unit>
+    suspend fun acceptConnectionRequest(targetId: String, senderId: String): Result<Unit>
+    suspend fun declineConnectionRequest(targetId: String, senderId: String): Result<Unit>
+    fun observePendingRequests(accountId: String): Flow<Result<List<AccountEntity>>>
+    fun observePendingRequestsCount(accountId: String): Flow<Int>
+    fun observeConnections(accountId: String): Flow<Result<List<AccountEntity>>>
+    suspend fun assignClassToConnection(targetId: String, schoolId: String, classIds: List<String>): Result<Unit>
 }

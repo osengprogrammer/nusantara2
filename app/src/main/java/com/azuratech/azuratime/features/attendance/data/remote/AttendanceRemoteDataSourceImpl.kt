@@ -39,22 +39,14 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun syncRecord(record: AttendanceRecordEntity): Result<Unit> {
         return try {
-            val batch = db.batch()
             val data = record.toFirestoreMap().toMutableMap()
             data["lastUpdated"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
 
-            batch.set(
-                db.collection("schools").document(record.schoolId).collection("checkin_records").document(record.id),
-                data,
-                SetOptions.merge(),
-            )
-            batch.set(
-                db.collection("attendance_logs").document(record.id),
-                data,
-                SetOptions.merge(),
-            )
+            db.collection("schools").document(record.schoolId)
+                .collection("checkin_records").document(record.id)
+                .set(data, SetOptions.merge())
+                .await()
 
-            batch.commit().await()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
@@ -63,10 +55,10 @@ class AttendanceRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun deleteRecord(schoolId: String, recordId: String): Result<Unit> {
         return try {
-            val batch = db.batch()
-            batch.delete(db.collection("schools").document(schoolId).collection("checkin_records").document(recordId))
-            batch.delete(db.collection("attendance_logs").document(recordId))
-            batch.commit().await()
+            db.collection("schools").document(schoolId)
+                .collection("checkin_records").document(recordId)
+                .delete()
+                .await()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))

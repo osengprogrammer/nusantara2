@@ -1,5 +1,9 @@
 package com.azuratech.azuraengine.result
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
+
 sealed class AppError {
     abstract val message: String?
     data class Network(override val message: String?) : AppError()
@@ -44,3 +48,15 @@ inline fun <T> Result<T>.onFailure(action: (AppError) -> Unit): Result<T> {
     if (this is Result.Failure) action(error)
     return this
 }
+
+/**
+ * 🔥 AI Native: Map a Flow of data into a Flow of Result<T>.
+ */
+fun <T> Flow<T>.asResult(
+    errorMapper: (Throwable) -> AppError = { AppError.Unknown(it.message) },
+): Flow<Result<T>> = this
+    .map<T, Result<T>> { Result.Success(it) }
+    .catch { e -> emit(Result.Failure(errorMapper(e))) }
+
+fun <T> Flow<T>.asLocalResult(): Flow<Result<T>> =
+    asResult { AppError.LocalDB(it.message) }

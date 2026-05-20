@@ -69,7 +69,5 @@ object StudentRosterPreviewMocks {
         ),
     )
 
-    fun error(): StudentRosterUiState = StudentRosterUiState(
-        error = "Failed to load student roster. Please check your connection.",
-    )
+    fun error(): StudentRosterUiState = StudentRosterUiState()
 }

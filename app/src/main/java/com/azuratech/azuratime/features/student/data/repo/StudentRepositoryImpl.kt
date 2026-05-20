@@ -3,6 +3,7 @@ package com.azuratech.azuratime.features.student.data.repo
 import androidx.room.withTransaction
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
@@ -48,8 +49,8 @@ class StudentRepositoryImpl @Inject constructor(
                     flowOf(Result.Success(emptyList()))
                 } else {
                     studentDao.getStudentProfilesFlow(schoolId)
-                        .map { list -> Result.Success(list.map { it.toDomain() }) as Result<List<StudentProfile>> }
-                        .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+                        .map { list -> list.map { it.toDomain() } }
+                        .asLocalResult()
                 }
             }
     }
@@ -60,8 +61,6 @@ class StudentRepositoryImpl @Inject constructor(
             if (schoolId.isNullOrBlank()) {
                 return@withContext Result.Success(emptyList())
             }
-            // We can't easily convert Flow to List without a non-flow DAO method or .first()
-            // Let's use .first() on the existing flow for SSOT consistency
             val result = getStudentProfiles().first()
             if (result is Result.Success) {
                 Result.Success(result.data)
@@ -77,25 +76,15 @@ class StudentRepositoryImpl @Inject constructor(
         return try {
             val (student, biometric, assignments) = profile.toEntities()
             database.withTransaction {
-                // 1. Save Core Entities
                 studentDao.upsert(student)
-
-                // 🔥 AI Friendly: Clear legacy biometrics with different studentId but same studentId (unified)
                 biometricDao.deleteOtherBiometricsForStudent(student.studentId, biometric.studentId, student.schoolId)
                 biometricDao.upsertStudentBiometric(biometric)
-
-                // 2. Clear existing assignments for this student (prevent orphans)
                 assignmentDao.deleteAllByStudentId(biometric.studentId)
-
-                // 3. Insert new assignments
                 for (assignment in assignments) {
                     assignmentDao.insertAssignment(assignment)
                 }
             }
-
-            // 🔥 Phase 3 - Trigger background sync immediately
             syncManager.enqueueSync()
-
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -108,14 +97,12 @@ class StudentRepositoryImpl @Inject constructor(
             database.withTransaction {
                 val student = studentDao.getById(studentId, schoolId)
                 if (student?.isSynced == true) {
-                    // Soft-delete if already synced to cloud
                     studentDao.markPendingDeletion(studentId, schoolId)
                     val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
                     if (biometric != null) {
                         biometricDao.markPendingDeletion(biometric.studentId, schoolId)
                     }
                 } else {
-                    // Hard-delete if only local
                     val biometric = biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
                     if (biometric != null) {
                         assignmentDao.deleteAllByStudentId(biometric.studentId)
@@ -124,10 +111,7 @@ class StudentRepositoryImpl @Inject constructor(
                     studentDao.deleteById(studentId, schoolId)
                 }
             }
-
-            // 🔥 Phase 3 - Trigger background sync immediately
             syncManager.enqueueSync()
-
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -167,7 +151,6 @@ class StudentRepositoryImpl @Inject constructor(
     override suspend fun pushPendingProfiles(): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Success(Unit)
         try {
-            // Logic from PushStudentsUseCase
             val unsyncedStudents = studentDao.getUnsyncedStudents(schoolId)
             for (student in unsyncedStudents) {
                 val docRef = firestore.collection("schools").document(schoolId)
@@ -249,21 +232,44 @@ class StudentRepositoryImpl @Inject constructor(
             val snapshot = firestore.collection("schools").document(schoolId)
                 .collection("students").get().let { com.google.android.gms.tasks.Tasks.await(it) }
 
-            val students = snapshot.documents.mapNotNull { doc ->
+            val studentData = snapshot.documents.mapNotNull { doc ->
                 val id = doc.getString("studentId") ?: return@mapNotNull null
-                StudentEntity(
-                    studentId = id,
-                    schoolId = schoolId,
-                    name = doc.getString("name") ?: "",
-                    studentCode = doc.getString("studentCode"),
-                    classId = doc.getString("classId"),
-                    createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
-                    isSynced = true,
+                val name = doc.getString("name") ?: ""
+                val studentCode = doc.getString("studentCode")
+                val classId = doc.getString("classId")
+                val createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
+
+                Triple(
+                    StudentEntity(
+                        studentId = id,
+                        schoolId = schoolId,
+                        name = name,
+                        studentCode = studentCode,
+                        classId = classId,
+                        createdAt = createdAt,
+                        isSynced = true,
+                    ),
+                    id,
+                    classId,
                 )
             }
 
-            if (students.isNotEmpty()) {
-                studentDao.upsertAll(students)
+            if (studentData.isNotEmpty()) {
+                database.withTransaction {
+                    for ((entity, studentId, classId) in studentData) {
+                        studentDao.upsert(entity)
+                        if (!classId.isNullOrBlank()) {
+                            assignmentDao.insertAssignment(
+                                StudentClassAssignmentEntity(
+                                    studentId = studentId,
+                                    classId = classId,
+                                    schoolId = schoolId,
+                                    isSynced = true,
+                                ),
+                            )
+                        }
+                    }
+                }
             }
             Result.Success(Unit)
         } catch (e: Exception) {

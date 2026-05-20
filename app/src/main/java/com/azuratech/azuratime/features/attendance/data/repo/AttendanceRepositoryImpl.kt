@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.attendance.data.repo
 
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.domain.sync.ExportUtils
 import com.azuratech.azuratime.core.session.SessionManager
@@ -62,8 +63,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             classId,
             assignedIds,
             schoolId,
-        ).map { Result.Success(it) as Result<List<AttendanceRecordEntity>> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+        ).asLocalResult()
     }
 
     override suspend fun saveRecord(record: AttendanceRecord): Result<Unit> {
@@ -161,32 +161,27 @@ class AttendanceRepositoryImpl @Inject constructor(
 
     override fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Result<Int>> {
         return attendanceRecordDao.getTodayPresentCount(date, schoolId)
-            .map { Result.Success(it) as Result<Int> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .asLocalResult()
     }
 
     override fun getUnassignedStudentCount(schoolId: String): Flow<Result<Int>> {
         return assignmentDao.getUnassignedStudentCount(schoolId)
-            .map { Result.Success(it) as Result<Int> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .asLocalResult()
     }
 
     override fun getStudentsByClass(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>> {
         return assignmentDao.getStudentsByClass(classId, schoolId)
-            .map { Result.Success(it) as Result<List<StudentBiometricEntity>> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .asLocalResult()
     }
 
     override fun getStudentCountInClass(classId: String, schoolId: String): Flow<Result<Int>> {
         return assignmentDao.getStudentCountInClass(classId, schoolId)
-            .map { Result.Success(it) as Result<Int> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .asLocalResult()
     }
 
     override fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<Result<List<String>>> {
         return assignmentDao.getClassIdsForStudent(studentId, schoolId)
-            .map { Result.Success(it) as Result<List<String>> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .asLocalResult()
     }
 
     override suspend fun getStudentBiometricById(studentId: String, schoolId: String): Result<StudentBiometricEntity?> {

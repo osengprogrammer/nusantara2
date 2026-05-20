@@ -97,8 +97,8 @@ sealed class Screen(val route: String) {
     data object CreateSchool : Screen(NavigationRoutes.CREATE_SCHOOL)
     data object SetupWizard : Screen(NavigationRoutes.SETUP_WIZARD)
 
-    // --- 🤝 JARINGAN SEDULUR ---
-    data object Network : Screen(NavigationRoutes.NETWORK)
+    // --- 🤝 FOLLOWING & CONNECTIONS ---
+    data object Following : Screen(NavigationRoutes.FOLLOWING)
 
     // --- 👑 ADMIN & MODERATION ---
     data object PendingSchools : Screen(NavigationRoutes.PENDING_SCHOOLS)

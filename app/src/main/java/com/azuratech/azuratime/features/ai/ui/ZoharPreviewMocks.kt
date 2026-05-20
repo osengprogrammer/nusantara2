@@ -14,5 +14,5 @@ object ZoharPreviewMocks {
         ),
     )
 
-    fun error(): ZoharUiState = ZoharUiState(error = "Zohar sedang tidak enak badan. Coba lagi nanti.")
+    fun error(): ZoharUiState = ZoharUiState()
 }

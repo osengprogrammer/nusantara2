@@ -9,7 +9,7 @@ import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementScreen
 import com.azuratech.azuratime.features.account.ui.components.MyAssignedClassScreen
-import com.azuratech.azuratime.features.account.ui.components.NetworkScreen
+import com.azuratech.azuratime.features.account.ui.components.FollowingScreen
 
 fun NavGraphBuilder.accountGraph(
     navController: androidx.navigation.NavController,
@@ -59,8 +59,8 @@ fun NavGraphBuilder.accountGraph(
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
             )
         }
-        composable(NavigationRoutes.NETWORK) {
-            com.azuratech.azuratime.features.account.ui.components.NetworkScreen(
+        composable(NavigationRoutes.FOLLOWING) {
+            com.azuratech.azuratime.features.account.ui.components.FollowingScreen(
                 onNavigateBack = { navController.popBackStack() },
             )
         }

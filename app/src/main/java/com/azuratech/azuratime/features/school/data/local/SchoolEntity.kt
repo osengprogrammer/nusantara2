@@ -25,4 +25,17 @@ data class SchoolEntity(
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
+
+    companion object {
+        fun fromDomain(school: School): SchoolEntity = SchoolEntity(
+            id = school.id,
+            accountId = school.accountId,
+            name = school.name,
+            timezone = school.timezone,
+            status = school.status,
+            createdAt = school.createdAt,
+            updatedAt = school.updatedAt,
+            syncStatus = "SYNCED"
+        )
+    }
 }

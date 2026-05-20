@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuratime.MainActivity
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.ConflictResolverDialog
@@ -53,19 +54,19 @@ fun DashboardScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.uiEventFlow.collect { event ->
-            when (event) {
-                is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
-                is UiEvent.NavigateTo -> {
-                    if (event.route == "login") {
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is DashboardUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is DashboardUiEffect.ShowToast -> context.showToast(effect.message)
+                is DashboardUiEffect.NavigateTo -> {
+                    if (effect.route == "login") {
                         val intent = Intent(context, MainActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         context.startActivity(intent)
                     } else {
-                        navController.navigate(event.route)
+                        navController.navigate(effect.route)
                     }
                 }
-                is UiEvent.NavigateUp -> navController.navigateUp()
             }
         }
     }
@@ -85,18 +86,6 @@ fun DashboardScreen(
         when {
             uiState.isLoading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-            uiState.error != null -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center).padding(AzuraSpacing.lg),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(text = uiState.error ?: "Unknown Error", color = MaterialTheme.colorScheme.error)
-                    Spacer(modifier = Modifier.height(AzuraSpacing.md))
-                    Button(onClick = { viewModel.onEvent(DashboardUiEvent.Refresh) }) {
-                        Text("Retry")
-                    }
-                }
             }
             !uiState.isReady -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -203,9 +192,9 @@ fun DashboardContent(
                 }
 
                 item {
-                    SedulurNetworkButton(
+                    FollowingButton(
                         pendingRequests = data.pendingRequests,
-                        onClick = { navController.navigate(Screen.Network.route) },
+                        onClick = { navController.navigate(Screen.Following.route) },
                     )
                 }
 

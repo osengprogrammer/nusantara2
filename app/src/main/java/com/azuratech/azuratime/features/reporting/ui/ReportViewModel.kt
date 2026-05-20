@@ -35,7 +35,7 @@ class ReportViewModel @Inject constructor(
         _uiStateFlow,
         sessionManager.currentAccountIdFlow.filterNotNull(),
         sessionManager.activeSchoolIdFlow.filterNotNull(),
-    ) { state, accountId, schoolId ->
+    ) { state, _, _ ->
         // We use combine to react to accountId/schoolId changes if needed,
         // but core data is loaded via onEvent/init
         state

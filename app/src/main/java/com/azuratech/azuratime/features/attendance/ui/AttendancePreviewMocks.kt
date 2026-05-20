@@ -45,5 +45,5 @@ object AttendancePreviewMocks {
         ),
     )
 
-    fun error(): AttendanceUiState = AttendanceUiState(error = "Gagal memuat data presensi")
+    fun error(): AttendanceUiState = AttendanceUiState()
 }

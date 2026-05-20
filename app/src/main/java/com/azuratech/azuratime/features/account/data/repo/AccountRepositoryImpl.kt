@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.account.data.repo
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.features.account.data.local.AccountDao
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.toProfile
@@ -9,9 +10,11 @@ import com.azuratech.azuratime.features.account.data.local.Membership
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,8 +40,8 @@ class AccountRepositoryImpl @Inject constructor(
 
     override fun observeAccountEntity(id: String): Flow<Result<AccountEntity?>> =
         accountDao.observeAccountById(id)
-            .map { Result.Success(it) as Result<AccountEntity?> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .asLocalResult()
+
 
     override suspend fun getProfile(accountId: String): Result<AccountProfile> {
         return syncAccount(accountId).map { it.toProfile() }
@@ -133,6 +136,266 @@ class AccountRepositoryImpl @Inject constructor(
                 "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
             )
             db.collection("accounts").document(accountId).set(data, com.google.firebase.firestore.SetOptions.merge()).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun searchAccounts(email: String): Result<List<AccountEntity>> {
+        return try {
+            val snapshot = db.collection("accounts")
+                .whereEqualTo("email", email.lowercase().trim())
+                .limit(5)
+                .get()
+                .await()
+
+            val accounts = snapshot.documents.mapNotNull { doc ->
+                val id = doc.id
+                val name = doc.getString("name") ?: ""
+                val mail = doc.getString("email") ?: ""
+                val photo = doc.getString("photoUrl")
+
+                AccountEntity(
+                    accountId = id,
+                    email = mail,
+                    name = name,
+                    photoUrl = photo,
+                    status = doc.getString("status") ?: "ACTIVE",
+                    role = doc.getString("role") ?: "MEMBER",
+                )
+            }
+            Result.Success(accounts)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun followAccount(accountId: String, targetAccountId: String): Result<Unit> {
+        return try {
+            val batch = db.batch()
+            val senderRef = db.collection("whitelisted_accounts").document(accountId)
+            val targetRef = db.collection("whitelisted_accounts").document(targetAccountId)
+
+            batch.set(
+                senderRef,
+                mapOf(
+                    "followingIds" to com.google.firebase.firestore.FieldValue.arrayUnion(targetAccountId),
+                ),
+                com.google.firebase.firestore.SetOptions.merge(),
+            )
+
+            batch.set(
+                targetRef,
+                mapOf(
+                    "followerIds" to com.google.firebase.firestore.FieldValue.arrayUnion(accountId),
+                ),
+                com.google.firebase.firestore.SetOptions.merge(),
+            )
+
+            batch.commit().await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun unfollowAccount(accountId: String, targetAccountId: String): Result<Unit> {
+        return try {
+            val batch = db.batch()
+            val senderRef = db.collection("whitelisted_accounts").document(accountId)
+            val targetRef = db.collection("whitelisted_accounts").document(targetAccountId)
+
+            batch.set(
+                senderRef,
+                mapOf(
+                    "followingIds" to com.google.firebase.firestore.FieldValue.arrayRemove(targetAccountId),
+                ),
+                com.google.firebase.firestore.SetOptions.merge(),
+            )
+
+            batch.set(
+                targetRef,
+                mapOf(
+                    "followerIds" to com.google.firebase.firestore.FieldValue.arrayRemove(accountId),
+                ),
+                com.google.firebase.firestore.SetOptions.merge(),
+            )
+
+            batch.commit().await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun updateFcmToken(accountId: String, token: String): Result<Unit> {
+        return try {
+            val batch = db.batch()
+            batch.set(db.collection("accounts").document(accountId), mapOf("fcmToken" to token), com.google.firebase.firestore.SetOptions.merge())
+            batch.set(db.collection("whitelisted_accounts").document(accountId), mapOf("fcmToken" to token), com.google.firebase.firestore.SetOptions.merge())
+            batch.commit().await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun sendConnectionRequest(senderId: String, targetId: String): Result<Unit> {
+        return try {
+            val request = mapOf(
+                "senderId" to senderId,
+                "targetId" to targetId,
+                "status" to "PENDING",
+                "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
+            )
+            db.collection("connection_requests").document("${senderId}_$targetId").set(request).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun acceptConnectionRequest(targetId: String, senderId: String): Result<Unit> {
+        return try {
+            val batch = db.batch()
+            batch.delete(db.collection("connection_requests").document("${senderId}_$targetId"))
+
+            val senderRef = db.collection("whitelisted_accounts").document(senderId)
+            val targetRef = db.collection("whitelisted_accounts").document(targetId)
+
+            batch.set(
+                senderRef,
+                mapOf(
+                    "followingIds" to com.google.firebase.firestore.FieldValue.arrayUnion(targetId),
+                    "followerIds" to com.google.firebase.firestore.FieldValue.arrayUnion(targetId),
+                ),
+                com.google.firebase.firestore.SetOptions.merge(),
+            )
+
+            batch.set(
+                targetRef,
+                mapOf(
+                    "followingIds" to com.google.firebase.firestore.FieldValue.arrayUnion(senderId),
+                    "followerIds" to com.google.firebase.firestore.FieldValue.arrayUnion(senderId),
+                ),
+                com.google.firebase.firestore.SetOptions.merge(),
+            )
+
+            batch.commit().await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun declineConnectionRequest(targetId: String, senderId: String): Result<Unit> {
+        return try {
+            db.collection("connection_requests").document("${senderId}_$targetId").delete().await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override fun observePendingRequests(accountId: String): Flow<Result<List<AccountEntity>>> {
+        return callbackFlow {
+            val listener = db.collection("connection_requests")
+                .whereEqualTo("targetId", accountId)
+                .whereEqualTo("status", "PENDING")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        trySend(Result.Failure(AppError.Network(error.message)))
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null) {
+                        val senderIds = snapshot.documents.mapNotNull { it.getString("senderId") }
+                        if (senderIds.isEmpty()) {
+                            trySend(Result.Success(emptyList()))
+                            return@addSnapshotListener
+                        }
+                        db.collection("accounts").whereIn("accountId", senderIds).get()
+                            .addOnSuccessListener { accountSnap ->
+                                val accounts = accountSnap.documents.map { doc ->
+                                    AccountEntity(
+                                        accountId = doc.id,
+                                        email = doc.getString("email") ?: "",
+                                        name = doc.getString("name") ?: "",
+                                        photoUrl = doc.getString("photoUrl"),
+                                        status = "ACTIVE",
+                                    )
+                                }
+                                trySend(Result.Success(accounts))
+                            }
+                    }
+                }
+            awaitClose { listener.remove() }
+        }
+    }
+
+    override fun observePendingRequestsCount(accountId: String): Flow<Int> {
+        return callbackFlow {
+            val listener = db.collection("connection_requests")
+                .whereEqualTo("targetId", accountId)
+                .whereEqualTo("status", "PENDING")
+                .addSnapshotListener { snapshot, _ ->
+                    if (snapshot != null) {
+                        trySend(snapshot.size())
+                    }
+                }
+            awaitClose { listener.remove() }
+        }
+    }
+
+    override fun observeConnections(accountId: String): Flow<Result<List<AccountEntity>>> {
+        return callbackFlow {
+            val listener = db.collection("whitelisted_accounts").document(accountId)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        trySend(Result.Failure(AppError.Network(error.message)))
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null && snapshot.exists()) {
+                        val connectedIds = snapshot.get("followingIds") as? List<String> ?: emptyList()
+                        if (connectedIds.isEmpty()) {
+                            trySend(Result.Success(emptyList()))
+                            return@addSnapshotListener
+                        }
+                        db.collection("accounts").whereIn("accountId", connectedIds).get()
+                            .addOnSuccessListener { accountSnap ->
+                                val accounts = accountSnap.documents.map { doc ->
+                                    AccountEntity(
+                                        accountId = doc.id,
+                                        email = doc.getString("email") ?: "",
+                                        name = doc.getString("name") ?: "",
+                                        photoUrl = doc.getString("photoUrl"),
+                                        status = "ACTIVE",
+                                    )
+                                }
+                                trySend(Result.Success(accounts))
+                            }
+                    }
+                }
+            awaitClose { listener.remove() }
+        }
+    }
+
+    override suspend fun assignClassToConnection(targetId: String, schoolId: String, classIds: List<String>): Result<Unit> {
+        return try {
+            val doc = db.collection("whitelisted_accounts").document(targetId).get().await()
+            if (!doc.exists()) return Result.Failure(AppError.BusinessRule("Akun tidak ditemukan"))
+
+            val memberships = doc.get("memberships") as? MutableMap<String, Any> ?: mutableMapOf()
+            val schoolMembership = memberships[schoolId] as? MutableMap<String, Any> ?: mutableMapOf()
+
+            schoolMembership["assignedClassIds"] = classIds
+            schoolMembership["status"] = "ACTIVE"
+            schoolMembership["role"] = "TEACHER"
+            memberships[schoolId] = schoolMembership
+
+            db.collection("whitelisted_accounts").document(targetId).update("memberships", memberships).await()
+            db.collection("accounts").document(targetId).update("memberships", memberships).await()
+
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))

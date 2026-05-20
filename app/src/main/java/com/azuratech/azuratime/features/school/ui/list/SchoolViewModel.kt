@@ -125,7 +125,7 @@ class SchoolViewModel @Inject constructor(
 
         viewModelScope.launch {
             accountRepository.getAccountById(currentAccountId).onSuccess { account ->
-                val role = account.role ?: "MEMBER"
+                val role = account.role
 
                 if (role != "SUPER_ADMIN" && _uiStateFlow.value.schools.isNotEmpty()) {
                     _uiEventFlow.emit(UiEvent.ShowSnackbar("❌ Gagal: Hanya Super Admin yang dapat membuat lebih dari satu sekolah."))
@@ -139,7 +139,7 @@ class SchoolViewModel @Inject constructor(
                         }
 
                         schoolRepository.getSchoolById(newSchoolId).onSuccess { newSchool ->
-                            val status = newSchool.status ?: "PENDING"
+                            val status = newSchool.status
                             if (status == "ACTIVE") {
                                 _uiEventFlow.emit(UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
                                 if (sessionManager.getActiveSchoolId() == null) {

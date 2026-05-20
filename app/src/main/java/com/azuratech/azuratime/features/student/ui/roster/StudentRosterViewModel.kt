@@ -9,9 +9,11 @@ import com.azuratech.azuratime.features.school.domain.repository.SchoolRepositor
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
@@ -24,7 +26,7 @@ import javax.inject.Inject
 
 /**
  * 🎓 STUDENT ROSTER VIEW MODEL (v3.2.0-ai-native)
- * Refactored to Strict MVI & SSOT.
+ * Optimized with Effect-Driven MVI pattern.
  */
 @HiltViewModel
 class StudentRosterViewModel @Inject constructor(
@@ -35,6 +37,9 @@ class StudentRosterViewModel @Inject constructor(
 
     private val _uiStateFlow = MutableStateFlow(StudentRosterUiState())
     val uiStateFlow: StateFlow<StudentRosterUiState> = _uiStateFlow.asStateFlow()
+
+    private val _uiEffectFlow = MutableSharedFlow<StudentRosterUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     // Internal flows for reactive filtering
     private val _searchQueryFlow = MutableStateFlow("")
@@ -74,26 +79,25 @@ class StudentRosterViewModel @Inject constructor(
             is StudentRosterUiEvent.RetryDelete -> {
                 _uiStateFlow.value.targetStudentId?.let { deleteStudent(it) }
             }
-            is StudentRosterUiEvent.ClearError -> {
-                _uiStateFlow.update { it.copy(error = null) }
-            }
+            is StudentRosterUiEvent.ClearError -> { /* Handled via Effects in UI */ }
             is StudentRosterUiEvent.SyncStudents -> syncStudents()
             is StudentRosterUiEvent.NavigateToDetail -> {
-                // Handled via Screen navigation callback
+                viewModelScope.launch { _uiEffectFlow.emit(StudentRosterUiEffect.NavigateToDetail(event.studentId)) }
             }
         }
     }
 
     private fun loadRoster() {
         viewModelScope.launch {
-            _uiStateFlow.update { it.copy(isLoading = true, error = null) }
+            _uiStateFlow.update { it.copy(isLoading = true) }
             studentRepository.getAll()
-                .onSuccess { profiles ->
+                .onSuccess {
                     // Profiles will also be updated via observeRosterReactive flow
                     _uiStateFlow.update { it.copy(isLoading = false) }
                 }
                 .onFailure { error ->
-                    _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Gagal memuat data: ${error.message}"))
                 }
         }
     }
@@ -142,7 +146,10 @@ class StudentRosterViewModel @Inject constructor(
             _uiStateFlow.update { it.copy(isLoading = true) }
             studentRepository.pullStudents(schoolId)
                 .onSuccess { _uiStateFlow.update { it.copy(isLoading = false) } }
-                .onFailure { error -> _uiStateFlow.update { it.copy(isLoading = false, error = error.message) } }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Gagal sinkronisasi: ${error.message}"))
+                }
         }
     }
 
@@ -150,8 +157,14 @@ class StudentRosterViewModel @Inject constructor(
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true, isDeleteDialogVisible = false) }
             studentRepository.deleteProfile(studentId)
-                .onSuccess { _uiStateFlow.update { it.copy(isLoading = false, targetStudentId = null) } }
-                .onFailure { error -> _uiStateFlow.update { it.copy(isLoading = false, error = error.message) } }
+                .onSuccess {
+                    _uiStateFlow.update { it.copy(isLoading = false, targetStudentId = null) }
+                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Siswa berhasil dihapus"))
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Gagal menghapus: ${error.message}"))
+                }
         }
     }
 }
