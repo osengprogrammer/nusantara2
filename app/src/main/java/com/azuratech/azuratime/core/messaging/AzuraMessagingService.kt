@@ -10,18 +10,37 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.azuratech.azuratime.MainActivity
 import com.azuratech.azuratime.R // Pastikan ini mengarah ke R project kamu
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AzuraMessagingService : FirebaseMessagingService() {
 
+    @Inject
+    lateinit var accountRepository: AccountRepository
+
     private val TAG = "AzuraFCM"
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // Fungsi ini terpanggil kalau token HP berubah atau baru diinstal
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d(TAG, "Token FCM Baru: $token")
-        // Nanti kita akan kirim token ini ke Firestore agar sistem tahu alamat HP Ortu
+
+        val currentUid = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUid != null) {
+            serviceScope.launch {
+                accountRepository.updateFcmToken(currentUid, token)
+            }
+        }
     }
 
     // Fungsi ini menangkap notifikasi saat aplikasi sedang TERTUTUP atau TERBUKA

@@ -45,7 +45,7 @@ object NavigationRoutes {
     const val PENDING_SCHOOLS = "pendingSchools"
     const val ACCOUNT_PROFILE = "accountProfile"
     const val SCHOOL_LIST = "schoolList/{accountId}"
-    const val NETWORK = "network"
+    const val FOLLOWING = "following"
     const val DEBUG = "debug"
 
     // --- 🗺️ NAVIGATION GRAPHS ---

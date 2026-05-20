@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.reporting.data.repo
 
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.reporting.data.local.ExportJobEntity
 import com.azuratech.azuratime.features.reporting.domain.model.ExportJobProfile
@@ -23,7 +24,7 @@ class ExportRepositoryImpl @Inject constructor(
 
     override fun observeExportJobs(accountId: String): Flow<Result<List<ExportJobProfile>>> {
         return exportJobDao.observeExportJobsByAccount(accountId).map { entities ->
-            val profiles = entities.map { entity ->
+            entities.map { entity ->
                 ExportJobProfile(
                     jobId = entity.jobId,
                     fileType = entity.fileType,
@@ -36,8 +37,7 @@ class ExportRepositoryImpl @Inject constructor(
                     },
                 )
             }
-            Result.Success(profiles) as Result<List<ExportJobProfile>>
-        }.catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+        }.asLocalResult()
     }
 
     override suspend fun startExport(format: String, accountId: String, schoolId: String): Result<String> = withContext(Dispatchers.IO) {

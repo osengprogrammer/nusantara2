@@ -16,6 +16,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.features.ai.ui.ZoharAssistantViewModel
 import com.azuratech.azuratime.features.ai.ui.ZoharUiEvent
 
+import androidx.compose.ui.platform.LocalContext
+import com.azuratech.azuratime.core.util.showToast
+import com.azuratech.azuratime.features.ai.ui.ZoharUiEffect
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ZoharChatSheet(
@@ -25,6 +29,16 @@ fun ZoharChatSheet(
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState()
+    val context = LocalContext.current
+
+    // 🔥 AI Native: Collect and Handle UI Effects
+    LaunchedEffect(Unit) {
+        viewModel.uiEffectFlow.collect { effect: ZoharUiEffect ->
+            when (effect) {
+                is ZoharUiEffect.ShowToast -> context.showToast(effect.message)
+            }
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,

@@ -37,7 +37,7 @@ data class RawStudentProfile(
      * Note: This requires @Transaction on the DAO query.
      */
     @Relation(
-        parentColumn = "faceId",
+        parentColumn = "studentId", // 🔥 FIXED: Use student entity ID instead of joined faceId
         entityColumn = "studentId",
     )
     val assignments: List<StudentClassAssignmentEntity> = emptyList(),

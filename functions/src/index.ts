@@ -83,12 +83,94 @@ export const onregistrationapproved = onDocumentUpdated(
 );
 
 /**
+ * 🔔 ON CONNECTION REQUEST CREATED
+ * Triggered when someone sends a connection request (Facebook-style).
+ */
+export const onconnectionrequestcreated = onDocumentCreated(
+    "connection_requests/{requestId}",
+    async (event) => {
+        const data = event.data?.data();
+        if (!data) return;
+
+        const senderId = data.senderId;
+        const targetId = data.targetId;
+        const db = admin.firestore();
+
+        try {
+            // Get sender's name
+            const senderDoc = await db.collection("whitelisted_accounts").doc(senderId).get();
+            const senderName = senderDoc.data()?.name || "Seseorang";
+
+            // Get target's FCM token
+            const targetDoc = await db.collection("accounts").doc(targetId).get();
+            const fcmToken = targetDoc.data()?.fcmToken;
+
+            if (fcmToken) {
+                await admin.messaging().send({
+                    notification: {
+                        title: "Permintaan Pertemanan! 🤝",
+                        body: `${senderName} ingin terhubung dengan Anda.`
+                    },
+                    token: fcmToken
+                });
+                console.log(`✅ Connection notification sent to ${targetId}`);
+            }
+        } catch (error) {
+            console.error("❌ Connection notification error:", error);
+        }
+    }
+);
+
+/**
+ * 🔔 ON CONNECTION ACCEPTED
+ * Handled via whitelisted_accounts update (followingIds).
+ */
+export const onaccountfollowed = onDocumentUpdated(
+    "whitelisted_accounts/{uid}",
+    async (event) => {
+        const before = event.data?.before.data();
+        const after = event.data?.after.data();
+        const uid = event.params.uid;
+
+        if (!before || !after) return;
+
+        const beforeFollowers = before.followerIds || [];
+        const afterFollowers = after.followerIds || [];
+
+        if (afterFollowers.length > beforeFollowers.length) {
+            const newFollowerUid = afterFollowers[afterFollowers.length - 1];
+            const db = admin.firestore();
+
+            try {
+                const followerDoc = await db.collection("whitelisted_accounts").doc(newFollowerUid).get();
+                const followerName = followerDoc.data()?.name || "Seseorang";
+
+                const targetDoc = await db.collection("accounts").doc(uid).get();
+                const fcmToken = targetDoc.data()?.fcmToken;
+
+                if (fcmToken) {
+                    await admin.messaging().send({
+                        notification: {
+                            title: "Terhubung! 🤝",
+                            body: `${followerName} sekarang terhubung dengan Anda.`
+                        },
+                        token: fcmToken
+                    });
+                }
+            } catch (error) {
+                console.error("❌ Follow notification error:", error);
+            }
+        }
+    }
+);
+
+/**
  * 🔔 SEND PARENT NOTIFICATION
  * Triggered when a new attendance record is pushed.
  * Uses studentId (Unified Identity).
  */
 export const sendparentnotification = onDocumentCreated(
-    "attendance_logs/{logId}",
+    "schools/{schoolId}/checkin_records/{recordId}",
     async (event) => {
         const snap = event.data;
         if (!snap) return;

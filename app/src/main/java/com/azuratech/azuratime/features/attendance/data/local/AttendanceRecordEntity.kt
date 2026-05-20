@@ -92,7 +92,7 @@ data class AttendanceRecordEntity(
                 name = domain.studentName,
                 accountEmail = domain.accountEmail,
                 status = domain.status.toCode(),
-                attendanceDate = dateTime.toLocalDate(),
+                attendanceDate = dateTime.toLocalDate(), // The exact day the epoch represents in local timezone
                 attendanceTime = dateTime,
                 classId = domain.classId,
                 className = domain.className,
@@ -110,11 +110,12 @@ data class AttendanceRecordEntity(
 fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(schoolId: String): AttendanceRecordEntity? {
     return try {
         // 1. Identify primary timestamp
-        val rawTimestamp = getTimestamp("timestamp") ?: getTimestamp("createdAt")
-        val longTimestamp = getLong("createdAt") ?: getLong("timestamp")
+        // 🔥 AI Native: Prioritize 'createdAt' (actual attendance time) over 'timestamp' (sync time)
+        val longTimestamp = getLong("createdAt")
+        val rawTimestamp = getTimestamp("timestamp")
 
-        val finalTimestamp = rawTimestamp?.toDate()?.time
-            ?: longTimestamp
+        val finalTimestamp = longTimestamp
+            ?: rawTimestamp?.toDate()?.time
             ?: System.currentTimeMillis()
 
         // 2. Parse Date & Time (Resilient)

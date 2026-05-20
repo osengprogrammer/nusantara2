@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.domain.media.PhotoStorageUtils
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
@@ -30,7 +29,7 @@ import javax.inject.Inject
 
 /**
  * 🚀 STUDENT FORM VIEW MODEL (v3.2.0-ai-native)
- * Manages student registration and biometric enrollment.
+ * Optimized with Effect-Driven MVI pattern.
  */
 @HiltViewModel
 class StudentFormViewModel @Inject constructor(
@@ -45,8 +44,8 @@ class StudentFormViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(StudentFormUiState())
     val uiStateFlow: StateFlow<StudentFormUiState> = _uiStateFlow.asStateFlow()
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow: SharedFlow<UiEvent> = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<StudentFormUiEffect>()
+    val uiEffectFlow: SharedFlow<StudentFormUiEffect> = _uiEffectFlow.asSharedFlow()
 
     init {
         observeClasses()
@@ -77,12 +76,12 @@ class StudentFormViewModel @Inject constructor(
             is StudentFormUiEvent.CapturePhoto -> _uiStateFlow.update { it.copy(isCapturingPhoto = true) }
             is StudentFormUiEvent.PhotoSelected -> updateField("photoUrl", event.uri)
             is StudentFormUiEvent.PhotoCaptured -> handlePhotoCaptured(event.bitmap)
-            is StudentFormUiEvent.BiometricScanned -> handleBiometricScanned(event.encoding)
+            is StudentFormUiEvent.BiometricScanned -> handleBiometricScanned()
             is StudentFormUiEvent.FaceCaptured -> handleFaceCaptured(event.bitmap, event.embedding)
             is StudentFormUiEvent.SubmitForm -> submitForm()
             is StudentFormUiEvent.Retry -> submitForm()
-            is StudentFormUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
-            is StudentFormUiEvent.NavigateBack -> viewModelScope.launch { _uiEventFlow.emit(UiEvent.NavigateUp) }
+            is StudentFormUiEvent.ClearError -> { /* Handled via Effects in UI */ }
+            is StudentFormUiEvent.NavigateBack -> viewModelScope.launch { _uiEffectFlow.emit(StudentFormUiEffect.NavigateBack) }
         }
     }
 
@@ -90,7 +89,7 @@ class StudentFormViewModel @Inject constructor(
         _uiStateFlow.update { state ->
             val updatedProfile = when (field) {
                 "name" -> state.profile.copy(name = value as String)
-                "studentId" -> state.profile.copy(studentId = value as String, faceId = value as String)
+                "studentId" -> state.profile.copy(studentId = value as String, faceId = value)
                 "studentCode" -> state.profile.copy(studentCode = value as String)
                 "classId" -> state.profile.copy(classIds = listOf(value as String))
                 "photoUrl" -> state.profile.copy(photoUrl = value as String)
@@ -105,9 +104,7 @@ class StudentFormViewModel @Inject constructor(
         _uiStateFlow.update { it.copy(capturedBitmap = bitmap, isCapturingPhoto = false) }
     }
 
-    private fun handleBiometricScanned(encoding: ByteArray) {
-        // Map encoding to embedding if needed, or store as is
-        // For now, assuming encoding is the embedding as ByteArray
+    private fun handleBiometricScanned() {
         _uiStateFlow.update { it.copy(biometricStatus = BiometricStatus.Success) }
     }
 
@@ -129,7 +126,7 @@ class StudentFormViewModel @Inject constructor(
             return
         }
 
-        _uiStateFlow.update { it.copy(isSubmitting = true, error = null) }
+        _uiStateFlow.update { it.copy(isSubmitting = true) }
 
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
@@ -139,11 +136,12 @@ class StudentFormViewModel @Inject constructor(
             when (val result = studentRepository.saveProfile(profile)) {
                 is Result.Success -> {
                     _uiStateFlow.update { it.copy(isSubmitting = false, isSubmitted = true) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Siswa berhasil disimpan"))
-                    _uiEventFlow.emit(UiEvent.NavigateUp)
+                    _uiEffectFlow.emit(StudentFormUiEffect.ShowSnackbar("Siswa berhasil disimpan"))
+                    _uiEffectFlow.emit(StudentFormUiEffect.NavigateBack)
                 }
                 is Result.Failure -> {
-                    _uiStateFlow.update { it.copy(isSubmitting = false, error = result.error.message) }
+                    _uiStateFlow.update { it.copy(isSubmitting = false) }
+                    _uiEffectFlow.emit(StudentFormUiEffect.ShowToast("Gagal: ${result.error.message}"))
                 }
                 is Result.Loading -> {}
             }
@@ -187,11 +185,11 @@ class StudentFormViewModel @Inject constructor(
                             )
                         }
                     } ?: run {
-                        _uiStateFlow.update { it.copy(error = "Siswa tidak ditemukan") }
+                        _uiEffectFlow.emit(StudentFormUiEffect.ShowToast("Siswa tidak ditemukan"))
                     }
                 }
                 is Result.Failure -> {
-                    _uiStateFlow.update { it.copy(error = result.error.message) }
+                    _uiEffectFlow.emit(StudentFormUiEffect.ShowToast("Error: ${result.error.message}"))
                 }
                 else -> {}
             }

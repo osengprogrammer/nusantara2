@@ -47,9 +47,18 @@ fun BulkRegistrationScreen(
     var fileName by remember { mutableStateOf<String?>(null) }
     var showCsvFormat by remember { mutableStateOf(false) }
 
+    // 🔥 AI Native: Collect and Handle UI Effects
+    LaunchedEffect(Unit) {
+        bulkViewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is RegisterUiEffect.ShowToast -> context.showToast(effect.message)
+            }
+        }
+    }
+
     fun downloadCsvTemplate() {
-        val header = "face_id,full_name,class_id,photo_url"
-        val example = "STUDENT-001,Ahmad Sudirman,CLASS-10A,https://azuratech.com/photo.jpg"
+        val header = "student_id,full_name,class_name,photo_url"
+        val example = "STU-001,Ahmad Sudirman,Kelas-10A,https://azuratech.com/photo.jpg"
         val csvContent = "$header\n$example\n"
         try {
             val file = File(context.cacheDir, "Azura_Bulk_Template.csv")
@@ -110,7 +119,7 @@ fun BulkRegistrationScreen(
                         }
                         if (showCsvFormat) {
                             Text(
-                                text = "Gunakan kolom: face_id, full_name, class_id, photo_url.\nSiswa otomatis akan masuk ke workspace ini.",
+                                text = "Gunakan kolom: student_id, full_name, class_name, photo_url.\nSiswa otomatis akan masuk ke workspace ini.",
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(top = 8.dp),
                             )

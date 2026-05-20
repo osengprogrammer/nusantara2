@@ -5,8 +5,7 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 
 /**
- * 🎨 STUDENT FORM UI STATE
- * v3.2.0-ai-native compliant
+ * 🎨 STUDENT FORM UI STATE (v3.2.0-ai-native)
  */
 data class StudentFormUiState(
     val profile: StudentProfile = StudentProfile(
@@ -18,7 +17,6 @@ data class StudentFormUiState(
     val isSubmitting: Boolean = false,
     val isCapturingPhoto: Boolean = false,
     val biometricStatus: BiometricStatus = BiometricStatus.Idle,
-    val error: String? = null,
     val validationErrors: Map<String, String> = emptyMap(),
     val isSubmitted: Boolean = false,
     val isEditMode: Boolean = false,

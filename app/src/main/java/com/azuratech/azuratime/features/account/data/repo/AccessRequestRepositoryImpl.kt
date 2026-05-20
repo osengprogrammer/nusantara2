@@ -3,6 +3,7 @@ package com.azuratech.azuratime.features.account.data.repo
 import androidx.room.withTransaction
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*
@@ -71,8 +72,7 @@ class AccessRequestRepositoryImpl @Inject constructor(
 
     override fun observeRequestsByAccount(accountId: String): Flow<Result<List<AccessRequestEntity>>> {
         return accessRequestDao.observeRequestsByAccount(accountId)
-            .map { Result.Success(it) as Result<List<AccessRequestEntity>> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .asLocalResult()
     }
 
     override suspend fun getPendingRequests(schoolId: String): Result<List<AccessRequestProfile>> {

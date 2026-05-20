@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.reporting.data.repo
 
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.data.local.toProfile
@@ -21,9 +22,11 @@ class AuditLogRepositoryImpl @Inject constructor(
 
     override fun observeAuditLogs(schoolId: String): Flow<Result<List<SystemAuditTrail>>> {
         return auditLogDao.observeLogsBySchool(schoolId)
-            .map { entities -> Result.Success(entities.map { it.toProfile() }) as Result<List<SystemAuditTrail>> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .map { entities -> entities.map { it.toProfile() } }
+            .asLocalResult()
     }
+
+
 
     override suspend fun logAction(schoolId: String, accountId: String, action: String, details: String?): Result<Unit> {
         return try {

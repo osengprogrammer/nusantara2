@@ -42,7 +42,6 @@ object StudentFormPreviewMocks {
     )
 
     fun error(): StudentFormUiState = initial().copy(
-        error = "Koneksi internet bermasalah. Silakan coba lagi.",
         profile = StudentProfile(
             studentId = "STU-123",
             name = "John Doe",

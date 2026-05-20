@@ -52,6 +52,13 @@ class AttendanceMatrixViewModel @Inject constructor(
             }
             is AttendanceMatrixUiEvent.Search -> {
                 _searchQuery.value = event.query
+                // 🔥 AI Native: Fast UI Update to prevent cursor jumping
+                val currentState = _uiStateFlow.value
+                if (currentState is AttendanceMatrixUiState.Success) {
+                    _uiStateFlow.value = AttendanceMatrixUiState.Success(
+                        currentState.data.copy(searchQuery = event.query),
+                    )
+                }
             }
             is AttendanceMatrixUiEvent.ExportToCsv -> {
                 // Implement export functionality if needed
@@ -66,7 +73,7 @@ class AttendanceMatrixViewModel @Inject constructor(
             val filtersFlow = combine(
                 _startDate,
                 _endDate,
-                _searchQuery,
+                _searchQuery.debounce(300), // ⚡ AI Native: Debounce heavy search
                 _selectedClassId,
             ) { start, end, query, classId ->
                 FilterInputs(start, end, query, classId)
@@ -95,10 +102,10 @@ class AttendanceMatrixViewModel @Inject constructor(
                         schoolId = schoolId,
                     ).map { recordsResult ->
                         val records = if (recordsResult is Result.Success) recordsResult.data else emptyList()
-                        val filteredStudents = if (classFilter != null) {
-                            params.students.filter { classFilter in it.classIds }
-                        } else {
-                            params.students
+                        val filteredStudents = params.students.filter { student ->
+                            val matchesClass = classFilter == null || classFilter in student.classIds
+                            val matchesQuery = params.query.isEmpty() || student.name.contains(params.query, ignoreCase = true)
+                            matchesClass && matchesQuery
                         }
                         val rows = transformToMatrixRows(records, filteredStudents, params.startDate, params.endDate)
 

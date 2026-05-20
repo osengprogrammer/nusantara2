@@ -14,7 +14,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
-fun SedulurNetworkButton(pendingRequests: Int, onClick: () -> Unit) {
+fun FollowingButton(pendingRequests: Int, onClick: () -> Unit) {
     BadgedBox(
         badge = {
             if (pendingRequests > 0) {
@@ -30,9 +30,9 @@ fun SedulurNetworkButton(pendingRequests: Int, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             shape = AzuraShapes.medium,
         ) {
-            Icon(Icons.Default.People, contentDescription = "Jaringan Sedulur")
+            Icon(Icons.Default.People, contentDescription = "Following")
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Jaringan Sedulur (Teman)")
+            Text("Following (Connections)")
         }
     }
 }

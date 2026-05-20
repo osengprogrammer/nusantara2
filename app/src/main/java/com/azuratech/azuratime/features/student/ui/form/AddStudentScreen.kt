@@ -35,6 +35,9 @@ import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 
+import androidx.compose.ui.platform.LocalContext
+import com.azuratech.azuratime.core.util.showToast
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun AddStudentScreen(
@@ -43,6 +46,7 @@ fun AddStudentScreen(
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     var showCamera by remember { mutableStateOf(false) }
     var captureMode by remember { mutableStateOf("EMBEDDING") } // "EMBEDDING" or "PHOTO"
@@ -51,16 +55,19 @@ fun AddStudentScreen(
 
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
+    // 🔥 AI Native: Collect and Handle UI Effects
     LaunchedEffect(Unit) {
-        viewModel.uiEventFlow.collect { event ->
-            when (event) {
-                is com.azuratech.azuratime.core.ui.UiEvent.NavigateUp -> {
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                StudentFormUiEffect.NavigateBack -> {
                     onNavigateBack()
                 }
-                is com.azuratech.azuratime.core.ui.UiEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(event.message)
+                is StudentFormUiEffect.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(effect.message)
                 }
-                else -> {}
+                is StudentFormUiEffect.ShowToast -> {
+                    context.showToast(effect.message)
+                }
             }
         }
     }
@@ -122,14 +129,6 @@ fun AddStudentScreen(
                         }
                     },
                 )
-
-                uiState.error?.let {
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(top = AzuraSpacing.md),
-                    )
-                }
             }
 
             if (showCamera) {

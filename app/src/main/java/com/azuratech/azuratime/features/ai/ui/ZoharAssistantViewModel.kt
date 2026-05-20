@@ -7,8 +7,11 @@ import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.ai.domain.repository.ZoharRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -16,7 +19,7 @@ import javax.inject.Inject
 
 /**
  * 🤖 ZOHAR ASSISTANT VIEW MODEL (v3.2.0-ai-native)
- * Integrated with ZoharRepository and strict MVI pattern.
+ * Optimized with Effect-Driven MVI pattern.
  */
 @HiltViewModel
 class ZoharAssistantViewModel @Inject constructor(
@@ -27,6 +30,9 @@ class ZoharAssistantViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(ZoharUiState())
     val uiStateFlow: StateFlow<ZoharUiState> = _uiStateFlow.asStateFlow()
 
+    private val _uiEffectFlow = MutableSharedFlow<ZoharUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
+
     fun onEvent(event: ZoharUiEvent) {
         when (event) {
             is ZoharUiEvent.AskZohar -> handleAskZohar(event.query)
@@ -35,7 +41,7 @@ class ZoharAssistantViewModel @Inject constructor(
                 val lastQuery = _uiStateFlow.value.query
                 if (lastQuery.isNotBlank()) handleAskZohar(lastQuery)
             }
-            ZoharUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
+            ZoharUiEvent.ClearError -> { /* Handled via Effects in UI */ }
         }
     }
 
@@ -45,7 +51,6 @@ class ZoharAssistantViewModel @Inject constructor(
                 it.copy(
                     query = userQuestion,
                     isLoading = true,
-                    error = null,
                     conversationHistory = it.conversationHistory + ChatMessage(ChatRole.USER, userQuestion),
                 )
             }
@@ -63,12 +68,8 @@ class ZoharAssistantViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    _uiStateFlow.update {
-                        it.copy(
-                            isLoading = false,
-                            error = "Zohar mengalami gangguan koneksi: ${error.message}",
-                        )
-                    }
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(ZoharUiEffect.ShowToast("Zohar mengalami gangguan koneksi: ${error.message}"))
                 }
         }
     }

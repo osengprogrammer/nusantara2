@@ -10,5 +10,4 @@ data class RegisterUiState(
     val progress: Float = 0f,
     val status: String = "",
     val results: List<ProcessResult> = emptyList(),
-    val error: String? = null,
 )

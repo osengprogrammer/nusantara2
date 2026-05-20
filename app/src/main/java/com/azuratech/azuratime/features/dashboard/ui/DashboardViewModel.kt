@@ -10,7 +10,6 @@ import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.domain.model.toAccountRole
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
@@ -30,7 +29,7 @@ import javax.inject.Inject
 
 /**
  * 🏠 DASHBOARD VIEW MODEL (v3.2.0-ai-native)
- * Entry point for Accounts (Admins and Members).
+ * Optimized with Effect-Driven MVI pattern.
  */
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
@@ -45,8 +44,8 @@ class DashboardViewModel @Inject constructor(
     private val database: AppDatabase,
 ) : ViewModel() {
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<DashboardUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     private val _refreshTriggerFlow = MutableStateFlow(0)
 
@@ -127,6 +126,15 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
+    private val _pendingRequestsCountFlow = sessionManager.currentAccountIdFlow
+        .flatMapLatest { accountId ->
+            if (accountId != null) {
+                accountRepository.observePendingRequestsCount(accountId)
+            } else {
+                flowOf(0)
+            }
+        }
+
     val uiStateFlow: StateFlow<DashboardUiState> = combine(
         _accountFlow,
         _recentRecordsFlow,
@@ -134,22 +142,20 @@ class DashboardViewModel @Inject constructor(
         _assignedClassesFlow,
         _allClassesFlow,
         _activeSchoolFlow,
+        _pendingRequestsCountFlow,
         _refreshTriggerFlow,
-    ) { flows ->
-        val account = flows[0] as AccountEntity?
-
+    ) { params ->
+        val account = params[0] as AccountEntity?
         @Suppress("UNCHECKED_CAST")
-        val recentRecords = flows[1] as List<AttendanceRecordEntity>
-
+        val recentRecords = params[1] as List<AttendanceRecordEntity>
         @Suppress("UNCHECKED_CAST")
-        val sessionStudents = flows[2] as List<StudentBiometricEntity>
-
+        val sessionStudents = params[2] as List<StudentBiometricEntity>
         @Suppress("UNCHECKED_CAST")
-        val assignedClasses = flows[3] as List<ClassModel>
-
+        val assignedClasses = params[3] as List<ClassModel>
         @Suppress("UNCHECKED_CAST")
-        val allClasses = flows[4] as List<ClassModel>
-        val activeSchool = flows[5] as School?
+        val allClasses = params[4] as List<ClassModel>
+        val activeSchool = params[5] as School?
+        val pendingCount = params[6] as Int
 
         val activeSchoolId = activeSchool?.id
         val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
@@ -166,6 +172,7 @@ class DashboardViewModel @Inject constructor(
             isReady = isReady,
             currentRole = effectiveRole,
             isApproved = account?.status == "ACTIVE",
+            pendingRequests = pendingCount,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState(isLoading = true))
 
@@ -183,7 +190,7 @@ class DashboardViewModel @Inject constructor(
             is DashboardUiEvent.SelectSchool -> selectSchool(event.school)
             is DashboardUiEvent.SelectActiveClass -> selectActiveClass(event.classId)
             is DashboardUiEvent.ResolveConflict -> resolveConflict(event.conflict, event.useCloud)
-            is DashboardUiEvent.NavigateTo -> viewModelScope.launch { _uiEventFlow.emit(UiEvent.NavigateTo(event.route)) }
+            is DashboardUiEvent.NavigateTo -> viewModelScope.launch { _uiEffectFlow.emit(DashboardUiEffect.NavigateTo(event.route)) }
             DashboardUiEvent.Logout -> logout()
             DashboardUiEvent.OnRegisterStudentClick -> onRegisterStudentClick()
         }
@@ -229,10 +236,10 @@ class DashboardViewModel @Inject constructor(
                         sessionManager.saveLastSyncTime(System.currentTimeMillis())
                     }
 
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Sinkronisasi Selesai!"))
+                    _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Sinkronisasi Selesai!"))
                 }
                 .onFailure { error ->
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal sinkron: ${error.message}"))
+                    _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Gagal sinkron: ${error.message}"))
                 }
         }
     }
@@ -261,7 +268,7 @@ class DashboardViewModel @Inject constructor(
     private fun logout() {
         viewModelScope.launch {
             authRepository.clearAllDataAndSignOut()
-            _uiEventFlow.emit(UiEvent.NavigateTo("login")) // Assuming login route
+            _uiEffectFlow.emit(DashboardUiEffect.NavigateTo("login"))
         }
     }
 
@@ -269,10 +276,10 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId()
             if (schoolId == null) {
-                _uiEventFlow.emit(UiEvent.ShowSnackbar("Silakan pilih sekolah terlebih dahulu"))
+                _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Silakan pilih sekolah terlebih dahulu"))
                 return@launch
             }
-            _uiEventFlow.emit(UiEvent.NavigateTo("registrationMenu"))
+            _uiEffectFlow.emit(DashboardUiEffect.NavigateTo("registrationMenu"))
         }
     }
 }

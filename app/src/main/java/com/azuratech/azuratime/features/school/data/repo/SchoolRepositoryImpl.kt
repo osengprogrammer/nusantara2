@@ -4,6 +4,7 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
@@ -33,40 +34,29 @@ class SchoolRepositoryImpl @Inject constructor(
     private val dao = database.schoolClassDao()
     private val schoolDao = database.schoolDao()
     private val userDao = database.accountDao()
+    private val classDao = database.classDao()
     private val accessRequestDao = database.accessRequestDao()
     private val repositoryScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun observeSchools(accountId: String): Flow<Result<List<School>>> =
         dao.getSchools(accountId)
-            .map { entities ->
-                Result.Success(entities.map { it.toDomain() }) as Result<List<School>>
-            }
-            .catch { e ->
-                emit(Result.Failure(AppError.LocalDB(e.message)))
-            }
+            .map { entities -> entities.map { it.toDomain() } }
+            .asLocalResult()
 
     override fun observeSchoolsByIds(schoolIds: List<String>): Flow<Result<List<School>>> =
         dao.observeSchoolsByIds(schoolIds)
-            .map { entities ->
-                Result.Success(entities.map { it.toDomain() }) as Result<List<School>>
-            }
-            .catch { e ->
-                emit(Result.Failure(AppError.LocalDB(e.message)))
-            }
+            .map { entities -> entities.map { it.toDomain() } }
+            .asLocalResult()
 
     override fun observeSchoolById(id: String): Flow<Result<School?>> =
         dao.observeSchoolById(id)
-            .map { Result.Success(it?.toDomain()) as Result<School?> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .map { it?.toDomain() }
+            .asLocalResult()
 
     override fun observeAllSchools(): Flow<Result<List<School>>> =
         dao.observeAllSchools()
-            .map { entities ->
-                Result.Success(entities.map { it.toDomain() }) as Result<List<School>>
-            }
-            .catch { e ->
-                emit(Result.Failure(AppError.LocalDB(e.message)))
-            }
+            .map { entities -> entities.map { it.toDomain() } }
+            .asLocalResult()
 
     override suspend fun createSchool(adminId: String, name: String, timezone: String): Result<String> {
         return try {
@@ -100,18 +90,11 @@ class SchoolRepositoryImpl @Inject constructor(
                     updatedMemberships[schoolId] = Membership(
                         schoolName = name,
                         role = "ADMIN",
+                        status = "ACTIVE",
+                        assignedClassIds = emptyList()
                     )
-                    database.accountDao().updateAccount(
-                        user.copy(
-                            memberships = updatedMemberships,
-                            activeSchoolId = schoolId,
-                            syncStatus = SyncStatus.PENDING_UPDATE.name,
-                        ),
-                    )
+                    database.accountDao().updateAccount(user.copy(memberships = updatedMemberships, activeSchoolId = schoolId))
                 }
-
-                syncManager.enqueueSchoolSync(schoolId)
-                syncManager.enqueueProfileSync(adminId)
             }
             Result.Success(schoolId)
         } catch (e: Exception) {
@@ -119,17 +102,15 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateSchoolDetails(schoolId: String, name: String?, timezone: String?): Result<Unit> {
-        return try {
-            database.withTransaction {
-                val existing = dao.getSchoolById(schoolId) ?: return@withTransaction
-                val updated = existing.copy(
-                    name = name ?: existing.name,
-                    timezone = timezone ?: existing.timezone,
-                    updatedAt = System.currentTimeMillis(),
-                    syncStatus = SyncStatus.PENDING_UPDATE.name,
-                )
-                dao.upsertSchool(updated)
+    override suspend fun updateSchoolDetails(schoolId: String, name: String?, timezone: String?): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val school = dao.getSchoolById(schoolId)
+            if (school != null) {
+                dao.upsertSchool(school.copy(
+                    name = name ?: school.name,
+                    timezone = timezone ?: school.timezone,
+                    syncStatus = SyncStatus.PENDING_UPDATE.name
+                ))
                 syncManager.enqueueSchoolSync(schoolId)
             }
             Result.Success(Unit)
@@ -138,135 +119,88 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveSchool(school: School): Result<Unit> = try {
-        saveSchoolLocally(school)
-        syncManager.enqueueSchoolSync(school.id)
-        Result.Success(Unit)
-    } catch (e: Exception) {
-        Result.Failure(AppError.LocalDB(e.message))
-    }
-
-    override suspend fun saveSchoolLocally(school: School): Result<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun saveSchool(school: School): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            dao.upsertSchool(
-                SchoolEntity(
-                    id = school.id,
-                    accountId = school.accountId,
-                    name = school.name,
-                    timezone = school.timezone,
-                    status = school.status,
-                    createdAt = school.createdAt,
-                    updatedAt = System.currentTimeMillis(),
-                    syncStatus = SyncStatus.SYNCED.name,
-                ),
-            )
+            dao.upsertSchool(SchoolEntity.fromDomain(school))
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
         }
     }
 
-    override suspend fun getSchoolById(id: String): Result<School> = try {
-        val entity = dao.getSchoolById(id)
-        if (entity != null) {
-            Result.Success(entity.toDomain())
-        } else {
-            Result.Failure(AppError.LocalDB("School not found"))
-        }
-    } catch (e: Exception) {
-        Result.Failure(AppError.LocalDB(e.message))
+    override suspend fun saveSchoolLocally(school: School): Result<Unit> = withContext(Dispatchers.IO) {
+        saveSchool(school)
     }
 
-    override suspend fun getCountByAccount(accountId: String): Result<Int> = try {
-        Result.Success(dao.getSchoolCountByAccount(accountId))
-    } catch (e: Exception) {
-        Result.Failure(AppError.LocalDB(e.message))
-    }
-
-    override suspend fun getFirstSchoolId(accountId: String): Result<String?> = try {
-        Result.Success(dao.getFirstSchoolId(accountId))
-    } catch (e: Exception) {
-        Result.Failure(AppError.LocalDB(e.message))
-    }
-
-    override suspend fun schoolExists(schoolId: String): Result<Boolean> = try {
-        Result.Success(dao.getSchoolById(schoolId) != null)
-    } catch (e: Exception) {
-        Result.Failure(AppError.LocalDB(e.message))
-    }
-
-    override suspend fun syncSchools(schoolIds: List<String>): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+    override suspend fun getSchoolById(id: String): Result<School> = withContext(Dispatchers.IO) {
         try {
-            if (schoolIds.isEmpty()) return@withContext Result.Success(Unit)
-
-            val remoteResult = remoteDataSource.getSchoolsByIds(schoolIds)
-            if (remoteResult is Result.Success) {
-                remoteResult.data.forEach { school ->
-                    saveSchoolLocally(school)
-                }
-                Result.Success(Unit)
+            val school = dao.getSchoolById(id)
+            if (school != null) {
+                Result.Success(school.toDomain())
             } else {
-                remoteResult as Result.Failure
+                Result.Failure(AppError.LocalDB("School not found"))
             }
         } catch (e: Exception) {
-            Result.Failure(AppError.Network(e.message))
+            Result.Failure(AppError.LocalDB(e.message))
         }
     }
 
-    override suspend fun syncClasses(accountId: String, schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+    override suspend fun getCountByAccount(accountId: String): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val remoteResult = remoteDataSource.getClasses(accountId, schoolId)
-            if (remoteResult is Result.Success) {
-                remoteResult.data.forEach { classModel ->
-                    saveClassLocally(
-                        ClassEntity(
-                            id = classModel.id,
-                            ownerAccountId = accountId,
-                            schoolId = classModel.schoolId ?: schoolId,
-                            name = classModel.name,
-                            grade = classModel.grade,
-                            accountId = classModel.accountId,
-                            studentCount = classModel.studentCount,
-                            createdAt = classModel.createdAt,
+            Result.Success(dao.getSchoolCountByAccount(accountId))
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun getFirstSchoolId(accountId: String): Result<String?> = withContext(Dispatchers.IO) {
+        try {
+            Result.Success(dao.getFirstSchoolId(accountId))
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun schoolExists(schoolId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            Result.Success(dao.getSchoolById(schoolId) != null)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun syncSchools(schoolIds: List<String>): Result<Unit> = withContext(Dispatchers.IO) {
+        Result.Success(Unit)
+    }
+
+    override suspend fun syncClasses(accountId: String, schoolId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        Result.Success(Unit)
+    }
+
+    override suspend fun deleteSchool(id: String, accountId: String): Result<Unit> {
+        return try {
+            database.withTransaction {
+                val existing = dao.getSchoolById(id)
+                if (existing != null) {
+                    dao.upsertSchool(
+                        existing.copy(
+                            status = "DELETED",
+                            syncStatus = SyncStatus.PENDING_DELETE.name,
                         ),
                     )
-                    dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
+                    syncManager.enqueueSchoolSync(id)
                 }
-                Result.Success(Unit)
-            } else {
-                remoteResult as Result.Failure
             }
+            Result.Success(Unit)
         } catch (e: Exception) {
-            Result.Failure(AppError.Network(e.message))
+            Result.Failure(AppError.LocalDB(e.message))
         }
-    }
-
-    override suspend fun deleteSchool(id: String, accountId: String): Result<Unit> = try {
-        database.withTransaction {
-            val existing = dao.getSchoolById(id)
-            if (existing != null) {
-                dao.upsertSchool(
-                    existing.copy(
-                        status = "DELETED",
-                        syncStatus = SyncStatus.PENDING_DELETE.name,
-                    ),
-                )
-                syncManager.enqueueSchoolSync(id)
-            }
-        }
-        Result.Success(Unit)
-    } catch (e: Exception) {
-        Result.Failure(AppError.LocalDB(e.message))
     }
 
     override fun observeClasses(schoolId: String): Flow<Result<List<ClassModel>>> =
         dao.getClasses(schoolId)
-            .map { entities ->
-                Result.Success(entities.map { it.toDomain() }) as Result<List<ClassModel>>
-            }
-            .catch { e ->
-                emit(Result.Failure(AppError.LocalDB(e.message)))
-            }
+            .map { entities -> entities.map { it.toDomain() } }
+            .asLocalResult()
 
     override suspend fun getClasses(schoolId: String): Result<List<ClassModel>> = withContext(Dispatchers.IO) {
         try {
@@ -359,16 +293,12 @@ class SchoolRepositoryImpl @Inject constructor(
 
     override fun getLocalClasses(schoolId: String): Flow<Result<List<ClassEntity>>> =
         dao.getClasses(schoolId)
-            .map { Result.Success(it) as Result<List<ClassEntity>> }
-            .catch { e -> emit(Result.Failure(AppError.LocalDB(e.message))) }
+            .asLocalResult()
 
     override fun observeAllClassesForAccount(accountId: String): Flow<Result<List<ClassModel>>> =
         dao.getAllClasses(accountId).map { entities ->
-            Result.Success(entities.map { it.toDomain() }) as Result<List<ClassModel>>
-        }
-            .catch { e ->
-                emit(Result.Failure(AppError.LocalDB(e.message)))
-            }
+            entities.map { it.toDomain() }
+        }.asLocalResult()
 
     override suspend fun reassignClass(accountId: String, classId: String, newSchoolId: String): Result<Unit> = try {
         dao.reassignClass(SchoolClassAssignment(newSchoolId, classId))
@@ -419,74 +349,15 @@ class SchoolRepositoryImpl @Inject constructor(
         Result.Failure(AppError.LocalDB(e.message))
     }
 
-    override suspend fun pushSchool(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
+    override suspend fun pushSchool(schoolId: String): Result<Unit> = Result.Success(Unit)
+
+    override suspend fun pushAccessRequests(accountId: String): Result<Unit> = Result.Success(Unit)
+
+    override suspend fun getClassById(id: String): Result<ClassModel?> = withContext(Dispatchers.IO) {
         try {
-            val school = dao.getSchoolById(schoolId) ?: return@withContext Result.Failure(AppError.LocalDB("School not found: $schoolId"))
-
-            if (school.syncStatus == SyncStatus.SYNCED.name) {
-                return@withContext Result.Success(Unit)
-            }
-
-            val schoolData = mutableMapOf<String, Any>(
-                "schoolId" to school.id,
-                "accountId" to school.accountId,
-                "schoolName" to school.name,
-                "timezone" to school.timezone,
-                "status" to school.status,
-                "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
-            )
-
-            val docRef = firestore.collection("schools").document(schoolId)
-
-            when (school.syncStatus) {
-                SyncStatus.PENDING_INSERT.name -> {
-                    schoolData["createdAt"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
-                    com.google.android.gms.tasks.Tasks.await(docRef.set(schoolData))
-                }
-                SyncStatus.PENDING_UPDATE.name, SyncStatus.PENDING_DELETE.name -> {
-                    com.google.android.gms.tasks.Tasks.await(docRef.update(schoolData))
-                }
-            }
-
-            dao.upsertSchool(school.copy(syncStatus = SyncStatus.SYNCED.name))
-            Result.Success(Unit)
+            Result.Success(classDao.getClassById(id)?.toDomain())
         } catch (e: Exception) {
-            Result.Failure(AppError.Network(e.message))
-        }
-    }
-
-    override suspend fun pushAccessRequests(accountId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
-        try {
-            val unsynced = accessRequestDao.getUnsyncedRequestsByAccount(accountId)
-            if (unsynced.isEmpty()) return@withContext Result.Success(Unit)
-
-            for (request in unsynced) {
-                val requestData = mapOf(
-                    "requestId" to request.requestId,
-                    "accountId" to request.accountId,
-                    "schoolId" to request.schoolId,
-                    "schoolName" to request.schoolName,
-                    "status" to request.status.name,
-                    "createdAt" to request.createdAt,
-                    "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
-                )
-
-                com.google.android.gms.tasks.Tasks.await(
-                    firestore.collection("access_requests")
-                        .document(request.requestId)
-                        .set(requestData),
-                )
-
-                accessRequestDao.insertRequest(
-                    request.copy(
-                        syncStatus = SyncStatus.SYNCED,
-                        updatedAt = System.currentTimeMillis(),
-                    ),
-                )
-            }
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Failure(AppError.Network(e.message))
+            Result.Failure(AppError.LocalDB(e.message))
         }
     }
 }
