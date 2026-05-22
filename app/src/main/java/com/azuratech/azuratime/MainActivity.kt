@@ -1,5 +1,6 @@
 package com.azuratech.azuratime
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -16,11 +17,19 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.sync.SyncWorker
-import dagger.hilt.android.AndroidEntryPoint // 🔥 Import Hilt ditambahkan
+import com.azuratech.azuratime.core.push.AzuraFcmService
+import com.azuratech.azuratime.features.update.ui.UpdateEventBus
+import com.google.firebase.Firebase
+import com.google.firebase.appdistribution.appDistribution
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-@AndroidEntryPoint // 🔥 Anotasi krusial agar UI Compose di bawahnya bisa menggunakan hiltViewModel()
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var updateEventBus: UpdateEventBus
 
     // Menggunakan variabel biasa agar lebih responsif di level sistem
     private var isBootReady = false
@@ -31,6 +40,8 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
+        handleUpdateIntent(intent)
+
         // 🔥 2. Tahan Splash Screen dengan kondisi yang stabil
         splashScreen.setKeepOnScreenCondition { !isBootReady }
 
@@ -38,6 +49,17 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setupFullscreen()
 
+        // 🔥 FIREBASE IN-APP UPDATES (FOR TESTERS)
+        // Checks if a new version is available in App Distribution and prompts the tester.
+        Firebase.appDistribution.updateIfNewReleaseAvailable()
+            .addOnSuccessListener {
+                android.util.Log.d("AzuraApp", "✅ App Distribution: Update check completed successfully.")
+            }
+            .addOnFailureListener { e ->
+                val errorMsg = "Update Check Failed: ${e.message}"
+                android.util.Log.e("AzuraApp", "❌ App Distribution Error", e)
+                android.widget.Toast.makeText(this, errorMsg, android.widget.Toast.LENGTH_LONG).show()
+            }
         // 🔥 3. Pindahkan Background Sync agar tidak berebut CPU saat Start-up
         // Kita beri jeda 2 detik setelah UI tampil
         window.decorView.postDelayed({
@@ -76,6 +98,17 @@ class MainActivity : ComponentActivity() {
         controller.apply {
             hide(WindowInsetsCompat.Type.systemBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleUpdateIntent(intent)
+    }
+
+    private fun handleUpdateIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra(AzuraFcmService.EXTRA_TRIGGER_UPDATE, false) == true) {
+            updateEventBus.triggerUpdateCheck()
         }
     }
 }

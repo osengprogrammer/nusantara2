@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.core.messaging
+package com.azuratech.azuratime.core.push
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,8 +9,8 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.azuratech.azuratime.MainActivity
-import com.azuratech.azuratime.R // Pastikan ini mengarah ke R project kamu
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.azuratech.azuratime.features.update.ui.UpdateEventBus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -21,16 +21,27 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * 🚀 AZURA FCM SERVICE (v3.2.0-ai-native)
+ * Unified Push Notification Service for attendance and system updates.
+ */
 @AndroidEntryPoint
-class AzuraMessagingService : FirebaseMessagingService() {
+class AzuraFcmService : FirebaseMessagingService() {
 
     @Inject
     lateinit var accountRepository: AccountRepository
 
+    @Inject
+    lateinit var updateEventBus: UpdateEventBus
+
     private val TAG = "AzuraFCM"
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // Fungsi ini terpanggil kalau token HP berubah atau baru diinstal
+    companion object {
+        const val EXTRA_TRIGGER_UPDATE = "trigger_app_update"
+        const val CHANNEL_ID = "azura_system_channel"
+    }
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d(TAG, "Token FCM Baru: $token")
@@ -43,34 +54,40 @@ class AzuraMessagingService : FirebaseMessagingService() {
         }
     }
 
-    // Fungsi ini menangkap notifikasi saat aplikasi sedang TERTUTUP atau TERBUKA
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-
         Log.d(TAG, "Pesan masuk dari: ${remoteMessage.from}")
 
-        // Ambil data dari notifikasi
         val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Notifikasi Azura"
         val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "Ada pembaruan baru."
 
-        tampilkanNotifikasi(title, body)
+        // 🔥 AI Native: Check for update trigger in data payload
+        val isUpdateTrigger = remoteMessage.data["type"] == "FORCE_UPDATE" ||
+            remoteMessage.data[EXTRA_TRIGGER_UPDATE] == "true"
+
+        if (isUpdateTrigger) {
+            updateEventBus.triggerUpdateCheck()
+        }
+
+        tampilkanNotifikasi(title, body, isUpdateTrigger)
     }
 
-    private fun tampilkanNotifikasi(title: String, message: String) {
-        val channelId = "azura_parent_channel"
+    private fun tampilkanNotifikasi(title: String, message: String, isUpdateTrigger: Boolean) {
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            if (isUpdateTrigger) {
+                putExtra(EXTRA_TRIGGER_UPDATE, true)
+            }
         }
 
         val pendingIntent = PendingIntent.getActivity(
             this,
-            0,
+            System.currentTimeMillis().toInt(),
             intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            // Ganti icon ini dengan icon logo Azura Parent kamu
+        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)
@@ -80,17 +97,15 @@ class AzuraMessagingService : FirebaseMessagingService() {
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Untuk Android Oreo (8.0) ke atas, WAJIB buat Notification Channel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
-                "Notifikasi Kehadiran Anak",
+                CHANNEL_ID,
+                "System Notifications",
                 NotificationManager.IMPORTANCE_HIGH,
             )
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Tampilkan notifikasi dengan ID unik (waktu saat ini)
         notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
 }

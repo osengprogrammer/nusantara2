@@ -10,7 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.azuratech.azuratime.core.navigation.Screen
@@ -20,11 +22,40 @@ import com.azuratech.azuratime.core.ui.navigation.graphs.dashboardGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.managementGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.reportingGraph
 import com.azuratech.azuratime.core.ui.navigation.graphs.accountGraph
+import com.azuratech.azuratime.core.util.installApk
+import com.azuratech.azuratime.core.util.showToast
+import com.azuratech.azuratime.features.update.ui.AppUpdateDialog
+import com.azuratech.azuratime.features.update.ui.AppUpdateUiEffect
+import com.azuratech.azuratime.features.update.ui.AppUpdateUiEvent
+import com.azuratech.azuratime.features.update.ui.AppUpdateViewModel
 
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
     var showZoharChat by remember { mutableStateOf(false) }
+
+    // 🔥 AI Native: In-App Update Integration (v3.2.0-ai-native)
+    val updateViewModel: AppUpdateViewModel = hiltViewModel()
+    val updateState by updateViewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        updateViewModel.onEvent(AppUpdateUiEvent.CheckForUpdate)
+    }
+
+    LaunchedEffect(Unit) {
+        updateViewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is AppUpdateUiEffect.ShowToast -> context.showToast(effect.message)
+                is AppUpdateUiEffect.InstallApk -> context.installApk(effect.apkFile)
+            }
+        }
+    }
+
+    AppUpdateDialog(
+        state = updateState,
+        onEvent = { updateViewModel.onEvent(it) },
+    )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route

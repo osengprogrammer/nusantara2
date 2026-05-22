@@ -50,6 +50,7 @@ fun DashboardScreen(
     LaunchedEffect(accountId) {
         if (accountId != null) {
             schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId))
+            viewModel.onEvent(DashboardUiEvent.LoadDashboard)
         }
     }
 
@@ -83,6 +84,16 @@ fun DashboardScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Visible Version Badge for testing updates
+        Text(
+            text = "v1.1.4",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp),
+        )
+
         when {
             uiState.isLoading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -263,6 +274,9 @@ fun DashboardContent(
                             },
                             onAddSchoolClick = {
                                 onAddSchoolClick()
+                            },
+                            onJoinSchoolClick = {
+                                navController.navigate(Screen.FindSchool.route)
                             },
                         )
                     }

@@ -39,7 +39,6 @@ fun ReportScreen(
                         AuditLogList(
                             logs = uiState.auditLogs,
                             isLoading = uiState.isLoading,
-                            onRefresh = { viewModel.onEvent(ReportUiEvent.RefreshData) },
                         )
                     }
                     ReportTab.ExportJobs -> {

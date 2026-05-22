@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download Azura Time</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#f8f9fa}
+    .card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+    .btn{display:inline-block;background:#1a73e8;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin-top:16px}
+    .btn:hover{background:#1558b0}
+    .note{margin-top:16px;color:#555;font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>📥 Download Azura Time</h1>
+    <p>Versi terbaru siap diinstall. Tidak perlu uninstall aplikasi lama.</p>
+    <a href="https://github.com/osengprogrammer/nusantara2/releases/latest/download/AzuraTime-latest.apk" class="btn">⬇️ Download APK (arm64)</a>
+    <div class="note">
+      🔒 Jika muncul peringatan keamanan, tap <em>Install anyway</em> atau <em>Lanjutkan</em>.<br>
+      📦 SHA-256: <code id="sha">Loading...</code>
+    </div>
+  </div>
+  <script>fetch("version.json").then(r=>r.json()).then(d=>document.getElementById("sha").textContent=d.sha256||"N/A")</script>
+</body>
+</html>

@@ -19,7 +19,6 @@ import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEnt
 import com.azuratech.azuratime.features.reporting.domain.repository.AuditLogRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate

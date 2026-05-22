@@ -1,0 +1,21 @@
+# 🚀 Azura Time - Firebase Distribution Commands
+
+## 🏆 1. Universal Release (High Compatibility)
+# Best for: Sending to a team or multiple testers. Works on ALL devices.
+# Includes: R8 Obfuscation, C++ Optimizations, All CPU architectures.
+./gradlew assembleRelease -Puniversal appDistributionUploadRelease
+
+## 💎 2. Modern & Lean Release (Best Performance)
+# Best for: Modern 64-bit phones only. Size is ~60% smaller than Universal.
+# Includes: R8 Obfuscation, C++ Optimizations (High Level), arm64-v8a only.
+./gradlew assembleRelease -PtargetAbi=arm64-v8a appDistributionUploadRelease
+
+## ⚡ 3. Fast Debug (Development)
+# Best for: Quick iterations during coding.
+./gradlew assembleDebug -PtargetAbi=arm64-v8a appDistributionUploadDebug
+
+## ⚙️ Requirements for Success:
+1. **Incremental Versioning**: You MUST increase `versionCode` in `app/build.gradle.kts` for testers to receive a notification.
+2. **Target Admin**: osengprogrammer@gmail.com
+3. **Physical Device**: In-app notifications only appear on real hardware, not emulators.
+4. **Environment**: Ensure you are authenticated via Firebase CLI (`firebase login`).

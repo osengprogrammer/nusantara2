@@ -229,6 +229,7 @@ class StudentRepositoryImpl @Inject constructor(
 
     override suspend fun pullStudents(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         try {
+            // 1. Pull Identities from 'students' collection
             val snapshot = firestore.collection("schools").document(schoolId)
                 .collection("students").get().let { com.google.android.gms.tasks.Tasks.await(it) }
 
@@ -254,8 +255,14 @@ class StudentRepositoryImpl @Inject constructor(
                 )
             }
 
-            if (studentData.isNotEmpty()) {
+            // 2. Pull Legacy Assignments from 'student_class_assignments' collection (Cross-Ref Sync)
+            val remoteAssignments = remoteDataSource.getStudentAssignments(schoolId).let {
+                if (it is Result.Success) it.data else emptyList()
+            }
+
+            if (studentData.isNotEmpty() || remoteAssignments.isNotEmpty()) {
                 database.withTransaction {
+                    // Save Identites
                     for ((entity, studentId, classId) in studentData) {
                         studentDao.upsert(entity)
                         if (!classId.isNullOrBlank()) {
@@ -268,6 +275,11 @@ class StudentRepositoryImpl @Inject constructor(
                                 ),
                             )
                         }
+                    }
+
+                    // Save Remote Assignments (Dedicated Collection)
+                    for (remoteAssignment in remoteAssignments) {
+                        assignmentDao.insertAssignment(remoteAssignment)
                     }
                 }
             }

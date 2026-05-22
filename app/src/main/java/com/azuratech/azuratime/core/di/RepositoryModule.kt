@@ -132,6 +132,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun provideAppUpdateRepository(
+        impl: com.azuratech.azuratime.features.update.data.repo.AppUpdateRepositoryImpl,
+    ): com.azuratech.azuratime.features.update.domain.repository.AppUpdateRepository
+
+    @Binds
+    @Singleton
     abstract fun provideFileStorage(
         impl: com.azuratech.azuratime.core.domain.media.PhotoStorageUtils,
     ): com.azuratech.azuratime.core.domain.media.FileStorage

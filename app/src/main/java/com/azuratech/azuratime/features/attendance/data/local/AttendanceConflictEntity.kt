@@ -12,8 +12,11 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConfli
     indices = [
         Index(value = ["local_schoolId"]),
         Index(value = ["cloud_schoolId"]),
+        Index(value = ["local_studentId"]),
+        Index(value = ["cloud_studentId"]),
     ],
 )
+@Suppress("RoomWarnings.PRIMARY_KEY_FROM_EMBEDDED_IS_DROPPED", "RoomWarnings.INDEX_FROM_EMBEDDED_ENTITY_IS_DROPPED")
 data class AttendanceConflictEntity(
     @PrimaryKey val conflictId: String,
     @Embedded(prefix = "local_") val local: AttendanceRecordEntity,

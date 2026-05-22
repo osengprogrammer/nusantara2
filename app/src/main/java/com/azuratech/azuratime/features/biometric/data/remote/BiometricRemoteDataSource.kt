@@ -11,4 +11,5 @@ interface BiometricRemoteDataSource {
     suspend fun syncStudentAssignment(assignment: StudentClassAssignmentEntity): Result<Unit>
     suspend fun deleteStudent(studentId: String, schoolId: String, classIds: List<String>): Result<Unit>
     suspend fun deleteStudentAssignments(assignment: StudentClassAssignmentEntity): Result<Unit>
+    suspend fun getStudentAssignments(schoolId: String): Result<List<StudentClassAssignmentEntity>>
 }

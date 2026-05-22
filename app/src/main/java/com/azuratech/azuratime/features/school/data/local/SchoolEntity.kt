@@ -35,7 +35,7 @@ data class SchoolEntity(
             status = school.status,
             createdAt = school.createdAt,
             updatedAt = school.updatedAt,
-            syncStatus = "SYNCED"
+            syncStatus = "SYNCED",
         )
     }
 }
