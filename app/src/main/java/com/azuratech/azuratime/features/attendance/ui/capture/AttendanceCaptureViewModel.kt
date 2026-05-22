@@ -145,13 +145,37 @@ class AttendanceCaptureViewModel @Inject constructor(
         if (isProcessing.getAndSet(true)) return
 
         viewModelScope.launch {
-            val schoolId = _uiStateFlow.value.activeSchoolId
-            if (schoolId == null) {
+            val currentSchoolId = _uiStateFlow.value.activeSchoolId
+            if (currentSchoolId == null) {
                 handleError("Error: Context Hilang")
                 return@launch
             }
-            _uiStateFlow.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null, scannedResult = barcode) }
-            processAttendanceRecord(barcode, schoolId)
+
+            // 🔥 AI Native: Smart Barcode Parsing
+            // Support format: schoolId|classId|studentId
+            val parts = barcode.split("|")
+            val (scannedSchoolId, scannedClassId, scannedStudentId) = when (parts.size) {
+                3 -> Triple(parts[0], parts[1], parts[2])
+                2 -> Triple(parts[0], null, parts[1]) // fallback for schoolId|studentId
+                else -> Triple(currentSchoolId, null, barcode) // legacy studentId only
+            }
+
+            // 1. Validate School Context
+            if (scannedSchoolId != currentSchoolId) {
+                handleError("Barcode Sekolah Lain!")
+                return@launch
+            }
+
+            // 2. Resolve Class Context (Optional but improves check-in accuracy)
+            if (scannedClassId != null && scannedClassId != "UNASSIGNED" && _uiStateFlow.value.activeClassId != null) {
+                if (scannedClassId != _uiStateFlow.value.activeClassId) {
+                    handleError("Bukan Kelas Ini!")
+                    return@launch
+                }
+            }
+
+            _uiStateFlow.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null, scannedResult = scannedStudentId) }
+            processAttendanceRecord(scannedStudentId, currentSchoolId)
         }
     }
 

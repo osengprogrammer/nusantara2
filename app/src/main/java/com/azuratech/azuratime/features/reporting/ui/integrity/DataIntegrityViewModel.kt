@@ -44,11 +44,22 @@ class DataIntegrityViewModel @Inject constructor(
         _isLoadingFlow,
         _errorFlow,
     ) { params ->
+        @Suppress("UNCHECKED_CAST")
         val totalStudents = params[0] as Result<Int>
+
+        @Suppress("UNCHECKED_CAST")
         val totalRecords = params[1] as Result<Int>
+
+        @Suppress("UNCHECKED_CAST")
         val missing = params[2] as Result<Int>
+
+        @Suppress("UNCHECKED_CAST")
         val broken = params[3] as Result<Int>
+
+        @Suppress("UNCHECKED_CAST")
         val unsynced = params[4] as Result<Int>
+
+        @Suppress("UNCHECKED_CAST")
         val conflicts = params[5] as Result<List<AttendanceConflictEntity>>
         val isLoading = params[6] as Boolean
         val error = params[7] as? String

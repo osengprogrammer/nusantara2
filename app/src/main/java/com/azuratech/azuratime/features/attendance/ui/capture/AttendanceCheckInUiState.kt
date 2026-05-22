@@ -15,6 +15,7 @@ data class AttendanceCheckInUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val activeClassName: String = "",
+    val activeClassId: String? = null,
     val activeSchoolId: String? = null,
     val isAlreadyCheckedIn: Boolean = false,
 )

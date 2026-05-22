@@ -11,7 +11,6 @@ import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceR
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.domain.repository.SyncRepository
@@ -155,11 +154,11 @@ class AttendanceViewModel @Inject constructor(
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             _uiStateFlow.update { it.copy(isLoading = true) }
             attendanceRepository.deleteRecord(record.recordId, schoolId)
-                .onSuccess { 
+                .onSuccess {
                     _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Log berhasil dihapus"))
-                    _refreshTriggerFlow.value++ 
+                    _refreshTriggerFlow.value++
                 }
-                .onFailure { error -> 
+                .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false) }
                     _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))
                 }
@@ -177,9 +176,9 @@ class AttendanceViewModel @Inject constructor(
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             attendanceRepository.updateRecordStatus(record.recordId, newStatus, schoolId)
-                .onSuccess { 
+                .onSuccess {
                     _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Status berhasil diubah"))
-                    _refreshTriggerFlow.value++ 
+                    _refreshTriggerFlow.value++
                 }
                 .onFailure { error ->
                     _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))
@@ -190,9 +189,9 @@ class AttendanceViewModel @Inject constructor(
     private fun updateRecordClass(record: AttendanceRecord, classModel: ClassModel) {
         viewModelScope.launch {
             attendanceRepository.updateRecord(record.recordId, classModel.id, classModel.name)
-                .onSuccess { 
+                .onSuccess {
                     _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Kelas berhasil diperbarui"))
-                    _refreshTriggerFlow.value++ 
+                    _refreshTriggerFlow.value++
                 }
                 .onFailure { error ->
                     _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))

@@ -120,4 +120,23 @@ class BiometricRemoteDataSourceImpl @Inject constructor(
             Result.Failure(AppError.Network(e.message))
         }
     }
+
+    override suspend fun getStudentAssignments(schoolId: String): Result<List<StudentClassAssignmentEntity>> {
+        return try {
+            val snapshot = getTenantRef(schoolId).collection("student_class_assignments").get().await()
+            val assignments = snapshot.documents.mapNotNull { doc ->
+                val studentId = doc.getString("studentId") ?: return@mapNotNull null
+                val classId = doc.getString("classId") ?: return@mapNotNull null
+                StudentClassAssignmentEntity(
+                    studentId = studentId,
+                    classId = classId,
+                    schoolId = schoolId,
+                    isSynced = true,
+                )
+            }
+            Result.Success(assignments)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
 }

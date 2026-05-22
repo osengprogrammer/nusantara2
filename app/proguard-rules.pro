@@ -177,9 +177,16 @@
 }
 
 # ----------------------------------------------------------------------------
-# 11. KOTLIN SERIALIZATION (JSON PARSING)
+# 11. GSON & KOTLIN SERIALIZATION (JSON PARSING)
 # ----------------------------------------------------------------------------
--keepattributes *Annotation*, InnerClasses, EnclosingMethod
+# Gson specific rules
+-keepattributes Signature, *Annotation*, InnerClasses, EnclosingMethod
+-keep class com.google.gson.** { *; }
+-keep class com.google.gson.reflect.TypeToken
+-keep class * extends com.google.gson.reflect.TypeToken
+-keep public class * extends com.google.gson.TypeAdapter
+
+# Kotlin Serialization rules
 -keepclassmembers class kotlinx.serialization.** { *; }
 -keep class * implements kotlinx.serialization.KSerializer { *; }
 
@@ -198,16 +205,22 @@
 # Keep local data layer classes (Room entities, DAOs, converters)
 -keep class com.azuratech.azuratime.data.local.** { *; }
 -keepclassmembers class com.azuratech.azuratime.data.local.** { *; }
+-keep class com.azuratech.azuratime.features.**.data.local.** { *; }
+-keepclassmembers class com.azuratech.azuratime.features.**.data.local.** { *; }
 
 # Keep remote data layer classes (Firestore models, mappers)
 -keep class com.azuratech.azuratime.data.remote.** { *; }
 -keepclassmembers class com.azuratech.azuratime.data.remote.** { *; }
+-keep class com.azuratech.azuratime.features.**.data.remote.** { *; }
+-keepclassmembers class com.azuratech.azuratime.features.**.data.remote.** { *; }
 
 # Keep repository implementations (if referenced via reflection)
 -keep class com.azuratech.azuratime.data.repository.** { *; }
+-keep class com.azuratech.azuratime.features.**.data.repository.** { *; }
 
 # Keep domain models used across layers
 -keep class com.azuratech.azuratime.domain.model.** { *; }
+-keep class com.azuratech.azuratime.features.**.domain.model.** { *; }
 
 # ----------------------------------------------------------------------------
 # 13. NATIVE / JNI / C++ SECURITY GUARD (AZURA ENGINE)
@@ -233,14 +246,14 @@
 # ----------------------------------------------------------------------------
 # 14. OPTIONAL OPTIMIZATIONS (REDUCE APK SIZE)
 # ----------------------------------------------------------------------------
-# Strip debug log calls from release build (safe if you use Log.d/v/i only for dev)
--assumenosideeffects class android.util.Log {
-    public static *** d(...);
-    public static *** v(...);
-    public static *** i(...);
-    public static *** w(...);  # Optional: keep warnings/errors
-    public static *** e(...);  # Optional: keep errors for crash reporting
-}
+# [DEBUG MODE] Temporarily disabled log stripping to investigate Firebase issues
+# -assumenosideeffects class android.util.Log {
+#    public static *** d(...);
+#    public static *** v(...);
+#    public static *** i(...);
+#    public static *** w(...);
+#    public static *** e(...);
+# }
 
 # Remove test-only dependencies from release
 -dontwarn com.azuratech.azuratime.test.**

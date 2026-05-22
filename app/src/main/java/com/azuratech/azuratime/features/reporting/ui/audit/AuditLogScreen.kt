@@ -15,7 +15,6 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.reporting.domain.model.SystemAuditTrail
 import com.azuratech.azuratime.features.reporting.ui.ReportViewModel
-import com.azuratech.azuratime.features.reporting.ui.ReportUiEvent
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -34,7 +33,6 @@ fun AuditLogScreen(
         AuditLogList(
             logs = uiState.auditLogs,
             isLoading = uiState.isLoading,
-            onRefresh = { viewModel.onEvent(ReportUiEvent.RefreshData) },
         )
     }
 }
@@ -43,7 +41,6 @@ fun AuditLogScreen(
 fun AuditLogList(
     logs: List<SystemAuditTrail>,
     isLoading: Boolean,
-    onRefresh: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(

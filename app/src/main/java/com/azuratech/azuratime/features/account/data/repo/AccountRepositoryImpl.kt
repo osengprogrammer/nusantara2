@@ -13,7 +13,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -41,7 +40,6 @@ class AccountRepositoryImpl @Inject constructor(
     override fun observeAccountEntity(id: String): Flow<Result<AccountEntity?>> =
         accountDao.observeAccountById(id)
             .asLocalResult()
-
 
     override suspend fun getProfile(accountId: String): Result<AccountProfile> {
         return syncAccount(accountId).map { it.toProfile() }
@@ -356,6 +354,7 @@ class AccountRepositoryImpl @Inject constructor(
                         return@addSnapshotListener
                     }
                     if (snapshot != null && snapshot.exists()) {
+                        @Suppress("UNCHECKED_CAST")
                         val connectedIds = snapshot.get("followingIds") as? List<String> ?: emptyList()
                         if (connectedIds.isEmpty()) {
                             trySend(Result.Success(emptyList()))
@@ -385,7 +384,10 @@ class AccountRepositoryImpl @Inject constructor(
             val doc = db.collection("whitelisted_accounts").document(targetId).get().await()
             if (!doc.exists()) return Result.Failure(AppError.BusinessRule("Akun tidak ditemukan"))
 
+            @Suppress("UNCHECKED_CAST")
             val memberships = doc.get("memberships") as? MutableMap<String, Any> ?: mutableMapOf()
+
+            @Suppress("UNCHECKED_CAST")
             val schoolMembership = memberships[schoolId] as? MutableMap<String, Any> ?: mutableMapOf()
 
             schoolMembership["assignedClassIds"] = classIds

@@ -10,7 +10,6 @@ import com.azuratech.azuratime.features.reporting.domain.model.SystemAuditTrail
 import com.azuratech.azuratime.features.reporting.domain.repository.AuditLogRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.catch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,8 +24,6 @@ class AuditLogRepositoryImpl @Inject constructor(
             .map { entities -> entities.map { it.toProfile() } }
             .asLocalResult()
     }
-
-
 
     override suspend fun logAction(schoolId: String, accountId: String, action: String, details: String?): Result<Unit> {
         return try {

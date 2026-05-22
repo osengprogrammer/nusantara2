@@ -31,6 +31,7 @@ fun MySchoolsCard(
     @Suppress("UNUSED_PARAMETER") globalRole: String,
     onSchoolClick: (String) -> Unit,
     onAddSchoolClick: () -> Unit,
+    onJoinSchoolClick: () -> Unit,
 ) {
     val schoolUiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val schools = schoolUiState.schools
@@ -76,7 +77,7 @@ fun MySchoolsCard(
                         Text("Buat Sekolah Baru")
                     }
                     OutlinedButton(
-                        onClick = { /* TODO: Navigate to Join/Search School Screen */ },
+                        onClick = onJoinSchoolClick,
                         modifier = Modifier.fillMaxWidth(),
                         shape = AzuraShapes.medium,
                     ) {

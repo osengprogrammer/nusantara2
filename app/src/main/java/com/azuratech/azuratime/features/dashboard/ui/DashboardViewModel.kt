@@ -146,12 +146,16 @@ class DashboardViewModel @Inject constructor(
         _refreshTriggerFlow,
     ) { params ->
         val account = params[0] as AccountEntity?
+
         @Suppress("UNCHECKED_CAST")
         val recentRecords = params[1] as List<AttendanceRecordEntity>
+
         @Suppress("UNCHECKED_CAST")
         val sessionStudents = params[2] as List<StudentBiometricEntity>
+
         @Suppress("UNCHECKED_CAST")
         val assignedClasses = params[3] as List<ClassModel>
+
         @Suppress("UNCHECKED_CAST")
         val allClasses = params[4] as List<ClassModel>
         val activeSchool = params[5] as School?
@@ -185,7 +189,10 @@ class DashboardViewModel @Inject constructor(
 
     fun onEvent(event: DashboardUiEvent) {
         when (event) {
-            DashboardUiEvent.LoadDashboard -> _refreshTriggerFlow.value++
+            DashboardUiEvent.LoadDashboard -> {
+                _refreshTriggerFlow.value++
+                viewModelScope.launch { _uiEffectFlow.emit(DashboardUiEffect.ShowToast("ok")) }
+            }
             DashboardUiEvent.Refresh -> sync()
             is DashboardUiEvent.SelectSchool -> selectSchool(event.school)
             is DashboardUiEvent.SelectActiveClass -> selectActiveClass(event.classId)

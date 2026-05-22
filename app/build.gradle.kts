@@ -27,8 +27,8 @@ android {
         applicationId = "com.azuratech.azuratime"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 8
+        versionName = "1.1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
@@ -69,19 +69,29 @@ android {
             signingConfig = signingConfigs.getByName("release")
             // Optional: keep Hilt/Room/Firebase classes if R8 removes them incorrectly
             proguardFiles("proguard-rules.pro")
+
+            // 🔥 FIREBASE APP DISTRIBUTION (AI-NATIVE CONFIG)
+            firebaseAppDistribution {
+                // serviceCredentialsFilePath = "credentials/firebase-distribution-key.json"
+                releaseNotes = "Azura Time - Latest Stable Build (Automated Upload)"
+                testers = "osengprogrammer@gmail.com, lead-developer@azuratech.com"
+            }
         }
     }
 
-    // 📉 ABI SPLITS: Generate separate APKs per CPU architecture (cuts native lib bloat)
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            // Keep only modern architectures + x86_64 for emulators
-            include("arm64-v8a", "armeabi-v7a", "x86_64")
-            isUniversalApk = false
+    // 📉 ABI TARGETING:
+    val targetAbi: String? = project.findProperty("targetAbi")?.toString()
+
+    if (targetAbi != null) {
+        defaultConfig {
+            ndk {
+                abiFilters.clear()
+                abiFilters.add(targetAbi)
+            }
         }
     }
+    // Note: If no targetAbi is provided, it builds a fat APK by default
+    // as splits are now disabled to ensure Firebase compatibility.
 
     buildFeatures {
         compose = true
@@ -191,6 +201,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-appdistribution:16.0.0-beta19") // 🔥 For In-App Updates
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.firebase:firebase-messaging-ktx:23.4.0")
 
