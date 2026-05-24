@@ -2,7 +2,7 @@
   "latest_version": "3.7.1",
   "latest_version_code": 3701,
   "min_supported_version_code": 3600,
-  "release_notes": "Fix attendance matrix, new export feature, optimized MVI state",
-  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/latest/download/AzuraTime-latest.apk",
-  "sha256": "pending"
+  "release_notes": "MVI ✅, FCM ✅, Theme ✅ — Automated deploy",
+  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/latest/download/AzuraTime-v3.7.1.apk",
+  "sha256": "cb07d650c0290ab2817c24dabb4217c54af7899ed6249c17e78f62add8afcd71"
 }
