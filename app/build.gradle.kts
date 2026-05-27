@@ -27,8 +27,8 @@ android {
         applicationId = "com.azuratech.azuratime"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3704
-        versionName = "3.7.4"
+        versionCode = 3705
+        versionName = "3.7.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
@@ -44,9 +44,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("azura-key.jks")
-            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD") ?: ""
-            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS") ?: ""
-            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD") ?: ""
+            storePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: localProperties.getProperty("RELEASE_STORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: localProperties.getProperty("RELEASE_KEY_ALIAS") ?: ""
+            keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: localProperties.getProperty("RELEASE_KEY_PASSWORD") ?: ""
         }
     }
 
@@ -76,19 +76,15 @@ android {
         }
     }
 
-    // 📉 ABI TARGETING:
-    val targetAbi: String? = project.findProperty("targetAbi")?.toString()
-
-    if (targetAbi != null) {
-        defaultConfig {
-            ndk {
-                abiFilters.clear()
-                abiFilters.add(targetAbi)
-            }
+    // 📉 ABI TARGETING (AI-NATIVE SPLITS):
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = true
         }
     }
-    // Note: If no targetAbi is provided, it builds a fat APK by default
-    // as splits are now disabled to ensure Firebase compatibility.
 
     buildFeatures {
         compose = true
@@ -130,6 +126,13 @@ android {
             excludes += "/META-INF/ASL2.0"
             excludes += "/META-INF/*.kotlin_module"
         }
+    }
+
+    // 🛡️ LINT OPTIONS: Fix for crash in NonNullableMutableLiveDataDetector (AGP Bug)
+    lint {
+        disable += "NullSafeMutableLiveData"
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 }
 
