@@ -1,8 +1,0 @@
-{
-  "latest_version": "3.7.3",
-  "latest_version_code": 3703,
-  "min_supported_version_code": 3600,
-  "release_notes": "Auto-update pipeline ✅, MVI strict ✅, FCM trigger ✅",
-  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.7.3/app-release.apk",
-  "sha256": "PASTE_SHA256_DI_SINI"
-}
