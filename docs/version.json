@@ -1,6 +1,6 @@
 {
-  "latest_version": "3.7.3",
-  "latest_version_code": 3703,
+  "latest_version": "3.7.4",
+  "latest_version_code": 3704,
   "min_supported_version_code": 3600,
   "release_notes": "Autonomous update ✅, MVI strict ✅",
   "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.7.3/app-release.apk",
