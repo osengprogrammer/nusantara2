@@ -19,8 +19,6 @@ import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.sync.SyncWorker
 import com.azuratech.azuratime.core.push.AzuraFcmService
 import com.azuratech.azuratime.features.update.ui.UpdateEventBus
-import com.google.firebase.Firebase
-import com.google.firebase.appdistribution.appDistribution
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -49,17 +47,16 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setupFullscreen()
 
-        // 🔥 FIREBASE IN-APP UPDATES (FOR TESTERS)
-        // Checks if a new version is available in App Distribution and prompts the tester.
+        // 🔥 AI Native: Custom In-App Update Engine is now the primary update mechanism.
+        // We disable the built-in Firebase App Distribution automatic prompt to avoid
+        // the "Update Check Failed" toast and conflict with our custom UI.
+        /*
         Firebase.appDistribution.updateIfNewReleaseAvailable()
-            .addOnSuccessListener {
-                android.util.Log.d("AzuraApp", "✅ App Distribution: Update check completed successfully.")
-            }
             .addOnFailureListener { e ->
-                val errorMsg = "Update Check Failed: ${e.message}"
                 android.util.Log.e("AzuraApp", "❌ App Distribution Error", e)
-                android.widget.Toast.makeText(this, errorMsg, android.widget.Toast.LENGTH_LONG).show()
             }
+         */
+
         // 🔥 3. Pindahkan Background Sync agar tidak berebut CPU saat Start-up
         // Kita beri jeda 2 detik setelah UI tampil
         window.decorView.postDelayed({

@@ -1,5 +1,11 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 17: APK Optimization & Build Stability (May 27, 2026)
+- **Feature Completed**: Implemented ABI splits for `arm64-v8a` and `armeabi-v7a` to reduce APK size.
+- **Modern Distribution**: Disabled Universal APK generation in favor of leaner, architecture-specific APKs.
+- **Build Stability**: Resolved `lintVitalAnalyzeRelease` crash by disabling the problematic `NullSafeMutableLiveData` detector (AGP bug workaround).
+- **Efficiency**: Optimized `app/build.gradle.kts` for faster, more reliable deployments.
+
 ### Phase 16: Custom In-App Update Engine (May 22, 2026)
 - **Feature Completed**: Implemented a native in-app update engine from scratch hitting `https://osengprogrammer.github.io/nusantara2/version.json`.
 - **MVI Compliance**: 100% adherence to the "State + Event + Effect" pattern via `AppUpdateViewModel`.
