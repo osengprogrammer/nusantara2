@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.update.ui
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.onFailure
@@ -36,11 +37,14 @@ class AppUpdateViewModel @Inject constructor(
     val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     init {
+        Log.i("AzuraUpdate", "AppUpdateViewModel initialized - Triggering check")
         viewModelScope.launch {
             eventBus.events.collect {
+                Log.i("AzuraUpdate", "External update event received from bus")
                 checkForUpdate()
             }
         }
+        checkForUpdate()
     }
 
     fun onEvent(event: AppUpdateUiEvent) {
@@ -54,12 +58,15 @@ class AppUpdateViewModel @Inject constructor(
     }
 
     private fun checkForUpdate() {
+        Log.i("AzuraUpdate", "checkForUpdate() called")
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
             repository.checkForUpdate()
                 .onSuccess { info ->
                     val currentVersionCode = BuildConfig.VERSION_CODE
+                    Log.i("AzuraUpdate", "Check Success: Remote=${info.versionCode}, Local=$currentVersionCode")
                     if (info.versionCode > currentVersionCode) {
+                        Log.i("AzuraUpdate", "New update available: ${info.versionName}")
                         _uiStateFlow.update {
                             it.copy(
                                 isLoading = false,
@@ -70,10 +77,12 @@ class AppUpdateViewModel @Inject constructor(
                             )
                         }
                     } else {
+                        Log.i("AzuraUpdate", "App is up to date")
                         _uiStateFlow.update { it.copy(isLoading = false, updateAvailable = false) }
                     }
                 }
                 .onFailure { error ->
+                    Log.e("AzuraUpdate", "Check Failed: ${error.message}")
                     _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
                 }
         }
