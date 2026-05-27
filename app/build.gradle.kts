@@ -43,12 +43,10 @@ android {
     // 🔐 SIGNING CONFIGS
     signingConfigs {
         create("release") {
-            // 🔹 For internal testing: use debug keystore temporarily
-            // 🔹 For Play Store: replace with your production .jks/.keystore
-            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+            storeFile = file("azura-key.jks")
+            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD") ?: ""
+            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS") ?: ""
+            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD") ?: ""
         }
     }
 
@@ -56,8 +54,7 @@ android {
         debug {
             isMinifyEnabled = false
             isShrinkResources = false
-            // applicationIdSuffix = ".debug"
-            // versionNameSuffix = "-debug"
+            signingConfig = signingConfigs.getByName("release")
         }
         release {
             isMinifyEnabled = true          // ✅ Enable R8 code shrinking
@@ -204,6 +201,8 @@ dependencies {
     implementation("com.google.firebase:firebase-appdistribution:16.0.0-beta19") // 🔥 For In-App Updates
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.firebase:firebase-messaging-ktx:23.4.0")
+    implementation("com.google.firebase:firebase-config-ktx")
+    implementation("com.google.firebase:firebase-common-ktx")
 
     // --- GEMINI AI & SECURITY ---
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")

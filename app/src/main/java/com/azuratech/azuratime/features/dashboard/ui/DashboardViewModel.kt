@@ -191,7 +191,6 @@ class DashboardViewModel @Inject constructor(
         when (event) {
             DashboardUiEvent.LoadDashboard -> {
                 _refreshTriggerFlow.value++
-                viewModelScope.launch { _uiEffectFlow.emit(DashboardUiEffect.ShowToast("ok")) }
             }
             DashboardUiEvent.Refresh -> sync()
             is DashboardUiEvent.SelectSchool -> selectSchool(event.school)

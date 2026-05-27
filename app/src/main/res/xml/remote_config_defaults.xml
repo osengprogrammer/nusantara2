@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>latest_version_code</key>
+        <value>8</value>
+    </entry>
+    <entry>
+        <key>latest_version_name</key>
+        <value>1.1.4</value>
+    </entry>
+    <entry>
+        <key>download_url</key>
+        <value>https://github.com/osengprogrammer/nusantara2/releases/download/v1.1.4/app-release.apk</value>
+    </entry>
+    <entry>
+        <key>release_notes</key>
+        <value>Migrating to Firebase Remote Config for smoother updates.</value>
+    </entry>
+</defaultsMap>
