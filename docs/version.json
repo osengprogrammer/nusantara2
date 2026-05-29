@@ -1,8 +1,8 @@
 {
-  "latest_version": "3.7.3",
-  "latest_version_code": 3703,
+  "latest_version": "3.7.9",
+  "latest_version_code": 3709,
   "min_supported_version_code": 3600,
-  "release_notes": "Autonomous update ✅, MVI strict ✅",
-  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.7.3/app-universal-release.apk",
-  "sha256": "285ea981c897ca580d35599c92fa3fcb12ad7d2a50afef72ed3ca21b0c3ca297"
+  "release_notes": "UI: Primary color → Royal Blue",
+  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.7.9/app-universal-release.apk",
+  "sha256": "69ea43413d5d22bba558b5eb839db237592398c969526c43fd46f1dd091cff72"
 }
