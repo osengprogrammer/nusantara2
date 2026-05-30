@@ -27,8 +27,8 @@ android {
         applicationId = "com.azuratech.azuratime"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3705
-        versionName = "3.7.5"
+        versionCode = 3710
+        versionName = "3.7.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
@@ -116,6 +116,7 @@ android {
 
     // 📦 PACKAGING OPTIONS: Exclude duplicate META-INF files that can cause merge conflicts
     packaging {
+        jniLibs { useLegacyPackaging = true }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "/META-INF/DEPENDENCIES"
