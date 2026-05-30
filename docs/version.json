@@ -2,7 +2,7 @@
   "latest_version": "3.7.9",
   "latest_version_code": 3709,
   "min_supported_version_code": 3600,
-  "release_notes": "UI: Primary color → Royal Blue",
+  "release_notes": "Safe deploy pipeline",
   "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.7.9/app-universal-release.apk",
-  "sha256": "69ea43413d5d22bba558b5eb839db237592398c969526c43fd46f1dd091cff72"
+  "sha256": "e731b31672d4067eaa1f28ddc32c938290e14b770403454d81188c9d01e073ff"
 }
