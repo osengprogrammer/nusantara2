@@ -136,19 +136,15 @@
 - **Data Layer**: Local-First Room SSOT with `asLocalResult()` mapping.
 - **Terminology**: Unified "Account", "Student", and "Biometric".
 - **AI-Native**: Standardized headers and idiomatic patterns across all 29 ViewModels.
-- **Distribution**: Firebase App Distribution enabled with in-app update notifications.
-    - **Admin Tester**: `osengprogrammer@gmail.com`.
-    - **Update Logic**: Triggered via `Firebase.appDistribution.updateIfNewReleaseAvailable()` in `MainActivity`.
-    - **Versioning**: Incremental `versionCode` in `build.gradle.kts` is MANDATORY for triggering in-app alerts.
-    - **Commands**: 
-        - Universal: `./gradlew assembleRelease -Puniversal appDistributionUploadRelease`
-        - Modern (Small): `./gradlew assembleRelease -PtargetAbi=arm64-v8a appDistributionUploadRelease`
+- **In-App Updates**: Powered by a custom **GitHub-based Engine**.
+    - **Source**: `https://osengprogrammer.github.io/nusantara2/version.json`
+    - **Stability**: Protocol-level cache-busting and 60s network resilience.
+    - **Versioning**: Remote `latest_version_code` must be > local `BuildConfig.VERSION_CODE` to trigger UI.
 
 ## 🏆 Nusantara v3.2.1-ai-native — 100% MVI & CLEAN CODE COMPLETE
 - ✅ **100% Effect-Driven MVI Compliance**: All ViewModels strictly implement `UiState`, `UiEffect`, `UiEvent`.
-- ✅ **AI-Native Standardization**: Unified header enforcement and idiomatic purity.
+- ✅ **GitHub-Native Update Engine**: Fully decoupled from Firebase Remote Config.
 - ✅ **Zero Ghost States**: Transient events decoupled via `SharedFlow<UiEffect>`.
-- ✅ **Automated Distribution**: Verified Firebase App Distribution workflow for `osengprogrammer@gmail.com`.
 - ✅ **Zero Dead Code**: Unused variables, redundant casts, and boilerplate tests removed.
 - ✅ **DRY Repository Layer**: Standardized data flow via `Result.kt` engine.
 - ✅ Build: `compileDebugKotlin` and `spotlessCheck` → ALWAYS SILENT/SUCCESSFUL.
