@@ -1,8 +1,8 @@
 {
-  "latest_version": "3.12.0",
+  "latest_version": "3.13.0",
   "latest_version_code": 3710,
   "min_supported_version_code": 3600,
-  "release_notes": "Phase 24: AI Music Engine & Supervisor Dashboard",
-  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.12.0/app-universal-release.apk",
-  "sha256": "b2b33907cdfe671858f3ac28f60012da2754147120adeb11d74a7907613cf5c5"
+  "release_notes": "Phase 25: Dashboard Restoration & Role-Based Menus",
+  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.13.0/app-universal-release.apk",
+  "sha256": "736c23212be96eb57bb01fab5768cb75ac079a3c5747df96f3430a889668f43c"
 }
