@@ -87,6 +87,9 @@ object AppModule {
     @Provides
     fun provideReportDao(db: AppDatabase): ReportDao = db.reportDao()
 
+    @Provides
+    fun provideAiMusicDao(db: AppDatabase): com.azuratech.azuratime.features.aimusic.data.local.AiMusicDao = db.aiMusicDao()
+
     // =====================================================
     // ☁️ FIREBASE CLOUD PROVIDERS
     // =====================================================

@@ -18,7 +18,7 @@ data class DashboardUiState(
     val isSyncing: Boolean = false,
     val isReady: Boolean = false,
     val pendingRequests: Int = 0,
-    val currentRole: String = "MEMBER",
+    val currentRole: String = "USER",
     val isApproved: Boolean = false,
     val totalStudents: Int = 0,
     val unassignedStudents: Int = 0,

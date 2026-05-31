@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.azuratech.azuratime.features.account.data.sync.AccountSyncWorker
+
 /**
  * 🛠️ SYNC MANAGER
  * Centralized utility to enqueue and manage background sync workers.
@@ -18,9 +20,9 @@ class SyncManager @Inject constructor(
     private val workManager = WorkManager.getInstance(context)
 
     /**
-     * Enqueue a one-time profile synchronization for the specified account.
+     * Enqueue a one-time account synchronization for the specified account.
      */
-    fun enqueueProfileSync(accountId: String) {
+    fun enqueueAccountSync(accountId: String) {
         val data = workDataOf("accountId" to accountId)
 
         val constraints = Constraints.Builder()
@@ -28,7 +30,7 @@ class SyncManager @Inject constructor(
             .setRequiresBatteryNotLow(true)
             .build()
 
-        val request = OneTimeWorkRequestBuilder<ProfileSyncWorker>()
+        val request = OneTimeWorkRequestBuilder<AccountSyncWorker>()
             .setInputData(data)
             .setConstraints(constraints)
             .setBackoffCriteria(
@@ -39,12 +41,12 @@ class SyncManager @Inject constructor(
             .build()
 
         workManager.enqueueUniqueWork(
-            "sync_profile_$accountId",
+            "sync_account_$accountId",
             ExistingWorkPolicy.REPLACE, // Replace to ensure latest local changes are prioritized
             request,
         )
 
-        android.util.Log.d("SyncManager", "Enqueued profile sync for user $accountId")
+        android.util.Log.d("SyncManager", "Enqueued account sync for user $accountId")
     }
 
     /**

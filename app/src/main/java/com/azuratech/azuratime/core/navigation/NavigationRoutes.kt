@@ -38,6 +38,7 @@ object NavigationRoutes {
     const val CLASS_MANAGEMENT = "classManagement/{accountId}"
     const val CLASS_DETAIL = "classDetail/{classId}/{className}"
     const val MY_ASSIGNED_CLASSES = "myAssignedClasses?targetAccountId={targetAccountId}&schoolId={schoolId}"
+    const val ASSIGN_CLASS = "assignClass/{targetAccountId}"
 
     // --- 🗄️ DATA & SYSTEM ---
     const val DATA_DASHBOARD = "dataDashboard"
@@ -47,6 +48,7 @@ object NavigationRoutes {
     const val SCHOOL_LIST = "schoolList/{accountId}"
     const val FOLLOWING = "following"
     const val DEBUG = "debug"
+    const val AI_MUSIC = "aiMusic"
 
     // --- 🗺️ NAVIGATION GRAPHS ---
     const val DASHBOARD_GRAPH = "dashboardGraph"

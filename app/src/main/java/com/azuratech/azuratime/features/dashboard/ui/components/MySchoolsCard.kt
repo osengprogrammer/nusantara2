@@ -29,7 +29,7 @@ fun MySchoolsCard(
     accountId: String,
     @Suppress("UNUSED_PARAMETER") isApproved: Boolean,
     @Suppress("UNUSED_PARAMETER") globalRole: String,
-    onSchoolClick: (String) -> Unit,
+    onSchoolClick: (School) -> Unit,
     onAddSchoolClick: () -> Unit,
     onJoinSchoolClick: () -> Unit,
 ) {
@@ -90,7 +90,7 @@ fun MySchoolsCard(
                     contentPadding = PaddingValues(vertical = AzuraSpacing.xs),
                 ) {
                     items(schools) { school ->
-                        SchoolItem(school = school, onClick = { onSchoolClick(school.id) })
+                        SchoolItem(school = school, onClick = { onSchoolClick(school) })
                     }
                 }
 

@@ -6,8 +6,10 @@ import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.features.account.data.local.AccountDao
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.toProfile
-import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.features.account.data.local.SchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
@@ -18,11 +20,20 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * 🚀 ACCOUNT REPOSITORY IMPLEMENTATION (v3.2.0-ai-native)
+ * Local-First SSOT implementation for Account management.
+ */
 @Singleton
 class AccountRepositoryImpl @Inject constructor(
     private val accountDao: AccountDao,
     private val db: FirebaseFirestore,
 ) : AccountRepository {
+
+    override fun getAccount(id: String): Flow<Result<Account>> =
+        accountDao.observeAccountById(id)
+            .map { it?.toDomain() ?: throw Exception("Account not found in Local DB") }
+            .asLocalResult()
 
     override suspend fun getAccountById(id: String): Result<AccountEntity> {
         return try {
@@ -79,7 +90,7 @@ class AccountRepositoryImpl @Inject constructor(
                 val name = snapshot.getString("name") ?: ""
                 val photoUrl = snapshot.getString("photoUrl")
                 val status = snapshot.getString("status") ?: "PENDING"
-                val role = snapshot.getString("role") ?: "MEMBER"
+                val role = snapshot.getString("role") ?: "USER"
                 val activeSchoolId = snapshot.getString("activeSchoolId")
                 val activeClassId = snapshot.getString("activeClassId")
 
@@ -87,9 +98,9 @@ class AccountRepositoryImpl @Inject constructor(
                 val memberships = membershipsRaw?.mapNotNull { (key, value) ->
                     val k = key as? String ?: return@mapNotNull null
                     val v = value as? Map<*, *> ?: return@mapNotNull null
-                    k to Membership(
+                    k to SchoolMembership(
                         schoolName = v["schoolName"] as? String ?: "",
-                        role = v["role"] as? String ?: "MEMBER",
+                        role = v["role"] as? String ?: "USER",
                         status = v["status"] as? String ?: "ACTIVE",
                         assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                     )
@@ -160,7 +171,7 @@ class AccountRepositoryImpl @Inject constructor(
                     name = name,
                     photoUrl = photo,
                     status = doc.getString("status") ?: "ACTIVE",
-                    role = doc.getString("role") ?: "MEMBER",
+                    role = doc.getString("role") ?: "USER",
                 )
             }
             Result.Success(accounts)
@@ -392,7 +403,7 @@ class AccountRepositoryImpl @Inject constructor(
 
             schoolMembership["assignedClassIds"] = classIds
             schoolMembership["status"] = "ACTIVE"
-            schoolMembership["role"] = "TEACHER"
+            schoolMembership["role"] = "SUPERVISOR"
             memberships[schoolId] = schoolMembership
 
             db.collection("whitelisted_accounts").document(targetId).update("memberships", memberships).await()

@@ -20,7 +20,7 @@ import androidx.core.view.WindowCompat
 // ==========================================
 
 // Light Mode (Inspirasi: WhatsApp & Material 3)
-val AzuraPrimary = Color(0xFF006766) // Teal WhatsApp yang lebih tajam
+val AzuraPrimary = Color(0xFF3B82F6) // Teal WhatsApp yang lebih tajam
 val AzuraSecondary = Color(0xFF435B5B) // Muted Teal (Gemini vibe)
 val AzuraBackgroundLight = Color(0xFFFBFDFA) // Off-white sedikit kehijauan (Fresh)
 val AzuraSurfaceLight = Color(0xFFFFFFFF)

@@ -9,12 +9,12 @@ To ensure codebase consistency and eliminate domain ambiguity, the following ter
 
 ### 🔑 Authorization & Role Management
 Role checks MUST use the `AccountRole` enum instead of raw string literals:
+- `SUPER_ADMIN`: Root system access.
 - `ADMIN`: Full school management access.
-- `TEACHER`: Class management and attendance capture access.
-- `MEMBER`: General access to assigned resources.
-- `OBSERVER`: View-only access.
+- `SUPERVISOR`: Class-specific management and attendance access (via `assignedClassIds` in `SchoolMembership`).
+- `USER`: General access to assigned resources.
 
-Example: `if (account.role.toAccountRole() == AccountRole.ADMIN) { ... }`
+Example: `if (account.isAdmin(schoolId)) { ... }` (using `PermissionUtils`)
 
 ---
 
@@ -23,6 +23,7 @@ AzuraTime is built on a **Vertical Slice Architecture** (Feature-First), designe
 
 *   **Feature-First Isolation**: Each feature contains its own UI, Domain, and Data layers. Cross-feature dependencies are strictly managed through `core` modules.
 *   **Local-First SSOT**: The local Room database is the Single Source of Truth. Remote synchronization (Firebase) is treated as a side-effect.
+*   **Supervisor Model**: Teachers are not separate entities. They are `Account` entities with `role = SUPERVISOR` and specific `assignedClassIds` within their `SchoolMembership`.
 *   **Explicit Over Implicit**: Package names and file suffixes explicitly state their purpose (e.g., `StudentRepositoryImpl`, `BiometricScreen`).
 *   **AI-Readable by Design**: The structure is optimized for LLMs to navigate and understand with minimal context, using consistent patterns across all slices.
 
@@ -42,17 +43,16 @@ app/src/main/java/com/azuratech/azuratime/
 │   ├── security/       # Encryption and security vault
 │   ├── session/        # User session management
 │   ├── sync/           # WorkManager sync workers
-│   └── ui/             # Root screens and shared UI utilities
+│   └── util/           # Shared utilities (PermissionUtils)
 ├── features/           # 🧩 Business Capabilities (Vertical Slices)
+│   ├── account/        # Profile, SchoolMembership, Account Management
 │   ├── ai/             # Zohar AI Assistant
 │   ├── attendance/     # Capture, Barcode, History, Manual
 │   ├── auth/           # Login and Authentication state
 │   ├── biometric/      # Face Enrollment and Matching
-│   ├── dashboard/      # Teacher Landing Page
+│   ├── dashboard/      # Unified Landing Page (Supervisor/Admin)
 │   ├── reporting/      # Matrix, Audit Logs, Export, Integrity
-│   ├── staff/          # Profile, Membership, School Admin
 │   └── student/        # Roster, Forms, Class Management
-└── navigation/         # 🗺️ Navigation Constants (NavigationRoutes)
 ```
 
 ---

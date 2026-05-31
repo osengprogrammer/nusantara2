@@ -40,7 +40,7 @@ fun MyAssignedClassScreen(
         .collectAsStateWithLifecycle()
     val classUiState by classViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val allClasses = classUiState.classes
-    val user by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
+    val account by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
     val targetAccount by accountViewModel.selectedTargetAccountFlow.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
@@ -63,8 +63,8 @@ fun MyAssignedClassScreen(
         "Otoritas Kelas: ${targetAccount?.name ?: targetAccountId}"
     }
 
-    LaunchedEffect(user?.activeClassId) {
-        println("✅ DEBUG: UI received updated activeClassId=${user?.activeClassId}")
+    LaunchedEffect(account?. activeClassId) {
+        println("✅ DEBUG: UI received updated activeClassId=${account?. activeClassId}")
     }
 
     MyAssignedClassContent(
@@ -79,7 +79,7 @@ fun MyAssignedClassScreen(
             accountViewModel.onEvent(AccountUiEvent.SelectActiveClass(classId, targetAccountId))
         },
         onAssignClass = { classId -> accountViewModel.onEvent(AccountUiEvent.AssignClassToAccount(classId, targetAccountId)) },
-        user = user,
+        account = account,
         onBack = onNavigateBack,
     )
 }
@@ -94,7 +94,7 @@ fun MyAssignedClassContent(
     onRemoveClass: (String) -> Unit,
     onSelectActiveClass: (String) -> Unit,
     onAssignClass: (String) -> Unit,
-    user: com.azuratech.azuratime.features.account.domain.model.AccountProfile?,
+    account: com.azuratech.azuratime.features.account.domain.model.AccountProfile?,
     onBack: () -> Unit,
 ) {
     AzuraScreen(
@@ -135,7 +135,7 @@ fun MyAssignedClassContent(
                         }
                     } else {
                         items(myClasses, key = { it.id }) { classItem ->
-                            val isActive = user?.activeClassId == classItem.id
+                            val isActive = account?. activeClassId == classItem.id
 
                             AzuraCard(
                                 modifier = Modifier.fillMaxWidth(),
@@ -158,7 +158,7 @@ fun MyAssignedClassContent(
                                             Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error)
                                         }
 
-                                        if (user != null) {
+                                        if (account != null) {
                                             if (isActive) {
                                                 Icon(Icons.Default.CheckCircle, contentDescription = "Aktif", tint = Color(0xFF00C853))
                                             } else {

@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.core.data.local
 
 import androidx.room.TypeConverter
-import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.data.local.SchoolMembership
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.google.gson.Gson
@@ -67,16 +67,16 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromMembershipsMap(map: Map<String, Membership>?): String? {
+    fun fromMembershipsMap(map: Map<String, SchoolMembership>?): String? {
         if (map == null) return null
-        val type = object : TypeToken<Map<String, Membership>>() {}.type
+        val type = object : TypeToken<Map<String, SchoolMembership>>() {}.type
         return gson.toJson(map, type)
     }
 
     @TypeConverter
-    fun toMembershipsMap(value: String?): Map<String, Membership>? {
+    fun toMembershipsMap(value: String?): Map<String, SchoolMembership>? {
         if (value.isNullOrEmpty()) return emptyMap()
-        val type = object : TypeToken<Map<String, Membership>>() {}.type
+        val type = object : TypeToken<Map<String, SchoolMembership>>() {}.type
         return try { gson.fromJson(value, type) } catch (e: Exception) { emptyMap() }
     }
 

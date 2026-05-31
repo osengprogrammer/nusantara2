@@ -138,6 +138,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun provideAiMusicRepository(
+        impl: com.azuratech.azuratime.features.aimusic.data.repo.AiMusicRepositoryImpl,
+    ): com.azuratech.azuratime.features.aimusic.domain.repository.AiMusicRepository
+
+    @Binds
+    @Singleton
     abstract fun provideFileStorage(
         impl: com.azuratech.azuratime.core.domain.media.PhotoStorageUtils,
     ): com.azuratech.azuratime.core.domain.media.FileStorage

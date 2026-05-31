@@ -8,6 +8,7 @@ import androidx.navigation.navigation
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementScreen
+import com.azuratech.azuratime.features.account.ui.management.AssignClassScreen
 import com.azuratech.azuratime.features.account.ui.components.MyAssignedClassScreen
 import com.azuratech.azuratime.features.account.ui.components.FollowingScreen
 
@@ -59,9 +60,25 @@ fun NavGraphBuilder.accountGraph(
                 classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
             )
         }
+        composable(
+            route = NavigationRoutes.ASSIGN_CLASS,
+            arguments = listOf(
+                navArgument("targetAccountId") { type = NavType.StringType },
+            ),
+        ) { backStackEntry ->
+            val targetAccountId = backStackEntry.arguments?.getString("targetAccountId") ?: ""
+            AssignClassScreen(
+                targetAccountId = targetAccountId,
+                onNavigateBack = { navController.popBackStack() },
+                viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+            )
+        }
         composable(NavigationRoutes.FOLLOWING) {
             com.azuratech.azuratime.features.account.ui.components.FollowingScreen(
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToAssignClass = { targetId ->
+                    navController.navigate(Screen.AssignClass.createRoute(targetId))
+                },
             )
         }
         composable(NavigationRoutes.DEBUG) {

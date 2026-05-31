@@ -1,5 +1,55 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 24: AI Music Rule-Based Engine (May 31, 2026)
+- **Data Model**: Expanded `TraditionalMusicTrack` to include `name` and updated Room `AiMusicEntity` accordingly.
+- **Rule Engine**: Implemented a functional filtering engine in `AiMusicRepositoryImpl` using an internal dataset of Nusantara tracks (Gamelan, Angklung, Sasando, etc.).
+- **Smart Filtering**: Enabled filtering by `region` and `mood` with a fallback to "Best of Nusantara" curated suggestions if no matches are found.
+- **UI Enhancement**: Updated `AiMusicScreen` with a refined track list and a "Play Preview" button for immediate user feedback.
+- **Unit Testing**: Added `AiMusicRepositoryTest` to verify filtering logic and updated `AiMusicViewModelTest` to ensure correct UI state reactivity.
+
+### Phase 23: Supervisor-Specific Dashboard View (May 31, 2026)
+- **ViewModel Filtering**: Updated `DashboardViewModel` to filter `allClasses` based on `assignedClassIds` for `SUPERVISOR` accounts.
+- **My Classes Section**: Implemented `MyAssignedClassesSection` in the Dashboard UI for quick access to attendance and rosters of assigned classes.
+- **Permission Enforcement**: Utilized `PermissionUtils` to ensure data visibility follows role-based access control (Admin vs Supervisor).
+- **Unit Verification**: Added `DashboardViewModelTest` cases to confirm that Supervisors only see their assigned classes while Admins retain full visibility.
+- **MVI Compliance**: Followed `v3.2.0-ai-native` standards with strict State-Event-Effect separation.
+
+### Phase 22: E2E Sync Integration Testing (May 31, 2026)
+- **Integration Suite**: Created `ClassAssignmentSyncTest.kt` using Robolectric and MockK to verify end-to-end data flow.
+- **Worker Verification**: Confirmed `AccountSyncWorker` correctly pulls updated `assignedClassIds` from Cloud to Room via `syncAccount()`.
+- **UseCase Validation**: Verified `AssignClassToSupervisorUseCase` triggers the correct repository calls and handles network failures gracefully.
+- **Consistency Check**: Asserted that `SchoolMembership` data model remains consistent across local and remote sources during the sync lifecycle.
+
+### Phase 21: Dedicated Class Assignment UI (May 31, 2026)
+- **UseCase Implementation**: Created `AssignClassToSupervisorUseCase.kt` to handle supervisor class assignments via `AccountRepository`.
+- **MVI Architecture**: Built `AssignClassViewModel.kt` following the `v3.2.0-ai-native` standard with strict State-Event-Effect separation.
+- **Dedicated UI**: Developed `AssignClassScreen.kt` featuring a modern Chip-based selector and a "Save" button for explicit assignment confirmation.
+- **Navigation Integration**: Registered `ASSIGN_CLASS` route and integrated it into the `AccountGraph`.
+- **Permission Enforcement**: Refactored `FollowingScreen` to show the assignment entry point only for accounts with `ADMIN` role in the active school.
+- **Refactoring**: Replaced legacy dialog-based assignment with the new dedicated screen for better UX and consistency.
+
+### Phase 20: Role & Assignment Refactor (May 31, 2026)
+- **Supervisor Architecture**: Migrated from "Teacher" entity to `AccountRole.SUPERVISOR`. Teachers are now Accounts with specific class assignments.
+- **Assigned Class IDs**: Integrated `assignedClassIds` into `SchoolMembership` to support granular access control (Teacher as Supervisor of specific classes).
+- **Permission Engine**: Created `PermissionUtils.kt` with extension functions (`isAdmin`, `isSupervisorOf`, `canAccessClass`) for centralized authorization.
+- **Terminology Unification**: Updated `AccountRole` to [SUPER_ADMIN, ADMIN, SUPERVISOR, USER], replacing legacy names.
+- **UI Refactor**: Replaced hardcoded role checks in `Dashboard` and `Attendance` screens with the new permission engine.
+- **Migration Blueprint**: Added `MigrateRoles.kt` with Firestore migration logic for legacy accounts.
+
+### Phase 19: AI Music Feature Scaffolding & Integration (May 30, 2026)
+- **Feature Scaffolding**: Built a complete vertical slice for "Traditional Music AI" with Domain, Data (Room + Remote Stub), and MVI UI layers.
+- **MVI Compliance**: Followed `v3.2.0-ai-native` standards with `UiState`, `UiEvent`, and `UiEffect` (SharedFlow).
+- **Navigation Integration**: Registered `aiMusic` route and integrated `AiMusicScreen` into the `dashboardGraph`.
+- **Dashboard UI**: Added a new "AI Native Features" section to the Dashboard with a shortcut to the AI Music tool.
+- **Data Integrity**: Verified 100% compilation and unit test coverage for the new feature's business logic.
+
+### Phase 18: Unit Testing & WorkManager Stability (May 30, 2026)
+- **Test Migration**: Moved `AccountSyncWorkerTest` from `androidTest` to `src/test` for faster execution and better CI compatibility.
+- **Dependency Optimization**: Added `work-testing`, `robolectric`, and `androidx.test.core` to `testImplementation`.
+- **Worker Verification**: Achieved 100% coverage for `AccountSyncWorker` sync logic, including pull/push success, failure, and retry scenarios.
+- **Robolectric Integration**: Configured Robolectric to provide a functional `Context` for unit tests involving WorkManager and repositories.
+- **Architecture Documentation**: Formalized the sync strategy in [ADR 001: Account Sync Architecture](docs/adr/001-account-sync-architecture.md).
+
 ### Phase 17: APK Optimization & Build Stability (May 27, 2026)
 - **Feature Completed**: Implemented ABI splits for `arm64-v8a` and `armeabi-v7a` to reduce APK size.
 - **Modern Distribution**: Disabled Universal APK generation in favor of leaner, architecture-specific APKs.

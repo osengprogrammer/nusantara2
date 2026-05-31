@@ -1,37 +1,28 @@
 package com.azuratech.azuratime.features.dashboard.ui
 
-import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.azuratech.azuratime.core.util.showToast
-import com.azuratech.azuratime.MainActivity
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.core.ui.designsystem.ConflictResolverDialog
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
-import com.azuratech.azuratime.core.ui.designsystem.WorkspaceSelector
-import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
-import com.azuratech.azuratime.features.dashboard.ui.components.*
-import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
-import com.azuratech.azuratime.features.reporting.ui.integrity.IntegritySummaryWidget
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
-import com.google.firebase.auth.FirebaseAuth
+import com.azuratech.azuratime.core.util.canAccessFeature
+import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.features.dashboard.ui.components.*
+import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
+import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 
 @Composable
 fun DashboardScreen(
@@ -40,81 +31,37 @@ fun DashboardScreen(
     schoolViewModel: SchoolViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val schoolUiState by schoolViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val availableClasses = schoolUiState.availableClasses
-    val context = LocalContext.current
+    val uiEffect by viewModel.uiEffectFlow.collectAsStateWithLifecycle(initialValue = null)
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddSchoolDialog by remember { mutableStateOf(false) }
 
-    val accountId = uiState.account?.accountId
-    LaunchedEffect(accountId) {
-        if (accountId != null) {
-            schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId))
-            viewModel.onEvent(DashboardUiEvent.LoadDashboard)
+    LaunchedEffect(uiEffect) {
+        when (val effect = uiEffect) {
+            is DashboardUiEffect.NavigateTo -> navController.navigate(effect.route)
+            is DashboardUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+            is DashboardUiEffect.ShowToast -> { /* Handle Toast if needed */ }
+            null -> {}
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffectFlow.collect { effect ->
-            when (effect) {
-                is DashboardUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
-                is DashboardUiEffect.ShowToast -> context.showToast(effect.message)
-                is DashboardUiEffect.NavigateTo -> {
-                    if (effect.route == "login") {
-                        val intent = Intent(context, MainActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        context.startActivity(intent)
-                    } else {
-                        navController.navigate(effect.route)
-                    }
-                }
+    AzuraScreen(
+        title = "Azura Time",
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        actions = {
+            IconButton(onClick = { viewModel.onEvent(DashboardUiEvent.Logout) }) {
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
             }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        schoolViewModel.uiEventFlow.collect { event: UiEvent ->
-            when (event) {
-                is UiEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(event.message)
-                }
-                else -> {}
-            }
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Visible Version Badge for testing updates
-        Text(
-            text = "v1.1.4",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(8.dp),
-        )
-
-        when {
-            uiState.isLoading -> {
+        },
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-            !uiState.isReady -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-            else -> {
-                if (uiState.conflicts.isNotEmpty()) {
-                    val firstConflict = uiState.conflicts.first()
-                    ConflictResolverDialog(
-                        conflict = firstConflict,
-                        onResolveClick = { useCloud -> viewModel.onEvent(DashboardUiEvent.ResolveConflict(firstConflict, useCloud)) },
-                    )
-                }
-
+            } else {
                 DashboardContent(
                     navController = navController,
                     data = uiState,
                     schoolViewModel = schoolViewModel,
-                    availableClasses = availableClasses,
+                    availableClasses = schoolViewModel.uiStateFlow.collectAsStateWithLifecycle().value.availableClasses,
                     snackbarHostState = snackbarHostState,
                     showAddSchoolDialog = showAddSchoolDialog,
                     onAddSchoolClick = { showAddSchoolDialog = true },
@@ -123,6 +70,12 @@ fun DashboardScreen(
                     onRegisterStudentClick = { viewModel.onEvent(DashboardUiEvent.OnRegisterStudentClick) },
                     onSelectClass = { classId ->
                         viewModel.onEvent(DashboardUiEvent.SelectActiveClass(classId))
+                    },
+                    onAttendanceClick = { classId ->
+                        viewModel.onEvent(DashboardUiEvent.SelectActiveClass(classId, Screen.AttendanceCapture.route))
+                    },
+                    onRosterClick = { classId ->
+                        viewModel.onEvent(DashboardUiEvent.SelectActiveClass(classId, Screen.StudentRoster.route))
                     },
                     onLogoutClick = {
                         viewModel.onEvent(DashboardUiEvent.Logout)
@@ -146,233 +99,173 @@ fun DashboardContent(
     onSyncClick: () -> Unit,
     onRegisterStudentClick: () -> Unit,
     onSelectClass: (String?) -> Unit,
+    onAttendanceClick: (String) -> Unit,
+    onRosterClick: (String) -> Unit,
     onLogoutClick: () -> Unit,
 ) {
     val schoolUiState by schoolViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val schools = schoolUiState.schools
     val activeSchoolId = schoolUiState.activeSchoolId
-    val activeSchool = schools.find { it.id == activeSchoolId }
+    val account = data.account
 
-    AzuraScreen(
-        title = activeSchool?.name?.let { "Azura - $it" } ?: "Azura IMS",
-        snackbarHostState = snackbarHostState,
-        actions = {
-            WorkspaceSelector(
-                schoolViewModel = schoolViewModel,
-                workspaceViewModel = hiltViewModel(),
-            )
-            DashboardSyncButton(
-                isSyncing = data.isSyncing,
-                onSyncClick = onSyncClick,
-            )
-        },
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
     ) {
-        val account = data.account ?: return@AzuraScreen
-        val photoUrl = FirebaseAuth.getInstance().currentUser?.photoUrl
+        // --- 👤 PROFILE & WORKSPACE ---
+        item {
+            ProfileHeader(
+                name = account?.name ?: "Guest",
+                email = account?.email,
+                schoolName = data.currentSchool?.name,
+                photoUrl = account?.photoUrl,
+                onLogout = onLogoutClick,
+                onProfileClick = { navController.navigate(Screen.Profile.route) },
+            )
+        }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.lg),
-            ) {
-                if (!data.isApproved) {
-                    item {
-                        AzuraCard(
-                            title = "Akses Dibatasi",
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                        ) {
-                            Text(
-                                text = "Akun Anda sedang menunggu verifikasi Admin. Fitur scanner akan muncul setelah disetujui.",
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        }
-                    }
+        item {
+            MySchoolsCard(
+                viewModel = schoolViewModel,
+                accountId = account?.accountId ?: "",
+                isApproved = data.isApproved,
+                globalRole = account?.role ?: "USER",
+                onSchoolClick = { school ->
+                    schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
+                },
+                onAddSchoolClick = onAddSchoolClick,
+                onJoinSchoolClick = { navController.navigate(Screen.FindSchool.route) },
+            )
+        }
+
+        // --- 🚀 QUICK ACTIONS & STATS ---
+        if (activeSchoolId != null) {
+            item {
+                SyncStatusCard(
+                    isSyncing = data.isSyncing,
+                    lastSync = "Baru saja",
+                    onSyncClick = onSyncClick,
+                )
+            }
+
+            // Visible Version Badge for testing updates
+            item {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("v1.1.4", style = MaterialTheme.typography.labelSmall) },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                        ),
+                    )
+                }
+            }
+
+            if (!data.isApproved) {
+                item {
+                    PendingApprovalCard()
+                }
+            }
+
+            if (data.isApproved) {
+                item {
+                    ActiveSessionCard(
+                        allClasses = data.allClasses,
+                        activeClassId = account?.activeClassId,
+                        onSelectClass = onSelectClass,
+                    )
+                }
+
+                if (data.sessionStudents.isNotEmpty()) {
+                    item { SessionStudentsList(students = data.sessionStudents) }
                 }
 
                 item {
-                    ProfileHeader(
-                        name = account.name,
-                        email = account.email,
-                        schoolName = activeSchool?.name ?: account.schoolName ?: "",
-                        photoUrl = photoUrl,
-                        onLogout = onLogoutClick,
-                        onProfileClick = { navController.navigate(Screen.Profile.route) },
+                    MyAssignedClassesSection(
+                        myClasses = data.assignedClasses,
+                        onNavigateToAll = { navController.navigate(Screen.MyAssignedClass.route) },
+                        onAttendanceClick = onAttendanceClick,
+                        onRosterClick = onRosterClick,
+                    )
+                }
+            }
+
+            if (data.isApproved && account?.toDomain().canAccessFeature(activeSchoolId ?: "")) {
+                item {
+                    AccountTasksGrid(
+                        navController = navController,
+                        isAdmin = account?.toDomain()?.role?.name == "ADMIN",
+                        currentRole = data.currentRole,
+                        onRegisterStudentClick = onRegisterStudentClick,
+                        accountId = account?.accountId,
+                    )
+                }
+
+                // AI Native Feature Section
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = AzuraSpacing.md))
+                    Text(
+                        text = "AI Native Tools",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = AzuraSpacing.md),
                     )
                 }
 
                 item {
-                    FollowingButton(
-                        pendingRequests = data.pendingRequests,
-                        onClick = { navController.navigate(Screen.Following.route) },
-                    )
-                }
-
-                if (data.currentRole == "ADMIN" || data.currentRole == "SUPER_ADMIN") {
-                    item {
-                        Surface(
-                            onClick = { navController.navigate(Screen.DataDashboard.route) },
-                            color = Color.Transparent,
-                            shape = AzuraShapes.medium,
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = AzuraSpacing.md),
+                        onClick = { navController.navigate(Screen.AiMusic.route) },
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(AzuraSpacing.md),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            IntegritySummaryWidget(
-                                totalStudents = data.totalStudents,
-                                unassignedCount = data.unassignedStudents,
-                                brokenLinks = data.brokenAssignments,
-                                unsyncedCount = data.unsyncedRecords,
-                            )
-                        }
-                    }
-                }
-
-                // 👑 SUPER ADMIN MODERATION
-                if (data.currentRole == "SUPER_ADMIN") {
-                    item {
-                        AzuraCard(
-                            title = "Moderasi Sistem",
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Persetujuan Sekolah", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                    Text("Lihat pendaftaran sekolah yang menunggu verifikasi.", style = MaterialTheme.typography.bodySmall)
-                                }
-                                Button(
-                                    onClick = { navController.navigate(Screen.PendingSchools.route) },
-                                    shape = AzuraShapes.medium,
-                                ) {
-                                    Text("Buka")
-                                }
+                            Icon(Icons.Default.MusicNote, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(Modifier.width(AzuraSpacing.md))
+                            Column {
+                                Text("Traditional Music AI", style = MaterialTheme.typography.titleMedium)
+                                Text("Rekomendasi musik pengiring belajar", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
                 }
-
-                if (data.isSyncing) {
-                    item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp)) }
-                }
-
-                // 🏫 School Management Section (Exempt from isApproved for first-time creation)
-                val showSchoolCard = schools.isEmpty() || data.isApproved || data.currentRole == "ADMIN"
-                if (showSchoolCard) {
-                    item {
-                        MySchoolsCard(
-                            viewModel = schoolViewModel,
-                            accountId = account.accountId,
-                            isApproved = data.isApproved,
-                            globalRole = data.currentRole,
-                            onSchoolClick = { clickedSchoolId ->
-                                val school = schools.find { it.id == clickedSchoolId }
-                                if (school != null) {
-                                    schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
-                                }
-                            },
-                            onAddSchoolClick = {
-                                onAddSchoolClick()
-                            },
-                            onJoinSchoolClick = {
-                                navController.navigate(Screen.FindSchool.route)
-                            },
-                        )
-                    }
-                }
-
-                if (data.isApproved) {
-                    item {
-                        ActiveSessionCard(
-                            allClasses = data.allClasses,
-                            activeClassId = account.activeClassId,
-                            onSelectClass = onSelectClass,
-                        )
-                    }
-
-                    if (data.sessionStudents.isNotEmpty()) {
-                        item { SessionStudentsList(students = data.sessionStudents) }
-                    }
-
-                    item {
-                        MyAssignedClassesSection(
-                            myClasses = data.assignedClasses,
-                            onNavigateToAll = { navController.navigate(Screen.MyAssignedClass.route) },
-                        )
-                    }
-                }
-
-                item {
-                    AccountTasksGrid(
-                        navController = navController,
-                        isAdmin = data.currentRole == "ADMIN" || data.currentRole == "SUPER_ADMIN",
-                        currentRole = data.currentRole,
-                        onRegisterStudentClick = onRegisterStudentClick,
-                        accountId = account.accountId,
-                        isEnabled = activeSchool?.status == "ACTIVE",
+            }
+        } else {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(AzuraSpacing.xl),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Silakan pilih sekolah untuk memulai",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    RecentScansHeader(navController = navController)
-                }
-
-                items(data.recentRecords) { record ->
-                    DashboardAttendanceItem(record)
-                }
-            }
-
-            if (showAddSchoolDialog) {
-                AddSchoolDialog(
-                    availableClasses = availableClasses,
-                    onDismissRequest = onDismissAddSchool,
-                    onConfirmClick = { name: String, timezone: String, selectedClassIds: List<String> ->
-                        schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.CreateSchool(name, timezone, selectedClassIds))
-                        onDismissAddSchool()
-                    },
-                )
             }
         }
+    }
+
+    if (showAddSchoolDialog) {
+        AddSchoolDialog(
+            availableClasses = availableClasses,
+            onDismissRequest = onDismissAddSchool,
+            onConfirmClick = { name, timezone, classes ->
+                schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.CreateSchool(name, timezone, classes))
+                onDismissAddSchool()
+            },
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PreviewEmpty() {
+private fun PreviewDashboard() {
     AzuraTheme {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Dashboard is empty")
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PreviewLoaded() {
-    AzuraTheme {
-        // Here you would render a mock DashboardContent or similar
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Dashboard Loaded")
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PreviewError() {
-    AzuraTheme {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(AzuraSpacing.lg),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(text = "An error occurred", color = MaterialTheme.colorScheme.error)
-            Spacer(modifier = Modifier.height(AzuraSpacing.md))
-            Button(onClick = {}) {
-                Text("Retry")
-            }
+            Text("Dashboard Content Preview")
         }
     }
 }

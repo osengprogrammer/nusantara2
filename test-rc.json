@@ -1,0 +1,40 @@
+{
+  "parameters": {
+    "download_url": {
+      "defaultValue": {
+        "value": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.7.9/app-universal-release.apk"
+      },
+      "valueType": "STRING"
+    },
+    "sha256": {
+      "defaultValue": {
+        "value": "69ea43413d5d22bba558b5eb839db237592398c969526c43fd46f1dd091cff72"
+      },
+      "valueType": "STRING"
+    },
+    "latest_version_name": {
+      "defaultValue": {
+        "value": "3.7.9"
+      },
+      "valueType": "STRING"
+    },
+    "latest_version_code": {
+      "defaultValue": {
+        "value": "3709"
+      },
+      "valueType": "NUMBER"
+    },
+    "release_notes": {
+      "defaultValue": {
+        "value": "Autonomous update ✅, MVI strict ✅, Zero data loss"
+      },
+      "valueType": "STRING"
+    },
+    "min_supported_version_code": {
+      "defaultValue": {
+        "value": "3600"
+      },
+      "valueType": "NUMBER"
+    }
+  }
+}

@@ -1,7 +1,5 @@
 package com.azuratech.azuratime.features.account.domain.model
 
-import com.azuratech.azuratime.features.account.data.local.Membership
-
 /**
  * 👤 ACCOUNT PROFILE (v3.2.0-ai-native)
  * Domain model for account management.
@@ -11,8 +9,8 @@ data class AccountProfile(
     val email: String,
     val name: String,
     val photoUrl: String? = null,
-    val role: String = "MEMBER",
+    val role: String = "USER",
     val activeSchoolId: String? = null,
     val activeClassId: String? = null,
-    val memberships: Map<String, Membership> = emptyMap(),
+    val memberships: Map<String, SchoolMembership> = emptyMap(),
 )
