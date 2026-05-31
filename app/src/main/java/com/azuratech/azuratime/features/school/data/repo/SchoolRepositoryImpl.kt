@@ -8,7 +8,7 @@ import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.data.local.SchoolMembership as LocalSchoolMembership
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
@@ -88,7 +88,7 @@ class SchoolRepositoryImpl @Inject constructor(
                 val user = database.accountDao().getAccountById(adminId)
                 if (user != null) {
                     val updatedMemberships = user.memberships.toMutableMap()
-                    updatedMemberships[schoolId] = Membership(
+                    updatedMemberships[schoolId] = LocalSchoolMembership(
                         schoolName = name,
                         role = "ADMIN",
                         status = "ACTIVE",

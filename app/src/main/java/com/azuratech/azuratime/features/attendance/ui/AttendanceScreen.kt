@@ -28,8 +28,12 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.ui.history.AttendanceHistoryCard
 import com.azuratech.azuratime.core.util.showToast
 
+import com.azuratech.azuratime.core.util.isAdmin
+import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.features.account.domain.model.toDomain
+
 /**
- * 📝 ATTENDANCE SCREEN (v3.2.0-ai-native)
+ * 📝 ATTENDANCE SCREEN (v3.2.1-ai-native)
  * Main management screen for viewing and correcting attendance logs.
  * BEAUTIFIED & RESPONSIVE (v3.7.1)
  */
@@ -41,7 +45,7 @@ fun AttendanceScreen(
     accountViewModel: AccountManagementViewModel,
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val user by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
+    val account by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
     val assignedIds by accountViewModel.assignedClassIdsFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -71,8 +75,8 @@ fun AttendanceScreen(
     }
 
     // Role helper
-    val accountRole = user?.memberships?.get(user?.activeSchoolId)?.role ?: user?.role ?: "MEMBER"
-    val isAdmin = accountRole == "ADMIN" || accountRole == "SUPER_ADMIN"
+    val activeSchoolId = account?.activeSchoolId ?: ""
+    val isAdmin = account?.toDomain().isAdmin(activeSchoolId)
 
     val availableClasses = remember(uiState.classes, assignedIds, isAdmin) {
         if (isAdmin) uiState.classes else uiState.classes.filter { it.id in assignedIds }

@@ -91,7 +91,7 @@ class AuthViewModel @Inject constructor(
                         }
                     } else {
                         val schoolId = account.activeSchoolId ?: ""
-                        val currentRole = account.memberships[schoolId]?.role ?: "MEMBER"
+                        val currentRole = account.memberships[schoolId]?.role ?: "USER"
                         _uiStateFlow.update {
                             it.copy(
                                 isLoading = false,

@@ -2,7 +2,7 @@ package com.azuratech.azuratime.core.data.local
 
 import android.content.Context
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.data.local.SchoolMembership
 import com.azuratech.azuratime.features.school.data.local.ClassDao
 import com.azuratech.azuratime.features.school.data.local.ClassEntity
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,7 @@ object DatabaseSeeder {
                     email = "admin@azuratech.com",
                     name = "Admin Azura",
                     memberships = mapOf(
-                        defaultSchoolId to Membership(
+                        defaultSchoolId to SchoolMembership(
                             schoolName = schoolName,
                             role = "ADMIN", // Pure-Class role
                         ),

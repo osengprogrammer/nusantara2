@@ -1,8 +1,8 @@
 {
-  "latest_version": "3.7.9",
-  "latest_version_code": 3709,
+  "latest_version": "3.12.0",
+  "latest_version_code": 3710,
   "min_supported_version_code": 3600,
-  "release_notes": "Safe deploy pipeline",
-  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.7.9/app-universal-release.apk",
-  "sha256": "4bfcac4607872f474dc7214548569ba2647bb751574dbf0967bb3c5c1a8d5aa9"
+  "release_notes": "Phase 24: AI Music Engine & Supervisor Dashboard",
+  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.12.0/app-universal-release.apk",
+  "sha256": "b2b33907cdfe671858f3ac28f60012da2754147120adeb11d74a7907613cf5c5"
 }

@@ -47,9 +47,15 @@ fun SessionStudentsList(students: List<StudentBiometricEntity>) {
 /**
  * 🔑 MY ASSIGNED CLASSES
  * Shows the classes the account is actually responsible for.
+ * Enhanced for Supervisors with quick actions.
  */
 @Composable
-fun MyAssignedClassesSection(myClasses: List<ClassModel>, onNavigateToAll: () -> Unit) {
+fun MyAssignedClassesSection(
+    myClasses: List<ClassModel>,
+    onNavigateToAll: () -> Unit,
+    onAttendanceClick: (String) -> Unit = {},
+    onRosterClick: (String) -> Unit = {},
+) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = AzuraSpacing.md)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -68,14 +74,74 @@ fun MyAssignedClassesSection(myClasses: List<ClassModel>, onNavigateToAll: () ->
         if (myClasses.isEmpty()) {
             Text("Belum ada kelas yang ditugaskan.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
         } else {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(vertical = 4.dp),
+            ) {
                 items(myClasses) { classItem ->
-                    AssistChip(
-                        onClick = onNavigateToAll,
-                        label = { Text(classItem.name) },
-                        leadingIcon = { Icon(Icons.Default.Bookmark, null, Modifier.size(16.dp)) },
-                        shape = AzuraShapes.medium,
+                    ClassActionCard(
+                        classItem = classItem,
+                        onAttendanceClick = { onAttendanceClick(classItem.id) },
+                        onRosterClick = { onRosterClick(classItem.id) },
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ClassActionCard(
+    classItem: ClassModel,
+    onAttendanceClick: () -> Unit,
+    onRosterClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.width(160.dp),
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(AzuraSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.xs),
+        ) {
+            Text(
+                text = classItem.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+            Text(
+                text = "${classItem.studentCount} Siswa",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                IconButton(
+                    onClick = onAttendanceClick,
+                    modifier = Modifier.size(32.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                ) {
+                    Icon(Icons.Default.CameraAlt, null, modifier = Modifier.size(16.dp))
+                }
+                IconButton(
+                    onClick = onRosterClick,
+                    modifier = Modifier.size(32.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary,
+                    ),
+                ) {
+                    Icon(Icons.Default.People, null, modifier = Modifier.size(16.dp))
                 }
             }
         }

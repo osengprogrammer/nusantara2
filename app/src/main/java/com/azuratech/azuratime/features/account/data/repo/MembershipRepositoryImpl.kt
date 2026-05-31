@@ -3,8 +3,9 @@ package com.azuratech.azuratime.features.account.data.repo
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.account.data.local.AccountDao
-import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.data.local.toDomain
 import com.azuratech.azuratime.core.domain.model.SyncStatus
+import com.azuratech.azuratime.features.account.domain.model.SchoolMembership as DomainSchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.MembershipRepository
 import com.azuratech.azuratime.features.account.domain.repository.MembershipDocUpdate
 import com.azuratech.azuraengine.result.Result
@@ -124,9 +125,9 @@ class MembershipRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeMemberships(uid: String): Flow<Result<List<Membership>>> {
+    override fun observeMemberships(uid: String): Flow<Result<List<DomainSchoolMembership>>> {
         return accountDao.observeAccountById(uid).map { account ->
-            Result.Success(account?.memberships?.values?.toList() ?: emptyList())
+            Result.Success(account?.memberships?.values?.map { it.toDomain() } ?: emptyList())
         }
     }
 

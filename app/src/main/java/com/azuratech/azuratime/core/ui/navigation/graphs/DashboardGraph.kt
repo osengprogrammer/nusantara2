@@ -5,9 +5,14 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import com.azuratech.azuratime.features.dashboard.ui.DashboardScreen
+import com.azuratech.azuratime.features.aimusic.ui.AiMusicScreen
 
 fun NavGraphBuilder.dashboardGraph(navController: NavController) {
     composable(NavigationRoutes.DASHBOARD) {
         DashboardScreen(navController = navController)
+    }
+
+    composable(NavigationRoutes.AI_MUSIC) {
+        AiMusicScreen(onNavigateBack = { navController.popBackStack() })
     }
 }

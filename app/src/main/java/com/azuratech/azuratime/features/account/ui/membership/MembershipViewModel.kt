@@ -17,8 +17,10 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.azuratech.azuratime.features.account.data.local.toDomain
+
 /**
- * 🛠️ MEMBERSHIP VIEW MODEL (v3.2.0-ai-native)
+ * 🛠️ MEMBERSHIP VIEW MODEL (v3.2.1-ai-native)
  * Observes AccountEntity and AccessRequestProfile from Room. Strict MVI.
  */
 @HiltViewModel
@@ -65,7 +67,7 @@ class MembershipViewModel @Inject constructor(
                 state.copy(
                     account = account,
                     accessRequests = requests.map { it.toProfile() },
-                    memberships = account?.memberships?.values?.toList() ?: emptyList(),
+                    memberships = account?.memberships?.values?.map { it.toDomain() } ?: emptyList(),
                     status = status,
                 )
             }

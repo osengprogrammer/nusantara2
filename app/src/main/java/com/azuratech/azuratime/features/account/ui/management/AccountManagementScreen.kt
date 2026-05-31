@@ -20,9 +20,11 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
@@ -30,6 +32,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.StudentAvatar
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.util.showToast
 
 /**
  * 👤 ACCOUNT MANAGEMENT SCREEN (v3.2.0-ai-native)
@@ -39,7 +42,27 @@ fun AccountManagementScreen(
     viewModel: AccountManagementViewModel,
     onNavigateBack: () -> Unit,
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+
+    // 🔥 AI Native: Collect and Handle UI Effects
+    LaunchedEffect(Unit) {
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is AccountUiEffect.ShowToast -> context.showToast(effect.message)
+                is AccountUiEffect.ShowSnackbar -> {
+                    // Could trigger scaffold state snackbar if needed
+                    context.showToast(effect.message)
+                }
+                is AccountUiEffect.NavigateTo -> {
+                    // Navigation logic here
+                }
+                AccountUiEffect.NavigateBack -> {
+                    onNavigateBack()
+                }
+            }
+        }
+    }
 
     AccountManagementContent(
         uiState = uiState,

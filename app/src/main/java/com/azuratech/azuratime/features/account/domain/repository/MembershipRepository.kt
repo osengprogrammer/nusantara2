@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.account.domain.repository
 
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.domain.model.SchoolMembership
 import kotlinx.coroutines.flow.Flow
 
 sealed class MembershipDocUpdate {
@@ -16,7 +16,7 @@ interface MembershipRepository {
     suspend fun createPendingAccount(uid: String, email: String, displayName: String?): Result<Unit>
     fun savePendingStatus(): Result<Unit>
     fun activateSession(data: Map<String, Any>?): Result<Boolean>
-    fun observeMemberships(uid: String): Flow<Result<List<Membership>>>
+    fun observeMemberships(uid: String): Flow<Result<List<SchoolMembership>>>
     fun observeMembershipFlow(uid: String): Flow<Result<MembershipDocUpdate>>
     suspend fun pollWhitelistedFinal(uid: String): Result<Map<String, Any>?>
 }

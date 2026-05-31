@@ -2,10 +2,16 @@ package com.azuratech.azuratime.features.account.domain.repository
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 import kotlinx.coroutines.flow.Flow
 
 interface AccountRepository {
+    /**
+     * 🔥 AI Native: Observe account from Room with Result wrapper.
+     */
+    fun getAccount(id: String): Flow<Result<Account>>
+
     suspend fun getAccountById(id: String): Result<AccountEntity>
     fun observeAccountEntity(id: String): Flow<Result<AccountEntity?>>
     suspend fun getProfile(accountId: String): Result<AccountProfile>

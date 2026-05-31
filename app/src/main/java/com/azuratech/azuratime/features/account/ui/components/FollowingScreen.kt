@@ -3,7 +3,6 @@ package com.azuratech.azuratime.features.account.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -16,10 +15,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
@@ -30,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun FollowingScreen(
     onNavigateBack: () -> Unit = {},
+    onNavigateToAssignClass: (String) -> Unit = {},
     viewModel: FollowingViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -64,20 +62,9 @@ fun FollowingScreen(
                 when (selectedTab) {
                     0 -> SearchTab(uiState, searchEmail, { searchEmail = it }, { viewModel.onEvent(FollowingUiEvent.SearchByEmail(it)) }, { viewModel.onEvent(FollowingUiEvent.SendConnectionRequest(it)) })
                     1 -> RequestsTab(uiState, { viewModel.onEvent(FollowingUiEvent.AcceptRequest(it)) }, { viewModel.onEvent(FollowingUiEvent.DeclineRequest(it)) })
-                    2 -> ConnectionsTab(uiState, { viewModel.onEvent(FollowingUiEvent.SelectFriendForAssignment(it)) })
+                    2 -> ConnectionsTab(uiState, onAssign = { onNavigateToAssignClass(it.accountId) })
                 }
             }
-        }
-
-        // 🏫 Class Assignment Dialog
-        if (uiState.selectedFriendForAssignment != null) {
-            ClassAssignmentDialog(
-                friend = uiState.selectedFriendForAssignment!!,
-                availableClasses = uiState.availableClasses,
-                isProcessing = uiState.isProcessing,
-                onDismiss = { viewModel.onEvent(FollowingUiEvent.SelectFriendForAssignment(null)) },
-                onConfirm = { classIds -> viewModel.onEvent(FollowingUiEvent.AssignClasses(uiState.selectedFriendForAssignment!!.accountId, classIds)) },
-            )
         }
     }
 }
@@ -141,57 +128,7 @@ fun ConnectionsTab(state: FollowingUiState, onAssign: (AccountEntity) -> Unit) {
     } else {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
             items(state.connections) { account ->
-                ConnectedFriendItem(account, { onAssign(account) })
-            }
-        }
-    }
-}
-
-@Composable
-fun ClassAssignmentDialog(
-    friend: AccountEntity,
-    availableClasses: List<ClassModel>,
-    isProcessing: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (List<String>) -> Unit,
-) {
-    val selectedIds = remember { mutableStateListOf<String>() }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(shape = AzuraShapes.large, modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Beri Akses Kelas", style = MaterialTheme.typography.titleLarge)
-                Text("Pilih kelas yang akan dikelola oleh ${friend.name}", style = MaterialTheme.typography.bodyMedium)
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Box(Modifier.heightIn(max = 300.dp)) {
-                    LazyColumn {
-                        items(availableClasses) { cls ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth().selectable(
-                                    selected = selectedIds.contains(cls.id),
-                                    onClick = { if (selectedIds.contains(cls.id)) selectedIds.remove(cls.id) else selectedIds.add(cls.id) },
-                                ).padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Checkbox(checked = selectedIds.contains(cls.id), onCheckedChange = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text(cls.name)
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Batal") }
-                    Spacer(Modifier.width(8.dp))
-                    Button(onClick = { onConfirm(selectedIds.toList()) }, enabled = !isProcessing && selectedIds.isNotEmpty()) {
-                        if (isProcessing) CircularProgressIndicator(Modifier.size(16.dp)) else Text("Simpan")
-                    }
-                }
+                ConnectedFriendItem(account, state.isAdmin, { onAssign(account) })
             }
         }
     }
@@ -213,7 +150,7 @@ fun AccountResultItem(account: AccountEntity, isProcessing: Boolean, onAdd: () -
 }
 
 @Composable
-fun ConnectedFriendItem(account: AccountEntity, onAssign: () -> Unit) {
+fun ConnectedFriendItem(account: AccountEntity, isAdmin: Boolean, onAssign: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth(), shape = AzuraShapes.medium) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(model = account.photoUrl ?: "https://ui-avatars.com/api/?name=${account.name}", contentDescription = null, modifier = Modifier.size(40.dp).clip(CircleShape))
@@ -222,7 +159,9 @@ fun ConnectedFriendItem(account: AccountEntity, onAssign: () -> Unit) {
                 Text(account.name, fontWeight = FontWeight.Bold)
                 Text(account.email, style = MaterialTheme.typography.bodySmall)
             }
-            IconButton(onClick = onAssign) { Icon(Icons.Default.School, contentDescription = "Beri Akses Kelas", tint = MaterialTheme.colorScheme.primary) }
+            if (isAdmin) {
+                IconButton(onClick = onAssign) { Icon(Icons.Default.School, contentDescription = "Beri Akses Kelas", tint = MaterialTheme.colorScheme.primary) }
+            }
         }
     }
 }

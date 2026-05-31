@@ -18,4 +18,5 @@ data class FollowingUiState(
     val error: String? = null,
     val isProcessing: Boolean = false,
     val selectedFriendForAssignment: AccountEntity? = null,
+    val isAdmin: Boolean = false,
 )

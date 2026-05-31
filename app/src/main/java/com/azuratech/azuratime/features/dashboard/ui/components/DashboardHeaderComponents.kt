@@ -124,6 +124,83 @@ fun ProfileHeader(
 }
 
 /**
+ * 🔄 SYNC STATUS CARD
+ * Shows background sync state and manual trigger.
+ */
+@Composable
+fun SyncStatusCard(
+    isSyncing: Boolean,
+    lastSync: String,
+    onSyncClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier.padding(AzuraSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            DashboardSyncButton(isSyncing = isSyncing, onSyncClick = onSyncClick)
+            Spacer(Modifier.width(AzuraSpacing.md))
+            Column {
+                Text(
+                    text = if (isSyncing) "Sinkronisasi Berjalan..." else "Data Terupdate",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Terakhir: $lastSync",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * ⏳ PENDING APPROVAL CARD
+ * Friendly reminder for new users waiting for admin validation.
+ */
+@Composable
+fun PendingApprovalCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier.padding(AzuraSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Default.ErrorOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+            )
+            Spacer(Modifier.width(AzuraSpacing.md))
+            Column {
+                Text(
+                    text = "Menunggu Persetujuan",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Akun Anda sedang ditinjau oleh Admin Sekolah.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+    }
+}
+
+/**
  * ⚠️ DATA INTEGRITY ALERT
  * Prompts the admin to assign classes to new student enrollments.
  */

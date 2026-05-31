@@ -102,7 +102,7 @@ class WorkspaceViewModel @Inject constructor(
             try {
                 sessionManager.saveActiveSchoolId(newSchoolId)
                 repository.switchWorkspace(accountId, newSchoolId)
-                syncManager.enqueueProfileSync(accountId)
+                syncManager.enqueueAccountSync(accountId)
                 _statusFlow.value = WorkspaceStatus.Success(newSchoolName)
             } catch (e: Exception) {
                 _statusFlow.value = WorkspaceStatus.Error("Gagal pindah workspace: ${e.message}")

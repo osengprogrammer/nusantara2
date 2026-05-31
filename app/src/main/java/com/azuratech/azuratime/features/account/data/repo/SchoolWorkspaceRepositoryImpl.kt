@@ -7,7 +7,7 @@ import com.azuratech.azuratime.features.school.data.local.*
 import com.azuratech.azuratime.features.account.data.local.*
 import com.azuratech.azuratime.features.attendance.data.local.*
 import com.azuratech.azuratime.features.biometric.data.local.*
-import com.azuratech.azuratime.features.account.data.local.Membership
+import com.azuratech.azuratime.features.account.data.local.SchoolMembership as LocalSchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuraengine.result.Result
@@ -140,7 +140,7 @@ class SchoolWorkspaceRepositoryImpl @Inject constructor(
                     assignmentDao.deleteAllBySchool(oldSchoolId)
                 }
 
-                syncManager.enqueueProfileSync(accountId)
+                syncManager.enqueueAccountSync(accountId)
                 syncManager.enqueueSync()
                 Result.Success(Unit)
             } catch (e: Exception) {
@@ -155,7 +155,7 @@ class SchoolWorkspaceRepositoryImpl @Inject constructor(
                     val account = accountDao.getAccountById(accountId)
                     account?.let {
                         val updatedMemberships = it.memberships.toMutableMap().apply {
-                            put(schoolId, Membership(schoolName = schoolName, role = role))
+                            put(schoolId, LocalSchoolMembership(schoolName = schoolName, role = role))
                         }
                         accountDao.updateAccount(
                             it.copy(
@@ -164,7 +164,7 @@ class SchoolWorkspaceRepositoryImpl @Inject constructor(
                             ),
                         )
 
-                        syncManager.enqueueProfileSync(accountId)
+                        syncManager.enqueueAccountSync(accountId)
                         syncManager.enqueueAccessSync(accountId)
                     }
                 }

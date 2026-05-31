@@ -10,7 +10,7 @@ object FollowingPreviewMocks {
 
     fun success(): FollowingUiState = FollowingUiState(
         results = listOf(
-            AccountEntity(accountId = "acc_1", name = "Budi Santoso", email = "budi@azura.com", role = "TEACHER"),
+            AccountEntity(accountId = "acc_1", name = "Budi Santoso", email = "budi@azura.com", role = "SUPERVISOR"),
             AccountEntity(accountId = "acc_2", name = "Siti Aminah", email = "siti@azura.com", role = "ADMIN"),
         ),
     )

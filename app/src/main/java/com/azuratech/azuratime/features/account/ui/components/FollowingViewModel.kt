@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.util.isAdmin
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -52,6 +53,21 @@ class FollowingViewModel @Inject constructor(
         observePendingRequests()
         observeConnections()
         loadAvailableClasses()
+        observeAdminStatus()
+    }
+
+    private fun observeAdminStatus() {
+        val uid = currentUserId ?: return
+        val schoolIdFlow = sessionManager.activeSchoolIdFlow
+
+        accountRepository.getAccount(uid)
+            .combine(schoolIdFlow) { accountResult, schoolId ->
+                accountResult.onSuccess { account ->
+                    val isAdmin = schoolId?.let { account.isAdmin(it) } ?: false
+                    _uiStateFlow.update { it.copy(isAdmin = isAdmin) }
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun handleSearchByEmail(email: String) {

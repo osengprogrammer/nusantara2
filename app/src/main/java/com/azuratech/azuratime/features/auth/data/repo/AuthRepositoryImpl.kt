@@ -72,7 +72,7 @@ class AuthRepositoryImpl @Inject constructor(
                     syncStatus = SyncStatus.PENDING_UPDATE.name,
                 )
                 accountDao.upsertAccount(newAccount)
-                syncManager.enqueueProfileSync(uid)
+                syncManager.enqueueAccountSync(uid)
 
                 sessionManager.saveCurrentAccountId(uid)
                 sessionManager.saveAccountEmail(email)
@@ -109,7 +109,7 @@ class AuthRepositoryImpl @Inject constructor(
                     syncStatus = SyncStatus.PENDING_UPDATE.name,
                 )
                 accountDao.updateAccount(updatedAccount)
-                syncManager.enqueueProfileSync(uid)
+                syncManager.enqueueAccountSync(uid)
                 println("💾 Room: Updated account for membership registration. Sync enqueued.")
                 DomainResult.Success(Unit)
             } else {

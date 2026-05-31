@@ -7,7 +7,7 @@ sealed class DashboardUiEvent {
     data object LoadDashboard : DashboardUiEvent()
     data object Refresh : DashboardUiEvent()
     data class SelectSchool(val school: School) : DashboardUiEvent()
-    data class SelectActiveClass(val classId: String?) : DashboardUiEvent()
+    data class SelectActiveClass(val classId: String?, val navigateTo: String? = null) : DashboardUiEvent()
     data class ResolveConflict(val conflict: AttendanceConflict, val useCloud: Boolean) : DashboardUiEvent()
     data class NavigateTo(val route: String) : DashboardUiEvent()
     data object Logout : DashboardUiEvent()

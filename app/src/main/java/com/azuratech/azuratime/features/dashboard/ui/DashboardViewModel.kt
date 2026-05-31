@@ -7,8 +7,6 @@ import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.core.domain.model.AccountRole
-import com.azuratech.azuratime.core.domain.model.toAccountRole
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
@@ -21,6 +19,8 @@ import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEnt
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
+import com.azuratech.azuratime.core.util.isAdmin
+import com.azuratech.azuratime.features.account.data.local.toDomain
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -70,18 +70,7 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
-    private val _allClassesFlow = _activeSchoolIdFlow
-        .flatMapLatest { schoolId ->
-            if (schoolId != null) {
-                schoolRepository.observeClasses(schoolId).map { result ->
-                    result.getOrNull() ?: emptyList()
-                }
-            } else {
-                flowOf(emptyList())
-            }
-        }
-
-    private val _assignedClassesFlow = combine(
+    private val _allClassesFlow = combine(
         _activeSchoolIdFlow,
         _accountFlow,
     ) { schoolId, account ->
@@ -89,19 +78,21 @@ class DashboardViewModel @Inject constructor(
     }.flatMapLatest { (schoolId, account) ->
         if (schoolId != null && account != null) {
             schoolRepository.observeClasses(schoolId).map { result ->
-                val allClasses = result.getOrNull() ?: emptyList()
-                val membership = account.memberships[schoolId]
-                if (membership?.role.toAccountRole() == AccountRole.ADMIN) {
-                    allClasses
+                val classes = result.getOrNull() ?: emptyList()
+                if (account.toDomain().isAdmin(schoolId)) {
+                    classes
                 } else {
+                    val membership = account.memberships[schoolId]
                     val assignedIds = membership?.assignedClassIds ?: emptyList()
-                    allClasses.filter { it.id in assignedIds }
+                    classes.filter { it.id in assignedIds }
                 }
             }
         } else {
             flowOf(emptyList())
         }
     }
+
+    private val _assignedClassesFlow = _allClassesFlow
 
     private val _sessionStudentsFlow = _accountFlow
         .flatMapLatest { account ->
@@ -158,12 +149,14 @@ class DashboardViewModel @Inject constructor(
 
         @Suppress("UNCHECKED_CAST")
         val allClasses = params[4] as List<ClassModel>
+
+        println("🛠 DEBUG DASHBOARD COMBINE: AssignedCount=${assignedClasses.size}, AllCount=${allClasses.size}")
         val activeSchool = params[5] as School?
         val pendingCount = params[6] as Int
 
         val activeSchoolId = activeSchool?.id
         val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
-        val effectiveRole = membershipRole ?: account?.role ?: "MEMBER"
+        val effectiveRole = membershipRole ?: account?.role ?: "USER"
         val isReady = account != null
 
         DashboardUiState(
@@ -258,10 +251,13 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private fun selectActiveClass(classId: String?) {
+    private fun selectActiveClass(classId: String?, navigateTo: String? = null) {
         viewModelScope.launch {
             val account = uiStateFlow.value.account ?: return@launch
             database.accountDao().updateAccount(account.copy(activeClassId = classId))
+            if (navigateTo != null) {
+                _uiEffectFlow.emit(DashboardUiEffect.NavigateTo(navigateTo))
+            }
         }
     }
 

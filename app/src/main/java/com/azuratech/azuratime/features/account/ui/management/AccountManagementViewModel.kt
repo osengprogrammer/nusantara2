@@ -6,9 +6,8 @@ import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.local.toProfile
+import com.azuratech.azuratime.features.account.domain.model.toProfileCompat
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +16,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * 👤 ACCOUNT MANAGEMENT VIEW MODEL (v3.2.0-ai-native)
+ * 🚀 ACCOUNT MANAGEMENT VIEW MODEL (v3.2.0-ai-native)
  * Unified ViewModel for account profile, school memberships, and network.
  */
 @HiltViewModel
@@ -31,8 +30,8 @@ class AccountManagementViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(AccountUiState())
     val uiStateFlow: StateFlow<AccountUiState> = _uiStateFlow.asStateFlow()
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<AccountUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     init {
         observeData()
@@ -41,13 +40,18 @@ class AccountManagementViewModel @Inject constructor(
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private fun observeData() {
-        // 1. Current Account Profile & Active Class
+        // 1. Current Account Profile & Active Class (Mapped from Domain Account)
         sessionManager.currentAccountIdFlow
             .filterNotNull()
-            .flatMapLatest { uid -> repository.observeAccountEntity(uid) }
+            .flatMapLatest { uid -> repository.getAccount(uid) }
             .onEach { result ->
-                result.onSuccess { entity ->
-                    _uiStateFlow.update { it.copy(accountProfile = entity?.toProfile(), activeClassId = entity?.activeClassId) }
+                result.onSuccess { account ->
+                    _uiStateFlow.update {
+                        it.copy(
+                            accountProfile = account.toProfileCompat(),
+                            activeClassId = account.activeClassId,
+                        )
+                    }
                 }
             }
             .launchIn(viewModelScope)
@@ -136,7 +140,7 @@ class AccountManagementViewModel @Inject constructor(
             repository.updateDisplayName(uid, newName)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Nama berhasil diperbarui"))
+                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Nama berhasil diperbarui"))
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
@@ -182,7 +186,7 @@ class AccountManagementViewModel @Inject constructor(
             repository.updatePhoto(uid, uri.toString())
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false, pendingPhotoUri = null) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Foto profil berhasil diperbarui"))
+                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Foto profil berhasil diperbarui"))
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
@@ -197,7 +201,7 @@ class AccountManagementViewModel @Inject constructor(
     private fun logout() {
         viewModelScope.launch {
             sessionManager.clearSession()
-            _uiEventFlow.emit(UiEvent.NavigateTo("login"))
+            _uiEffectFlow.emit(AccountUiEffect.NavigateTo("login"))
         }
     }
 

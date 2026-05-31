@@ -65,4 +65,10 @@ abstract class DataSourceModule {
     abstract fun bindAttendanceRemoteDataSource(
         impl: AttendanceRemoteDataSourceImpl,
     ): AttendanceRemoteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindAiMusicApi(
+        impl: com.azuratech.azuratime.features.aimusic.data.remote.AiMusicApiImpl,
+    ): com.azuratech.azuratime.features.aimusic.data.remote.AiMusicApi
 }

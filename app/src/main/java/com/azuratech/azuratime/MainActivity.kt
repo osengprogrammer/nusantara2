@@ -37,6 +37,8 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
+        android.util.Log.i("AzuraUpdateTest", "✅ CODE CHANGE APPLIED - v3.7.7 in-app update test")
+        android.util.Log.i("AzuraUpdateTest", "✅ CODE CHANGE APPLIED - v3.7.7 in-app update test")
 
         handleUpdateIntent(intent)
 

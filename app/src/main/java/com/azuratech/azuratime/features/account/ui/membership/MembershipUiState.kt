@@ -1,16 +1,16 @@
 package com.azuratech.azuratime.features.account.ui.membership
 
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.local.Membership
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
+import com.azuratech.azuratime.features.account.domain.model.SchoolMembership
 
 /**
- * 🛠️ MEMBERSHIP UI STATE (v3.2.0-ai-native)
+ * 🛠️ MEMBERSHIP UI STATE (v3.2.1-ai-native)
  */
 data class MembershipUiState(
     val account: AccountEntity? = null,
     val accessRequests: List<AccessRequestProfile> = emptyList(),
-    val memberships: List<Membership> = emptyList(),
+    val memberships: List<SchoolMembership> = emptyList(),
     val status: MembershipStatus = MembershipStatus.Loading,
     val error: String? = null,
 )

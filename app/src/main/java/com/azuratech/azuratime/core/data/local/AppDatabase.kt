@@ -8,6 +8,7 @@ import com.azuratech.azuratime.features.attendance.data.local.*
 import com.azuratech.azuratime.features.biometric.data.local.*
 import com.azuratech.azuratime.features.account.data.local.*
 import com.azuratech.azuratime.features.reporting.data.local.*
+import com.azuratech.azuratime.features.aimusic.data.local.*
 
 @Database(
     entities = [
@@ -25,11 +26,13 @@ import com.azuratech.azuratime.features.reporting.data.local.*
         AuditLogEntity::class,
         ExportJobEntity::class,
         ReportEntity::class,
+        AiMusicEntity::class,
     ],
-    version = 14,
+    version = 15,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
+@Suppress("RoomProcessor:RoomSchemaMerging")
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun studentDao(): StudentDao
@@ -46,6 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun auditLogDao(): AuditLogDao
     abstract fun exportJobDao(): ExportJobDao
     abstract fun reportDao(): ReportDao
+    abstract fun aiMusicDao(): AiMusicDao
 
     companion object {
         @Volatile
