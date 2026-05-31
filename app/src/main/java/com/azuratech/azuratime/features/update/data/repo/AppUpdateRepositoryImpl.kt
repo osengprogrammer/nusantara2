@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.net.HttpURLConnection
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 
 /**
  * 🚀 APP UPDATE REPOSITORY IMPLEMENTATION (v3.2.0-ai-native)
- * Fetches version info from GitHub Pages version.json.
+ * Decoupled from Firebase. Fetches directly from GitHub Pages version.json.
  */
 @Singleton
 class AppUpdateRepositoryImpl @Inject constructor() : AppUpdateRepository {
@@ -27,27 +28,37 @@ class AppUpdateRepositoryImpl @Inject constructor() : AppUpdateRepository {
     private val versionUrl = "https://osengprogrammer.github.io/nusantara2/version.json"
 
     override suspend fun checkForUpdate(): Result<AppVersionInfo> {
-        Log.i("AzuraUpdate", "Repository: Fetching version.json from $versionUrl")
-        return with(Dispatchers.IO) {
+        val cacheBusterUrl = "$versionUrl?t=${System.currentTimeMillis()}"
+        Log.i("AzuraUpdate", "Repository: Checking for updates at $cacheBusterUrl")
+
+        return withContext(Dispatchers.IO) {
             try {
-                val connection = URL(versionUrl).openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 15000
-                connection.readTimeout = 15000
+                val connection = (URL(cacheBusterUrl).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 10000
+                    readTimeout = 10000
+                    useCaches = false
+                    // Force no caching at the protocol level
+                    addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate")
+                    addRequestProperty("Pragma", "no-cache")
+                    addRequestProperty("Expires", "0")
+                }
 
                 val responseCode = connection.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     val content = connection.inputStream.bufferedReader().use { it.readText() }
+                    Log.d("AzuraUpdate", "Repository: Raw JSON received -> $content")
+
                     val info = json.decodeFromString<AppVersionInfo>(content)
-                    Log.d("AzuraUpdate", "Repository: Data received -> Code: ${info.versionCode}, Name: ${info.versionName}")
+                    Log.d("AzuraUpdate", "Repository: Version check successful. Remote: ${info.versionCode}")
                     Result.Success(info)
                 } else {
-                    Log.e("AzuraUpdate", "Repository: Failed to fetch version.json, HTTP $responseCode")
-                    Result.Failure(AppError.Network("HTTP Error: $responseCode"))
+                    Log.e("AzuraUpdate", "Repository: HTTP Error $responseCode")
+                    Result.Failure(AppError.Network("Server returned HTTP $responseCode"))
                 }
             } catch (e: Exception) {
-                Log.e("AzuraUpdate", "Repository: Exception during update check", e)
-                Result.Failure(AppError.Network(e.localizedMessage ?: "Unknown error"))
+                Log.e("AzuraUpdate", "Repository: Network Exception", e)
+                Result.Failure(AppError.Network(e.localizedMessage ?: "Network connection failed"))
             }
         }
     }
@@ -55,16 +66,15 @@ class AppUpdateRepositoryImpl @Inject constructor() : AppUpdateRepository {
     override fun downloadApk(url: String, targetFile: File): Flow<Result<Float>> = flow {
         Log.i("AzuraUpdate", "Repository: Starting download from $url")
         try {
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 15000
-            connection.readTimeout = 60000
-            connection.instanceFollowRedirects = true
-            connection.setRequestProperty("User-Agent", "AzuraTime-Updater")
+            val connection = (URL(url).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 15000
+                readTimeout = 60000
+                instanceFollowRedirects = true
+                setRequestProperty("User-Agent", "AzuraTime-Updater")
+            }
 
             val responseCode = connection.responseCode
-            Log.d("AzuraUpdate", "Repository: Download HTTP Response Code: $responseCode")
-
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 val fileLength = connection.contentLength.toLong()
                 connection.inputStream.use { input ->
@@ -90,14 +100,14 @@ class AppUpdateRepositoryImpl @Inject constructor() : AppUpdateRepository {
                         }
                     }
                 }
-                Log.i("AzuraUpdate", "Repository: Download completed successfully")
+                Log.i("AzuraUpdate", "Repository: Download complete")
                 emit(Result.Success(1.0f))
             } else {
-                Log.e("AzuraUpdate", "Repository: Download failed with HTTP $responseCode")
-                emit(Result.Failure(AppError.Network("HTTP Error: $responseCode")))
+                Log.e("AzuraUpdate", "Repository: Download HTTP Error $responseCode")
+                emit(Result.Failure(AppError.Network("HTTP $responseCode")))
             }
         } catch (e: Exception) {
-            Log.e("AzuraUpdate", "Repository: Download exception", e)
+            Log.e("AzuraUpdate", "Repository: Download failed", e)
             emit(Result.Failure(AppError.Network(e.message)))
         }
     }.flowOn(Dispatchers.IO)
