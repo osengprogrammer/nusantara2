@@ -37,10 +37,9 @@ class AppUpdateViewModel @Inject constructor(
     val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     init {
-        Log.i("AzuraUpdate", "AppUpdateViewModel initialized - Triggering check")
+        Log.i("AzuraUpdate", "AppUpdateViewModel initialized - Listening for events")
         viewModelScope.launch {
             eventBus.events.collect {
-                Log.i("AzuraUpdate", "External update event received from bus")
                 checkForUpdate()
             }
         }
@@ -60,53 +59,70 @@ class AppUpdateViewModel @Inject constructor(
     private fun checkForUpdate() {
         Log.i("AzuraUpdate", "checkForUpdate() called")
         viewModelScope.launch {
-            _uiStateFlow.update { it.copy(isLoading = true) }
-            repository.checkForUpdate()
-                .onSuccess { info ->
-                    val currentVersionCode = BuildConfig.VERSION_CODE
-                    Log.i("AzuraUpdate", "Check Success: Remote=${info.versionCode}, Local=$currentVersionCode")
-                    if (info.versionCode > currentVersionCode) {
-                        Log.i("AzuraUpdate", "New update available: ${info.versionName}")
-                        _uiStateFlow.update {
-                            it.copy(
-                                isLoading = false,
-                                updateAvailable = true,
-                                releaseNotes = info.releaseNotes,
-                                downloadUrl = info.downloadUrl,
-                                showDialog = true,
-                            )
+            try {
+                _uiStateFlow.update { it.copy(isLoading = true, error = null) }
+                repository.checkForUpdate()
+                    .onSuccess { info ->
+                        val currentVersionCode = BuildConfig.VERSION_CODE
+                        val currentVersionName = BuildConfig.VERSION_NAME
+                        Log.i("AzuraUpdate", "Check Success: Remote(Code=${info.versionCode}, Name=${info.versionName}), Local(Code=$currentVersionCode, Name=$currentVersionName)")
+
+                        if (info.versionCode > currentVersionCode) {
+                            Log.i("AzuraUpdate", "New update available: ${info.versionName}")
+                            _uiStateFlow.update {
+                                it.copy(
+                                    isLoading = false,
+                                    updateAvailable = true,
+                                    releaseNotes = info.releaseNotes,
+                                    downloadUrl = info.downloadUrl,
+                                    showDialog = true,
+                                )
+                            }
+                        } else {
+                            Log.i("AzuraUpdate", "App is up to date")
+                            _uiStateFlow.update { it.copy(isLoading = false, updateAvailable = false) }
                         }
-                    } else {
-                        Log.i("AzuraUpdate", "App is up to date")
-                        _uiStateFlow.update { it.copy(isLoading = false, updateAvailable = false) }
                     }
-                }
-                .onFailure { error ->
-                    Log.e("AzuraUpdate", "Check Failed: ${error.message}")
-                    _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
-                }
+                    .onFailure { error ->
+                        Log.e("AzuraUpdate", "Check Failed: ${error.message}")
+                        _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+                    }
+            } catch (e: Exception) {
+                Log.e("AzuraUpdate", "Fatal Error in checkForUpdate", e)
+                _uiStateFlow.update { it.copy(isLoading = false, error = e.localizedMessage) }
+            }
         }
     }
 
     private fun downloadUpdate() {
         val url = _uiStateFlow.value.downloadUrl
-        if (url.isBlank()) return
+        if (url.isBlank()) {
+            Log.e("AzuraUpdate", "Download aborted: URL is blank")
+            return
+        }
 
         viewModelScope.launch {
-            // Use external files dir to avoid needing MANAGE_EXTERNAL_STORAGE on modern Android for simple APK download
-            // Installation will still need REQUEST_INSTALL_PACKAGES
-            val targetFile = File(context.getExternalFilesDir(null), "update.apk")
-            repository.downloadApk(url, targetFile).collect { result ->
-                result.onSuccess { progress ->
-                    _uiStateFlow.update { it.copy(downloadProgress = progress) }
-                    if (progress >= 1.0f) {
-                        _uiStateFlow.update { it.copy(apkFile = targetFile) }
-                        _uiEffectFlow.emit(AppUpdateUiEffect.ShowToast("Unduhan selesai. Siap dipasang."))
+            try {
+                _uiStateFlow.update { it.copy(error = null) }
+                val targetFile = File(context.getExternalFilesDir(null), "update.apk")
+
+                repository.downloadApk(url, targetFile).collect { result ->
+                    result.onSuccess { progress ->
+                        _uiStateFlow.update { it.copy(downloadProgress = progress) }
+                        if (progress >= 1.0f) {
+                            Log.i("AzuraUpdate", "Download completed: ${targetFile.absolutePath}")
+                            _uiStateFlow.update { it.copy(apkFile = targetFile) }
+                            _uiEffectFlow.emit(AppUpdateUiEffect.ShowToast("Unduhan selesai. Siap dipasang."))
+                        }
                     }
+                        .onFailure { error ->
+                            Log.e("AzuraUpdate", "Download failed: ${error.message}")
+                            _uiStateFlow.update { it.copy(error = error.message) }
+                        }
                 }
-                    .onFailure { error ->
-                        _uiStateFlow.update { it.copy(error = error.message) }
-                    }
+            } catch (e: Exception) {
+                Log.e("AzuraUpdate", "Fatal Error in downloadUpdate", e)
+                _uiStateFlow.update { it.copy(error = e.localizedMessage) }
             }
         }
     }
@@ -115,6 +131,7 @@ class AppUpdateViewModel @Inject constructor(
         val file = _uiStateFlow.value.apkFile
         if (file != null && file.exists()) {
             viewModelScope.launch {
+                Log.i("AzuraUpdate", "Triggering installation for ${file.absolutePath}")
                 _uiEffectFlow.emit(AppUpdateUiEffect.InstallApk(file))
             }
         } else {

@@ -1,5 +1,12 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 26: Robust In-App Update Implementation (June 1, 2026)
+- **Stability Fix**: Resolved "stuck disabled" button state by refining `enabled` logic in `AppUpdateDialog`. The button now correctly re-enables on network failure.
+- **Network Resilience**: Increased `readTimeout` to 60s and explicitly enabled `followRedirects` in `AppUpdateRepositoryImpl` for reliable GitHub release downloads.
+- **Error Visibility**: Added real-time error reporting to the `AppUpdateDialog` for better user feedback during connection drops or HTTP failures.
+- **Clean MVI**: Refactored `AppUpdateViewModel` to strictly follow `v3.2.0-ai-native` standards with improved logging and error handling.
+- **Production Verification**: Verified full download-to-install flow using production APKs and restored live Firebase Remote Config data.
+
 ### Phase 25: Dashboard Menu Restoration (May 31, 2026)
 - **Menu Restoration**: Restored missing "Class Management", "Staff Management", "School Selection", and "Follow System" cards to the Dashboard grid.
 - **Role-Based Visibility**: Enforced strict visibility logic using `PermissionUtils.isAdmin(activeSchoolId)`.

@@ -1,8 +1,8 @@
 {
   "latest_version": "3.13.0",
-  "latest_version_code": 3710,
+  "latest_version_code": 3711, 
   "min_supported_version_code": 3600,
-  "release_notes": "Phase 25: Dashboard Restoration & Role-Based Menus",
+  "release_notes": "Test Update Flow - Fixed Network & UI",
   "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.13.0/app-universal-release.apk",
   "sha256": "736c23212be96eb57bb01fab5768cb75ac079a3c5747df96f3430a889668f43c"
 }
