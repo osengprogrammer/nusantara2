@@ -18,7 +18,7 @@ import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
-import com.azuratech.azuratime.core.util.canAccessFeature
+import com.azuratech.azuratime.core.util.isAdmin
 import com.azuratech.azuratime.features.account.data.local.toDomain
 import com.azuratech.azuratime.features.dashboard.ui.components.*
 import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
@@ -191,11 +191,12 @@ fun DashboardContent(
                 }
             }
 
-            if (data.isApproved && account?.toDomain().canAccessFeature(activeSchoolId ?: "")) {
+            if (data.isApproved) {
+                val isAdmin = account?.toDomain().isAdmin(activeSchoolId ?: "")
                 item {
                     AccountTasksGrid(
                         navController = navController,
-                        isAdmin = account?.toDomain()?.role?.name == "ADMIN",
+                        isAdmin = isAdmin,
                         currentRole = data.currentRole,
                         onRegisterStudentClick = onRegisterStudentClick,
                         accountId = account?.accountId,

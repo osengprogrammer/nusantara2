@@ -1,5 +1,12 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 25: Dashboard Menu Restoration (May 31, 2026)
+- **Menu Restoration**: Restored missing "Class Management", "Staff Management", "School Selection", and "Follow System" cards to the Dashboard grid.
+- **Role-Based Visibility**: Enforced strict visibility logic using `PermissionUtils.isAdmin(activeSchoolId)`.
+- **UI Grid Reorganization**: Optimized `AccountTasksGrid` layout for better accessibility and logical grouping of Admin vs. Member actions.
+- **Navigation Verification**: Ensured all restored menu items correctly navigate to their respective screens (`ClassManagement`, `Following`, `SchoolList`).
+- **MVI Consistency**: Maintained 100% adherence to `v3.2.0-ai-native` standards with clean state propagation.
+
 ### Phase 24: AI Music Rule-Based Engine (May 31, 2026)
 - **Data Model**: Expanded `TraditionalMusicTrack` to include `name` and updated Room `AiMusicEntity` accordingly.
 - **Rule Engine**: Implemented a functional filtering engine in `AiMusicRepositoryImpl` using an internal dataset of Nusantara tracks (Gamelan, Angklung, Sasando, etc.).

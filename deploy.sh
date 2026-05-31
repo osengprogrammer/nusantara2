@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🛡️ Azura Time — Safe & Verified Deploy Pipeline (v2.3 Simplified)
+# 🛡️ Azura Time — Safe & Verified Deploy Pipeline (v2.4 Auto-Verify Version)
 # =============================================================================
 # Usage: 
 #   ./deploy.sh                          # Build dengan versi yang ada
@@ -13,6 +13,7 @@
 #   • SHA256 integrity check
 #   • GitHub Releases upload
 #   • GitHub Pages fallback (docs/version.json) ← ✅ Primary update channel
+#   • 🔧 AUTO-VERIFY: Re-reads version from Gradle file to prevent stale data
 #   • Zero manual steps, fully autonomous
 #   • NO Firebase Remote Config complexity
 # =============================================================================
@@ -157,8 +158,16 @@ else
 fi
 echo "✅ GitHub Release: https://github.com/$GITHUB_REPO/releases/tag/v${VERSION_NAME}"
 
-# === 7. ✅ GITHUB PAGES FALLBACK (Primary Update Channel) ===
+# === 7. ✅ GITHUB PAGES FALLBACK (Primary Update Channel + AUTO-VERIFY) ===
 echo "🌐 Updating docs/version.json (Autonomous Update Source)..."
+
+# 🔧 FIX: Re-read version directly from Gradle file to ensure 100% accuracy
+# This prevents stale variables from being used if --bump was triggered
+VERSION_NAME=$(grep -E 'versionName\s*=\s*"[^"]+"' app/build.gradle.kts | head -n 1 | grep -oP '"\K[^"]+')
+VERSION_CODE=$(grep -E "versionCode\s*=\s*[0-9]+" app/build.gradle.kts | head -n 1 | grep -oE '[0-9]+$')
+
+echo "   📝 Verified Version: $VERSION_NAME ($VERSION_CODE)"
+
 mkdir -p docs
 cat > docs/version.json << EOF
 {
@@ -170,6 +179,7 @@ cat > docs/version.json << EOF
   "sha256": "$SHA"
 }
 EOF
+
 git add docs/version.json && git commit -m "chore: bump version.json to v${VERSION_NAME} [skip ci]" 2>/dev/null || true
 git push origin main 2>/dev/null || true
 echo "✅ GitHub Pages updated: https://osengprogrammer.github.io/nusantara2/version.json"

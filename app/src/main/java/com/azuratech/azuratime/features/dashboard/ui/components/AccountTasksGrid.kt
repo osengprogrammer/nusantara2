@@ -87,7 +87,7 @@ fun AccountTasksGrid(
         // ======================================================
         // 🔥 Row 3: Admin Only Management
         // ======================================================
-        if (isAdmin) {
+        if (isAdmin || currentRole == "SUPER_ADMIN") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
@@ -105,10 +105,32 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
+                    "Manajemen Staf",
+                    Icons.Default.ManageAccounts,
+                    MaterialTheme.colorScheme.secondary,
+                    { navController.navigate(Screen.Following.route) },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+            ) {
+                DashboardActionCard(
                     "Manajemen Siswa",
                     Icons.Default.People,
-                    MaterialTheme.colorScheme.secondary,
+                    MaterialTheme.colorScheme.primary,
                     { navController.navigate(Screen.StudentRoster.route) },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+                DashboardActionCard(
+                    "Registrasi Baru",
+                    Icons.Default.PersonAdd,
+                    MaterialTheme.colorScheme.tertiary,
+                    onClick = onRegisterStudentClick,
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
@@ -141,21 +163,42 @@ fun AccountTasksGrid(
         }
 
         // ======================================================
-        // 🔥 Row 5: Admin Tools
+        // 🔥 Row 5: School & Connection (Visible for ALL)
+        // ======================================================
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+        ) {
+            DashboardActionCard(
+                "Pilih Sekolah",
+                Icons.Default.School,
+                MaterialTheme.colorScheme.tertiary,
+                {
+                    if (accountId != null) {
+                        navController.navigate(Screen.SchoolList.createRoute(accountId))
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                enabled = isEnabled,
+            )
+            DashboardActionCard(
+                "Sistem Follow",
+                Icons.Default.GroupAdd,
+                MaterialTheme.colorScheme.outline,
+                { navController.navigate(Screen.Following.route) },
+                modifier = Modifier.weight(1f),
+                enabled = isEnabled,
+            )
+        }
+
+        // ======================================================
+        // 🔥 Row 6: Debug System
         // ======================================================
         if (isAdmin || currentRole == "SUPER_ADMIN") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
-                DashboardActionCard(
-                    "Registrasi Baru",
-                    Icons.Default.PersonAdd,
-                    MaterialTheme.colorScheme.tertiary,
-                    onClick = onRegisterStudentClick,
-                    modifier = Modifier.weight(1f),
-                    enabled = isEnabled,
-                )
                 DashboardActionCard(
                     "Debug System",
                     Icons.Default.BugReport,
@@ -164,6 +207,7 @@ fun AccountTasksGrid(
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
