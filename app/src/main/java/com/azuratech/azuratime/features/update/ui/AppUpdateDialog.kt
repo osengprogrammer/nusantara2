@@ -62,6 +62,16 @@ fun AppUpdateDialog(
                             modifier = Modifier.padding(top = 4.dp),
                         )
                     }
+
+                    if (state.error != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Error: ${state.error}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -73,12 +83,14 @@ fun AppUpdateDialog(
                         Text("Pasang Sekarang")
                     }
                 } else {
+                    // Retain fix: Allow retry on error by ensuring enabled is true if not currently downloading
+                    val isDownloading = state.downloadProgress > 0f && state.downloadProgress < 1f
                     Button(
                         onClick = { onEvent(AppUpdateUiEvent.DownloadUpdate) },
-                        enabled = state.downloadProgress == 0f,
+                        enabled = !isDownloading,
                         shape = AzuraShapes.medium,
                     ) {
-                        Text(if (state.downloadProgress > 0f) "Mengunduh..." else "Unduh & Perbarui")
+                        Text(if (isDownloading) "Mengunduh..." else "Unduh & Perbarui")
                     }
                 }
             },
