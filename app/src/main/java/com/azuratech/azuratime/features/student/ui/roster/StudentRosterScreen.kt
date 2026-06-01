@@ -45,6 +45,7 @@ fun StudentRosterScreen(
                 is StudentRosterUiEffect.NavigateToDetail -> {
                     onEditStudentClick(effect.studentId)
                 }
+                is StudentRosterUiEffect.ExportPdf -> { /* Only handled in Barcode Screen */ }
             }
         }
     }

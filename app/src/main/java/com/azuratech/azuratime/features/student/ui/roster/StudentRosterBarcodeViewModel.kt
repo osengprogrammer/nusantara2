@@ -20,6 +20,7 @@ class StudentRosterBarcodeViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
 ) : ViewModel() {
 
     private val _uiStateFlow = MutableStateFlow(StudentRosterBarcodeUiState())
@@ -48,7 +49,33 @@ class StudentRosterBarcodeViewModel @Inject constructor(
                 _uiStateFlow.update { it.copy(selectedStudentIds = emptySet()) }
             }
             StudentRosterBarcodeUiEvent.ExportSelected -> {
-                // Future: Implement PDF export logic
+                exportToPdf()
+            }
+        }
+    }
+
+    private fun exportToPdf() {
+        val selectedIds = _uiStateFlow.value.selectedStudentIds
+        if (selectedIds.isEmpty()) return
+
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isLoading = true) }
+
+            val schoolId = _uiStateFlow.value.schoolId ?: ""
+            val selectedStudents = _uiStateFlow.value.students.filter { it.profile.studentId in selectedIds }
+
+            val file = com.azuratech.azuratime.features.student.util.BarcodePdfGenerator.generateBarcodePdf(
+                cacheDir = context.cacheDir,
+                schoolId = schoolId,
+                students = selectedStudents,
+            )
+
+            _uiStateFlow.update { it.copy(isLoading = false) }
+
+            if (file != null) {
+                _uiEffectFlow.emit(StudentRosterUiEffect.ExportPdf(file))
+            } else {
+                _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Gagal membuat file PDF"))
             }
         }
     }
