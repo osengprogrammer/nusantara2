@@ -4,7 +4,7 @@ import android.net.Uri
 
 /**
  * 🗺️ AZURA NAVIGATION MAP (PURE-CLASS 2.0)
- * Cleaned of all legacy Options and UserClassManagement routes.
+ * Cleaned of all legacy Options and Management routes.
  */
 sealed class Screen(val route: String) {
 

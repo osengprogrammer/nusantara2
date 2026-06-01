@@ -19,14 +19,14 @@ class SessionManager private constructor(private val context: Context) {
 
         private const val PREF_NAME = "azura_secure_session"
         private const val KEY_DB_CLOUD = "db_cloud_key"
-        private const val KEY_USER_STATUS = "account_status"
+        private const val KEY_ACCOUNT_STATUS = "account_status"
         private const val KEY_EXPIRE_DATE = "expire_date"
         private const val KEY_LAST_SYNC = "last_sync_time"
         private const val KEY_LAST_FACES_SYNC = "last_faces_sync_time"
         private const val KEY_LAST_CLASSES_SYNC = "last_classes_sync_time"
         private const val KEY_LAST_RECORDS_SYNC = "last_records_sync_time"
-        private const val KEY_USER_EMAIL = "account_email"
-        private const val KEY_USER_ID = "current_account_id"
+        private const val KEY_ACCOUNT_EMAIL = "account_email"
+        private const val KEY_ACCOUNT_ID = "current_account_id"
         private const val KEY_ACTIVE_SCHOOL_ID = "active_school_id"
 
         @Volatile
@@ -82,24 +82,24 @@ class SessionManager private constructor(private val context: Context) {
     }
 
     fun saveCurrentAccountId(accountId: String) {
-        sharedPreferences.edit().putString(KEY_USER_ID, accountId).apply()
+        sharedPreferences.edit().putString(KEY_ACCOUNT_ID, accountId).apply()
         _currentAccountIdFlow.value = accountId
     }
 
-    fun getCurrentAccountId(): String? = sharedPreferences.getString(KEY_USER_ID, null)
+    fun getCurrentAccountId(): String? = sharedPreferences.getString(KEY_ACCOUNT_ID, null)
 
     // 🔥 RESTORED MISSING FUNCTIONS
     fun saveAccountEmail(email: String) {
-        sharedPreferences.edit().putString(KEY_USER_EMAIL, email).apply()
+        sharedPreferences.edit().putString(KEY_ACCOUNT_EMAIL, email).apply()
     }
 
-    fun getAccountEmail(): String = sharedPreferences.getString(KEY_USER_EMAIL, "") ?: ""
+    fun getAccountEmail(): String = sharedPreferences.getString(KEY_ACCOUNT_EMAIL, "") ?: ""
 
     fun saveAccountStatus(status: String) {
-        sharedPreferences.edit().putString(KEY_USER_STATUS, status).apply()
+        sharedPreferences.edit().putString(KEY_ACCOUNT_STATUS, status).apply()
     }
 
-    fun getAccountStatus(): String = sharedPreferences.getString(KEY_USER_STATUS, STATUS_PENDING) ?: STATUS_PENDING
+    fun getAccountStatus(): String = sharedPreferences.getString(KEY_ACCOUNT_STATUS, STATUS_PENDING) ?: STATUS_PENDING
 
     fun getExpireDate(): Long = sharedPreferences.getLong(KEY_EXPIRE_DATE, 0L)
 
@@ -140,7 +140,7 @@ class SessionManager private constructor(private val context: Context) {
             putString(KEY_DB_CLOUD, isoKey)
             putLong(KEY_EXPIRE_DATE, expireDateMillis)
             putLong(KEY_LAST_SYNC, System.currentTimeMillis())
-            putString(KEY_USER_STATUS, STATUS_ACTIVE)
+            putString(KEY_ACCOUNT_STATUS, STATUS_ACTIVE)
         }.apply()
         Log.d(TAG, "Security envelope injected successfully.")
     }
