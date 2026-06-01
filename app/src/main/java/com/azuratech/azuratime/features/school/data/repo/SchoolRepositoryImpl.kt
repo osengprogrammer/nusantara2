@@ -284,7 +284,10 @@ class SchoolRepositoryImpl @Inject constructor(
     }
 
     override suspend fun assignClassToSchool(schoolId: String, classId: String): Result<Unit> = try {
-        dao.assignClass(SchoolClassAssignment(schoolId, classId))
+        database.withTransaction {
+            dao.assignClass(SchoolClassAssignment(schoolId, classId))
+            dao.updateClassSchool(classId, schoolId)
+        }
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(AppError.LocalDB(e.message))

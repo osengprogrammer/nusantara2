@@ -45,10 +45,20 @@ class SchoolViewModel @Inject constructor(
             onEvent(SchoolUiEvent.LoadSchools(initialAccountId))
         }
 
+        loadOrphanedClasses() // 🔥 AI Native: Pre-load classes for new school creation
+
         // Keep activeSchoolId in sync with SessionManager
         viewModelScope.launch {
             sessionManager.activeSchoolIdFlow.collect { id ->
                 _uiStateFlow.update { it.copy(activeSchoolId = id) }
+            }
+        }
+    }
+
+    private fun loadOrphanedClasses() {
+        viewModelScope.launch {
+            schoolRepository.getOrphanedClasses().onSuccess { classes ->
+                _uiStateFlow.update { it.copy(availableClasses = classes) }
             }
         }
     }
@@ -151,6 +161,7 @@ class SchoolViewModel @Inject constructor(
                                 _uiEventFlow.emit(UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
                             }
                         }
+                        loadOrphanedClasses() // 🔥 Refresh available classes
                         _uiStateFlow.update { it.copy(isLoading = false) }
                     }
                     .onFailure { error ->
