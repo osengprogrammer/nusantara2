@@ -13,7 +13,7 @@ object MigrateRoles {
     /**
      * FIRESTORE MIGRATION SNIPPET (Node.js/Cloud Functions)
      *
-     * async function migrateTeacherToSupervisor() {
+     * async function migrateLegacyToSupervisor() {
      *   const accountsRef = db.collection('accounts');
      *   const snapshot = await accountsRef.get();
      *

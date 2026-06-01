@@ -21,7 +21,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 fun AccountTasksGrid(
     navController: NavController,
     isAdmin: Boolean,
-    currentRole: String = "MEMBER", // 👈 Added
+    currentRole: String = "USER", // 👈 Updated
     onRegisterStudentClick: () -> Unit, // 👈 Added
     accountId: String? = null,
     isEnabled: Boolean = true, // 🔥 Added
