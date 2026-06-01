@@ -21,7 +21,9 @@ fun NavGraphBuilder.attendanceGraph(
         }
 
         composable(NavigationRoutes.BARCODE_SCAN) {
-            TextPlaceholder("Barcode Screen")
+            com.azuratech.azuratime.features.attendance.ui.capture.BarcodeScanScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
 
         composable(NavigationRoutes.MANUAL_ATTENDANCE) {

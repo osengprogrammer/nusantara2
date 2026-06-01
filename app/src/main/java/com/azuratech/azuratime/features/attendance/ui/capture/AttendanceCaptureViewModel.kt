@@ -71,7 +71,12 @@ class AttendanceCaptureViewModel @Inject constructor(
     }
 
     private fun startScannerSession(email: String, mode: ScanMode) {
-        currentAccountEmail = email
+        val resolvedEmail = if (email.isBlank() || email == "admin@azuratech.com") {
+            sessionManager.getAccountEmail().ifBlank { "admin@azuratech.com" }
+        } else {
+            email
+        }
+        currentAccountEmail = resolvedEmail
         _uiStateFlow.update { it.copy(isLoading = true, error = null, scanMode = mode) }
 
         viewModelScope.launch {
