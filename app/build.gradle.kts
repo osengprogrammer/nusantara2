@@ -27,8 +27,8 @@ android {
         applicationId = "com.azuratech.azuratime"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3711
-        versionName = "3.13.0"
+        versionCode = 3712
+        versionName = "Test bump to 3712 for update verification"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
