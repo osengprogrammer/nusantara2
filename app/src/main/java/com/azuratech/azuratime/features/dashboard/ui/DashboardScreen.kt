@@ -154,7 +154,7 @@ fun DashboardContent(
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     AssistChip(
                         onClick = {},
-                        label = { Text("v1.1.4", style = MaterialTheme.typography.labelSmall) },
+                        label = { Text("v${com.azuratech.azuratime.BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.labelSmall) },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                         ),

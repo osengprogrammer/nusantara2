@@ -278,7 +278,7 @@ fun AttendanceScreen(
         showClassCorrectionDialog?.let { recordToCorrect ->
             LocalClassCorrectionDialog(
                 currentClassName = recordToCorrect.className.ifBlank { "General Scan" },
-                userClasses = availableClasses,
+                accountClasses = availableClasses,
                 onDismiss = { showClassCorrectionDialog = null },
                 onClassSelected = { classItem ->
                     viewModel.onEvent(AttendanceUiEvent.UpdateRecordClass(recordToCorrect, classItem))
@@ -342,7 +342,7 @@ fun LocalEmptyPlaceholder(msg: String) {
 @Composable
 fun LocalClassCorrectionDialog(
     currentClassName: String,
-    userClasses: List<ClassModel>,
+    accountClasses: List<ClassModel>,
     onDismiss: () -> Unit,
     onClassSelected: (ClassModel) -> Unit,
 ) {
@@ -354,7 +354,7 @@ fun LocalClassCorrectionDialog(
                 Text("Sesi saat ini: $currentClassName", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(16.dp))
                 LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
-                    items(userClasses) { classItem ->
+                    items(accountClasses) { classItem ->
                         OutlinedButton(
                             onClick = { onClassSelected(classItem) },
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),

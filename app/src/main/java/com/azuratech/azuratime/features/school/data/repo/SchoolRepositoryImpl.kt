@@ -97,6 +97,10 @@ class SchoolRepositoryImpl @Inject constructor(
                     database.accountDao().updateAccount(user.copy(memberships = updatedMemberships, activeSchoolId = schoolId))
                 }
             }
+            // 🔥 Trigger immediate sync to Firestore
+            syncManager.enqueueSchoolSync(schoolId)
+            syncManager.enqueueAccessSync(adminId)
+
             Result.Success(schoolId)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))

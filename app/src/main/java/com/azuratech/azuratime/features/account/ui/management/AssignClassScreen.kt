@@ -59,7 +59,7 @@ fun AssignClassScreen(
                         AzuraCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(AzuraSpacing.md)) {
                                 Text(
-                                    text = "Petugas / Supervisor",
+                                    text = "Akun / Supervisor",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                 )

@@ -75,7 +75,7 @@ fun SearchTab(state: FollowingUiState, email: String, onEmailChange: (String) ->
         OutlinedTextField(
             value = email,
             onValueChange = onEmailChange,
-            label = { Text("Cari Guru (Email)") },
+            label = { Text("Cari Akun (Email)") },
             modifier = Modifier.fillMaxWidth(),
             shape = AzuraShapes.medium,
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },

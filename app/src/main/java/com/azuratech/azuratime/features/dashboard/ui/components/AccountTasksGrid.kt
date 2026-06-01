@@ -105,7 +105,7 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Manajemen Staf",
+                    "Manajemen Akun",
                     Icons.Default.ManageAccounts,
                     MaterialTheme.colorScheme.secondary,
                     { navController.navigate(Screen.Following.route) },
