@@ -40,9 +40,18 @@ fun StudentRosterBarcodeScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val uiEffect by viewModel.uiEffectFlow.collectAsStateWithLifecycle(initialValue = null)
     var selectedStudentIdForPreview by remember { mutableStateOf<String?>(null) }
     var selectedStudentNameForPreview by remember { mutableStateOf("") }
     var selectedClassIdForPreview by remember { mutableStateOf("") }
+
+    LaunchedEffect(uiEffect) {
+        when (val effect = uiEffect) {
+            is StudentRosterUiEffect.ExportPdf -> sharePdf(context, effect.file)
+            is StudentRosterUiEffect.ShowToast -> android.widget.Toast.makeText(context, effect.message, android.widget.Toast.LENGTH_SHORT).show()
+            else -> {}
+        }
+    }
 
     AzuraScreen(
         title = "Cetak Barcode",
@@ -80,8 +89,9 @@ fun StudentRosterBarcodeScreen(
 
                     if (uiState.selectedStudentIds.isNotEmpty()) {
                         Button(
-                            onClick = { /* Export PDF logic here */ },
+                            onClick = { viewModel.onEvent(StudentRosterBarcodeUiEvent.ExportSelected) },
                             shape = AzuraShapes.medium,
+                            enabled = !uiState.isLoading,
                         ) {
                             Icon(Icons.Default.Print, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
@@ -233,6 +243,24 @@ private fun shareQrCode(context: Context, bitmap: Bitmap, studentName: String) {
             type = "image/png"
         }
         context.startActivity(Intent.createChooser(shareIntent, "Bagikan Barcode"))
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
+private fun sharePdf(context: Context, file: File) {
+    try {
+        val contentUri: Uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file,
+        )
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(contentUri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Buka atau Cetak PDF Barcode"))
     } catch (e: Exception) {
         e.printStackTrace()
     }

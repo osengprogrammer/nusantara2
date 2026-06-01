@@ -1,5 +1,11 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 27: Student Barcode PDF Export (June 1, 2026)
+- **PDF Generation**: Implemented a lightweight, native PDF generator using `android.graphics.pdf.PdfDocument`.
+- **Batch Export**: Added ability to select multiple students and generate a printable grid of QR codes on A4 pages.
+- **Sharing Integration**: Integrated with `FileProvider` to allow immediate sharing or opening of generated PDF files.
+- **MVI Refinement**: Updated `StudentRosterBarcodeViewModel` and `StudentRosterBarcodeScreen` to handle the export side-effect seamlessly.
+
 ### Phase 26: Robust In-App Update Implementation (June 1, 2026)
 - **Stability Fix**: Resolved "stuck disabled" button state by refining `enabled` logic in `AppUpdateDialog`. The button now correctly re-enables on network failure.
 - **Network Resilience**: Increased `readTimeout` to 60s and explicitly enabled `followRedirects` in `AppUpdateRepositoryImpl` for reliable GitHub release downloads.
