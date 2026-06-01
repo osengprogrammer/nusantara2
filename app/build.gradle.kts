@@ -27,8 +27,8 @@ android {
         applicationId = "com.azuratech.azuratime"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3712
-        versionName = "Implement 100% AI-native Barcode Scanner for Student Attendance"
+        versionCode = 3713
+        versionName = "Added new features and bug fixes"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
