@@ -41,7 +41,7 @@ fun AttendanceCaptureScreen(
     onBarcodeScanClick: () -> Unit,
     onNavigateBack: () -> Unit,
     useBackCamera: Boolean = false,
-    accountEmail: String = "admin@azuratech.com",
+    accountEmail: String = "",
     viewModel: AttendanceCaptureViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
