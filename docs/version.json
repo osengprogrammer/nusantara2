@@ -1,8 +1,8 @@
 {
-  "latest_version": "3.13.1",
-  "latest_version_code": 3712,
+  "latest_version": "3.14.0",
+  "latest_version_code": 3716,
   "min_supported_version_code": 3600,
-  "release_notes": "Test update flow fix - Version 3712 (Retry after daemon crash)",
-  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.13.1/app-universal-release.apk",
-  "sha256": "c73c57c358038c50e8fa5e73afff3fc5816fc1d256899d943e39b4856ed67a49"
+  "release_notes": "Safe deploy pipeline",
+  "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.14.0/app-universal-release.apk",
+  "sha256": "9fe1554881e38b0b64bfd05442055f103be3f445ee293fdf1f27e5eec94503e0"
 }
