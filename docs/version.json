@@ -1,8 +1,8 @@
 {
   "latest_version": "3.14.0",
-  "latest_version_code": 3726,
+  "latest_version_code": 3727,
   "min_supported_version_code": 3600,
   "release_notes": "MVI ✅, FCM ✅, Theme ✅ — Automated deploy",
   "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.14.0/app-universal-release.apk",
-  "sha256": "fb3046b5cdfc0cde3552eae27844bde5b228dbf97472034e13a4accf8b2d7f29"
+  "sha256": "414ce7a3fd65ec02c7833647fe3d83c28575ac57aa3bd86b24fe59fef6680f69"
 }
