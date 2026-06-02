@@ -1,5 +1,17 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 28: Robust Sync Logic & Firebase Function Refinement (June 2, 2026)
+- **Background Sync**: Updated `AccountSyncWorker` to explicitly sync classes for the active school, ensuring no data gaps after account synchronization.
+- **Sync Reliability**: Fixed a critical bug in `SchoolRepositoryImpl.syncClasses` where remote network failures were treated as successes, preventing proper error handling and retries.
+- **SSOT Integrity**: Updated `SchoolRepositoryImpl` to mark classes as `isSynced = true` when pulled from remote, ensuring local state matches Cloud state.
+- **Worker Logic Fix**: Refined `AccountSyncWorker` to correctly return `Result.retry()` if the initial `pushAccount` fails with a network error, ensuring data eventual consistency.
+- **Test Stabilization**: Fixed compilation errors in `AccountSyncWorkerTest` and `ClassAssignmentSyncTest` by updating constructor parameters and adding missing dependencies.
+- **Verification**: 100% pass rate for `spotlessCheck`, `compileDebugKotlin`, and all unit tests.
+- **Firebase Function Hardening**: Refined `onregistrationapproved` in `functions/src/index.ts` to:
+    - Prevent accidental overwriting of school owners (`accountId`, `ownerEmail`) when joining existing schools.
+    - Ensure `email` and `name` are present in the `accounts` collection for seamless app synchronization.
+- **Supervisor Accessibility**: Verified and improved the class visibility logic to ensure supervisors only see their assigned classes while admins retain full access.
+
 ### Phase 27: Student Barcode PDF Export (June 1, 2026)
 - **PDF Generation**: Implemented a lightweight, native PDF generator using `android.graphics.pdf.PdfDocument`.
 - **Batch Export**: Added ability to select multiple students and generate a printable grid of QR codes on A4 pages.

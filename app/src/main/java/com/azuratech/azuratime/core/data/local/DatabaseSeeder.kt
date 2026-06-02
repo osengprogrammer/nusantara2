@@ -19,6 +19,7 @@ object DatabaseSeeder {
         withContext(Dispatchers.IO) {
             val database = AppDatabase.getInstance(context)
             val accountDao = database.accountDao()
+            val schoolDao = database.schoolDao() // 🔥 Added: Need schoolDao to seed schools
             val classDao = database.classDao() // 🔥 FIXED: Using classDao instead of optionDao
 
             val existingAccounts = accountDao.getAllAccountsOnce()
@@ -27,6 +28,16 @@ object DatabaseSeeder {
                 // 1. Create Default Workspace
                 val defaultSchoolId = "AZURA-SCHOOL-${UUID.randomUUID().toString().take(8)}"
                 val schoolName = "Azura Academy"
+
+                // 1.5. Seed Default School Entity (REQUIRED for Foreign Key Constraints)
+                val defaultSchool = com.azuratech.azuratime.features.school.data.local.SchoolEntity(
+                    id = defaultSchoolId,
+                    accountId = "SYSTEM", // Placeholder for seeded data
+                    name = schoolName,
+                    timezone = "Asia/Jakarta",
+                    status = "ACTIVE",
+                )
+                schoolDao.insertSchool(defaultSchool)
 
                 // 2. Seed Default Admin Account
                 val defaultAdmin = AccountEntity(

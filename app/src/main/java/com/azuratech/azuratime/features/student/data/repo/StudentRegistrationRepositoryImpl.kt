@@ -122,6 +122,19 @@ class StudentRegistrationRepositoryImpl @Inject constructor(
                             name = rawClassName,
                         )
                         classDao.insert(newClass)
+
+                        // 🔥 SAFETY CHECK: Ensure school exists locally to avoid Foreign Key constraint fail (Code 787)
+                        if (schoolClassDao.getSchoolById(schoolId) == null) {
+                            schoolClassDao.upsertSchool(
+                                SchoolEntity(
+                                    id = schoolId,
+                                    accountId = accountId,
+                                    name = "School $schoolId",
+                                    timezone = "Asia/Jakarta",
+                                ),
+                            )
+                        }
+
                         schoolClassDao.assignClass(SchoolClassAssignment(schoolId, newClass.id))
                         newClass.id
                     }

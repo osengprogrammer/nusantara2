@@ -94,6 +94,7 @@ class AttendanceCaptureViewModel @Inject constructor(
                                 _uiStateFlow.update {
                                     it.copy(
                                         isLoading = false,
+                                        activeClassId = classId,
                                         activeClassName = className,
                                         activeSchoolId = schoolId,
                                         isScanning = true,
@@ -207,7 +208,7 @@ class AttendanceCaptureViewModel @Inject constructor(
             studentId = scannedId,
             studentName = studentBiometric.name,
             accountEmail = currentAccountEmail,
-            activeClassId = activeClassId,
+            activeClassId = _uiStateFlow.value.activeClassId,
             studentClassIds = studentClassIds,
         )
 

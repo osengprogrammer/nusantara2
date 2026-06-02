@@ -5,6 +5,7 @@ import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.asLocalResult
+import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
@@ -30,6 +31,7 @@ class SchoolRepositoryImpl @Inject constructor(
     private val database: AppDatabase,
     private val remoteDataSource: SchoolRemoteDataSource,
     private val syncManager: SyncManager,
+    private val sessionManager: SessionManager, // 🔥 Added for account context
     private val firestore: com.google.firebase.firestore.FirebaseFirestore,
 ) : SchoolRepository {
     private val dao = database.schoolClassDao()
@@ -195,23 +197,42 @@ class SchoolRepositoryImpl @Inject constructor(
     override suspend fun syncClasses(accountId: String, schoolId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val remoteResult = remoteDataSource.getClasses(accountId, schoolId)
-            if (remoteResult is Result.Success) {
-                remoteResult.data.forEach { classModel ->
-                    val entity = ClassEntity(
-                        id = classModel.id,
-                        ownerAccountId = accountId,
-                        schoolId = schoolId,
-                        name = classModel.name,
-                        grade = classModel.grade,
-                        accountId = classModel.accountId,
-                        studentCount = classModel.studentCount,
-                        createdAt = classModel.createdAt,
-                    )
-                    dao.upsertClass(entity)
-                    dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
+            when (remoteResult) {
+                is Result.Success -> {
+                    database.withTransaction {
+                        // 🔥 SAFETY CHECK: Ensure school exists locally to avoid Foreign Key constraint fail (Code 787)
+                        if (dao.getSchoolById(schoolId) == null) {
+                            dao.upsertSchool(
+                                SchoolEntity(
+                                    id = schoolId,
+                                    accountId = accountId,
+                                    name = "School $schoolId",
+                                    timezone = "Asia/Jakarta",
+                                ),
+                            )
+                        }
+
+                        remoteResult.data.forEach { classModel ->
+                            val entity = ClassEntity(
+                                id = classModel.id,
+                                ownerAccountId = accountId,
+                                schoolId = schoolId,
+                                name = classModel.name,
+                                grade = classModel.grade,
+                                accountId = classModel.accountId,
+                                studentCount = classModel.studentCount,
+                                createdAt = classModel.createdAt,
+                                isSynced = true, // 🔥 Since it's from remote, it's synced
+                            )
+                            dao.upsertClass(entity)
+                            dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
+                        }
+                    }
+                    Result.Success(Unit)
                 }
+                is Result.Failure -> Result.Failure(remoteResult.error)
+                else -> Result.Failure(AppError.LocalDB("Unknown sync state"))
             }
-            Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
         }
@@ -253,20 +274,33 @@ class SchoolRepositoryImpl @Inject constructor(
 
     override suspend fun saveClass(_accountId: String, schoolId: String?, classModel: ClassModel): Result<Unit> {
         return try {
-            val entity = ClassEntity(
-                id = classModel.id,
-                ownerAccountId = _accountId,
-                schoolId = schoolId,
-                name = classModel.name,
-                grade = classModel.grade,
-                accountId = classModel.accountId,
-                studentCount = classModel.studentCount,
-                createdAt = classModel.createdAt,
-            )
-            dao.upsertClass(entity)
+            database.withTransaction {
+                val entity = ClassEntity(
+                    id = classModel.id,
+                    ownerAccountId = _accountId,
+                    schoolId = schoolId,
+                    name = classModel.name,
+                    grade = classModel.grade,
+                    accountId = classModel.accountId,
+                    studentCount = classModel.studentCount,
+                    createdAt = classModel.createdAt,
+                )
+                dao.upsertClass(entity)
 
-            if (schoolId != null) {
-                dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
+                if (schoolId != null) {
+                    // 🔥 SAFETY CHECK: Ensure school exists locally to avoid Foreign Key constraint fail (Code 787)
+                    if (dao.getSchoolById(schoolId) == null) {
+                        dao.upsertSchool(
+                            SchoolEntity(
+                                id = schoolId,
+                                accountId = _accountId,
+                                name = "School $schoolId",
+                                timezone = "Asia/Jakarta",
+                            ),
+                        )
+                    }
+                    dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
+                }
             }
 
             repositoryScope.launch {
@@ -344,7 +378,20 @@ class SchoolRepositoryImpl @Inject constructor(
         }.asLocalResult()
 
     override suspend fun reassignClass(accountId: String, classId: String, newSchoolId: String): Result<Unit> = try {
-        dao.reassignClass(SchoolClassAssignment(newSchoolId, classId))
+        database.withTransaction {
+            // 🔥 SAFETY CHECK: Ensure school exists locally
+            if (dao.getSchoolById(newSchoolId) == null) {
+                dao.upsertSchool(
+                    SchoolEntity(
+                        id = newSchoolId,
+                        accountId = accountId,
+                        name = "School $newSchoolId",
+                        timezone = "Asia/Jakarta",
+                    ),
+                )
+            }
+            dao.reassignClass(SchoolClassAssignment(newSchoolId, classId))
+        }
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(AppError.LocalDB(e.message))
@@ -358,8 +405,22 @@ class SchoolRepositoryImpl @Inject constructor(
 
     override suspend fun updateClassSchool(classId: String, schoolId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            dao.updateClassSchool(classId, schoolId)
-            dao.assignClass(SchoolClassAssignment(schoolId, classId))
+            database.withTransaction {
+                // 🔥 SAFETY CHECK: Ensure school exists locally
+                if (dao.getSchoolById(schoolId) == null) {
+                    val accountId = sessionManager.getCurrentAccountId() ?: "SYSTEM"
+                    dao.upsertSchool(
+                        SchoolEntity(
+                            id = schoolId,
+                            accountId = accountId,
+                            name = "School $schoolId",
+                            timezone = "Asia/Jakarta",
+                        ),
+                    )
+                }
+                dao.updateClassSchool(classId, schoolId)
+                dao.assignClass(SchoolClassAssignment(schoolId, classId))
+            }
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))

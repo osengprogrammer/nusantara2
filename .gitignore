@@ -18,15 +18,8 @@ build/
 *.iml
 .idea/
 build_log.txt
-app/release/*.apk
-AzuraTime-*.apk
 app-release.apk
-*.apk
-*.apk
-*.apk
-
 # 🧹 Cleanup: Prevent root clutter
-*.apk
 *.tmp
 *.log
 *.data
@@ -37,7 +30,6 @@ backup_*/
 old_*/
 *.py  # ← Hapus komentar ini kalau kamu memang nggak butuh script Python di repo
 *.diff
-
 # 📦 Build & IDE (jika belum ada)
 /build/
 .gradle/
@@ -45,7 +37,6 @@ old_*/
 *.keystore
 local.properties
 # 🧹 Prevent root clutter & build artifacts
-*.apk
 *.tmp
 *.bak
 *.data

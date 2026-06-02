@@ -9,6 +9,7 @@ import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -25,6 +26,7 @@ class AccountSyncWorker @AssistedInject constructor(
     private val accountRepository: AccountRepository,
     private val studentRepository: StudentRepository,
     private val biometricRepository: BiometricRepository,
+    private val schoolRepository: SchoolRepository,
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -37,31 +39,46 @@ class AccountSyncWorker @AssistedInject constructor(
         Log.d(TAG, "Starting sync for account: $accountId")
 
         return try {
-            // 1. Pull latest Account from Cloud to Room (Local-First SSOT)
+            // 1. Push any local Account changes to Cloud (Local-First Priority)
+            val pushResult = accountRepository.pushAccount(accountId)
+            if (pushResult is DomainResult.Failure) {
+                Log.e(TAG, "Account push sync failed: ${pushResult.error.message}")
+                // Continue to pull anyway, but we should retry later if it was a network error
+            }
+
+            // 2. Pull latest Account from Cloud to Room (Update memberships/roles)
             val syncResult = accountRepository.syncAccount(accountId)
             if (syncResult is DomainResult.Failure) {
                 Log.e(TAG, "Account pull sync failed: ${syncResult.error.message}")
                 return handleSyncError(syncResult.error)
             }
 
-            // 2. Push any local Account changes to Cloud
-            val pushResult = accountRepository.pushAccount(accountId)
-            if (pushResult is DomainResult.Failure) {
-                Log.e(TAG, "Account push sync failed: ${pushResult.error.message}")
-                return handleSyncError(pushResult.error)
+            // 3. Sync Classes for the active school (Pull updates)
+            val accountEntity = (syncResult as? DomainResult.Success)?.data
+            val activeSchoolId = accountEntity?.activeSchoolId
+            if (activeSchoolId != null) {
+                val classResult = schoolRepository.syncClasses(accountId, activeSchoolId)
+                if (classResult is DomainResult.Failure) {
+                    Log.w(TAG, "Class sync failed: ${classResult.error.message}")
+                }
             }
 
-            // 3. Push Student Profiles (Biometrics + Assignments) for the active school
+            // 4. Push Student Profiles (Biometrics + Assignments) for the active school
             val studentResult = studentRepository.pushPendingProfiles()
             if (studentResult is DomainResult.Failure) {
                 Log.e(TAG, "Student profiles sync failed: ${studentResult.error.message}")
                 return handleSyncError(studentResult.error)
             }
 
-            // 4. Sync Biometrics (Pull updates)
+            // 5. Sync Biometrics (Pull updates)
             val biometricResult = biometricRepository.syncBiometrics()
             if (biometricResult is DomainResult.Failure) {
                 Log.w(TAG, "Biometric sync (pull) failed: ${biometricResult.error.message}")
+            }
+
+            // If initial push failed, trigger retry now that everything else is done
+            if (pushResult is DomainResult.Failure) {
+                return handleSyncError(pushResult.error)
             }
 
             Log.i(TAG, "Successfully synced account and student data for $accountId")
