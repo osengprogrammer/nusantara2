@@ -328,12 +328,20 @@ class AttendanceRepositoryImpl @Inject constructor(
 
             // 🔥 AI Native: Robust Class Resolution
             // 1. Priority: Explicitly selected class (activeClassId)
-            // 2. Secondary: Many-to-Many mapping (studentClassIds)
-            // 3. Fallback: Legacy classId field on the student entity
-            val resolvedClassId = params.activeClassId
-                ?: params.studentClassIds.firstOrNull()
-                ?: database.studentDao().getById(params.studentId, schoolId)?.classId
-                ?: "UNASSIGNED"
+            // 2. Secondary: If student only has ONE class, use it automatically
+            // 3. Fallback: If student has multiple classes but session not selected,
+            //    mark as UNASSIGNED (Scan Bebas) to prevent incorrect reporting.
+            val resolvedClassId = when {
+                params.activeClassId != null -> params.activeClassId
+                params.studentClassIds.size == 1 -> params.studentClassIds.first()
+                else -> "UNASSIGNED" // Multi-class with no active session or truly unassigned
+            }
+
+            val resolvedClassName = if (resolvedClassId != "UNASSIGNED") {
+                database.classDao().getClassById(resolvedClassId)?.name ?: "Kelas Tidak Dikenal"
+            } else {
+                if (params.studentClassIds.size > 1) "Multi-Kelas (Scan Bebas)" else "Scan Bebas"
+            }
 
             val record = AttendanceRecord(
                 recordId = "rec_${System.currentTimeMillis()}", // ID can use current time to ensure uniqueness
@@ -341,7 +349,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                 studentName = params.studentName,
                 schoolId = schoolId,
                 classId = resolvedClassId,
-                className = if (resolvedClassId == "UNASSIGNED") "Auto" else "Auto", // Can be improved to fetch name
+                className = resolvedClassName,
                 timestamp = recordTimestamp,
                 status = params.status,
                 accountEmail = params.accountEmail,

@@ -1,7 +1,12 @@
 // 🔥 Jurus Pamungkas di level Root
 buildscript {
+    repositories {
+        mavenCentral()
+        google()
+    }
     dependencies {
         classpath("com.squareup:javapoet:1.13.0")
+        classpath("com.android.tools:r8:8.5.35")
     }
 }
 

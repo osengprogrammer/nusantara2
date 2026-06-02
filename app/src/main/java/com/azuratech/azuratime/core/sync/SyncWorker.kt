@@ -80,6 +80,8 @@ class SyncWorker @AssistedInject constructor(
         try {
             val currentAccountId = sessionManager.getCurrentAccountId() ?: ""
             if (currentAccountId.isNotEmpty()) {
+                // 🔥 AI Native: Push local account state before pulling to preserve sessions
+                accountRepository.pushAccount(currentAccountId)
                 accountRepository.syncAccount(currentAccountId)
             }
             schoolRepository.syncClasses(currentAccountId, schoolId)

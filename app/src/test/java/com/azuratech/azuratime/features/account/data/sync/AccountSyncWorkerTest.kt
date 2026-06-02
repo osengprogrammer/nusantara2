@@ -11,6 +11,7 @@ import com.azuratech.azuraengine.result.Result as DomainResult
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -33,6 +34,7 @@ class AccountSyncWorkerTest {
     private lateinit var accountRepository: AccountRepository
     private lateinit var studentRepository: StudentRepository
     private lateinit var biometricRepository: BiometricRepository
+    private lateinit var schoolRepository: SchoolRepository
 
     @Before
     fun setup() {
@@ -40,6 +42,13 @@ class AccountSyncWorkerTest {
         accountRepository = mockk()
         studentRepository = mockk()
         biometricRepository = mockk()
+        schoolRepository = mockk()
+
+        // Default successes to avoid MockKException on non-targeted calls
+        coEvery { accountRepository.pushAccount(any()) } returns DomainResult.Success(Unit)
+        coEvery { studentRepository.pushPendingProfiles() } returns DomainResult.Success(Unit)
+        coEvery { biometricRepository.syncBiometrics() } returns DomainResult.Success(Unit)
+        coEvery { schoolRepository.syncClasses(any(), any()) } returns DomainResult.Success(Unit)
     }
 
     @Test
@@ -53,14 +62,11 @@ class AccountSyncWorkerTest {
         )
 
         coEvery { accountRepository.syncAccount(accountId) } returns DomainResult.Success(mockEntity)
-        coEvery { accountRepository.pushAccount(accountId) } returns DomainResult.Success(Unit)
-        coEvery { studentRepository.pushPendingProfiles() } returns DomainResult.Success(Unit)
-        coEvery { biometricRepository.syncBiometrics() } returns DomainResult.Success(Unit)
 
         val worker = TestListenableWorkerBuilder<AccountSyncWorker>(
             context = context,
             inputData = workDataOf("accountId" to accountId),
-        ).setWorkerFactory(DelegatingWorkerFactory(accountRepository, studentRepository, biometricRepository)).build()
+        ).setWorkerFactory(DelegatingWorkerFactory(accountRepository, studentRepository, biometricRepository, schoolRepository)).build()
 
         // Act
         val result = worker.doWork()
@@ -78,7 +84,7 @@ class AccountSyncWorkerTest {
         val worker = TestListenableWorkerBuilder<AccountSyncWorker>(
             context = context,
             inputData = workDataOf("accountId" to accountId),
-        ).setWorkerFactory(DelegatingWorkerFactory(accountRepository, studentRepository, biometricRepository)).build()
+        ).setWorkerFactory(DelegatingWorkerFactory(accountRepository, studentRepository, biometricRepository, schoolRepository)).build()
 
         // Act
         val result = worker.doWork()
@@ -98,7 +104,7 @@ class AccountSyncWorkerTest {
         val worker = TestListenableWorkerBuilder<AccountSyncWorker>(
             context = context,
             inputData = workDataOf("accountId" to accountId),
-        ).setWorkerFactory(DelegatingWorkerFactory(accountRepository, studentRepository, biometricRepository)).build()
+        ).setWorkerFactory(DelegatingWorkerFactory(accountRepository, studentRepository, biometricRepository, schoolRepository)).build()
 
         // Act
         val result = worker.doWork()
@@ -114,6 +120,7 @@ class AccountSyncWorkerTest {
         private val accountRepository: AccountRepository,
         private val studentRepository: StudentRepository,
         private val biometricRepository: BiometricRepository,
+        private val schoolRepository: SchoolRepository,
     ) : androidx.work.WorkerFactory() {
         override fun createWorker(
             appContext: Context,
@@ -122,7 +129,7 @@ class AccountSyncWorkerTest {
         ): ListenableWorker? {
             return when (workerClassName) {
                 AccountSyncWorker::class.java.name ->
-                    AccountSyncWorker(appContext, workerParameters, accountRepository, studentRepository, biometricRepository)
+                    AccountSyncWorker(appContext, workerParameters, accountRepository, studentRepository, biometricRepository, schoolRepository)
                 else -> null
             }
         }

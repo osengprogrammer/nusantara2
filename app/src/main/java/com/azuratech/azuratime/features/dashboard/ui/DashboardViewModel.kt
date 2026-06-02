@@ -254,7 +254,12 @@ class DashboardViewModel @Inject constructor(
     private fun selectActiveClass(classId: String?, navigateTo: String? = null) {
         viewModelScope.launch {
             val account = uiStateFlow.value.account ?: return@launch
-            database.accountDao().updateAccount(account.copy(activeClassId = classId))
+            val updated = account.copy(activeClassId = classId)
+            database.accountDao().updateAccount(updated)
+
+            // 🔥 AI Native: Push session change immediately to prevent sync overwrite
+            accountRepository.pushAccount(account.accountId)
+
             if (navigateTo != null) {
                 _uiEffectFlow.emit(DashboardUiEffect.NavigateTo(navigateTo))
             }
