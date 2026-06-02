@@ -1,8 +1,8 @@
 {
   "latest_version": "3.14.0",
-  "latest_version_code": 3721,
+  "latest_version_code": 3723,
   "min_supported_version_code": 3600,
   "release_notes": "Safe deploy pipeline",
   "download_url": "https://github.com/osengprogrammer/nusantara2/releases/download/v3.14.0/app-universal-release.apk",
-  "sha256": "c25f22e7559ac20159ef59b0f78e3ebbd882fb8869154c03567f98cd2b763f85"
+  "sha256": "aeb70e9e4543a1da87d6b157449b85c33fee1d701a5d7b09c3e4ec9f61ff0c04"
 }
