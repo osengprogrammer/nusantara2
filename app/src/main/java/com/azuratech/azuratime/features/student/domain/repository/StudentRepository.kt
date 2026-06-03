@@ -21,6 +21,11 @@ interface StudentRepository {
     suspend fun getAll(): Result<List<StudentProfile>>
 
     /**
+     * Get a single student profile by ID.
+     */
+    suspend fun getProfileById(studentId: String): Result<StudentProfile?>
+
+    /**
      * Create or update a student profile locally and enqueue for remote sync.
      */
     suspend fun saveProfile(profile: StudentProfile): Result<Unit>

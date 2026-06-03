@@ -82,7 +82,7 @@ class AttendanceCaptureViewModel @Inject constructor(
         viewModelScope.launch {
             val resolvedSchoolId = sessionManager.getActiveSchoolId()
 
-            when (val sessionResult = repository.getSessionData(email, resolvedSchoolId)) {
+            when (val sessionResult = repository.getSessionData(resolvedEmail, resolvedSchoolId)) {
                 is com.azuratech.azuraengine.result.Result.Success -> {
                     val (classId, className, schoolId) = sessionResult.data
                     activeClassId = classId

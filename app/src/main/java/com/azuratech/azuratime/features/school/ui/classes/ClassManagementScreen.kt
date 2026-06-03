@@ -74,7 +74,11 @@ fun ClassManagementScreen(
                     items(uiState.classes) { classModel ->
                         ClassItem(
                             classModel = classModel,
-                            onClick = { onClassSelected(classModel.id, classModel.name) },
+                            onClick = {
+                                if (classModel.id.isNotBlank() && classModel.name.isNotBlank()) {
+                                    onClassSelected(classModel.id, classModel.name)
+                                }
+                            },
                         )
                     }
                 }

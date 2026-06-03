@@ -29,6 +29,7 @@ data class ClassEntity(
         grade = grade,
         accountId = accountId,
         studentCount = studentCount,
+        studentIds = emptyList(),
         createdAt = createdAt,
     )
 }

@@ -297,13 +297,18 @@ class AttendanceRepositoryImpl @Inject constructor(
         try {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Failure(AppError.BusinessRule("School not selected"))
 
-            // 1. 🔥 AI Native: Time-based Duplicate Check
-            // We allow re-recording after 10 minutes (600,000 ms)
+            // 🔥 ATTENDANCE_DEBUG: Log context for diagnosis
+            android.util.Log.d("ATTENDANCE_DEBUG", "-----------------------------------------")
+            android.util.Log.d("ATTENDANCE_DEBUG", "Processing: ${params.studentName} (${params.studentId})")
+            android.util.Log.d("ATTENDANCE_DEBUG", "Active Session: ${params.activeClassId ?: "NONE (Free Scan)"}")
+            android.util.Log.d("ATTENDANCE_DEBUG", "Student Classes: ${params.studentClassIds}")
+
             val recordTimestamp = params.timestamp ?: System.currentTimeMillis()
             val logicalDate = java.time.Instant.ofEpochMilli(recordTimestamp)
                 .atZone(java.time.ZoneId.systemDefault())
                 .toLocalDate()
 
+            // 1. Duplicate Check (10m window)
             val latest = localDataSource.getLatestRecordForStudent(
                 studentId = params.studentId,
                 classId = params.activeClassId ?: "",
@@ -313,38 +318,64 @@ class AttendanceRepositoryImpl @Inject constructor(
 
             if (latest != null) {
                 val timeDiff = recordTimestamp - latest.timestamp
-                if (timeDiff >= 0 && timeDiff < 600_000L) { // 10 minute lockout window
+                if (timeDiff >= 0 && timeDiff < 600_000L) {
+                    android.util.Log.w("ATTENDANCE_DEBUG", "Deduplicated: Student already scanned ${timeDiff / 1000}s ago.")
                     return@withContext Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.AlreadyCheckedIn(params.studentName))
                 }
             }
 
-            // 2. Class validation
-            if (params.activeClassId != null && params.activeClassId !in params.studentClassIds) {
-                return@withContext Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.Rejected(params.studentName, "Bukan kelas ini"))
+            // 2. 🔥 AI Native: Robust Class Resolution Hierarchy (V2 - Strict Comparison)
+            val studentClasses = params.studentClassIds.map { it.trim().lowercase() }
+            val selectedSessionId = params.activeClassId?.trim()?.lowercase()
+
+            // Exhaustive comparison logging
+            android.util.Log.d("ATTENDANCE_DEBUG", "Strict Check: Selected($selectedSessionId) against List($studentClasses)")
+            params.studentClassIds.forEachIndexed { index, id ->
+                val match = id.trim().lowercase() == selectedSessionId
+                android.util.Log.d("ATTENDANCE_DEBUG", "   [$index] '$id' -> Match: $match")
             }
 
-            // 3. Save Record
-            // recordTimestamp is already defined above
+            val (resolvedClassId, resolvedClassName) = when {
+                // CASE A: Student has NO registered classes
+                studentClasses.isEmpty() -> {
+                    android.util.Log.i("ATTENDANCE_DEBUG", "Result: CASE A - Unassigned Student -> Free Scan")
+                    "UNASSIGNED" to "Scan Bebas"
+                }
 
-            // 🔥 AI Native: Robust Class Resolution
-            // 1. Priority: Explicitly selected class (activeClassId)
-            // 2. Secondary: If student only has ONE class, use it automatically
-            // 3. Fallback: If student has multiple classes but session not selected,
-            //    mark as UNASSIGNED (Scan Bebas) to prevent incorrect reporting.
-            val resolvedClassId = when {
-                params.activeClassId != null -> params.activeClassId
-                params.studentClassIds.size == 1 -> params.studentClassIds.first()
-                else -> "UNASSIGNED" // Multi-class with no active session or truly unassigned
-            }
+                // CASE B1: No Session Selected (Free Scan Mode)
+                selectedSessionId.isNullOrBlank() -> {
+                    if (studentClasses.size == 1) {
+                        // Auto-assign ONLY if there is zero ambiguity
+                        val originalId = params.studentClassIds.first()
+                        val name = database.classDao().getClassById(originalId)?.name ?: "Kelas"
+                        android.util.Log.i("ATTENDANCE_DEBUG", "Result: CASE B1 - Auto-assign to single class: $name ($originalId)")
+                        originalId to name
+                    } else {
+                        // Multi-class students MUST go to Scan Bebas to avoid incorrect reporting
+                        android.util.Log.i("ATTENDANCE_DEBUG", "Result: CASE B1 - Multi-class Ambiguity -> Free Scan")
+                        "UNASSIGNED" to "Scan Bebas (Multi-Kelas)"
+                    }
+                }
 
-            val resolvedClassName = if (resolvedClassId != "UNASSIGNED") {
-                database.classDao().getClassById(resolvedClassId)?.name ?: "Kelas Tidak Dikenal"
-            } else {
-                if (params.studentClassIds.size > 1) "Multi-Kelas (Scan Bebas)" else "Scan Bebas"
+                // CASE B2: Session IS Selected by User
+                else -> {
+                    // Search for original ID to maintain case sensitivity in DB
+                    val matchedOriginalId = params.studentClassIds.find { it.trim().lowercase() == selectedSessionId }
+
+                    if (matchedOriginalId != null) {
+                        val name = database.classDao().getClassById(matchedOriginalId)?.name ?: "Kelas"
+                        android.util.Log.i("ATTENDANCE_DEBUG", "Result: CASE B2 - Session Match: $name ($matchedOriginalId)")
+                        matchedOriginalId to name
+                    } else {
+                        // Fallback to Scan Bebas instead of Rejection to ensure record is saved
+                        android.util.Log.w("ATTENDANCE_DEBUG", "Result: CASE B2 - Session Mismatch -> Fallback Free Scan")
+                        "UNASSIGNED" to "Scan Bebas (Luar Sesi)"
+                    }
+                }
             }
 
             val record = AttendanceRecord(
-                recordId = "rec_${System.currentTimeMillis()}", // ID can use current time to ensure uniqueness
+                recordId = "rec_${System.currentTimeMillis()}",
                 studentId = params.studentId,
                 studentName = params.studentName,
                 schoolId = schoolId,
@@ -357,16 +388,19 @@ class AttendanceRepositoryImpl @Inject constructor(
 
             saveRecord(record)
 
-            // 🔥 Log to Audit Trail
             auditLogRepository.logAction(
                 schoolId = schoolId,
                 accountId = params.accountEmail,
                 action = "CHECK_IN",
-                details = "Student: ${params.studentName} (${params.studentId})",
+                details = "Student: ${params.studentName} assigned to $resolvedClassName",
             )
+
+            android.util.Log.d("ATTENDANCE_DEBUG", "Saved record for $resolvedClassName")
+            android.util.Log.d("ATTENDANCE_DEBUG", "-----------------------------------------")
 
             Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.Success(params.studentName, "Berhasil Absen"))
         } catch (e: Exception) {
+            android.util.Log.e("ATTENDANCE_DEBUG", "FATAL ERROR: ${e.message}", e)
             Result.Failure(AppError.LocalDB(e.message))
         }
     }

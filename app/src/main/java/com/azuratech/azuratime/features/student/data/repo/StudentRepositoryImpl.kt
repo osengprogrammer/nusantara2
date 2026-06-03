@@ -14,6 +14,7 @@ import com.azuratech.azuratime.features.student.data.local.StudentEntity
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,6 +36,7 @@ class StudentRepositoryImpl @Inject constructor(
     private val syncManager: SyncManager,
     private val firestore: com.google.firebase.firestore.FirebaseFirestore,
     private val remoteDataSource: BiometricRemoteDataSource,
+    private val schoolRepository: SchoolRepository,
 ) : StudentRepository {
 
     private val studentDao = database.studentDao()
@@ -72,6 +74,16 @@ class StudentRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getProfileById(studentId: String): Result<StudentProfile?> = withContext(Dispatchers.IO) {
+        try {
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Success(null)
+            val rawProfile = studentDao.getStudentProfileById(studentId, schoolId)
+            Result.Success(rawProfile?.toDomain())
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
     override suspend fun saveProfile(profile: StudentProfile): Result<Unit> {
         return try {
             val (student, biometric, assignments) = profile.toEntities()
@@ -79,7 +91,8 @@ class StudentRepositoryImpl @Inject constructor(
                 studentDao.upsert(student)
                 biometricDao.deleteOtherBiometricsForStudent(student.studentId, biometric.studentId, student.schoolId)
                 biometricDao.upsertStudentBiometric(biometric)
-                assignmentDao.deleteAllByStudentId(biometric.studentId)
+                // 🔥 AI Native FIX: Removed assignmentDao.deleteAllByStudentId()
+                // We now allow additive assignments to support multi-class logic.
                 for (assignment in assignments) {
                     assignmentDao.insertAssignment(assignment)
                 }
@@ -229,6 +242,10 @@ class StudentRepositoryImpl @Inject constructor(
 
     override suspend fun pullStudents(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
         try {
+            // 🔥 AI Native Fix: First, sync all classes to ensure Foreign Key Integrity (Code 787)
+            val accountId = sessionManager.getCurrentAccountId() ?: ""
+            schoolRepository.syncClasses(accountId, schoolId)
+
             // 1. Pull Identities from 'students' collection
             val snapshot = firestore.collection("schools").document(schoolId)
                 .collection("students").get().let { com.google.android.gms.tasks.Tasks.await(it) }
@@ -238,6 +255,14 @@ class StudentRepositoryImpl @Inject constructor(
                 val name = doc.getString("name") ?: ""
                 val studentCode = doc.getString("studentCode")
                 val classId = doc.getString("classId")
+
+                // ✅ AI Native Fix: Pull classIds array for multi-class support
+                @Suppress("UNCHECKED_CAST")
+                val classIds = doc.get("classIds") as? List<String> ?: emptyList()
+                val finalClassIds = (classIds + listOfNotNull(classId)).distinct()
+
+                println("🔍 SYNC PULL: Student $name ($id) has classes: $finalClassIds")
+
                 val createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
 
                 Triple(
@@ -251,7 +276,7 @@ class StudentRepositoryImpl @Inject constructor(
                         isSynced = true,
                     ),
                     id,
-                    classId,
+                    finalClassIds,
                 )
             }
 
@@ -262,24 +287,74 @@ class StudentRepositoryImpl @Inject constructor(
 
             if (studentData.isNotEmpty() || remoteAssignments.isNotEmpty()) {
                 database.withTransaction {
-                    // Save Identites
-                    for ((entity, studentId, classId) in studentData) {
+                    // 3. Save Identities
+                    for ((entity, _, _) in studentData) {
                         studentDao.upsert(entity)
-                        if (!classId.isNullOrBlank()) {
-                            assignmentDao.insertAssignment(
-                                StudentClassAssignmentEntity(
-                                    studentId = studentId,
-                                    classId = classId,
-                                    schoolId = schoolId,
-                                    isSynced = true,
-                                ),
-                            )
+                    }
+
+                    // 4. Save Assignments with Healing Logic
+                    for ((_, studentId, classIds) in studentData) {
+                        for (cId in classIds) {
+                            try {
+                                // 🔥 HEALING: Ensure class exists before assignment
+                                if (schoolRepository.getClassById(cId).let { it is Result.Success && it.data == null }) {
+                                    schoolRepository.saveClassLocally(
+                                        ClassEntity(
+                                            id = cId,
+                                            ownerAccountId = accountId,
+                                            schoolId = schoolId,
+                                            name = "Auto-Healed Class",
+                                            isSynced = true,
+                                        ),
+                                    )
+                                }
+
+                                assignmentDao.insertAssignment(
+                                    StudentClassAssignmentEntity(
+                                        studentId = studentId,
+                                        classId = cId,
+                                        schoolId = schoolId,
+                                        isSynced = true,
+                                    ),
+                                )
+                            } catch (e: Exception) {
+                                println("⚠️ SYNC HEAL: Failed to assign student $studentId to class $cId. Error: ${e.message}")
+                            }
                         }
                     }
 
-                    // Save Remote Assignments (Dedicated Collection)
+                    // 5. Save Remote Legacy Assignments (Dedicated Collection)
                     for (remoteAssignment in remoteAssignments) {
-                        assignmentDao.insertAssignment(remoteAssignment)
+                        try {
+                            // Ensure student exists
+                            if (studentDao.getById(remoteAssignment.studentId, schoolId) == null) {
+                                studentDao.upsert(
+                                    StudentEntity(
+                                        studentId = remoteAssignment.studentId,
+                                        schoolId = schoolId,
+                                        name = "Unknown Student",
+                                        isSynced = true,
+                                    ),
+                                )
+                            }
+
+                            // Ensure class exists
+                            if (schoolRepository.getClassById(remoteAssignment.classId).let { it is Result.Success && it.data == null }) {
+                                schoolRepository.saveClassLocally(
+                                    ClassEntity(
+                                        id = remoteAssignment.classId,
+                                        ownerAccountId = accountId,
+                                        schoolId = schoolId,
+                                        name = "Auto-Healed Class",
+                                        isSynced = true,
+                                    ),
+                                )
+                            }
+
+                            assignmentDao.insertAssignment(remoteAssignment)
+                        } catch (e: Exception) {
+                            println("⚠️ SYNC HEAL: Failed to insert remote assignment. Error: ${e.message}")
+                        }
                     }
                 }
             }

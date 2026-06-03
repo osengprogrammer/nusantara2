@@ -5,8 +5,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StudentClassAssignmentDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAssignment(assignment: StudentClassAssignmentEntity)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAllAssignments(assignments: List<StudentClassAssignmentEntity>)
 
     @Query("DELETE FROM student_class_assignments WHERE studentId = :studentId AND classId = :classId AND schoolId = :schoolId")
     suspend fun deleteSpecificAssignment(studentId: String, classId: String, schoolId: String)
@@ -20,7 +23,13 @@ interface StudentClassAssignmentDao {
     @Query("DELETE FROM student_class_assignments WHERE schoolId = :schoolId")
     suspend fun deleteAllBySchool(schoolId: String)
 
-    @Query("SELECT classId FROM student_class_assignments WHERE studentId = :studentId AND schoolId = :schoolId")
+    @Query(
+        """
+        SELECT classId FROM student_class_assignments WHERE studentId = :studentId AND schoolId = :schoolId
+        UNION
+        SELECT classId FROM students WHERE studentId = :studentId AND schoolId = :schoolId AND classId IS NOT NULL
+    """,
+    )
     fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<List<String>>
 
     @Query("SELECT * FROM student_class_assignments WHERE schoolId = :schoolId")

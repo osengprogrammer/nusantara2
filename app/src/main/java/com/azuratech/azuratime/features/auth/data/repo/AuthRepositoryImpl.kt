@@ -124,7 +124,9 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun clearAllDataAndSignOut(): DomainResult<Unit> = withContext(Dispatchers.IO) {
         try {
-            database.clearAllTables()
+            // 🔥 AI Native FIX: Removed database.clearAllTables()
+            // We now preserve students, classes, and local records across sessions
+            // to support offline-first continuity and prevent accidental data loss.
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(application.getString(R.string.my_web_client_id))
                 .requestEmail()

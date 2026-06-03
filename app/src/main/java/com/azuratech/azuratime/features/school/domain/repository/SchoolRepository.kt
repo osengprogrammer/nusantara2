@@ -44,4 +44,7 @@ interface SchoolRepository {
     suspend fun pushAccessRequests(accountId: String): Result<Unit>
 
     suspend fun getClassById(id: String): Result<ClassModel?>
+
+    // 🔥 CLASS-CENTRIC ASSIGNMENT
+    suspend fun addStudentToClass(schoolId: String, classId: String, studentId: String): Result<Unit>
 }

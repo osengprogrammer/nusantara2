@@ -8,12 +8,8 @@ import androidx.work.WorkerParameters
 import androidx.work.ListenableWorker.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result as DomainResult
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
@@ -38,63 +34,9 @@ class SyncWorker @AssistedInject constructor(
     private val sessionManager: SessionManager,
 ) : CoroutineWorker(context, workerParams) {
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val schoolId = sessionManager.getActiveSchoolId() ?: run {
-            Log.w("AZURA_SYNC", "SyncWorker: No active school ID found. Aborting.")
-            return@withContext Result.failure()
-        }
-
-        Log.d("AZURA_SYNC", "SyncWorker: Starting persistent background sync for school: $schoolId")
-
-        // 1. Push & Sync Attendance Records (Local-First)
-        val attendanceResult = attendanceRepository.syncRecords()
-        if (attendanceResult is DomainResult.Failure) {
-            if (handleSyncError(attendanceResult.error, "AttendanceSync") == Result.retry()) {
-                return@withContext Result.retry()
-            }
-        }
-
-        // 2. Push Student Profiles (Biometrics + Assignments)
-        val pushResult = studentRepository.pushPendingProfiles()
-        if (pushResult is DomainResult.Failure) {
-            if (handleSyncError(pushResult.error, "PushStudents") == Result.retry()) {
-                return@withContext Result.retry()
-            }
-        }
-
-        // 3. Pull Student Profiles (Ensure SSOT exists locally)
-        studentRepository.pullStudents(schoolId)
-
-        // 4. Sync Biometrics (Pull Delta + Process Soft-Deletes)
-        val biometricResult = biometricRepository.syncBiometrics()
-        if (biometricResult is DomainResult.Failure) {
-            if (handleSyncError(biometricResult.error, "BiometricSync") == Result.retry()) {
-                return@withContext Result.retry()
-            }
-        } else {
-            // 🔥 SSOT Auto-Healing: Ensure Student identities exist for all synced biometrics
-            studentRepository.autoHealStudentIdentities(schoolId)
-        }
-
-        // 5. Modernized Sync (Classes, Accounts, Assignments)
-        try {
-            val currentAccountId = sessionManager.getCurrentAccountId() ?: ""
-            if (currentAccountId.isNotEmpty()) {
-                // 🔥 AI Native: Push local account state before pulling to preserve sessions
-                accountRepository.pushAccount(currentAccountId)
-                accountRepository.syncAccount(currentAccountId)
-            }
-            schoolRepository.syncClasses(currentAccountId, schoolId)
-            val assignmentResult = biometricRepository.syncAssignments()
-            if (assignmentResult is DomainResult.Failure) {
-                handleSyncError(assignmentResult.error, "AssignmentSync")
-            }
-        } catch (e: Exception) {
-            Log.w("AZURA_SYNC", "Repository sync failed: ${e.message}")
-        }
-
-        Log.d("AZURA_SYNC", "SyncWorker: Sync completed successfully.")
-        Result.success()
+    override suspend fun doWork(): Result {
+        Log.d("WORKER_DEBUG", "⚠️ SYNC WORKER DISABLED FOR DEBUGGING ⚠️")
+        return Result.success()
     }
 
     /**

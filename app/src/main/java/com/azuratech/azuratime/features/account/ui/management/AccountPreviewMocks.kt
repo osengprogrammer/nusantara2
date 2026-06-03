@@ -17,8 +17,8 @@ object AccountPreviewMocks {
             role = "ADMIN",
         ),
         classes: List<ClassModel> = listOf(
-            ClassModel("cls_1", "sch_1", "Kelas 10-A", "10", null, 0, 0L),
-            ClassModel("cls_2", "sch_1", "Kelas 11-B", "11", null, 0, 0L),
+            ClassModel("cls_1", "sch_1", "Kelas 10-A", "10", null, 0, emptyList(), 0L),
+            ClassModel("cls_2", "sch_1", "Kelas 11-B", "11", null, 0, emptyList(), 0L),
         ),
     ): AccountUiState = AccountUiState(
         accountProfile = profile,

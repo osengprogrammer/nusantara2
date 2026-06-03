@@ -6,8 +6,8 @@ import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 object StudentFormPreviewMocks {
     fun initial(): StudentFormUiState = StudentFormUiState(
         availableClasses = listOf(
-            ClassModel("cls_1", "sch_1", "10-A", "10", null, 0, System.currentTimeMillis()),
-            ClassModel("cls_2", "sch_1", "10-B", "10", null, 0, System.currentTimeMillis()),
+            ClassModel("cls_1", "sch_1", "10-A", "10", null, 0, emptyList(), System.currentTimeMillis()),
+            ClassModel("cls_2", "sch_1", "10-B", "10", null, 0, emptyList(), System.currentTimeMillis()),
         ),
     )
 
