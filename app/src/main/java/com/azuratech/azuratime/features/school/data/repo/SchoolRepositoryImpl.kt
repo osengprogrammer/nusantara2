@@ -4,11 +4,13 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
+import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.account.data.local.SchoolMembership as LocalSchoolMembership
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
@@ -38,6 +40,7 @@ class SchoolRepositoryImpl @Inject constructor(
     private val schoolDao = database.schoolDao()
     private val userDao = database.accountDao()
     private val classDao = database.classDao()
+    private val assignmentDao = database.studentClassAssignmentDao()
     private val accessRequestDao = database.accessRequestDao()
     private val repositoryScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -240,17 +243,15 @@ class SchoolRepositoryImpl @Inject constructor(
 
     override suspend fun deleteSchool(id: String, accountId: String): Result<Unit> {
         return try {
-            database.withTransaction {
-                val existing = dao.getSchoolById(id)
-                if (existing != null) {
-                    dao.upsertSchool(
-                        existing.copy(
-                            status = "DELETED",
-                            syncStatus = SyncStatus.PENDING_DELETE.name,
-                        ),
-                    )
-                    syncManager.enqueueSchoolSync(id)
-                }
+            val existing = dao.getSchoolById(id)
+            if (existing != null) {
+                dao.upsertSchool(
+                    existing.copy(
+                        status = "DELETED",
+                        syncStatus = SyncStatus.PENDING_DELETE.name,
+                    ),
+                )
+                syncManager.enqueueSchoolSync(id)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -497,6 +498,30 @@ class SchoolRepositoryImpl @Inject constructor(
             Result.Success(classDao.getClassById(id)?.toDomain())
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun addStudentToClass(schoolId: String, classId: String, studentId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // 1. Update Local Room DB
+            assignmentDao.insertAssignment(
+                StudentClassAssignmentEntity(
+                    studentId = studentId,
+                    classId = classId,
+                    schoolId = schoolId,
+                    isSynced = false, // Will be synced by push if we had a worker for it, but for now we push direct
+                ),
+            )
+
+            // 2. Update Remote Firebase
+            remoteDataSource.addStudentToClass(schoolId, classId, studentId)
+                .onSuccess {
+                    assignmentDao.updateSyncStatus(studentId, classId, schoolId, true)
+                }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
         }
     }
 }

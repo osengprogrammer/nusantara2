@@ -15,4 +15,5 @@ interface SchoolRemoteDataSource {
     suspend fun saveClass(_accountId: String, schoolId: String, classModel: ClassModel): Result<Unit>
     suspend fun deleteClass(_accountId: String, schoolId: String, classId: String): Result<Unit>
     suspend fun getClasses(_accountId: String, schoolId: String): Result<List<ClassModel>>
+    suspend fun addStudentToClass(schoolId: String, classId: String, studentId: String): Result<Unit>
 }

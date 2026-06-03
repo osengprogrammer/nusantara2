@@ -86,6 +86,7 @@ class ClassViewModel @Inject constructor(
                 _stateFlow.update { it.copy(error = null) }
             }
             is ClassUiEvent.SyncClasses -> syncClasses()
+            is ClassUiEvent.AddStudentToClass -> addStudentToClass(event.classId, event.studentId)
         }
     }
 
@@ -194,6 +195,24 @@ class ClassViewModel @Inject constructor(
                 .onFailure { error ->
                     _stateFlow.update { it.copy(isLoading = false, error = error.message) }
                     _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal sinkron kelas: ${error.message}"))
+                }
+        }
+    }
+
+    private fun addStudentToClass(classId: String, studentId: String) {
+        viewModelScope.launch {
+            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
+            _stateFlow.update { it.copy(isLoading = true) }
+
+            schoolRepository.addStudentToClass(schoolId, classId, studentId)
+                .onSuccess {
+                    _stateFlow.update { it.copy(isLoading = false) }
+                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Siswa berhasil ditambahkan ke kelas!"))
+                    loadClasses() // Refresh to update student counts
+                }
+                .onFailure { error ->
+                    _stateFlow.update { it.copy(isLoading = false, error = error.message) }
+                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal menambahkan siswa: ${error.message}"))
                 }
         }
     }

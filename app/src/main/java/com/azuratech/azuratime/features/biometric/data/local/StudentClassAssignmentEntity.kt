@@ -14,9 +14,9 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
         Index(value = ["schoolId"]),
     ],
     foreignKeys = [
-        // 1. Link to the Student (Biometric)
+        // 1. Link to the Student (Identity)
         ForeignKey(
-            entity = StudentBiometricEntity::class,
+            entity = com.azuratech.azuratime.features.student.data.local.StudentEntity::class,
             parentColumns = ["studentId"],
             childColumns = ["studentId"],
             onDelete = ForeignKey.CASCADE,

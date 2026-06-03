@@ -1,14 +1,14 @@
 #!/bin/bash
-# 🛡️ Azura Time — Safe & Verified Deploy Pipeline (v2.5 Full-Sync Version)
+# 🛡️ Azura Time — Safe & Verified Deploy Pipeline (v2.5 Low-RAM Optimized)
 # =============================================================================
 # Usage: 
-#   ./deploy.sh                          # Build with current version from Gradle
-#   ./deploy.sh --bump                   # Auto-bump versionCode +1, build
-#   ./deploy.sh --bump 3.8.0             # Bump to specific versionName + auto code
-#   ./deploy.sh "Release Notes"          # Build current version with specific notes
+#   ./deploy.sh                          # Build with current version
+#   ./deploy.sh --bump                   # Auto-bump versionCode +1
+#   ./deploy.sh --bump 3.8.0             # Bump to specific versionName
+#   ./deploy.sh "Release Notes"          # Build with specific notes
 # =============================================================================
 
-set +e  # Handle errors manually
+set -e  # Stop on error (Safer)
 
 GRADLE_FILE="app/build.gradle.kts"
 
@@ -51,7 +51,7 @@ bump_version() {
 # =============================================================================
 BUMP_MODE=false
 TARGET_NAME=""
-RELEASE_NOTES="Safe deploy pipeline"
+RELEASE_NOTES="MVI ✅, FCM ✅, Theme ✅ — Automated deploy"
 
 if [[ "$1" == "--bump" ]]; then
     BUMP_MODE=true
@@ -78,9 +78,9 @@ echo "🚀 Azura Time v${VERSION_NAME} (${VERSION_CODE})"
 echo "   Notes: ${RELEASE_NOTES}"
 echo "=================================================="
 
-# === 1. BUILD ===
-echo "🔨 Building APK..."
-./gradlew :app:assembleRelease --no-daemon --quiet
+# === 1. BUILD (Low-RAM Optimized) ===
+echo "🔨 Building APK (Low-RAM Mode)..."
+./gradlew :app:assembleRelease --no-daemon -Dorg.gradle.workers.max=1 --quiet
 if [ $? -ne 0 ]; then
     echo "❌ BUILD FAILED."
     exit 1

@@ -21,5 +21,6 @@ data class ClassModel(
     val grade: String,
     val accountId: String?,
     val studentCount: Int = 0,
+    val studentIds: List<String> = emptyList(), // 🔥 Class-centric assignment support
     val createdAt: Long,
 )

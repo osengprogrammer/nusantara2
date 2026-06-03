@@ -165,7 +165,7 @@ class StudentBiometricRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeStudentFromClass(studentId: String, classId: String): Result<Unit> = try {
-        localDataSource.deleteAssignmentsByStudent(studentId, schoolId)
+        localDataSource.deleteSpecificAssignment(studentId, classId, schoolId)
         Result.Success(Unit)
     } catch (e: Exception) {
         Result.Failure(AppError.LocalDB(e.message))
@@ -179,7 +179,8 @@ class StudentBiometricRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateStudentClass(studentId: String, classId: String?): Result<Unit> = try {
-        localDataSource.deleteAssignmentsByStudent(studentId, schoolId)
+        // 🔥 AI Native FIX: Removed localDataSource.deleteAssignmentsByStudent()
+        // We now allow additive assignments to support multi-class logic.
         if (classId != null) {
             localDataSource.insertAssignment(StudentClassAssignmentEntity(studentId, classId, schoolId))
         }

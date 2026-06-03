@@ -60,6 +60,9 @@ class BiometricLocalDataSourceImpl @Inject constructor(
     override suspend fun deleteAssignmentsByStudent(studentId: String, schoolId: String) =
         assignmentDao.deleteAllByStudent(studentId, schoolId)
 
+    override suspend fun deleteSpecificAssignment(studentId: String, classId: String, schoolId: String) =
+        assignmentDao.deleteSpecificAssignment(studentId, classId, schoolId)
+
     override suspend fun markPendingDeletion(studentId: String, schoolId: String) =
         biometricDao.markPendingDeletion(studentId, schoolId)
 

@@ -231,13 +231,17 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         else -> 0L
                     }
 
+                    @Suppress("UNCHECKED_CAST")
+                    val studentIds = doc.get("studentIds") as? List<String> ?: emptyList()
+
                     val classModel = ClassModel(
                         id = doc.id,
                         schoolId = doc.getString("schoolId") ?: schoolId,
                         name = doc.getString("name") ?: "",
                         grade = doc.getString("grade") ?: "",
                         accountId = doc.getString("accountId"),
-                        studentCount = doc.getLong("studentCount")?.toInt() ?: 0,
+                        studentCount = doc.getLong("studentCount")?.toInt() ?: studentIds.size,
+                        studentIds = studentIds,
                         createdAt = createdAt,
                     )
                     println("🔍 SYNC: Parsed class: ${classModel.name} (${classModel.id})")
@@ -249,6 +253,18 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                 }
             }
             Result.Success(classes)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun addStudentToClass(schoolId: String, classId: String, studentId: String): Result<Unit> {
+        return try {
+            getClassesRef(schoolId).document(classId).update(
+                "studentIds",
+                com.google.firebase.firestore.FieldValue.arrayUnion(studentId),
+            ).await()
+            Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
         }

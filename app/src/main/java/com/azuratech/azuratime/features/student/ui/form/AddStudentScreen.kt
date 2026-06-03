@@ -2,12 +2,18 @@ package com.azuratech.azuratime.features.student.ui.form
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,22 +28,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
-import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraAccountFormContent
+import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.CoreFaceCamera
 import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 
-import androidx.compose.ui.platform.LocalContext
-import com.azuratech.azuratime.core.util.showToast
-
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddStudentScreen(
     onNavigateBack: () -> Unit,
@@ -50,7 +54,6 @@ fun AddStudentScreen(
     var showCamera by remember { mutableStateOf(false) }
     var captureMode by remember { mutableStateOf("EMBEDDING") } // "EMBEDDING" or "PHOTO"
     var triggerCapture by remember { mutableStateOf(false) }
-    var isClassExpanded by remember { mutableStateOf(false) }
 
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
@@ -105,18 +108,32 @@ fun AddStudentScreen(
                     onSubmit = { viewModel.onEvent(StudentFormUiEvent.SubmitForm) },
                     submitText = if (uiState.isEditMode) "Simpan Perubahan" else "Daftarkan Siswa",
                     additionalFields = {
-                        val selectedClassName = uiState.availableClasses.find { it.id == uiState.profile.classId }?.name ?: "Pilih Kelas *"
-                        AzuraDropdownField(
-                            label = "Pilih Kelas *",
-                            selectedValue = selectedClassName,
-                            options = uiState.availableClasses,
-                            isExpanded = isClassExpanded,
-                            onExpandedChange = { isClassExpanded = it },
-                            onOptionSelected = { classModel ->
-                                viewModel.onEvent(StudentFormUiEvent.UpdateField("classId", classModel.id))
-                            },
-                            getOptionLabel = { it.name },
+                        Text(
+                            text = "Pilih Kelas *",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = AzuraSpacing.xs),
                         )
+
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            uiState.availableClasses.forEach { classModel ->
+                                val isSelected = uiState.profile.classIds.contains(classModel.id)
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { viewModel.onEvent(StudentFormUiEvent.ToggleClass(classModel.id)) },
+                                    label = { Text(classModel.name) },
+                                    modifier = Modifier.padding(end = AzuraSpacing.xs),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    ),
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
                         uiState.validationErrors["classId"]?.let {
                             Text(

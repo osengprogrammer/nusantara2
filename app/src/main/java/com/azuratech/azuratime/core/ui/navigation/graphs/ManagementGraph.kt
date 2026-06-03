@@ -127,14 +127,23 @@ fun NavGraphBuilder.managementGraph(
             ),
             deepLinks = listOf(navDeepLink { uriPattern = "$uri/class_detail/{classId}/{className}" }),
         ) { entry ->
-            ClassDetailScreen(
-                classId = entry.arguments?.getString("classId") ?: "",
-                className = entry.arguments?.getString("className") ?: "",
-                classViewModel = hiltViewModel(),
-                biometricViewModel = hiltViewModel<com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel>(),
-                onNavigateBack = { navController.popBackStack() },
-                onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
-            )
+            val classId = entry.arguments?.getString("classId")
+            val className = entry.arguments?.getString("className")
+
+            if (classId != null && className != null) {
+                ClassDetailScreen(
+                    classId = classId,
+                    className = className,
+                    classViewModel = hiltViewModel<com.azuratech.azuratime.features.school.ui.classes.ClassViewModel>(),
+                    biometricViewModel = hiltViewModel<com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel>(),
+                    onNavigateBack = { navController.popBackStack() },
+                    onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
+                )
+            } else {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    navController.popBackStack()
+                }
+            }
         }
 
         composable(NavigationRoutes.PENDING_SCHOOLS) {

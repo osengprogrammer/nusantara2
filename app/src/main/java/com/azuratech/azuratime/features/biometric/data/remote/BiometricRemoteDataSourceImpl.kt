@@ -90,7 +90,18 @@ class BiometricRemoteDataSourceImpl @Inject constructor(
                 "classId" to assignment.classId,
                 "lastUpdated" to FieldValue.serverTimestamp(),
             )
+            // 1. Update dedicated assignments collection
             getTenantRef(assignment.schoolId).collection("student_class_assignments").document(docId).set(data, SetOptions.merge()).await()
+
+            // 2. 🔥 AI Native Fix: Also update the main student document using arrayUnion to prevent 'Last One Wins' overwrite
+            try {
+                getTenantRef(assignment.schoolId).collection("students").document(assignment.studentId)
+                    .update("classIds", FieldValue.arrayUnion(assignment.classId), "lastUpdated", FieldValue.serverTimestamp())
+                    .await()
+            } catch (e: Exception) {
+                // If student doc doesn't exist yet, it will be created by the next full sync
+            }
+
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))

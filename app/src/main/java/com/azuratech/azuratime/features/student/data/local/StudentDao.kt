@@ -49,4 +49,21 @@ interface StudentDao {
 
     @Query("SELECT * FROM students WHERE isSynced = 0 AND schoolId = :schoolId")
     suspend fun getUnsyncedStudents(schoolId: String): List<StudentEntity>
+
+    @Transaction
+    @Query(
+        """
+        SELECT students.*, 
+               student_biometrics.studentId as faceId,
+               student_biometrics.embedding as embedding,
+               student_biometrics.photoUrl as photoUrl,
+               student_biometrics.lastUpdated as faceLastUpdated,
+               student_biometrics.isSynced as faceIsSynced,
+               student_biometrics.isDeleted as faceIsDeleted
+        FROM students
+        LEFT JOIN student_biometrics ON students.studentId = student_biometrics.studentId AND student_biometrics.schoolId = :schoolId
+        WHERE students.studentId = :studentId AND students.schoolId = :schoolId
+    """,
+    )
+    suspend fun getStudentProfileById(studentId: String, schoolId: String): RawStudentProfile?
 }

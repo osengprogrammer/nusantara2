@@ -9,7 +9,6 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
-import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -78,6 +77,7 @@ class StudentFormViewModel @Inject constructor(
             is StudentFormUiEvent.PhotoCaptured -> handlePhotoCaptured(event.bitmap)
             is StudentFormUiEvent.BiometricScanned -> handleBiometricScanned()
             is StudentFormUiEvent.FaceCaptured -> handleFaceCaptured(event.bitmap, event.embedding)
+            is StudentFormUiEvent.ToggleClass -> toggleClass(event.classId)
             is StudentFormUiEvent.SubmitForm -> submitForm()
             is StudentFormUiEvent.Retry -> submitForm()
             is StudentFormUiEvent.ClearError -> { /* Handled via Effects in UI */ }
@@ -91,12 +91,26 @@ class StudentFormViewModel @Inject constructor(
                 "name" -> state.profile.copy(name = value as String)
                 "studentId" -> state.profile.copy(studentId = value as String, faceId = value)
                 "studentCode" -> state.profile.copy(studentCode = value as String)
-                "classId" -> state.profile.copy(classIds = listOf(value as String))
                 "photoUrl" -> state.profile.copy(photoUrl = value as String)
                 "embedding" -> state.profile.copy(embedding = value as FloatArray)
                 else -> state.profile
             }
             state.copy(profile = updatedProfile, validationErrors = state.validationErrors - field)
+        }
+    }
+
+    private fun toggleClass(classId: String) {
+        _uiStateFlow.update { state ->
+            val currentClasses = state.profile.classIds
+            val updatedClasses = if (currentClasses.contains(classId)) {
+                currentClasses - classId
+            } else {
+                currentClasses + classId
+            }
+            state.copy(
+                profile = state.profile.copy(classIds = updatedClasses),
+                validationErrors = state.validationErrors - "classId",
+            )
         }
     }
 
@@ -165,21 +179,12 @@ class StudentFormViewModel @Inject constructor(
 
     fun loadStudentForEdit(studentId: String) {
         viewModelScope.launch {
-            val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            when (val result = biometricRepository.getStudentWithDetails(studentId, schoolId)) {
+            when (val result = studentRepository.getProfileById(studentId)) {
                 is Result.Success -> {
-                    result.data?.let { details ->
+                    result.data?.let { profile ->
                         _uiStateFlow.update {
                             it.copy(
-                                profile = StudentProfile(
-                                    studentId = details.biometric.studentId,
-                                    name = details.biometric.name,
-                                    schoolId = schoolId,
-                                    classIds = listOfNotNull(details.classId),
-                                    faceId = details.biometric.studentId,
-                                    embedding = details.biometric.embedding,
-                                    photoUrl = details.biometric.photoUrl,
-                                ),
+                                profile = profile,
                                 isEditMode = true,
                                 pageTitle = "Edit Profil Siswa",
                             )

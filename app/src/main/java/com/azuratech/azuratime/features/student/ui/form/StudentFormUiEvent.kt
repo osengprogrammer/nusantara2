@@ -13,6 +13,7 @@ sealed class StudentFormUiEvent {
     data class PhotoCaptured(val bitmap: Bitmap) : StudentFormUiEvent()
     data class BiometricScanned(val encoding: ByteArray) : StudentFormUiEvent()
     data class FaceCaptured(val bitmap: Bitmap, val embedding: FloatArray) : StudentFormUiEvent()
+    data class ToggleClass(val classId: String) : StudentFormUiEvent()
     object SubmitForm : StudentFormUiEvent()
     object Retry : StudentFormUiEvent()
     object ClearError : StudentFormUiEvent()

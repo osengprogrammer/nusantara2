@@ -22,6 +22,7 @@ interface BiometricLocalDataSource {
     suspend fun upsertAllStudentFaces(studentFaces: List<StudentBiometricEntity>)
     suspend fun deleteStudentFaceById(studentId: String, schoolId: String)
     suspend fun deleteAssignmentsByStudent(studentId: String, schoolId: String)
+    suspend fun deleteSpecificAssignment(studentId: String, classId: String, schoolId: String)
     suspend fun markPendingDeletion(studentId: String, schoolId: String)
     suspend fun insertAssignment(assignment: StudentClassAssignmentEntity)
 }
