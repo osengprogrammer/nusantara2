@@ -22,5 +22,5 @@ object DashboardPreviewMocks {
         recentRecords = emptyList(),
     )
 
-    fun error(): DashboardUiState = DashboardUiState(error = "Gagal memuat dashboard")
+    fun error(): DashboardUiState = DashboardUiState(error = "Failed to load dashboard")
 }

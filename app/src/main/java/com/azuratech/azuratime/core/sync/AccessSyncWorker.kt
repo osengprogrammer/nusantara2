@@ -36,7 +36,7 @@ class AccessSyncWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val accountId = inputData.getString("accountId") ?: return Result.failure()
 
-        Log.d(TAG, "Starting access sync for user $accountId")
+        Log.d(TAG, "Starting access sync for account $accountId")
 
         return try {
             // 1. Push Access Requests (Join/Leave school)
@@ -58,7 +58,7 @@ class AccessSyncWorker @AssistedInject constructor(
                 studentRepository.autoHealStudentIdentities(schoolId)
             }
 
-            Log.i(TAG, "Successfully completed access sync for user $accountId")
+            Log.i(TAG, "Successfully completed access sync for account $accountId")
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error during access sync: ${e.message}")

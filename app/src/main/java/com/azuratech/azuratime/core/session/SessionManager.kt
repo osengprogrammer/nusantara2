@@ -151,6 +151,6 @@ class SessionManager private constructor(private val context: Context) {
 
     fun clearSession() {
         sharedPreferences.edit().clear().apply()
-        Log.d(TAG, "Sesi lokal berhasil dibersihkan.")
+        Log.d(TAG, "Local session cleared successfully.")
     }
 }

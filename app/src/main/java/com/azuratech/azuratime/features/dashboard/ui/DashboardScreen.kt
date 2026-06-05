@@ -106,7 +106,6 @@ fun DashboardContent(
     onLogoutClick: () -> Unit,
 ) {
     val schoolUiState by schoolViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val schools = schoolUiState.schools
     val activeSchoolId = schoolUiState.activeSchoolId
     val account = data.account
 
@@ -150,7 +149,7 @@ fun DashboardContent(
                 ) {
                     SyncStatusCard(
                         isSyncing = data.isSyncing,
-                        lastSync = "Baru saja",
+                        lastSync = "Just now",
                         onSyncClick = onSyncClick,
                         modifier = Modifier.weight(1f),
                     )
@@ -173,7 +172,7 @@ fun DashboardContent(
                                 color = MaterialTheme.colorScheme.primary,
                             )
                             Text(
-                                text = "Siswa Aktif",
+                                text = "Active Students",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
@@ -235,7 +234,7 @@ fun DashboardContent(
             }
 
             if (data.isApproved) {
-                val isAdmin = account?.toDomain().isAdmin(activeSchoolId ?: "")
+                val isAdmin = account?.toDomain().isAdmin(activeSchoolId)
                 item {
                     AccountTasksGrid(
                         navController = navController,
@@ -270,7 +269,7 @@ fun DashboardContent(
                             Spacer(Modifier.width(AzuraSpacing.md))
                             Column {
                                 Text("Traditional Music AI", style = MaterialTheme.typography.titleMedium)
-                                Text("Rekomendasi musik pengiring belajar", style = MaterialTheme.typography.bodySmall)
+                                Text("Music recommendations for studying", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -283,7 +282,7 @@ fun DashboardContent(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "Silakan pilih sekolah untuk memulai",
+                        text = "Please select a school to start",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -330,14 +329,14 @@ fun SupervisorOnboardingCard(
                 )
                 Spacer(Modifier.width(AzuraSpacing.sm))
                 Text(
-                    text = "Selamat Datang, Supervisor!",
+                    text = "Welcome, Supervisor!",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             }
             Text(
-                text = "Anda belum memilih kelas yang akan diampu. Silakan pilih kelas untuk mulai melakukan absensi.",
+                text = "You haven't selected any classes to supervise. Please select a class to start taking attendance.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
             )
@@ -349,7 +348,7 @@ fun SupervisorOnboardingCard(
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
             ) {
-                Text("Pilih Kelas Sekarang")
+                Text("Select Class Now")
             }
         }
     }

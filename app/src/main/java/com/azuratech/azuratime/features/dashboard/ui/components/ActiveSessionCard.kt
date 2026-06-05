@@ -17,11 +17,11 @@ fun ActiveSessionCard(
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val activeClassName = allClasses.find { it.id == activeClassId }?.name ?: "Pilih Kelas"
+    val activeClassName = allClasses.find { it.id == activeClassId }?.name ?: "Select Class"
 
     Card(modifier = modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(AzuraSpacing.md)) {
-            Text(text = "Sesi Aktif", style = MaterialTheme.typography.titleMedium)
+            Text(text = "Active Session", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
             ExposedDropdownMenuBox(
@@ -52,7 +52,7 @@ fun ActiveSessionCard(
                     if (activeClassId != null) {
                         HorizontalDivider()
                         DropdownMenuItem(
-                            text = { Text("Hapus Sesi / General Scan", color = MaterialTheme.colorScheme.error) },
+                            text = { Text("Clear Session / General Scan", color = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 onSelectClass(null)
                                 expanded = false

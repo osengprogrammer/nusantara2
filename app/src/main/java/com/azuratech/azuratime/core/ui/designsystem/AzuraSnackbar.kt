@@ -36,7 +36,7 @@ fun AzuraDynamicSnackbarHost(hostState: SnackbarHostState) {
                 contentColor = MaterialTheme.colorScheme.onTertiary
                 icon = Icons.Default.Warning
             }
-            message.startsWith("❌") || message.contains("Gagal", ignoreCase = true) -> {
+            message.startsWith("❌") || message.contains("Failed", ignoreCase = true) -> {
                 bgColor = MaterialTheme.colorScheme.error
                 contentColor = MaterialTheme.colorScheme.onError
                 icon = Icons.Default.Error

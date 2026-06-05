@@ -12,7 +12,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 @Composable
 fun SessionStudentsList(students: List<StudentBiometricEntity>, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(horizontal = AzuraSpacing.md)) {
-        Text(text = "Siswa Terpindai", style = MaterialTheme.typography.titleMedium)
+        Text(text = "Scanned Students", style = MaterialTheme.typography.titleMedium)
         // You can add a list of students here
         students.forEach { student ->
             Text(text = student.name, style = MaterialTheme.typography.bodyMedium)

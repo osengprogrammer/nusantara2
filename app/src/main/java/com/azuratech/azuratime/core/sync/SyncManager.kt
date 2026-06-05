@@ -46,7 +46,7 @@ class SyncManager @Inject constructor(
             request,
         )
 
-        android.util.Log.d("SyncManager", "Enqueued account sync for user $accountId")
+        android.util.Log.d("SyncManager", "Enqueued account sync for account $accountId")
     }
 
     /**
@@ -70,7 +70,7 @@ class SyncManager @Inject constructor(
             request,
         )
 
-        android.util.Log.d("SyncManager", "Enqueued access sync for user $accountId")
+        android.util.Log.d("SyncManager", "Enqueued access sync for account $accountId")
     }
 
     /**

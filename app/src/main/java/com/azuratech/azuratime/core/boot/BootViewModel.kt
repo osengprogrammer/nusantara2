@@ -57,7 +57,7 @@ class BootViewModel @Inject constructor(
                             _uiStateFlow.value = if (result.data) BootUiState.Ready else BootUiState.NeedActivation
                         }
                         is Result.Failure -> {
-                            _uiStateFlow.value = BootUiState.Error(result.error.message ?: "Gagal memuat sesi")
+                            _uiStateFlow.value = BootUiState.Error(result.error.message ?: "Failed to load session")
                         }
                         else -> {}
                     }

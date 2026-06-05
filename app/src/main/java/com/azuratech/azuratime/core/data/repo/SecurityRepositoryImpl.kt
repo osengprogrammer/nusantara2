@@ -62,7 +62,7 @@ class SecurityRepositoryImpl @Inject constructor(
                 session.injectSecurityEnvelope(isoKey, expireDate)
                 Result.Success(isoKey)
             } else {
-                Log.w("AZURA_SEC", "Refresh IsoKey gagal: Data tidak valid atau sudah expired.")
+                Log.w("AZURA_SEC", "Refresh IsoKey failed: Data invalid or expired.")
                 Result.Failure(AppError.BusinessRule("Invalid or expired key"))
             }
         } catch (e: Exception) {

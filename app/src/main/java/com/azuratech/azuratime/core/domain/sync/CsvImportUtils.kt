@@ -33,7 +33,7 @@ class CsvImportUtils @Inject constructor(
         try {
             val bytes = storageProvider.read(uriString)
             if (bytes.isEmpty()) {
-                return@withContext CsvParseResult(emptyList(), listOf("File kosong atau tidak dapat dibaca"), 0, 0)
+                return@withContext CsvParseResult(emptyList(), listOf("File empty or unreadable"), 0, 0)
             }
 
             BufferedReader(InputStreamReader(ByteArrayInputStream(bytes))).use { reader ->
@@ -56,7 +56,7 @@ class CsvImportUtils @Inject constructor(
                     }
 
                     if (headers == null) {
-                        errors.add("Baris $lineNumber: Header tidak ditemukan.")
+                        errors.add("Row $lineNumber: Headers not found.")
                         continue
                     }
 
@@ -68,15 +68,15 @@ class CsvImportUtils @Inject constructor(
                             students.add(student)
                             validRows++
                         } else {
-                            errors.add("Baris $lineNumber: Student ID (student_id) wajib diisi.")
+                            errors.add("Row $lineNumber: Student ID (student_id) is mandatory.")
                         }
                     } catch (e: Exception) {
-                        errors.add("Baris $lineNumber: Error format (${e.message})")
+                        errors.add("Row $lineNumber: Format error (${e.message})")
                     }
                 }
             }
         } catch (e: Exception) {
-            errors.add("Gagal membaca file: ${e.message}")
+            errors.add("Failed to read file: ${e.message}")
         }
 
         CsvParseResult(students, errors, totalRows, validRows)
