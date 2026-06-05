@@ -20,6 +20,7 @@ data class DashboardUiState(
     val pendingRequests: Int = 0,
     val currentRole: String = "USER",
     val isApproved: Boolean = false,
+    val needsClassAssignment: Boolean = false,
     val totalStudents: Int = 0,
     val totalActiveStudents: Int = 0,
     val unassignedStudents: Int = 0,

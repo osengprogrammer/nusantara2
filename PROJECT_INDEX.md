@@ -14,9 +14,9 @@
 | `AuditLogEntity.kt` | `features.reporting.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 | `ExportJobEntity.kt` | `features.reporting.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 | `ReportEntity.kt` | `features.reporting.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `ClassEntity.kt` | `features.school.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `ClassEntity.kt` | `features.school.data.local" | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 | `SchoolEntity.kt` | `features.school.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
-| `StudentEntity.kt` | `features.student.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
+| `StudentEntity.kt" | `features.student.data.local` | Room table schema; maps DB columns to Kotlin properties | ✅ Migrated |
 
 ## 🧠 ViewModels (100% Effect-Driven MVI)
 | File | Package | Responsibility | SSOT Status |
@@ -36,7 +36,7 @@
 | File | Package | Responsibility |
 |------|---------|---------------|
 | `AttendanceUiEffect.kt` | `features.attendance.ui` | Decouples Toasts, Navigation from State |
-| `StudentRosterUiEffect.kt` | `features.student.ui.roster` | Decouples Toasts, Navigation from State |
+| `StudentRosterUiEffect.kt` | `features.student.ui.roster" | Decouples Toasts, Navigation from State |
 | `StudentFormUiEffect.kt` | `features.student.ui.form` | Decouples Toasts, Navigation from State |
 | `RegisterUiEffect.kt` | `features.student.ui.bulk` | Decouples Toasts, Navigation from State |
 | `DailyDetailUiEffect.kt` | `features.reporting.ui.daily` | Decouples Toasts, Navigation from State |
@@ -58,3 +58,36 @@
 |------|---------|---------------|
 | `AttendanceViewModelTest.kt` | `features.attendance.ui` | Gold-Standard MVI Contract Test |
 | `ArchitectureTest.kt` | `(various)` | Deleted redundant legacy boilerplate |
+
+---
+
+## 🔗 Critical Data Flows (The "How It Works" Map)
+
+*   **Multi-Class Sync:** `StudentFormViewModel` → `StudentRepository.saveProfile` (isSynced=false) → `pushPendingProfiles` (fetch from AssignmentDAO) → `Firestore (classIds array)`.
+*   **Supervisor Onboarding:** `DashboardViewModel` (needsClassAssignment) → `AssignClassScreen` → `AccountRepository.updateMembership` → `Firestore (memberships.assignedClassIds)`.
+*   **Student Registration:** `AddStudentScreen` → `StudentFormViewModel` → `StudentRepository` → `StudentDao` (Local) & `Firestore (profiles)` (via Worker/Immediate Push).
+
+## 🕸️ Feature Dependency Graph
+
+*   **DashboardViewModel:** Depends on `SchoolRepository`, `StudentRepository`, `AccountRepository`.
+*   **StudentFormViewModel:** Depends on `StudentRepository`, `SchoolRepository`, `BiometricRepository`.
+*   **ClassViewModel:** Depends on `SchoolRepository`, `StudentRepository`, `AccountRepository`.
+*   **AttendanceViewModel:** Depends on `AttendanceRepository`, `StudentRepository`, `SchoolRepository`.
+
+## 🚨 Architectural Constraints (AI Safety Rules)
+
+*   **Data Integrity:** NEVER use `CASCADE` delete in `StudentClassAssignmentEntity`. Use `NO_ACTION` to prevent accidental loss of student assignments when a class is temporarily missing from sync.
+*   **Cloud Sync Source:** `pushPendingProfiles` MUST fetch `classIds` from `assignmentDao`, not from the local `Student` entity, to ensure multi-class assignments are correctly aggregated for Firestore.
+*   **Result Pattern:** All write operations in Repositories MUST return `Result<T>` (from `com.azuratech.azuraengine.result`).
+*   **MVI Standard:** UI events MUST be processed through a central `onEvent(event)` function in ViewModels. Transient UI feedback (Toasts, Navigation) MUST use `UiEffect` (SharedFlow).
+
+## 📍 Quick-Reference Hotspots
+
+| Task | Target Files |
+| :--- | :--- |
+| **Fix UI scrolling/layout** | `app/src/main/java/com/azuratech/azuratime/features/*/ui/*Screen.kt` |
+| **Change data schema** | `app/src/main/java/com/azuratech/azuratime/features/*/data/local/*Entity.kt` |
+| **Modify cloud sync logic** | `app/src/main/java/com/azuratech/azuratime/features/*/data/repo/*RepositoryImpl.kt` |
+| **Add new UI event** | `app/src/main/java/com/azuratech/azuratime/features/*/ui/*UiEvent.kt` |
+| **Update navigation routes** | `app/src/main/java/com/azuratech/azuratime/core/navigation/Screen.kt` |
+| **Fix DI/Dagger Injection** | `app/src/main/java/com/azuratech/azuratime/core/di/*.kt` |
