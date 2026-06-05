@@ -202,6 +202,16 @@ fun DashboardContent(
             }
 
             if (data.isApproved) {
+                if (data.needsClassAssignment) {
+                    item {
+                        SupervisorOnboardingCard(
+                            onClick = {
+                                navController.navigate(Screen.AssignClass.createRoute(data.account?.accountId ?: ""))
+                            },
+                        )
+                    }
+                }
+
                 item {
                     ActiveSessionCard(
                         allClasses = data.allClasses,
@@ -291,6 +301,57 @@ fun DashboardContent(
                 onDismissAddSchool()
             },
         )
+    }
+}
+
+@Composable
+fun SupervisorOnboardingCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = AzuraSpacing.md),
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(AzuraSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.School,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Spacer(Modifier.width(AzuraSpacing.sm))
+                Text(
+                    text = "Selamat Datang, Supervisor!",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+            Text(
+                text = "Anda belum memilih kelas yang akan diampu. Silakan pilih kelas untuk mulai melakukan absensi.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+            )
+            Button(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+            ) {
+                Text("Pilih Kelas Sekarang")
+            }
+        }
     }
 }
 

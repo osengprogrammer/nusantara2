@@ -183,6 +183,8 @@ class DashboardViewModel @Inject constructor(
         val effectiveRole = membershipRole ?: account?.role ?: "USER"
         val isReady = account != null
 
+        val needsAssignment = effectiveRole == "SUPERVISOR" && assignedClasses.isEmpty()
+
         DashboardUiState(
             account = account,
             currentSchool = activeSchool,
@@ -193,6 +195,7 @@ class DashboardViewModel @Inject constructor(
             isReady = isReady,
             currentRole = effectiveRole,
             isApproved = account?.status == "ACTIVE",
+            needsClassAssignment = needsAssignment,
             pendingRequests = pendingCount,
             totalActiveStudents = totalActiveStudents,
         )
