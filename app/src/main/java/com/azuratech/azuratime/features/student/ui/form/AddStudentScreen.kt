@@ -111,10 +111,10 @@ fun AddStudentScreen(
                     isSubmitting = uiState.isSubmitting,
                     isSubmitEnabled = uiState.isFormValid,
                     onSubmit = { viewModel.onEvent(StudentFormUiEvent.SubmitForm) },
-                    submitText = if (uiState.isEditMode) "Simpan Perubahan" else "Daftarkan Siswa",
+                    submitText = if (uiState.isEditMode) "Save Changes" else "Register Student",
                     additionalFields = {
                         Text(
-                            text = "Pilih Kelas *",
+                            text = "Select Class *",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(bottom = AzuraSpacing.xs),
@@ -201,7 +201,7 @@ fun AddStudentScreen(
                                 .padding(AzuraSpacing.lg)
                                 .align(androidx.compose.ui.Alignment.BottomCenter),
                         ) {
-                            Text("Ambil ${if (captureMode == "EMBEDDING") "Wajah" else "Foto"}")
+                            Text("Capture ${if (captureMode == "EMBEDDING") "Face" else "Photo"}")
                         }
 
                         IconButton(

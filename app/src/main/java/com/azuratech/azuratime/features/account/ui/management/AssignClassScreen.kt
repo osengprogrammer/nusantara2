@@ -41,7 +41,7 @@ fun AssignClassScreen(
     }
 
     AzuraScreen(
-        title = "Tugaskan Kelas",
+        title = "Assign Classes",
         onBack = onNavigateBack,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) {
@@ -59,7 +59,7 @@ fun AssignClassScreen(
                         AzuraCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(AzuraSpacing.md)) {
                                 Text(
-                                    text = "Akun / Supervisor",
+                                    text = "Account / Supervisor",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -80,13 +80,13 @@ fun AssignClassScreen(
                     // Selection Section
                     item {
                         Text(
-                            text = "Pilih Kelas yang Diampu",
+                            text = "Select Assigned Classes",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 4.dp),
                         )
                         Text(
-                            text = "Supervisor hanya dapat melakukan absensi pada kelas yang dipilih.",
+                            text = "Supervisors can only perform attendance for selected classes.",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray,
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
@@ -126,7 +126,7 @@ fun AssignClassScreen(
                         item {
                             HorizontalDivider(modifier = Modifier.padding(vertical = AzuraSpacing.sm))
                             Text(
-                                text = "Daftar Terpilih (${uiState.selectedClassIds.size})",
+                                text = "Selected List (${uiState.selectedClassIds.size})",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 4.dp),
@@ -177,7 +177,7 @@ fun AssignClassScreen(
                     .padding(AzuraSpacing.md),
             ) {
                 AzuraButton(
-                    text = if (uiState.isSaving) "Menyimpan..." else "Simpan Perubahan",
+                    text = if (uiState.isSaving) "Saving..." else "Save Changes",
                     onClick = { viewModel.onEvent(AssignClassUiEvent.SaveAssignments) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isSaving && !uiState.isLoading,

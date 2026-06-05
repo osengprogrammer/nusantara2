@@ -44,7 +44,7 @@ class StudentRepositoryImpl @Inject constructor(
     private val assignmentDao = database.studentClassAssignmentDao()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    override fun getStudentProfiles(): Flow<Result<List<StudentProfile>>> {
+    override fun getStudentProfilesFlow(): Flow<Result<List<StudentProfile>>> {
         return sessionManager.activeSchoolIdFlow
             .flatMapLatest { schoolId ->
                 if (schoolId.isNullOrBlank()) {
@@ -63,7 +63,7 @@ class StudentRepositoryImpl @Inject constructor(
             if (schoolId.isNullOrBlank()) {
                 return@withContext Result.Success(emptyList())
             }
-            val result = getStudentProfiles().first()
+            val result = getStudentProfilesFlow().first()
             if (result is Result.Success) {
                 Result.Success(result.data)
             } else {

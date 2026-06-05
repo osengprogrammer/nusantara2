@@ -78,7 +78,7 @@ fun AccountManagementContent(
     onNavigateBack: () -> Unit,
 ) {
     AzuraScreen(
-        title = "Pengaturan Akun",
+        title = "Account Settings",
         onBack = onNavigateBack,
     ) {
         if (uiState.isLoading) {
@@ -113,12 +113,12 @@ fun AccountManagementContent(
 
                 AzuraCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(AzuraSpacing.md)) {
-                        Text("Pilih Kelas Aktif", style = MaterialTheme.typography.titleMedium)
+                        Text("Select Active Class", style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
                         if (uiState.availableClasses.isEmpty()) {
                             Text(
-                                "Belum ada kelas tersedia di sekolah ini.",
+                                "No classes available in this school.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.outline,
                             )
@@ -153,7 +153,7 @@ fun AccountManagementContent(
         uiState.error?.let { error ->
             AlertDialog(
                 onDismissRequest = { onEvent(AccountUiEvent.ClearError) },
-                title = { Text("Terjadi Kesalahan") },
+                title = { Text("An Error Occurred") },
                 text = { Text(error) },
                 confirmButton = {
                     TextButton(onClick = { onEvent(AccountUiEvent.ClearError) }) {

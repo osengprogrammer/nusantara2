@@ -51,7 +51,7 @@ fun StudentRosterScreen(
     }
 
     AzuraScreen(
-        title = "Roster Siswa",
+        title = "Student Roster",
         onBack = onNavigateBack,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -64,7 +64,7 @@ fun StudentRosterScreen(
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = { viewModel.onEvent(StudentRosterUiEvent.UpdateSearch(it)) },
-                    placeholder = { Text("Cari nama siswa atau ID...") },
+                    placeholder = { Text("Search student name or ID...") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = AzuraShapes.medium,
                     leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary) },
@@ -123,7 +123,7 @@ fun StudentRosterScreen(
                 ) {
                     Box(modifier = Modifier.padding(horizontal = AzuraSpacing.md), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "${uiState.students.size} Siswa",
+                            text = "${uiState.students.size} Students",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                         )
@@ -143,7 +143,7 @@ fun StudentRosterScreen(
                     FilterChip(
                         selected = uiState.selectedClassId == null,
                         onClick = { viewModel.onEvent(StudentRosterUiEvent.SelectClass(null)) },
-                        label = { Text("Semua Kelas") },
+                        label = { Text("All Classes") },
                         shape = AzuraShapes.medium,
                     )
                 }
@@ -183,7 +183,7 @@ fun StudentRosterScreen(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
-                                    "Tidak ada siswa ditemukan",
+                                    "No students found",
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -202,8 +202,8 @@ fun StudentRosterScreen(
     if (uiState.isDeleteDialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onEvent(StudentRosterUiEvent.CancelDelete) },
-            title = { Text("Hapus Siswa?") },
-            text = { Text("Data siswa akan dihapus secara permanen dari perangkat dan cloud.") },
+            title = { Text("Delete Student?") },
+            text = { Text("Student data will be permanently deleted from device and cloud.") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -213,12 +213,12 @@ fun StudentRosterScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 ) {
-                    Text("Hapus")
+                    Text("Delete")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onEvent(StudentRosterUiEvent.CancelDelete) }) {
-                    Text("Batal")
+                    Text("Cancel")
                 }
             },
         )

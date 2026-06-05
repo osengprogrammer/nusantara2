@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
@@ -35,16 +34,15 @@ fun PendingSchoolsScreen(
     var rejectionReason by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        viewModel.uiEventFlow.collect { event ->
-            when (event) {
-                is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
-                else -> {}
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is PendingSchoolsUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
             }
         }
     }
 
     AzuraScreen(
-        title = "Persetujuan Sekolah",
+        title = "School Approvals",
         onBack = onBack,
         snackbarHostState = snackbarHostState,
     ) {
@@ -55,7 +53,7 @@ fun PendingSchoolsScreen(
         } else if (uiState.pendingSchools.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "Tidak ada sekolah yang menunggu persetujuan.",
+                    text = "No schools waiting for approval.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline,
                 )
@@ -83,16 +81,16 @@ fun PendingSchoolsScreen(
                 schoolToReject = null
                 rejectionReason = ""
             },
-            title = { Text("Tolak Pendaftaran Sekolah") },
+            title = { Text("Reject School Registration") },
             text = {
                 Column {
-                    Text("Berikan alasan penolakan untuk '${schoolToReject?.name}':")
+                    Text("Provide a rejection reason for '${schoolToReject?.name}':")
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = rejectionReason,
                         onValueChange = { rejectionReason = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Contoh: Data tidak valid") },
+                        placeholder = { Text("Example: Invalid data") },
                         shape = AzuraShapes.medium,
                     )
                 }
@@ -106,7 +104,7 @@ fun PendingSchoolsScreen(
                     },
                     enabled = rejectionReason.isNotBlank(),
                 ) {
-                    Text("Tolak", color = MaterialTheme.colorScheme.error)
+                    Text("Reject", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -114,7 +112,7 @@ fun PendingSchoolsScreen(
                     schoolToReject = null
                     rejectionReason = ""
                 }) {
-                    Text("Batal")
+                    Text("Cancel")
                 }
             },
         )
@@ -139,12 +137,12 @@ fun SchoolApprovalCard(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Didaftar oleh: ${school.accountId}",
+                text = "Registered by: ${school.accountId}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline,
             )
             Text(
-                text = "Pada: $dateString",
+                text = "At: $dateString",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline,
             )
@@ -164,7 +162,7 @@ fun SchoolApprovalCard(
                 ) {
                     Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Tolak")
+                    Text("Reject")
                 }
 
                 Button(
@@ -175,7 +173,7 @@ fun SchoolApprovalCard(
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Setujui")
+                    Text("Approve")
                 }
             }
         }

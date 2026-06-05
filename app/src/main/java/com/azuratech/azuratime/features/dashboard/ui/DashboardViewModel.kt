@@ -52,7 +52,7 @@ class DashboardViewModel @Inject constructor(
     private val _accountFlow: StateFlow<AccountEntity?> = sessionManager.currentAccountIdFlow
         .flatMapLatest { accountId ->
             if (accountId != null) {
-                accountRepository.observeAccountEntity(accountId).map { it.getOrNull() }
+                accountRepository.observeAccountEntityFlow(accountId).map { it.getOrNull() }
             } else {
                 flowOf(null)
             }
@@ -73,12 +73,12 @@ class DashboardViewModel @Inject constructor(
     private val _allClassesFlow = combine(
         _activeSchoolIdFlow,
         _accountFlow,
-        studentRepository.getStudentProfiles(),
+        studentRepository.getStudentProfilesFlow(),
     ) { schoolId, account, studentResult ->
         Triple(schoolId, account, studentResult)
     }.flatMapLatest { (schoolId, account, studentResult) ->
         if (schoolId != null && account != null) {
-            schoolRepository.observeClasses(schoolId).map { result ->
+            schoolRepository.observeClassesFlow(schoolId).map { result ->
                 val classes = result.getOrNull() ?: emptyList()
                 val students = studentResult.getOrNull() ?: emptyList()
 
@@ -118,7 +118,7 @@ class DashboardViewModel @Inject constructor(
     private val _activeSchoolFlow = _activeSchoolIdFlow
         .flatMapLatest { id ->
             if (id != null) {
-                schoolRepository.observeSchoolById(id).map { result ->
+                schoolRepository.observeSchoolByIdFlow(id).map { result ->
                     result.getOrNull()
                 }
             } else {
@@ -129,7 +129,7 @@ class DashboardViewModel @Inject constructor(
     private val _pendingRequestsCountFlow = sessionManager.currentAccountIdFlow
         .flatMapLatest { accountId ->
             if (accountId != null) {
-                accountRepository.observePendingRequestsCount(accountId)
+                accountRepository.observePendingRequestsCountFlow(accountId)
             } else {
                 flowOf(0)
             }
@@ -138,7 +138,7 @@ class DashboardViewModel @Inject constructor(
     private val _totalActiveStudentsFlow = _activeSchoolIdFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
-                studentRepository.getStudentProfiles()
+                studentRepository.getStudentProfilesFlow()
                     .map { result ->
                         val students = result.getOrNull() ?: emptyList()
                         students.count { it.classIds.isNotEmpty() }
@@ -263,10 +263,10 @@ class DashboardViewModel @Inject constructor(
                         sessionManager.saveLastSyncTime(System.currentTimeMillis())
                     }
 
-                    _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Sinkronisasi Selesai!"))
+                    _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Sync Completed!"))
                 }
                 .onFailure { error ->
-                    _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Gagal sinkron: ${error.message}"))
+                    _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Sync Failed: ${error.message}"))
                 }
         }
     }
@@ -311,7 +311,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId()
             if (schoolId == null) {
-                _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Silakan pilih sekolah terlebih dahulu"))
+                _uiEffectFlow.emit(DashboardUiEffect.ShowSnackbar("Please select a school first"))
                 return@launch
             }
             _uiEffectFlow.emit(DashboardUiEffect.NavigateTo("registrationMenu"))

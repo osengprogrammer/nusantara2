@@ -28,7 +28,7 @@ class BiometricLocalDataSourceImpl @Inject constructor(
         assignmentDao.getStudentsByClass(classId, schoolId)
 
     override fun observeClassesBySchool(schoolId: String): Flow<List<ClassEntity>> =
-        database.classDao().observeClassesBySchool(schoolId)
+        database.classDao().observeClassesBySchoolFlow(schoolId)
 
     override fun getAllAssignmentsFlow(schoolId: String): Flow<List<StudentClassAssignmentEntity>> =
         assignmentDao.getAllAssignments(schoolId)

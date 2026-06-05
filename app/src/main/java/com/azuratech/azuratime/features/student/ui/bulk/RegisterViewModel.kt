@@ -39,20 +39,20 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId()
             if (schoolId == null) {
-                _uiEffectFlow.emit(RegisterUiEffect.ShowToast("Sekolah aktif tidak ditemukan."))
+                _uiEffectFlow.emit(RegisterUiEffect.ShowToast("Active school not found."))
                 return@launch
             }
 
             _uiStateFlow.update {
                 it.copy(
                     isProcessing = true,
-                    status = "Memulai impor massal...",
+                    status = "Starting bulk import...",
                     results = emptyList(),
                     progress = 0f,
                 )
             }
 
-            registrationRepository.processCsv(uri.toString(), schoolId)
+            registrationRepository.processCsvFlow(uri.toString(), schoolId)
                 .onEach { result ->
                     when (result) {
                         is Result.Success -> {
@@ -60,17 +60,17 @@ class RegisterViewModel @Inject constructor(
                             _uiStateFlow.update { state ->
                                 state.copy(
                                     results = state.results + processResult,
-                                    status = "Memproses: ${processResult.name}",
+                                    status = "Processing: ${processResult.name}",
                                     progress = if (state.results.isEmpty()) 0.1f else state.progress + 0.01f,
                                 )
                             }
                         }
                         is Result.Failure -> {
                             _uiStateFlow.update { it.copy(isProcessing = false) }
-                            _uiEffectFlow.emit(RegisterUiEffect.ShowToast("Gagal: ${result.error.message}"))
+                            _uiEffectFlow.emit(RegisterUiEffect.ShowToast("Failed: ${result.error.message}"))
                         }
                         Result.Loading -> {
-                            _uiStateFlow.update { it.copy(status = "Menyiapkan data...") }
+                            _uiStateFlow.update { it.copy(status = "Preparing data...") }
                         }
                     }
                 }
@@ -78,7 +78,7 @@ class RegisterViewModel @Inject constructor(
                     _uiStateFlow.update {
                         it.copy(
                             isProcessing = false,
-                            status = "Impor Selesai! ${it.results.size} data diproses.",
+                            status = "Import Completed! ${it.results.size} data processed.",
                             progress = 1.0f,
                         )
                     }

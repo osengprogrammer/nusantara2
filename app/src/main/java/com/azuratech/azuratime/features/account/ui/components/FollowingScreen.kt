@@ -49,13 +49,13 @@ fun FollowingScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             TabRow(selectedTabIndex = selectedTab) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Cari") })
+                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("Search") })
                 Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = {
                     BadgedBox(badge = { if (uiState.pendingRequests.isNotEmpty()) Badge { Text(uiState.pendingRequests.size.toString()) } }) {
-                        Text("Permintaan")
+                        Text("Requests")
                     }
                 })
-                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Teman") })
+                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("Friends") })
             }
 
             Column(modifier = Modifier.fillMaxSize().padding(AzuraSpacing.md)) {
@@ -75,13 +75,13 @@ fun SearchTab(state: FollowingUiState, email: String, onEmailChange: (String) ->
         OutlinedTextField(
             value = email,
             onValueChange = onEmailChange,
-            label = { Text("Cari Akun (Email)") },
+            label = { Text("Search Account (Email)") },
             modifier = Modifier.fillMaxWidth(),
             shape = AzuraShapes.medium,
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             trailingIcon = {
                 Button(onClick = { onSearch(email) }, enabled = !state.isLoading && email.isNotBlank(), shape = AzuraShapes.small) {
-                    Text("Cari")
+                    Text("Search")
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -98,7 +98,7 @@ fun SearchTab(state: FollowingUiState, email: String, onEmailChange: (String) ->
                     }
                 }
             } else {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Cari rekan guru untuk terhubung.") }
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Search for fellow supervisors to connect.") }
             }
         }
     }
@@ -108,7 +108,7 @@ fun SearchTab(state: FollowingUiState, email: String, onEmailChange: (String) ->
 fun RequestsTab(state: FollowingUiState, onAccept: (String) -> Unit, onDecline: (String) -> Unit) {
     if (state.pendingRequests.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Tidak ada permintaan baru.")
+            Text("No new requests.")
         }
     } else {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
@@ -123,7 +123,7 @@ fun RequestsTab(state: FollowingUiState, onAccept: (String) -> Unit, onDecline: 
 fun ConnectionsTab(state: FollowingUiState, onAssign: (AccountEntity) -> Unit) {
     if (state.connections.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Belum ada teman terhubung.")
+            Text("No connected friends yet.")
         }
     } else {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
@@ -144,7 +144,7 @@ fun AccountResultItem(account: AccountEntity, isProcessing: Boolean, onAdd: () -
                 Text(account.name, fontWeight = FontWeight.Bold)
                 Text(account.email, style = MaterialTheme.typography.bodySmall)
             }
-            Button(onClick = onAdd, enabled = !isProcessing, shape = AzuraShapes.small) { Text("Tambah") }
+            Button(onClick = onAdd, enabled = !isProcessing, shape = AzuraShapes.small) { Text("Add") }
         }
     }
 }
@@ -160,7 +160,7 @@ fun ConnectedFriendItem(account: AccountEntity, isAdmin: Boolean, onAssign: () -
                 Text(account.email, style = MaterialTheme.typography.bodySmall)
             }
             if (isAdmin) {
-                IconButton(onClick = onAssign) { Icon(Icons.Default.School, contentDescription = "Beri Akses Kelas", tint = MaterialTheme.colorScheme.primary) }
+                IconButton(onClick = onAssign) { Icon(Icons.Default.School, contentDescription = "Grant Class Access", tint = MaterialTheme.colorScheme.primary) }
             }
         }
     }
@@ -175,9 +175,9 @@ fun PendingRequestItem(account: AccountEntity, isProcessing: Boolean, onAccept: 
             Column(Modifier.weight(1f)) {
                 Text(account.name, fontWeight = FontWeight.Bold)
                 Row(Modifier.padding(top = 4.dp)) {
-                    Button(onClick = onAccept, enabled = !isProcessing, shape = AzuraShapes.small, modifier = Modifier.height(32.dp)) { Text("Terima", style = MaterialTheme.typography.labelSmall) }
+                    Button(onClick = onAccept, enabled = !isProcessing, shape = AzuraShapes.small, modifier = Modifier.height(32.dp)) { Text("Accept", style = MaterialTheme.typography.labelSmall) }
                     Spacer(Modifier.width(8.dp))
-                    OutlinedButton(onClick = onDecline, enabled = !isProcessing, shape = AzuraShapes.small, modifier = Modifier.height(32.dp)) { Text("Tolak", style = MaterialTheme.typography.labelSmall) }
+                    OutlinedButton(onClick = onDecline, enabled = !isProcessing, shape = AzuraShapes.small, modifier = Modifier.height(32.dp)) { Text("Decline", style = MaterialTheme.typography.labelSmall) }
                 }
             }
         }

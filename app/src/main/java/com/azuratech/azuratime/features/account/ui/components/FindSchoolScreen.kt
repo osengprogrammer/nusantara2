@@ -53,15 +53,15 @@ fun FindSchoolScreen(
     LaunchedEffect(uiState.status) {
         when (val currentStatus = uiState.status) {
             is WorkspaceStatus.Success -> {
-                scope.launch { snackbarHostState.showSnackbar("Berhasil!") }
+                scope.launch { snackbarHostState.showSnackbar("Success!") }
                 workspaceViewModel.onEvent(WorkspaceUiEvent.ResetState)
             }
             is WorkspaceStatus.RequestSent -> {
-                scope.launch { snackbarHostState.showSnackbar("Permintaan bergabung ke ${currentStatus.schoolName} telah dikirim!") }
+                scope.launch { snackbarHostState.showSnackbar("Join request to ${currentStatus.schoolName} has been sent!") }
                 workspaceViewModel.onEvent(WorkspaceUiEvent.ResetState)
             }
             is WorkspaceStatus.RequestFailed -> {
-                scope.launch { snackbarHostState.showSnackbar(currentStatus.message ?: "Gagal mengirim permintaan") }
+                scope.launch { snackbarHostState.showSnackbar(currentStatus.message ?: "Failed to send request") }
                 workspaceViewModel.onEvent(WorkspaceUiEvent.ResetState)
             }
             is WorkspaceStatus.Error -> {
@@ -73,7 +73,7 @@ fun FindSchoolScreen(
     }
 
     AzuraScreen(
-        title = "Temukan Workspace",
+        title = "Find Workspace",
         onBack = { navController.popBackStack() },
     ) {
         // 🔥 FIXED: Removed nested Scaffold. AzuraScreen provides a BoxScope,
@@ -91,7 +91,7 @@ fun FindSchoolScreen(
                     onValueChange = {
                         workspaceViewModel.onEvent(WorkspaceUiEvent.UpdateSearchQuery(it))
                     },
-                    label = { Text("Cari Nama Sekolah atau ID...") },
+                    label = { Text("Search School Name or ID...") },
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = AzuraShapes.medium,
@@ -105,13 +105,13 @@ fun FindSchoolScreen(
                     searchQuery.length < 3 -> {
                         EmptyDiscoveryState(
                             icon = Icons.Default.TravelExplore,
-                            message = "Ketik minimal 3 karakter untuk mencari sekolah.",
+                            message = "Type at least 3 characters to search for schools.",
                         )
                     }
                     searchResults.isEmpty() -> {
                         EmptyDiscoveryState(
                             icon = Icons.Default.Search,
-                            message = "Sekolah tidak ditemukan.",
+                            message = "No schools found.",
                         )
                     }
                     else -> {
@@ -211,7 +211,7 @@ fun SchoolFollowCard(
             if (isFollowing) {
                 AssistChip(
                     onClick = {},
-                    label = { Text(if (status == "PENDING") "Menunggu" else "Terdaftar") },
+                    label = { Text(if (status == "PENDING") "Waiting" else "Registered") },
                     leadingIcon = {
                         if (!isSynced) {
                             Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(14.dp))
@@ -224,7 +224,7 @@ fun SchoolFollowCard(
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             } else {
                 Button(onClick = onFollowClick, shape = AzuraShapes.small, enabled = !isLoading) {
-                    Text("Ikuti")
+                    Text("Follow")
                 }
             }
         }

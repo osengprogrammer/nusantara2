@@ -66,7 +66,7 @@ class GetAccountUseCaseTest {
         // Arrange
         val accountId = "test_id"
         val mockError = AppError.LocalDB("Not Found")
-        every { repository.getAccount(accountId) } returns flowOf(Result.Failure(mockError))
+        every { repository.getAccountFlow(accountId) } returns flowOf(Result.Failure(mockError))
 
         // Act & Assert
         getAccountUseCase(accountId).test {

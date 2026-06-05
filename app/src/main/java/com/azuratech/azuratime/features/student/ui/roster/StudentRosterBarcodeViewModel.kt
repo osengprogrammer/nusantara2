@@ -75,7 +75,7 @@ class StudentRosterBarcodeViewModel @Inject constructor(
             if (file != null) {
                 _uiEffectFlow.emit(StudentRosterUiEffect.ExportPdf(file))
             } else {
-                _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Gagal membuat file PDF"))
+                _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Failed to generate PDF file"))
             }
         }
     }
@@ -86,13 +86,13 @@ class StudentRosterBarcodeViewModel @Inject constructor(
             _uiStateFlow.update { it.copy(isLoading = true, schoolId = schoolId) }
 
             if (schoolId == null) {
-                _uiStateFlow.update { it.copy(isLoading = false, error = "Sekolah tidak ditemukan") }
+                _uiStateFlow.update { it.copy(isLoading = false, error = "School not found") }
                 return@launch
             }
 
             // Combine students and classes for display
-            val classesFlow = schoolRepository.observeClasses(schoolId).map { it.getOrNull() ?: emptyList() }
-            val studentsFlow = studentRepository.getStudentProfiles().map { it.getOrNull() ?: emptyList() }
+            val classesFlow = schoolRepository.observeClassesFlow(schoolId).map { it.getOrNull() ?: emptyList() }
+            val studentsFlow = studentRepository.getStudentProfilesFlow().map { it.getOrNull() ?: emptyList() }
 
             combine(studentsFlow, classesFlow) { profiles, classes ->
                 val classMap = classes.associateBy { it.id }

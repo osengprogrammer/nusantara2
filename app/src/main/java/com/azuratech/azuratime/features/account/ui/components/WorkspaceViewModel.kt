@@ -29,8 +29,8 @@ import javax.inject.Inject
 
 /**
  * 🚀 WORKSPACE VIEW MODEL (v3.2.0-ai-native)
- * Mengelola perpindahan antar sekolah, pencarian sekolah, dan pembuatan workspace baru.
- * 🔥 v3.1: Full Reactive SSOT dengan SchoolRepository dan debounced search.
+ * Manages workspace switching, school search, and new workspace creation.
+ * 🔥 v3.1: Full Reactive SSOT with SchoolRepository and debounced search.
  */
 @HiltViewModel
 class WorkspaceViewModel @Inject constructor(
@@ -61,7 +61,7 @@ class WorkspaceViewModel @Inject constructor(
     private val _accessRequestsFlow = sessionManager.currentAccountIdFlow
         .filterNotNull()
         .flatMapLatest { accountId ->
-            accessRequestRepository.observeRequestsByAccount(accountId)
+            accessRequestRepository.observeRequestsByAccountFlow(accountId)
                 .map { result ->
                     result.getOrNull()?.map { it.toProfile() } ?: emptyList()
                 }
@@ -105,7 +105,7 @@ class WorkspaceViewModel @Inject constructor(
                 syncManager.enqueueAccountSync(accountId)
                 _statusFlow.value = WorkspaceStatus.Success(newSchoolName)
             } catch (e: Exception) {
-                _statusFlow.value = WorkspaceStatus.Error("Gagal pindah workspace: ${e.message}")
+                _statusFlow.value = WorkspaceStatus.Error("Failed to switch workspace: ${e.message}")
             }
         }
     }
@@ -138,7 +138,7 @@ class WorkspaceViewModel @Inject constructor(
             _statusFlow.value = WorkspaceStatus.Switching
             schoolRepository.createSchool(accountId, schoolName, "Asia/Jakarta")
                 .onSuccess { _statusFlow.value = WorkspaceStatus.Success(schoolName) }
-                .onFailure { _statusFlow.value = WorkspaceStatus.Error(it.message ?: "Gagal membuat sekolah") }
+                .onFailure { _statusFlow.value = WorkspaceStatus.Error(it.message ?: "Failed to create school") }
         }
     }
 
@@ -157,8 +157,8 @@ class WorkspaceViewModel @Inject constructor(
                     onSuccess()
                 }
                 .onFailure {
-                    _statusFlow.value = WorkspaceStatus.Error(it.message ?: "Gagal mengubah nama sekolah")
-                    onError(it.message ?: "Gagal mengubah nama sekolah")
+                    _statusFlow.value = WorkspaceStatus.Error(it.message ?: "Failed to change school name")
+                    onError(it.message ?: "Failed to change school name")
                 }
         }
     }

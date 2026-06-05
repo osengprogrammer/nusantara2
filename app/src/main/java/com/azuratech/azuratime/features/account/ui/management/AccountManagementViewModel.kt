@@ -43,7 +43,7 @@ class AccountManagementViewModel @Inject constructor(
         // 1. Current Account Profile & Active Class (Mapped from Domain Account)
         sessionManager.currentAccountIdFlow
             .filterNotNull()
-            .flatMapLatest { uid -> repository.getAccount(uid) }
+            .flatMapLatest { accountId -> repository.getAccountFlow(accountId) }
             .onEach { result ->
                 result.onSuccess { account ->
                     _uiStateFlow.update {
@@ -69,7 +69,7 @@ class AccountManagementViewModel @Inject constructor(
         // 3. Available Classes in current school
         sessionManager.activeSchoolIdFlow
             .filterNotNull()
-            .flatMapLatest { schoolId -> schoolRepository.observeClasses(schoolId) }
+            .flatMapLatest { schoolId -> schoolRepository.observeClassesFlow(schoolId) }
             .onEach { result ->
                 result.onSuccess { classes ->
                     _uiStateFlow.update { it.copy(availableClasses = classes) }
@@ -81,7 +81,7 @@ class AccountManagementViewModel @Inject constructor(
         sessionManager.activeSchoolIdFlow
             .filterNotNull()
             .flatMapLatest { schoolId ->
-                database.accountDao().observeAllAccounts().map { accounts ->
+                database.accountDao().observeAllAccountsFlow().map { accounts ->
                     accounts.filter { it.memberships.containsKey(schoolId) }
                 }
             }
@@ -134,13 +134,13 @@ class AccountManagementViewModel @Inject constructor(
     }
 
     private fun updateDisplayName(newName: String) {
-        val uid = sessionManager.getCurrentAccountId() ?: return
+        val accountId = sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            repository.updateDisplayName(uid, newName)
+            repository.updateDisplayName(accountId, newName)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Nama berhasil diperbarui"))
+                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Display name updated successfully"))
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
@@ -149,22 +149,22 @@ class AccountManagementViewModel @Inject constructor(
     }
 
     private fun selectActiveClass(classId: String?, targetAccountId: String?) {
-        val uid = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
+        val accountId = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
-            repository.getAccountById(uid).onSuccess { account ->
+            repository.getAccountById(accountId).onSuccess { account ->
                 val updated = account.copy(activeClassId = classId)
                 database.accountDao().updateAccount(updated)
-                repository.pushAccount(uid)
+                repository.pushAccount(accountId)
             }
         }
     }
 
     private fun assignClassToAccount(classId: String, targetAccountId: String?) {
-        val uid = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
+        val accountId = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
             database.accountClassAccessDao().insert(
                 com.azuratech.azuratime.core.data.local.AccountClassAccessEntity(
-                    accountId = uid,
+                    accountId = accountId,
                     classId = classId,
                     schoolId = sessionManager.getActiveSchoolId() ?: "",
                 ),
@@ -173,20 +173,20 @@ class AccountManagementViewModel @Inject constructor(
     }
 
     private fun removeClassAccess(classId: String, targetAccountId: String?) {
-        val uid = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
+        val accountId = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
-            database.accountClassAccessDao().deleteSpecificAccess(uid, classId)
+            database.accountClassAccessDao().deleteSpecificAccess(accountId, classId)
         }
     }
 
     private fun updatePhoto(uri: android.net.Uri) {
-        val uid = sessionManager.getCurrentAccountId() ?: return
+        val accountId = sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            repository.updatePhoto(uid, uri.toString())
+            repository.updatePhoto(accountId, uri.toString())
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false, pendingPhotoUri = null) }
-                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Foto profil berhasil diperbarui"))
+                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Profile photo updated successfully"))
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }

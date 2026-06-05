@@ -30,7 +30,7 @@ class ZoharRepositoryImpl @Inject constructor(
         try {
             // 1. Ambil data context sekolah (Kelas & Siswa)
             val allRecords = database.attendanceRecordDao().getAllRecords(schoolId).first()
-            val classes = database.schoolClassDao().getClasses(schoolId).first()
+            val classes = database.schoolClassDao().getClassesFlow(schoolId).first()
             val studentProfiles = database.studentDao().getStudentProfilesFlow(schoolId).first()
 
             if (allRecords.isEmpty()) {

@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,8 +28,8 @@ class PendingSchoolsViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(PendingSchoolsUiState())
     val uiStateFlow: StateFlow<PendingSchoolsUiState> = _uiStateFlow.asStateFlow()
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<PendingSchoolsUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     init {
         loadPendingSchools()
@@ -48,7 +47,7 @@ class PendingSchoolsViewModel @Inject constructor(
     private fun loadPendingSchools() {
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            schoolRepository.observeAllSchools().collectLatest { result ->
+            schoolRepository.observeAllSchoolsFlow().collectLatest { result ->
                 result.onSuccess { schools ->
                     _uiStateFlow.update {
                         it.copy(
@@ -69,11 +68,11 @@ class PendingSchoolsViewModel @Inject constructor(
             schoolRepository.approveSchool(schoolId)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Sekolah berhasil disetujui!"))
+                    _uiEffectFlow.emit(PendingSchoolsUiEffect.ShowSnackbar("School approved successfully!"))
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal menyetujui sekolah: ${error.message}"))
+                    _uiEffectFlow.emit(PendingSchoolsUiEffect.ShowSnackbar("Failed to approve school: ${error.message}"))
                 }
         }
     }
@@ -84,11 +83,11 @@ class PendingSchoolsViewModel @Inject constructor(
             schoolRepository.rejectSchool(schoolId, reason)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Sekolah telah ditolak."))
+                    _uiEffectFlow.emit(PendingSchoolsUiEffect.ShowSnackbar("School has been rejected."))
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal menolak sekolah: ${error.message}"))
+                    _uiEffectFlow.emit(PendingSchoolsUiEffect.ShowSnackbar("Failed to reject school: ${error.message}"))
                 }
         }
     }

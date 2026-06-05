@@ -91,7 +91,7 @@ class StudentRegistrationRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun processCsv(uri: String, schoolId: String): Flow<Result<ProcessResult>> = flow {
+    override fun processCsvFlow(uri: String, schoolId: String): Flow<Result<ProcessResult>> = flow {
         val parseResult = csvImportUtils.parseCsvFile(uri)
         val accountId = sessionManager.getCurrentAccountId() ?: ""
 

@@ -48,7 +48,7 @@ class StudentRosterViewModel @Inject constructor(
     private val _allClassesFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
-            schoolRepository.observeClasses(schoolId).map { result ->
+            schoolRepository.observeClassesFlow(schoolId).map { result ->
                 result.getOrNull() ?: emptyList()
             }
         }
@@ -97,14 +97,14 @@ class StudentRosterViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Gagal memuat data: ${error.message}"))
+                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Failed to load data: ${error.message}"))
                 }
         }
     }
 
     private fun observeRosterReactive() {
         combine(
-            studentRepository.getStudentProfiles(),
+            studentRepository.getStudentProfilesFlow(),
             _allClassesFlow,
             _searchQueryFlow,
             _selectedClassIdFlow,
@@ -126,7 +126,7 @@ class StudentRosterViewModel @Inject constructor(
 
                     StudentDisplayItem(
                         profile = profile,
-                        assignedClassNames = assignedClassNames.ifEmpty { "Tanpa Kelas" },
+                        assignedClassNames = assignedClassNames.ifEmpty { "No Class" },
                         isBiometricReady = profile.biometricExists,
                     )
                 }
@@ -148,7 +148,7 @@ class StudentRosterViewModel @Inject constructor(
                 .onSuccess { _uiStateFlow.update { it.copy(isLoading = false) } }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Gagal sinkronisasi: ${error.message}"))
+                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Sync failed: ${error.message}"))
                 }
         }
     }
@@ -159,11 +159,11 @@ class StudentRosterViewModel @Inject constructor(
             studentRepository.deleteProfile(studentId)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false, targetStudentId = null) }
-                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Siswa berhasil dihapus"))
+                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Student deleted successfully"))
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Gagal menghapus: ${error.message}"))
+                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Delete failed: ${error.message}"))
                 }
         }
     }

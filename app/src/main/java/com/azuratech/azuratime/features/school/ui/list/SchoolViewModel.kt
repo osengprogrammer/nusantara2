@@ -8,7 +8,6 @@ import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
@@ -33,8 +32,8 @@ class SchoolViewModel @Inject constructor(
     private val syncManager: SyncManager,
 ) : ViewModel() {
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<SchoolUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     private val _uiStateFlow = MutableStateFlow(SchoolUiState())
     val uiStateFlow: StateFlow<SchoolUiState> = _uiStateFlow.asStateFlow()
@@ -79,7 +78,7 @@ class SchoolViewModel @Inject constructor(
 
         // 🔥 REACTIVE SSOT: Observe account memberships and schools in a unified flow
         viewModelScope.launch {
-            accountRepository.observeAccountEntity(accountId)
+            accountRepository.observeAccountEntityFlow(accountId)
                 .map { it.getOrNull() }
                 .filterNotNull()
                 .distinctUntilChangedBy { it.memberships.keys }
@@ -93,7 +92,7 @@ class SchoolViewModel @Inject constructor(
                             schoolRepository.syncSchools(schoolIds)
                         }
                         // Observe the schools from Room
-                        schoolRepository.observeSchoolsByIds(schoolIds).map { result ->
+                        schoolRepository.observeSchoolsByIdsFlow(schoolIds).map { result ->
                             result.getOrNull() ?: emptyList()
                         }
                     }
@@ -109,7 +108,7 @@ class SchoolViewModel @Inject constructor(
 
         // Separate classes observation
         viewModelScope.launch {
-            schoolRepository.observeAllClassesForAccount(accountId).collect { result ->
+            schoolRepository.observeAllClassesForAccountFlow(accountId).collect { result ->
                 result.onSuccess { classes ->
                     _uiStateFlow.update { it.copy(availableClasses = classes) }
                 }
@@ -138,7 +137,7 @@ class SchoolViewModel @Inject constructor(
             accountRepository.getAccountById(currentAccountId).onSuccess { account ->
                 // 🔥 RELAXED FOR TESTING: Allow school creation to verify the flow
                 // if (account.role != "SUPER_ADMIN" && _uiStateFlow.value.schools.isNotEmpty()) {
-                //     _uiEventFlow.emit(UiEvent.ShowSnackbar("❌ Gagal: Hanya Super Admin yang dapat membuat lebih dari satu sekolah."))
+                //     _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("❌ Failed: Only Super Admin can create more than one school."))
                 //     _uiStateFlow.update { it.copy(isLoading = false) }
                 //     return@onSuccess
                 // }
@@ -155,17 +154,17 @@ class SchoolViewModel @Inject constructor(
                         schoolRepository.getSchoolById(newSchoolId).onSuccess { newSchool ->
                             val status = newSchool.status
                             if (status == "ACTIVE") {
-                                _uiEventFlow.emit(UiEvent.ShowSnackbar("🎉 Sekolah aktif! Anda adalah Admin."))
+                                _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("🎉 School active! You are an Admin."))
                                 selectSchool(newSchool)
                             } else {
-                                _uiEventFlow.emit(UiEvent.ShowSnackbar("⏳ Menunggu verifikasi Super Admin."))
+                                _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("⏳ Waiting for Super Admin verification."))
                             }
                         }
                         loadOrphanedClasses() // 🔥 Refresh available classes
                         _uiStateFlow.update { it.copy(isLoading = false) }
                     }
                     .onFailure { error ->
-                        _uiEventFlow.emit(UiEvent.ShowSnackbar("❌ Gagal: ${error.message}"))
+                        _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("❌ Failed: ${error.message}"))
                         _uiStateFlow.update { it.copy(isLoading = false) }
                     }
             }

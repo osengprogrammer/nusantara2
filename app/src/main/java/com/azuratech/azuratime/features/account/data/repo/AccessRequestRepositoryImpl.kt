@@ -68,9 +68,8 @@ class AccessRequestRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeRequestsByAccount(accountId: String): Flow<Result<List<AccessRequestEntity>>> {
-        return accessRequestDao.observeRequestsByAccount(accountId)
-            .asLocalResult()
+    override fun observeRequestsByAccountFlow(accountId: String): Flow<Result<List<AccessRequestEntity>>> {
+        return accessRequestDao.observeRequestsByAccountFlow(accountId).asLocalResult()
     }
 
     override suspend fun getPendingRequests(schoolId: String): Result<List<AccessRequestProfile>> {

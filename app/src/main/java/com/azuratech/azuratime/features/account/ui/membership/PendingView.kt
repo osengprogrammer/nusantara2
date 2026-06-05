@@ -21,7 +21,7 @@ fun PendingView(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Menunggu Persetujuan",
+            text = "Waiting for Approval",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
         )
@@ -29,7 +29,7 @@ fun PendingView(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Akun Anda sedang dalam proses verifikasi oleh administrator.",
+            text = "Your account is currently being verified by the administrator.",
             style = MaterialTheme.typography.bodyMedium,
         )
 

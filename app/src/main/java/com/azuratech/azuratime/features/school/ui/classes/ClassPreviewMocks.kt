@@ -33,6 +33,6 @@ object ClassPreviewMocks {
     )
 
     fun error(): ClassUiState = ClassUiState(
-        error = "Waduh, koneksi ke server sekolah lagi bapuk, Lur.",
+        error = "Failed to connect to the school server. Please try again later.",
     )
 }

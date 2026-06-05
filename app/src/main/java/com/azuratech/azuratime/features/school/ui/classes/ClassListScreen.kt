@@ -18,7 +18,6 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.UiEvent
 
 @Composable
 fun ClassListScreen(
@@ -30,15 +29,16 @@ fun ClassListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.uiEventFlow.collect { event ->
-            if (event is UiEvent.ShowSnackbar) {
-                snackbarHostState.showSnackbar(event.message)
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is ClassUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is ClassUiEffect.NavigateTo -> {} // Handle if needed
             }
         }
     }
 
     AzuraScreen(
-        title = "Manajemen Kelas",
+        title = "Class Management",
         onBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
         actions = {
@@ -46,7 +46,7 @@ fun ClassListScreen(
                 onClick = { viewModel.onEvent(ClassUiEvent.SyncClasses) },
                 enabled = !uiState.isLoading,
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = "Sinkronkan")
+                Icon(Icons.Default.Refresh, contentDescription = "Sync")
             }
         },
         floatingActionButton = {
@@ -55,7 +55,7 @@ fun ClassListScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 shape = AzuraShapes.medium,
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
+                Icon(Icons.Default.Add, contentDescription = "Add Class")
             }
         },
     ) {
@@ -89,7 +89,7 @@ fun ClassListScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 } else if (uiState.classes.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Belum ada kelas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("No classes yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
                     LazyColumn(
@@ -138,16 +138,16 @@ fun ClassListScreen(
             AlertDialog(
                 onDismissRequest = { viewModel.onEvent(ClassUiEvent.CancelDeleteClass) },
                 icon = { Icon(Icons.Default.DeleteForever, null, tint = MaterialTheme.colorScheme.error) },
-                title = { Text("Hapus Kelas?") },
-                text = { Text("Menghapus '${item.name}' akan memutus hubungan dengan siswa di kelas ini.") },
+                title = { Text("Delete Class?") },
+                text = { Text("Deleting '${item.name}' will disconnect students from this class.") },
                 confirmButton = {
                     Button(
                         onClick = { viewModel.onEvent(ClassUiEvent.ConfirmDeleteClass) },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    ) { Text("Hapus") }
+                    ) { Text("Delete") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { viewModel.onEvent(ClassUiEvent.CancelDeleteClass) }) { Text("Batal") }
+                    TextButton(onClick = { viewModel.onEvent(ClassUiEvent.CancelDeleteClass) }) { Text("Cancel") }
                 },
             )
         }
@@ -188,7 +188,7 @@ fun ClassItemCard(
                     Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = onDeleteClick) {
-                    Icon(Icons.Default.Delete, "Hapus", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
                 }
             }
         }

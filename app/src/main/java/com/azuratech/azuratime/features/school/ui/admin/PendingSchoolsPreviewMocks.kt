@@ -15,5 +15,5 @@ object PendingSchoolsPreviewMocks {
         ),
     )
 
-    fun error(): PendingSchoolsUiState = PendingSchoolsUiState(error = "Gagal memuat daftar sekolah")
+    fun error(): PendingSchoolsUiState = PendingSchoolsUiState(error = "Failed to load school list")
 }

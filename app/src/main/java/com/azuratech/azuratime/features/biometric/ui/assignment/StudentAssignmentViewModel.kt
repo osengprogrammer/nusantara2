@@ -49,7 +49,7 @@ class StudentAssignmentViewModel @Inject constructor(
 
         // 2. Observe Available Classes
         schoolIdFlow
-            .flatMapLatest { schoolId -> schoolRepository.observeClasses(schoolId) }
+            .flatMapLatest { schoolId -> schoolRepository.observeClassesFlow(schoolId) }
             .onEach { result ->
                 result.onSuccess { classes ->
                     _uiStateFlow.update { it.copy(availableClasses = classes) }

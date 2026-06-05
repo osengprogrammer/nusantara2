@@ -54,7 +54,7 @@ fun StudentRosterBarcodeScreen(
     }
 
     AzuraScreen(
-        title = "Cetak Barcode",
+        title = "Print Barcodes",
         onBack = onNavigateBack,
         actions = {
             if (uiState.selectedStudentIds.isNotEmpty()) {
@@ -80,9 +80,9 @@ fun StudentRosterBarcodeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column {
-                        Text("Pilih siswa untuk dicetak", style = MaterialTheme.typography.titleSmall)
+                        Text("Select students to print", style = MaterialTheme.typography.titleSmall)
                         Text(
-                            "${uiState.selectedStudentIds.size} dipilih dari ${uiState.students.size} siswa",
+                            "${uiState.selectedStudentIds.size} selected from ${uiState.students.size} students",
                             style = MaterialTheme.typography.labelSmall,
                         )
                     }
@@ -211,7 +211,7 @@ fun StudentRosterBarcodeScreen(
                         Text("Share")
                     }
                     TextButton(onClick = { selectedStudentIdForPreview = null }) {
-                        Text("Tutup")
+                        Text("Close")
                     }
                 }
             },
@@ -238,11 +238,11 @@ private fun shareQrCode(context: Context, bitmap: Bitmap, studentName: String) {
             action = Intent.ACTION_SEND
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             putExtra(Intent.EXTRA_STREAM, contentUri)
-            putExtra(Intent.EXTRA_SUBJECT, "Barcode AzuraTime - $studentName")
-            putExtra(Intent.EXTRA_TEXT, "Barcode untuk siswa: $studentName")
+            putExtra(Intent.EXTRA_SUBJECT, "AzuraTime Barcode - $studentName")
+            putExtra(Intent.EXTRA_TEXT, "Barcode for student: $studentName")
             type = "image/png"
         }
-        context.startActivity(Intent.createChooser(shareIntent, "Bagikan Barcode"))
+        context.startActivity(Intent.createChooser(shareIntent, "Share Barcode"))
     } catch (e: Exception) {
         e.printStackTrace()
     }
@@ -260,7 +260,7 @@ private fun sharePdf(context: Context, file: File) {
             setDataAndType(contentUri, "application/pdf")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Buka atau Cetak PDF Barcode"))
+        context.startActivity(Intent.createChooser(intent, "Open or Print Barcode PDF"))
     } catch (e: Exception) {
         e.printStackTrace()
     }

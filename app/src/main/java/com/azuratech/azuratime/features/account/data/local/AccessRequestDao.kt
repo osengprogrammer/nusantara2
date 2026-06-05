@@ -12,7 +12,7 @@ interface AccessRequestDao {
     suspend fun insertRequest(request: AccessRequestEntity)
 
     @Query("SELECT * FROM access_requests WHERE accountId = :accountId ORDER BY updatedAt DESC")
-    fun observeRequestsByAccount(accountId: String): Flow<List<AccessRequestEntity>>
+    fun observeRequestsByAccountFlow(accountId: String): Flow<List<AccessRequestEntity>>
 
     @Query("SELECT * FROM access_requests WHERE requestId = :requestId")
     suspend fun getRequestById(requestId: String): AccessRequestEntity?

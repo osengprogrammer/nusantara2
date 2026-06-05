@@ -28,7 +28,7 @@ class FollowingViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(FollowingUiState())
     val uiStateFlow: StateFlow<FollowingUiState> = _uiStateFlow.asStateFlow()
 
-    private val currentUserId: String?
+    private val currentAccountId: String?
         get() = FirebaseAuth.getInstance().currentUser?.uid
 
     init {
@@ -57,10 +57,10 @@ class FollowingViewModel @Inject constructor(
     }
 
     private fun observeAdminStatus() {
-        val uid = currentUserId ?: return
+        val accountId = currentAccountId ?: return
         val schoolIdFlow = sessionManager.activeSchoolIdFlow
 
-        accountRepository.getAccount(uid)
+        accountRepository.getAccountFlow(accountId)
             .combine(schoolIdFlow) { accountResult, schoolId ->
                 accountResult.onSuccess { account ->
                     val isAdmin = schoolId?.let { account.isAdmin(it) } ?: false
@@ -72,7 +72,7 @@ class FollowingViewModel @Inject constructor(
 
     private fun handleSearchByEmail(email: String) {
         if (email.isBlank()) {
-            _uiStateFlow.update { it.copy(error = "Email tidak boleh kosong.") }
+            _uiStateFlow.update { it.copy(error = "Email cannot be empty.") }
             return
         }
         viewModelScope.launch {
@@ -80,40 +80,40 @@ class FollowingViewModel @Inject constructor(
             accountRepository.searchAccounts(email)
                 .onSuccess { results ->
                     _uiStateFlow.update {
-                        it.copy(isLoading = false, results = results.filter { acc -> acc.accountId != currentUserId })
+                        it.copy(isLoading = false, results = results.filter { acc -> acc.accountId != currentAccountId })
                     }
-                    if (results.isEmpty()) _uiStateFlow.update { it.copy(error = "Akun tidak ditemukan.") }
+                    if (results.isEmpty()) _uiStateFlow.update { it.copy(error = "Account not found.") }
                 }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
 
     private fun handleSendConnectionRequest(targetAccountId: String) {
-        val uid = currentUserId ?: return
+        val accountId = currentAccountId ?: return
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
-            accountRepository.sendConnectionRequest(uid, targetAccountId)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Permintaan terkirim!") } }
+            accountRepository.sendConnectionRequest(accountId, targetAccountId)
+                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Request sent!") } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
 
     private fun handleAcceptRequest(senderId: String) {
-        val uid = currentUserId ?: return
+        val accountId = currentAccountId ?: return
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
-            accountRepository.acceptConnectionRequest(uid, senderId)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Berhasil terhubung!") } }
+            accountRepository.acceptConnectionRequest(accountId, senderId)
+                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Connected successfully!") } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
 
     private fun handleDeclineRequest(senderId: String) {
-        val uid = currentUserId ?: return
+        val accountId = currentAccountId ?: return
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
-            accountRepository.declineConnectionRequest(uid, senderId)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Permintaan ditolak.") } }
+            accountRepository.declineConnectionRequest(accountId, senderId)
+                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Request declined.") } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
@@ -123,14 +123,14 @@ class FollowingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
             accountRepository.assignClassToConnection(targetId, schoolId, classIds)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Berhasil memberikan akses kelas!", selectedFriendForAssignment = null) } }
+                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Class access granted!", selectedFriendForAssignment = null) } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
 
     private fun observePendingRequests() {
-        val uid = currentUserId ?: return
-        accountRepository.observePendingRequests(uid)
+        val accountId = currentAccountId ?: return
+        accountRepository.observePendingRequestsFlow(accountId)
             .onEach { result ->
                 result.onSuccess { requests -> _uiStateFlow.update { it.copy(pendingRequests = requests) } }
             }
@@ -138,8 +138,8 @@ class FollowingViewModel @Inject constructor(
     }
 
     private fun observeConnections() {
-        val uid = currentUserId ?: return
-        accountRepository.observeConnections(uid)
+        val accountId = currentAccountId ?: return
+        accountRepository.observeConnectionsFlow(accountId)
             .onEach { result ->
                 result.onSuccess { connections -> _uiStateFlow.update { it.copy(connections = connections) } }
             }
@@ -148,7 +148,7 @@ class FollowingViewModel @Inject constructor(
 
     private fun loadAvailableClasses() {
         val schoolId = sessionManager.getActiveSchoolId() ?: return
-        schoolRepository.observeClasses(schoolId)
+        schoolRepository.observeClassesFlow(schoolId)
             .onEach { result ->
                 result.onSuccess { classes -> _uiStateFlow.update { it.copy(availableClasses = classes) } }
             }

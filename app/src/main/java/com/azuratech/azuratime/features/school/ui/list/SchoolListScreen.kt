@@ -31,13 +31,24 @@ fun SchoolListScreen(
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is SchoolUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is SchoolUiEffect.NavigateTo -> {} // Handle if needed
+            }
+        }
+    }
 
     AzuraScreen(
-        title = "Manajemen Sekolah",
+        title = "School Management",
         onBack = onNavigateBack,
+        snackbarHostState = snackbarHostState,
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Sekolah")
+                Icon(Icons.Default.Add, contentDescription = "Add School")
             }
         },
     ) {
@@ -66,7 +77,7 @@ fun SchoolListScreen(
                 }
                 uiState.schools.isEmpty() -> {
                     Text(
-                        text = "Belum ada sekolah.",
+                        text = "No schools yet.",
                         modifier = Modifier.align(Alignment.Center),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -195,7 +206,7 @@ private fun PreviewSuccess() {
         val mockState = SchoolPreviewMocks.success()
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
-                text = "Terdapat ${mockState.schools.size} sekolah terdaftar.",
+                text = "There are ${mockState.schools.size} schools registered.",
                 modifier = Modifier.padding(AzuraSpacing.md),
             )
         }
