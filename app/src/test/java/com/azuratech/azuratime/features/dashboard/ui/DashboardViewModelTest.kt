@@ -52,9 +52,9 @@ class DashboardViewModelTest {
     private val accountId = "user_1"
 
     private val allClasses = listOf(
-        ClassModel("class_1", "school_1", "Kelas A", "10", "user_1", 10, 0L),
-        ClassModel("class_2", "school_1", "Kelas B", "12", "user_1", 12, 0L),
-        ClassModel("class_3", "school_1", "Kelas C", "8", "user_1", 8, 0L),
+        ClassModel("class_1", "school_1", "Kelas A", "10", "user_1", 10, emptyList(), 0L),
+        ClassModel("class_2", "school_1", "Kelas B", "12", "user_1", 12, emptyList(), 0L),
+        ClassModel("class_3", "school_1", "Kelas C", "8", "user_1", 8, emptyList(), 0L),
     )
 
     @Before
@@ -81,6 +81,7 @@ class DashboardViewModelTest {
         every { schoolRepository.observeSchoolById(schoolId) } returns flowOf(Result.Success(null))
         every { attendanceRepository.getAttendanceRecords(any(), any(), any(), any(), any(), any(), any()) } returns flowOf(Result.Success(emptyList()))
         every { accountRepository.observePendingRequestsCount(any()) } returns flowOf(0)
+        every { studentRepository.getStudentProfiles() } returns flowOf(Result.Success(emptyList()))
     }
 
     @After

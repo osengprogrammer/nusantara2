@@ -132,9 +132,10 @@ fun SyncStatusCard(
     isSyncing: Boolean,
     lastSync: String,
     onSyncClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = AzuraShapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),

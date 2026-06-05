@@ -20,6 +20,8 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+import androidx.compose.material.icons.filled.Person
 
 @Composable
 fun ClassManagementScreen(
@@ -38,50 +40,58 @@ fun ClassManagementScreen(
         }
     }
 
+    val title = if (uiState.selectedClassId != null) {
+        val selectedClass = uiState.classes.find { it.id == uiState.selectedClassId }
+        "Siswa: ${selectedClass?.name ?: "Kelas"}"
+    } else {
+        "Manajemen Kelas"
+    }
+
     AzuraScreen(
-        title = "Manajemen Kelas",
-        onBack = onNavigateBack,
+        title = title,
+        onBack = {
+            if (uiState.selectedClassId != null) {
+                viewModel.onEvent(ClassUiEvent.SelectClass(null))
+            } else {
+                onNavigateBack()
+            }
+        },
         snackbarHostState = snackbarHostState,
         actions = {
-            IconButton(
-                onClick = { viewModel.onEvent(ClassUiEvent.SyncClasses) },
-                enabled = !uiState.isLoading,
-            ) {
-                Icon(Icons.Default.Refresh, contentDescription = "Sinkronkan Kelas")
+            if (uiState.selectedClassId == null) {
+                IconButton(
+                    onClick = { viewModel.onEvent(ClassUiEvent.SyncClasses) },
+                    enabled = !uiState.isLoading,
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Sinkronkan Kelas")
+                }
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.onEvent(ClassUiEvent.ShowAddDialog) }) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
+            if (uiState.selectedClassId == null) {
+                FloatingActionButton(onClick = { viewModel.onEvent(ClassUiEvent.ShowAddDialog) }) {
+                    Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
+                }
+            } else {
+                FloatingActionButton(onClick = { viewModel.onEvent(ClassUiEvent.ShowAddStudentDialog) }) {
+                    Icon(Icons.Default.Person, contentDescription = "Tambah Siswa")
+                }
             }
         },
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            if (uiState.isLoading && uiState.classes.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (uiState.classes.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Belum ada kelas yang terdaftar.")
-                }
+            if (uiState.selectedClassId != null) {
+                StudentListSection(
+                    students = uiState.studentsInClass,
+                    isLoading = uiState.isLoading,
+                )
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(AzuraSpacing.md),
-                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
-                ) {
-                    items(uiState.classes) { classModel ->
-                        ClassItem(
-                            classModel = classModel,
-                            onClick = {
-                                if (classModel.id.isNotBlank() && classModel.name.isNotBlank()) {
-                                    onClassSelected(classModel.id, classModel.name)
-                                }
-                            },
-                        )
-                    }
-                }
+                ClassListSection(
+                    uiState = uiState,
+                    onClassClick = { classModel ->
+                        viewModel.onEvent(ClassUiEvent.SelectClass(classModel.id))
+                    },
+                )
             }
         }
     }
@@ -95,10 +105,135 @@ fun ClassManagementScreen(
             },
         )
     }
+
+    if (uiState.isAddStudentDialogVisible && uiState.selectedClassId != null) {
+        AddStudentToClassDialog(
+            allStudents = uiState.allStudents,
+            studentsInClass = uiState.studentsInClass,
+            onDismissRequest = { viewModel.onEvent(ClassUiEvent.DismissAddStudentDialog) },
+            onStudentSelected = { studentId ->
+                viewModel.onEvent(ClassUiEvent.AddStudentToClass(uiState.selectedClassId!!, studentId))
+                viewModel.onEvent(ClassUiEvent.DismissAddStudentDialog)
+            },
+        )
+    }
 }
 
 @Composable
-fun ClassItem(classModel: ClassModel, onClick: () -> Unit) {
+fun ClassListSection(
+    uiState: ClassUiState,
+    onClassClick: (ClassModel) -> Unit,
+) {
+    if (uiState.isLoading && uiState.classes.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else if (uiState.classes.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Belum ada kelas yang terdaftar.")
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(AzuraSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+        ) {
+            items(uiState.classes) { classModel ->
+                val studentCount = uiState.studentCountsByClassId[classModel.id] ?: 0
+                ClassItem(
+                    classModel = classModel,
+                    studentCount = studentCount,
+                    onClick = { onClassClick(classModel) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StudentListSection(
+    students: List<StudentProfile>,
+    isLoading: Boolean,
+) {
+    if (isLoading && students.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else if (students.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Belum ada siswa di kelas ini.")
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(AzuraSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+        ) {
+            items(students) { student ->
+                StudentItem(student = student)
+            }
+        }
+    }
+}
+
+@Composable
+fun StudentItem(student: StudentProfile) {
+    AzuraCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.padding(AzuraSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Default.Person, contentDescription = null)
+            Spacer(modifier = Modifier.width(AzuraSpacing.md))
+            Column {
+                Text(text = student.name, style = MaterialTheme.typography.titleMedium)
+                Text(text = "ID: ${student.studentId}", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+@Composable
+fun AddStudentToClassDialog(
+    allStudents: List<StudentProfile>,
+    studentsInClass: List<StudentProfile>,
+    onDismissRequest: () -> Unit,
+    onStudentSelected: (String) -> Unit,
+) {
+    val availableToAdd = allStudents.filter { student ->
+        studentsInClass.none { it.studentId == student.studentId }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Tambah Siswa ke Kelas") },
+        text = {
+            if (availableToAdd.isEmpty()) {
+                Text("Semua siswa sudah ada di kelas ini.")
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+                    items(availableToAdd) { student ->
+                        Text(
+                            text = student.name,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onStudentSelected(student.studentId) }
+                                .padding(AzuraSpacing.md),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Tutup")
+            }
+        },
+    )
+}
+
+@Composable
+fun ClassItem(classModel: ClassModel, studentCount: Int, onClick: () -> Unit) {
     AzuraCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -113,7 +248,7 @@ fun ClassItem(classModel: ClassModel, onClick: () -> Unit) {
             Column {
                 Text(text = classModel.name, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "${classModel.studentCount} Siswa",
+                    text = "$studentCount Siswa",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

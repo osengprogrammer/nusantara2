@@ -73,18 +73,27 @@ class DashboardViewModel @Inject constructor(
     private val _allClassesFlow = combine(
         _activeSchoolIdFlow,
         _accountFlow,
-    ) { schoolId, account ->
-        schoolId to account
-    }.flatMapLatest { (schoolId, account) ->
+        studentRepository.getStudentProfiles(),
+    ) { schoolId, account, studentResult ->
+        Triple(schoolId, account, studentResult)
+    }.flatMapLatest { (schoolId, account, studentResult) ->
         if (schoolId != null && account != null) {
             schoolRepository.observeClasses(schoolId).map { result ->
                 val classes = result.getOrNull() ?: emptyList()
+                val students = studentResult.getOrNull() ?: emptyList()
+
+                // 🔥 AI Native: Map dynamic counts from SSOT assignments
+                val enrichedClasses = classes.map { classModel ->
+                    val count = students.count { it.classIds.contains(classModel.id) }
+                    classModel.copy(studentCount = count)
+                }
+
                 if (account.toDomain().isAdmin(schoolId)) {
-                    classes
+                    enrichedClasses
                 } else {
                     val membership = account.memberships[schoolId]
                     val assignedIds = membership?.assignedClassIds ?: emptyList()
-                    classes.filter { it.id in assignedIds }
+                    enrichedClasses.filter { it.id in assignedIds }
                 }
             }
         } else {
@@ -126,6 +135,19 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
+    private val _totalActiveStudentsFlow = _activeSchoolIdFlow
+        .flatMapLatest { schoolId ->
+            if (schoolId != null) {
+                studentRepository.getStudentProfiles()
+                    .map { result ->
+                        val students = result.getOrNull() ?: emptyList()
+                        students.count { it.classIds.isNotEmpty() }
+                    }
+            } else {
+                flowOf(0)
+            }
+        }
+
     val uiStateFlow: StateFlow<DashboardUiState> = combine(
         _accountFlow,
         _recentRecordsFlow,
@@ -134,6 +156,7 @@ class DashboardViewModel @Inject constructor(
         _allClassesFlow,
         _activeSchoolFlow,
         _pendingRequestsCountFlow,
+        _totalActiveStudentsFlow,
         _refreshTriggerFlow,
     ) { params ->
         val account = params[0] as AccountEntity?
@@ -153,6 +176,7 @@ class DashboardViewModel @Inject constructor(
         println("🛠 DEBUG DASHBOARD COMBINE: AssignedCount=${assignedClasses.size}, AllCount=${allClasses.size}")
         val activeSchool = params[5] as School?
         val pendingCount = params[6] as Int
+        val totalActiveStudents = params[7] as Int
 
         val activeSchoolId = activeSchool?.id
         val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
@@ -170,6 +194,7 @@ class DashboardViewModel @Inject constructor(
             currentRole = effectiveRole,
             isApproved = account?.status == "ACTIVE",
             pendingRequests = pendingCount,
+            totalActiveStudents = totalActiveStudents,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState(isLoading = true))
 

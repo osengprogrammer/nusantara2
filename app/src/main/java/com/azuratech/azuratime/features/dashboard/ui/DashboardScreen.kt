@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -16,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.util.isAdmin
@@ -142,11 +144,42 @@ fun DashboardContent(
         // --- 🚀 QUICK ACTIONS & STATS ---
         if (activeSchoolId != null) {
             item {
-                SyncStatusCard(
-                    isSyncing = data.isSyncing,
-                    lastSync = "Baru saja",
-                    onSyncClick = onSyncClick,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = AzuraSpacing.md),
+                    horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+                ) {
+                    SyncStatusCard(
+                        isSyncing = data.isSyncing,
+                        lastSync = "Baru saja",
+                        onSyncClick = onSyncClick,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Card(
+                        modifier = Modifier.weight(0.6f).height(IntrinsicSize.Min),
+                        shape = AzuraShapes.medium,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                        ),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(AzuraSpacing.md).fillMaxHeight(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = "${data.totalActiveStudents}",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Text(
+                                text = "Siswa Aktif",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
+                    }
+                }
             }
 
             // Visible Version Badge for testing updates

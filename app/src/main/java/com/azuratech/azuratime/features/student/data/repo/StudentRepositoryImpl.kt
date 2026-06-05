@@ -88,9 +88,11 @@ class StudentRepositoryImpl @Inject constructor(
         return try {
             val (student, biometric, assignments) = profile.toEntities()
             database.withTransaction {
-                studentDao.upsert(student)
+                // ✅ FIX: Set isSynced = false to trigger pushPendingProfiles
+                studentDao.upsert(student.copy(isSynced = false))
                 biometricDao.deleteOtherBiometricsForStudent(student.studentId, biometric.studentId, student.schoolId)
                 biometricDao.upsertStudentBiometric(biometric)
+
                 // 🔥 AI Native FIX: Removed assignmentDao.deleteAllByStudentId()
                 // We now allow additive assignments to support multi-class logic.
                 for (assignment in assignments) {
@@ -162,9 +164,19 @@ class StudentRepositoryImpl @Inject constructor(
     }
 
     override suspend fun pushPendingProfiles(): Result<Unit> = kotlinx.coroutines.withContext(Dispatchers.IO) {
-        val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Success(Unit)
+        android.util.Log.e("DEBUG_PUSH", "🚨 pushPendingProfiles CALLED!")
+
+        val schoolId = sessionManager.getActiveSchoolId()
+        if (schoolId == null) {
+            android.util.Log.e("DEBUG_PUSH", "❌ ABORTED: School ID is NULL!")
+            return@withContext Result.Failure(AppError.BusinessRule("No School"))
+        }
+        android.util.Log.d("DEBUG_PUSH", "✅ School ID Found: $schoolId")
+
         try {
             val unsyncedStudents = studentDao.getUnsyncedStudents(schoolId)
+            android.util.Log.d("DEBUG_PUSH", "🔍 Found ${unsyncedStudents.size} unsynced students.")
+
             for (student in unsyncedStudents) {
                 val docRef = firestore.collection("schools").document(schoolId)
                     .collection("students").document(student.studentId)
@@ -172,16 +184,22 @@ class StudentRepositoryImpl @Inject constructor(
                 if (student.isDeleted) {
                     com.google.android.gms.tasks.Tasks.await(docRef.delete())
                 } else {
+                    // ✅ FIX: Fetch FULL LIST of classIds from Assignment DAO
+                    val currentClassIds = assignmentDao.getClassIdsForStudent(student.studentId, schoolId).first()
+
+                    android.util.Log.d("DEBUG_PUSH", "Pushing Student: ${student.name} | Classes: $currentClassIds")
+
                     val data = mapOf(
                         "studentId" to student.studentId,
                         "schoolId" to student.schoolId,
                         "name" to student.name,
                         "studentCode" to student.studentCode,
-                        "classId" to student.classId,
+                        "classId" to student.classId, // Legacy support
+                        "classIds" to currentClassIds, // ✅ Multi-class SSOT
                         "createdAt" to student.createdAt,
                         "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
                     )
-                    com.google.android.gms.tasks.Tasks.await(docRef.set(data))
+                    com.google.android.gms.tasks.Tasks.await(docRef.set(data, com.google.firebase.firestore.SetOptions.merge()))
                 }
                 studentDao.upsert(student.copy(isSynced = true))
             }
@@ -205,6 +223,7 @@ class StudentRepositoryImpl @Inject constructor(
             }
             Result.Success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("DEBUG_PUSH", "❌ Error: ${e.message}")
             Result.Failure(AppError.Network(e.message))
         }
     }

@@ -39,16 +39,19 @@ class AccountSyncWorkerTest {
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        accountRepository = mockk()
-        studentRepository = mockk()
-        biometricRepository = mockk()
-        schoolRepository = mockk()
+        accountRepository = mockk(relaxed = true)
+        studentRepository = mockk(relaxed = true)
+        biometricRepository = mockk(relaxed = true)
+        schoolRepository = mockk(relaxed = true)
 
-        // Default successes to avoid MockKException on non-targeted calls
+        // Default successes
         coEvery { accountRepository.pushAccount(any()) } returns DomainResult.Success(Unit)
         coEvery { studentRepository.pushPendingProfiles() } returns DomainResult.Success(Unit)
         coEvery { biometricRepository.syncBiometrics() } returns DomainResult.Success(Unit)
         coEvery { schoolRepository.syncClasses(any(), any()) } returns DomainResult.Success(Unit)
+        coEvery { schoolRepository.syncSchools(any()) } returns DomainResult.Success(Unit)
+        coEvery { studentRepository.pullStudents(any()) } returns DomainResult.Success(Unit)
+        coEvery { studentRepository.autoHealStudentIdentities(any()) } returns DomainResult.Success(Unit)
     }
 
     @Test
