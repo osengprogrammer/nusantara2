@@ -9,29 +9,31 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * 🛠️ CLASS VIEW MODEL (v3.2.0-ai-native)
- * Refactored to Strict MVI & SSOT.
- */
 @HiltViewModel
 class ClassViewModel @Inject constructor(
     private val schoolRepository: SchoolRepository,
     private val accountRepository: AccountRepository,
+    private val studentRepository: StudentRepository, // ✅ ADDED
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
@@ -86,8 +88,41 @@ class ClassViewModel @Inject constructor(
                 _stateFlow.update { it.copy(error = null) }
             }
             is ClassUiEvent.SyncClasses -> syncClasses()
+            is ClassUiEvent.SelectClass -> {
+                _stateFlow.update { it.copy(selectedClassId = event.classId) }
+                event.classId?.let { observeStudentsInClassInternal(it) }
+            }
+            ClassUiEvent.ShowAddStudentDialog -> {
+                _stateFlow.update { it.copy(isAddStudentDialogVisible = true) }
+            }
+            ClassUiEvent.DismissAddStudentDialog -> {
+                _stateFlow.update { it.copy(isAddStudentDialogVisible = false) }
+            }
             is ClassUiEvent.AddStudentToClass -> addStudentToClass(event.classId, event.studentId)
         }
+    }
+
+    private fun observeStudentsInClassInternal(classId: String) {
+        studentRepository.getStudentProfiles()
+            .onEach { result ->
+                result.onSuccess { students ->
+                    val filtered = students.filter { it.classIds.contains(classId) }
+                    _stateFlow.update { it.copy(studentsInClass = filtered) }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    // ✅ FUNGSI BARU: Mengamati siswa di kelas tertentu
+    fun observeStudentsInClass(classId: String): Flow<List<StudentProfile>> {
+        return studentRepository.getStudentProfiles()
+            .map { result ->
+                if (result is com.azuratech.azuraengine.result.Result.Success) {
+                    result.data.filter { it.classIds.contains(classId) }
+                } else {
+                    emptyList()
+                }
+            }
     }
 
     private fun loadClasses() {
@@ -101,17 +136,25 @@ class ClassViewModel @Inject constructor(
     }
 
     private fun observeClassesReactive() {
-        sessionManager.activeSchoolIdFlow
-            .filterNotNull()
-            .flatMapLatest { schoolId -> schoolRepository.observeClasses(schoolId) }
-            .onEach { result ->
-                result.onSuccess { classes ->
-                    _stateFlow.update { it.copy(classes = classes) }
-                }.onFailure { error ->
-                    _stateFlow.update { it.copy(error = error.message) }
+        val activeSchoolIdFlow = sessionManager.activeSchoolIdFlow.filterNotNull()
+
+        combine(
+            activeSchoolIdFlow.flatMapLatest { schoolId -> schoolRepository.observeClasses(schoolId) },
+            studentRepository.getStudentProfiles(),
+        ) { classResult, studentResult ->
+            if (classResult is com.azuratech.azuraengine.result.Result.Success && studentResult is com.azuratech.azuraengine.result.Result.Success) {
+                val classes = classResult.data
+                val students = studentResult.data
+
+                val counts = classes.associate { classModel ->
+                    classModel.id to students.count { it.classIds.contains(classModel.id) }
                 }
+
+                _stateFlow.update { it.copy(classes = classes, studentCountsByClassId = counts) }
+            } else if (classResult is com.azuratech.azuraengine.result.Result.Failure) {
+                _stateFlow.update { it.copy(error = classResult.error.message) }
             }
-            .launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
     }
 
     private fun createClass(name: String) {
@@ -125,7 +168,7 @@ class ClassViewModel @Inject constructor(
                 id = "cls_${System.currentTimeMillis()}",
                 name = name,
                 schoolId = schoolId,
-                grade = "", // Grade can be inferred from name or added later
+                grade = "",
                 accountId = null,
                 studentCount = 0,
                 createdAt = System.currentTimeMillis(),
@@ -204,13 +247,25 @@ class ClassViewModel @Inject constructor(
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             _stateFlow.update { it.copy(isLoading = true) }
 
+            android.util.Log.d("DATA_HUNT", "📱 UI: Adding Student $studentId to Class $classId")
+
             schoolRepository.addStudentToClass(schoolId, classId, studentId)
                 .onSuccess {
+                    android.util.Log.d("DATA_HUNT", "☁ UI: Firebase Update Success? true")
+
+                    // ✅ TRIGGER PUSH TO UPDATE 'classIds' IN STUDENT DOCUMENT
+                    viewModelScope.launch {
+                        studentRepository.pushPendingProfiles()
+                            .onSuccess { android.util.Log.d("CLASS_SYNC", "✅ Profile pushed with full class list") }
+                            .onFailure { err -> android.util.Log.e("CLASS_SYNC", "❌ Push failed: ${err.message}") }
+                    }
+
                     _stateFlow.update { it.copy(isLoading = false) }
                     _uiEventFlow.emit(UiEvent.ShowSnackbar("Siswa berhasil ditambahkan ke kelas!"))
-                    loadClasses() // Refresh to update student counts
+                    loadClasses()
                 }
                 .onFailure { error ->
+                    android.util.Log.d("DATA_HUNT", "☁ UI: Firebase Update Success? false, Error: ${error.message}")
                     _stateFlow.update { it.copy(isLoading = false, error = error.message) }
                     _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal menambahkan siswa: ${error.message}"))
                 }

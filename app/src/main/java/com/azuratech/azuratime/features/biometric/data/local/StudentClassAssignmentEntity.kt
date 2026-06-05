@@ -19,7 +19,7 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
             entity = com.azuratech.azuratime.features.student.data.local.StudentEntity::class,
             parentColumns = ["studentId"],
             childColumns = ["studentId"],
-            onDelete = ForeignKey.CASCADE,
+            onDelete = ForeignKey.NO_ACTION,
             onUpdate = ForeignKey.CASCADE,
         ),
         // 2. Link to the Class
@@ -27,7 +27,7 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
             entity = ClassEntity::class,
             parentColumns = ["id"],
             childColumns = ["classId"],
-            onDelete = ForeignKey.CASCADE,
+            onDelete = ForeignKey.NO_ACTION,
             onUpdate = ForeignKey.CASCADE,
         ),
     ],

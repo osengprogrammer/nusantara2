@@ -18,5 +18,8 @@ sealed class ClassUiEvent {
     data object DismissAddDialog : ClassUiEvent()
     data object ClearError : ClassUiEvent()
     data object SyncClasses : ClassUiEvent()
+    data class SelectClass(val classId: String?) : ClassUiEvent()
+    data object ShowAddStudentDialog : ClassUiEvent()
+    data object DismissAddStudentDialog : ClassUiEvent()
     data class AddStudentToClass(val classId: String, val studentId: String) : ClassUiEvent()
 }

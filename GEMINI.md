@@ -1,5 +1,19 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 29: Robust Multi-Class Persistence & Sync Harmonization (June 5, 2026)
+- **Feature Completion:** Successfully implemented persistent multi-class assignment. A single student can now belong to multiple classes (e.g., 10-IPA-1 and 10-IPA-2) without data loss during sync or logout.
+- **Data Model Refinement:**
+  - Local DB: Updated `StudentClassAssignmentEntity` to use composite primary keys (`studentId`, `classId`) and `ForeignKey.NO_ACTION` to prevent accidental cascade deletions.
+  - Firestore (Cloud): Standardized on a Hybrid Sync strategy. Primary source is `studentIds` in Class documents; fallback is `classIds` in Student documents.
+- **Sync Logic Overhaul:**
+  - Trigger Mechanism: Fixed critical bug where `pushPendingProfiles` was not triggered after class assignment changes in `StudentFormViewModel`. Added explicit call to `pushPendingProfiles()` upon successful profile save.
+  - Data Freshness: Modified `saveProfile` in `StudentRepositoryImpl` to set `isSynced = false` locally, ensuring the sync worker always picks up the latest class assignments.
+  - Repository Fix: Refined `pushPendingProfiles` to fetch the FULL LIST of class IDs from `assignmentDao` before pushing to Firestore, preventing single-class overwrites.
+- **UI/UX Integration:**
+  - Fixed missing event handler in `ClassViewModel.onEvent` for `AddStudentToClass`.
+  - Ensured both "Management Class" and "Management Student" flows correctly update the Cloud state.
+- **Verification:** Verified data persistence across Logout/Login cycles and confirmed bidirectional sync between Local Room DB and Firestore.
+
 ### Phase 28: Robust Sync Logic & Firebase Function Refinement (June 2, 2026)
 - **Background Sync**: Updated `AccountSyncWorker` to explicitly sync classes for the active school, ensuring no data gaps after account synchronization.
 - **Sync Reliability**: Fixed a critical bug in `SchoolRepositoryImpl.syncClasses` where remote network failures were treated as successes, preventing proper error handling and retries.

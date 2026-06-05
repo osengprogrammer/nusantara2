@@ -46,15 +46,19 @@ class ClassAssignmentSyncTest {
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        accountRepository = mockk()
-        studentRepository = mockk()
-        biometricRepository = mockk()
-        schoolRepository = mockk()
+        accountRepository = mockk(relaxed = true)
+        studentRepository = mockk(relaxed = true)
+        biometricRepository = mockk(relaxed = true)
+        schoolRepository = mockk(relaxed = true)
         assignUseCase = AssignClassToSupervisorUseCase(accountRepository)
 
-        // Default successes for non-targeted sync stages
+        // Default successes
         coEvery { studentRepository.pushPendingProfiles() } returns Result.Success(Unit)
         coEvery { biometricRepository.syncBiometrics() } returns Result.Success(Unit)
+        coEvery { schoolRepository.syncClasses(any(), any()) } returns Result.Success(Unit)
+        coEvery { schoolRepository.syncSchools(any()) } returns Result.Success(Unit)
+        coEvery { studentRepository.pullStudents(any()) } returns Result.Success(Unit)
+        coEvery { studentRepository.autoHealStudentIdentities(any()) } returns Result.Success(Unit)
     }
 
     @Test

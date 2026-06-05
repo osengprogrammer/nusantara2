@@ -3,7 +3,10 @@ package com.azuratech.azuratime.features.student.ui.form
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.domain.media.PhotoStorageUtils
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
@@ -149,6 +152,11 @@ class StudentFormViewModel @Inject constructor(
             // 1. Save Profile
             when (val result = studentRepository.saveProfile(profile)) {
                 is Result.Success -> {
+                    // ✅ FIX: TRIGGER PUSH TO FIRESTORE IMMEDIATELY
+                    studentRepository.pushPendingProfiles()
+                        .onSuccess { android.util.Log.d("STUDENT_FORM", "✅ Student & Classes pushed to Firestore") }
+                        .onFailure { err: AppError -> android.util.Log.e("STUDENT_FORM", "❌ Push failed: ${err.message}") }
+
                     _uiStateFlow.update { it.copy(isSubmitting = false, isSubmitted = true) }
                     _uiEffectFlow.emit(StudentFormUiEffect.ShowSnackbar("Siswa berhasil disimpan"))
                     _uiEffectFlow.emit(StudentFormUiEffect.NavigateBack)
