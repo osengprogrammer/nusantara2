@@ -27,7 +27,7 @@ android {
         applicationId = "com.azuratech.azuratime"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3727
+        versionCode = 3728
         versionName = "3.14.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
