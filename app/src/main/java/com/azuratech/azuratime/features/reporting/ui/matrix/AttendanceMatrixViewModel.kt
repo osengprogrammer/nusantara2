@@ -80,8 +80,8 @@ class AttendanceMatrixViewModel @Inject constructor(
             }
 
             combine(
-                studentRepository.getStudentProfiles(),
-                schoolRepository.observeClasses(schoolId),
+                studentRepository.getStudentProfilesFlow(),
+                schoolRepository.observeClassesFlow(schoolId),
                 filtersFlow,
             ) { studentsResult, classesResult, filters ->
                 val students = if (studentsResult is Result.Success) studentsResult.data else emptyList()

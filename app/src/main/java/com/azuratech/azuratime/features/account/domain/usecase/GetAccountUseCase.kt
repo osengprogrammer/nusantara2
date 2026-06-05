@@ -14,6 +14,6 @@ class GetAccountUseCase @Inject constructor(
     private val repository: AccountRepository,
 ) {
     operator fun invoke(id: String): Flow<Result<Account>> {
-        return repository.getAccount(id)
+        return repository.getAccountFlow(id)
     }
 }

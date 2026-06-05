@@ -50,18 +50,18 @@ class StudentFormViewModel @Inject constructor(
     val uiEffectFlow: SharedFlow<StudentFormUiEffect> = _uiEffectFlow.asSharedFlow()
 
     init {
-        observeClasses()
+        observeClassesFlow()
     }
 
-    private fun observeClasses() {
+    private fun observeClassesFlow() {
         sessionManager.activeSchoolIdFlow
             .filterNotNull()
             .flatMapLatest { schoolId ->
-                schoolRepository.observeClasses(schoolId)
+                schoolRepository.observeClassesFlow(schoolId)
             }
             .onEach { result ->
                 when (result) {
-                    is Result.Success -> {
+                    is com.azuratech.azuraengine.result.Result.Success -> {
                         _uiStateFlow.update { it.copy(availableClasses = result.data) }
                     }
                     else -> {
@@ -158,12 +158,12 @@ class StudentFormViewModel @Inject constructor(
                         .onFailure { err: AppError -> android.util.Log.e("STUDENT_FORM", "❌ Push failed: ${err.message}") }
 
                     _uiStateFlow.update { it.copy(isSubmitting = false, isSubmitted = true) }
-                    _uiEffectFlow.emit(StudentFormUiEffect.ShowSnackbar("Siswa berhasil disimpan"))
+                    _uiEffectFlow.emit(StudentFormUiEffect.ShowSnackbar("Student saved successfully"))
                     _uiEffectFlow.emit(StudentFormUiEffect.NavigateBack)
                 }
                 is Result.Failure -> {
                     _uiStateFlow.update { it.copy(isSubmitting = false) }
-                    _uiEffectFlow.emit(StudentFormUiEffect.ShowToast("Gagal: ${result.error.message}"))
+                    _uiEffectFlow.emit(StudentFormUiEffect.ShowToast("Failed: ${result.error.message}"))
                 }
                 is Result.Loading -> {}
             }
@@ -172,10 +172,10 @@ class StudentFormViewModel @Inject constructor(
 
     private fun validateForm(state: StudentFormUiState): Map<String, String> {
         val errors = mutableMapOf<String, String>()
-        if (state.profile.name.isBlank()) errors["name"] = "Nama tidak boleh kosong"
-        if (state.profile.studentId.isBlank()) errors["studentId"] = "ID Siswa tidak boleh kosong"
-        if (state.profile.classIds.isEmpty()) errors["classId"] = "Pilih kelas terlebih dahulu"
-        if (state.profile.embedding == null) errors["biometric"] = "Biometrik wajah diperlukan"
+        if (state.profile.name.isBlank()) errors["name"] = "Name cannot be empty"
+        if (state.profile.studentId.isBlank()) errors["studentId"] = "Student ID cannot be empty"
+        if (state.profile.classIds.isEmpty()) errors["classId"] = "Select at least one class"
+        if (state.profile.embedding == null) errors["biometric"] = "Face biometric is required"
         return errors
     }
 
@@ -194,11 +194,11 @@ class StudentFormViewModel @Inject constructor(
                             it.copy(
                                 profile = profile,
                                 isEditMode = true,
-                                pageTitle = "Edit Profil Siswa",
+                                pageTitle = "Edit Student Profile",
                             )
                         }
                     } ?: run {
-                        _uiEffectFlow.emit(StudentFormUiEffect.ShowToast("Siswa tidak ditemukan"))
+                        _uiEffectFlow.emit(StudentFormUiEffect.ShowToast("Student not found"))
                     }
                 }
                 is Result.Failure -> {

@@ -63,13 +63,13 @@ fun StudentRosterItem(
                             tint = Color(0xFF2E7D32),
                         )
                         Text(
-                            "Biometrik Aktif",
+                            "Biometric Active",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFF2E7D32),
                         )
                     } else {
                         Text(
-                            "Biometrik Belum Ada",
+                            "Biometric Missing",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.error,
                         )
@@ -91,7 +91,7 @@ fun StudentRosterItem(
                     Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = onDeleteClick) {
-                    Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error)
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                 }
             }
         }

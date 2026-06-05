@@ -125,14 +125,14 @@ class MembershipRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeMemberships(uid: String): Flow<Result<List<DomainSchoolMembership>>> {
-        return accountDao.observeAccountById(uid).map { account ->
+    override fun observeMembershipsFlow(uid: String): Flow<Result<List<DomainSchoolMembership>>> {
+        return accountDao.observeAccountByIdFlow(uid).map { account ->
             Result.Success(account?.memberships?.values?.map { it.toDomain() } ?: emptyList())
         }
     }
 
     override fun observeMembershipFlow(uid: String): Flow<Result<MembershipDocUpdate>> {
-        return accountDao.observeAccountById(uid).map { account ->
+        return accountDao.observeAccountByIdFlow(uid).map { account ->
             if (account == null) {
                 Result.Success(MembershipDocUpdate.DocumentMissing)
             } else {

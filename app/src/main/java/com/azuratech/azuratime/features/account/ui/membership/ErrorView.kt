@@ -20,7 +20,7 @@ fun ErrorView(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Terjadi Kesalahan",
+            text = "An Error Occurred",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.error,

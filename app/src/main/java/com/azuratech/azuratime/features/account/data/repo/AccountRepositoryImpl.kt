@@ -30,8 +30,8 @@ class AccountRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
 ) : AccountRepository {
 
-    override fun getAccount(id: String): Flow<Result<Account>> =
-        accountDao.observeAccountById(id)
+    override fun getAccountFlow(id: String): Flow<Result<Account>> =
+        accountDao.observeAccountByIdFlow(id)
             .map { it?.toDomain() ?: throw Exception("Account not found in Local DB") }
             .asLocalResult()
 
@@ -48,8 +48,8 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeAccountEntity(id: String): Flow<Result<AccountEntity?>> =
-        accountDao.observeAccountById(id)
+    override fun observeAccountEntityFlow(id: String): Flow<Result<AccountEntity?>> =
+        accountDao.observeAccountByIdFlow(id)
             .asLocalResult()
 
     override suspend fun getProfile(accountId: String): Result<AccountProfile> {
@@ -307,7 +307,7 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observePendingRequests(accountId: String): Flow<Result<List<AccountEntity>>> {
+    override fun observePendingRequestsFlow(accountId: String): Flow<Result<List<AccountEntity>>> {
         return callbackFlow {
             val listener = db.collection("connection_requests")
                 .whereEqualTo("targetId", accountId)
@@ -342,7 +342,7 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observePendingRequestsCount(accountId: String): Flow<Int> {
+    override fun observePendingRequestsCountFlow(accountId: String): Flow<Int> {
         return callbackFlow {
             val listener = db.collection("connection_requests")
                 .whereEqualTo("targetId", accountId)
@@ -356,7 +356,7 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeConnections(accountId: String): Flow<Result<List<AccountEntity>>> {
+    override fun observeConnectionsFlow(accountId: String): Flow<Result<List<AccountEntity>>> {
         return callbackFlow {
             val listener = db.collection("whitelisted_accounts").document(accountId)
                 .addSnapshotListener { snapshot, error ->

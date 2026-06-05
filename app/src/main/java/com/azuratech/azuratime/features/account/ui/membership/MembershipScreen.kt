@@ -110,9 +110,9 @@ fun PendingView(
         Spacer(modifier = Modifier.height(AzuraSpacing.xl))
         Icon(Icons.Default.HourglassEmpty, null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(AzuraSpacing.lg))
-        Text("Menunggu Persetujuan", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Text("Waiting for Approval", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(AzuraSpacing.md))
-        Text("Akun Anda sedang dalam antrean verifikasi oleh administrator. Mohon tunggu beberapa saat.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Your account is currently in the verification queue by the administrator. Please wait a moment.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(AzuraSpacing.lg))
 
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = AzuraShapes.medium) {
@@ -125,7 +125,7 @@ fun PendingView(
 
         if (accessRequests.isNotEmpty()) {
             Text(
-                "Permintaan Bergabung:",
+                "Join Requests:",
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Start,
@@ -147,7 +147,7 @@ fun PendingView(
             ) {
                 Icon(Icons.Default.Refresh, contentDescription = null)
                 Spacer(modifier = Modifier.width(AzuraSpacing.sm))
-                Text("Periksa Status Lagi")
+                Text("Check Status Again")
             }
             Spacer(modifier = Modifier.height(AzuraSpacing.xl))
         }
@@ -155,7 +155,7 @@ fun PendingView(
         Spacer(modifier = Modifier.weight(1f))
 
         TextButton(onClick = onLogoutClick) {
-            Text("Bukan akun Anda? Ganti Akun")
+            Text("Not your account? Switch Account")
         }
     }
 }
@@ -195,15 +195,15 @@ fun RejectedView(reason: String?, onLogoutClick: () -> Unit) {
     ) {
         Icon(Icons.Default.Block, null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.error)
         Spacer(modifier = Modifier.height(AzuraSpacing.lg))
-        Text("Akses Ditolak", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+        Text("Access Denied", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
         Spacer(modifier = Modifier.height(AzuraSpacing.md))
-        Text(reason ?: "Akun ini tidak memiliki akses ke dalam sistem. Silakan hubungi administrator.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(reason ?: "This account does not have access to the system. Please contact the administrator.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(AzuraSpacing.xl))
 
         Button(onClick = onLogoutClick, shape = AzuraShapes.medium, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
             Icon(Icons.AutoMirrored.Filled.Logout, null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(AzuraSpacing.sm))
-            Text("Keluar")
+            Text("Logout")
         }
     }
 }
@@ -217,17 +217,17 @@ fun ErrorView(message: String, onRetry: () -> Unit, onLogoutClick: () -> Unit) {
     ) {
         Icon(Icons.Default.ErrorOutline, null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.error)
         Spacer(modifier = Modifier.height(AzuraSpacing.lg))
-        Text("Terjadi Kesalahan", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+        Text("An Error Occurred", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
         Spacer(modifier = Modifier.height(AzuraSpacing.md))
         Text(message, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(AzuraSpacing.xl))
 
         Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
-            OutlinedButton(onClick = onLogoutClick, shape = AzuraShapes.medium) { Text("Keluar") }
+            OutlinedButton(onClick = onLogoutClick, shape = AzuraShapes.medium) { Text("Logout") }
             Button(onClick = onRetry, shape = AzuraShapes.medium) {
                 Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(AzuraSpacing.sm))
-                Text("Coba Lagi")
+                Text("Retry")
             }
         }
     }

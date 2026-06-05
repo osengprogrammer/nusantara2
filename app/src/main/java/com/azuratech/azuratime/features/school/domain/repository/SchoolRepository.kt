@@ -7,10 +7,10 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
 import kotlinx.coroutines.flow.Flow
 
 interface SchoolRepository {
-    fun observeSchools(accountId: String): Flow<Result<List<School>>>
-    fun observeSchoolsByIds(schoolIds: List<String>): Flow<Result<List<School>>>
-    fun observeSchoolById(id: String): Flow<Result<School?>>
-    fun observeAllSchools(): Flow<Result<List<School>>>
+    fun observeSchoolsFlow(accountId: String): Flow<Result<List<School>>>
+    fun observeSchoolsByIdsFlow(schoolIds: List<String>): Flow<Result<List<School>>>
+    fun observeSchoolByIdFlow(id: String): Flow<Result<School?>>
+    fun observeAllSchoolsFlow(): Flow<Result<List<School>>>
 
     suspend fun createSchool(adminId: String, name: String, timezone: String): Result<String>
     suspend fun updateSchoolDetails(schoolId: String, name: String?, timezone: String?): Result<Unit>
@@ -25,7 +25,7 @@ interface SchoolRepository {
     suspend fun deleteSchool(id: String, accountId: String): Result<Unit>
 
     // 🏫 CLASS OPERATIONS
-    fun observeClasses(schoolId: String): Flow<Result<List<ClassModel>>>
+    fun observeClassesFlow(schoolId: String): Flow<Result<List<ClassModel>>>
     suspend fun getClasses(schoolId: String): Result<List<ClassModel>>
     suspend fun saveClass(_accountId: String, schoolId: String?, classModel: ClassModel): Result<Unit>
     suspend fun assignClassToSchool(schoolId: String, classId: String): Result<Unit>
@@ -33,8 +33,8 @@ interface SchoolRepository {
     suspend fun getAssignedClassIds(schoolId: String): Result<List<String>>
     suspend fun deleteClass(_accountId: String, schoolId: String, classId: String): Result<Unit>
     suspend fun saveClassLocally(classEntity: ClassEntity): Result<Unit>
-    fun getLocalClasses(schoolId: String): Flow<Result<List<ClassEntity>>>
-    fun observeAllClassesForAccount(accountId: String): Flow<Result<List<ClassModel>>>
+    fun getLocalClassesFlow(schoolId: String): Flow<Result<List<ClassEntity>>>
+    fun observeAllClassesForAccountFlow(accountId: String): Flow<Result<List<ClassModel>>>
     suspend fun reassignClass(accountId: String, classId: String, newSchoolId: String): Result<Unit>
     suspend fun getOrphanedClasses(): Result<List<ClassModel>>
     suspend fun updateClassSchool(classId: String, schoolId: String): Result<Unit>

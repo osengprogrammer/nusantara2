@@ -51,7 +51,7 @@ object BarcodePdfGenerator {
             val canvas = page.canvas
 
             // Draw Header
-            canvas.drawText("Daftar Barcode Siswa - Hal $pageNumber", MARGIN.toFloat(), 30f, titlePaint)
+            canvas.drawText("Student Barcode List - Page $pageNumber", MARGIN.toFloat(), 30f, titlePaint)
             canvas.drawLine(MARGIN.toFloat(), 40f, (PAGE_WIDTH - MARGIN).toFloat(), 40f, paint)
 
             val columnWidth = (PAGE_WIDTH - 2 * MARGIN) / COLUMNS
@@ -99,7 +99,7 @@ object BarcodePdfGenerator {
         }
 
         return try {
-            val file = File(cacheDir, "daftar_barcode_siswa.pdf")
+            val file = File(cacheDir, "student_barcode_list.pdf")
             val outputStream = FileOutputStream(file)
             pdfDocument.writeTo(outputStream)
             pdfDocument.close()

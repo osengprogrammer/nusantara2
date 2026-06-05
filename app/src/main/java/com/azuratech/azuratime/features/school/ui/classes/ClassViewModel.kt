@@ -6,7 +6,6 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
@@ -37,8 +36,8 @@ class ClassViewModel @Inject constructor(
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<ClassUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     private val _stateFlow = MutableStateFlow(ClassUiState())
     val uiStateFlow: StateFlow<ClassUiState> = _stateFlow.asStateFlow()
@@ -103,7 +102,7 @@ class ClassViewModel @Inject constructor(
     }
 
     private fun observeStudentsInClassInternal(classId: String) {
-        studentRepository.getStudentProfiles()
+        studentRepository.getStudentProfilesFlow()
             .onEach { result ->
                 result.onSuccess { students ->
                     val filtered = students.filter { it.classIds.contains(classId) }
@@ -113,9 +112,9 @@ class ClassViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    // ✅ FUNGSI BARU: Mengamati siswa di kelas tertentu
-    fun observeStudentsInClass(classId: String): Flow<List<StudentProfile>> {
-        return studentRepository.getStudentProfiles()
+    // ✅ NEW FUNCTION: Observe students in a specific class
+    fun observeStudentsInClassFlow(classId: String): Flow<List<StudentProfile>> {
+        return studentRepository.getStudentProfilesFlow()
             .map { result ->
                 if (result is com.azuratech.azuraengine.result.Result.Success) {
                     result.data.filter { it.classIds.contains(classId) }
@@ -139,8 +138,8 @@ class ClassViewModel @Inject constructor(
         val activeSchoolIdFlow = sessionManager.activeSchoolIdFlow.filterNotNull()
 
         combine(
-            activeSchoolIdFlow.flatMapLatest { schoolId -> schoolRepository.observeClasses(schoolId) },
-            studentRepository.getStudentProfiles(),
+            activeSchoolIdFlow.flatMapLatest { schoolId -> schoolRepository.observeClassesFlow(schoolId) },
+            studentRepository.getStudentProfilesFlow(),
         ) { classResult, studentResult ->
             if (classResult is com.azuratech.azuraengine.result.Result.Success && studentResult is com.azuratech.azuraengine.result.Result.Success) {
                 val classes = classResult.data
@@ -177,11 +176,11 @@ class ClassViewModel @Inject constructor(
             schoolRepository.saveClass(accountId, schoolId, classModel)
                 .onSuccess {
                     _stateFlow.update { it.copy(isLoading = false) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Kelas '$name' berhasil dibuat!"))
+                    _uiEffectFlow.emit(ClassUiEffect.ShowSnackbar("Class '$name' created successfully!"))
                 }
                 .onFailure { error ->
                     _stateFlow.update { it.copy(isLoading = false, error = error.message) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal membuat kelas: ${error.message}"))
+                    _uiEffectFlow.emit(ClassUiEffect.ShowSnackbar("Failed to create class: ${error.message}"))
                 }
         }
     }
@@ -217,7 +216,7 @@ class ClassViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _stateFlow.update { it.copy(isLoading = false, error = error.message) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar(error.message ?: "Gagal menghapus kelas"))
+                    _uiEffectFlow.emit(ClassUiEffect.ShowSnackbar(error.message ?: "Failed to delete class"))
                 }
         }
     }
@@ -228,16 +227,16 @@ class ClassViewModel @Inject constructor(
             val sid = sessionManager.getActiveSchoolId() ?: return@launch
 
             _stateFlow.update { it.copy(isLoading = true) }
-            _uiEventFlow.emit(UiEvent.ShowSnackbar("Sedang menyinkronkan data kelas..."))
+            _uiEffectFlow.emit(ClassUiEffect.ShowSnackbar("Syncing class data..."))
 
             schoolRepository.syncClasses(uid, sid)
                 .onSuccess {
                     _stateFlow.update { it.copy(isLoading = false) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Data kelas berhasil diperbarui!"))
+                    _uiEffectFlow.emit(ClassUiEffect.ShowSnackbar("Class data updated successfully!"))
                 }
                 .onFailure { error ->
                     _stateFlow.update { it.copy(isLoading = false, error = error.message) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal sinkron kelas: ${error.message}"))
+                    _uiEffectFlow.emit(ClassUiEffect.ShowSnackbar("Class sync failed: ${error.message}"))
                 }
         }
     }
@@ -261,13 +260,13 @@ class ClassViewModel @Inject constructor(
                     }
 
                     _stateFlow.update { it.copy(isLoading = false) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Siswa berhasil ditambahkan ke kelas!"))
+                    _uiEffectFlow.emit(ClassUiEffect.ShowSnackbar("Student successfully added to class!"))
                     loadClasses()
                 }
                 .onFailure { error ->
                     android.util.Log.d("DATA_HUNT", "☁ UI: Firebase Update Success? false, Error: ${error.message}")
                     _stateFlow.update { it.copy(isLoading = false, error = error.message) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal menambahkan siswa: ${error.message}"))
+                    _uiEffectFlow.emit(ClassUiEffect.ShowSnackbar("Failed to add student: ${error.message}"))
                 }
         }
     }

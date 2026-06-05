@@ -53,7 +53,7 @@ class AttendanceViewModel @Inject constructor(
         sessionManager.activeSchoolIdFlow
             .filterNotNull()
             .flatMapLatest { schoolId ->
-                schoolRepository.observeClasses(schoolId).map { it.getOrNull() ?: emptyList() }
+                schoolRepository.observeClassesFlow(schoolId).map { it.getOrNull() ?: emptyList() }
             }
             .onEach { classes ->
                 _uiStateFlow.update { it.copy(classes = classes) }
@@ -86,7 +86,7 @@ class AttendanceViewModel @Inject constructor(
                 _uiStateFlow.update { it.copy(isLoading = false, records = records) }
             }.onFailure { error ->
                 _uiStateFlow.update { it.copy(isLoading = false) }
-                _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal memuat data: ${error.message}"))
+                _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Failed to load data: ${error.message}"))
             }
         }.launchIn(viewModelScope)
 
@@ -138,8 +138,8 @@ class AttendanceViewModel @Inject constructor(
                     when (res) {
                         is AttendanceResult.Success -> onResult(true, res.message)
                         is AttendanceResult.Rejected -> onResult(false, res.reason)
-                        is AttendanceResult.AlreadyCheckedIn -> onResult(true, "${res.name} sudah absen.")
-                        AttendanceResult.Unregistered -> onResult(false, "Siswa tidak dikenal")
+                        is AttendanceResult.AlreadyCheckedIn -> onResult(true, "${res.name} already checked in.")
+                        AttendanceResult.Unregistered -> onResult(false, "Unknown student")
                     }
                     _refreshTriggerFlow.value++
                 }
@@ -155,12 +155,12 @@ class AttendanceViewModel @Inject constructor(
             _uiStateFlow.update { it.copy(isLoading = true) }
             attendanceRepository.deleteRecord(record.recordId, schoolId)
                 .onSuccess {
-                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Log berhasil dihapus"))
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Log deleted successfully"))
                     _refreshTriggerFlow.value++
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Failed: ${error.message}"))
                 }
         }
     }
@@ -177,11 +177,11 @@ class AttendanceViewModel @Inject constructor(
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             attendanceRepository.updateRecordStatus(record.recordId, newStatus, schoolId)
                 .onSuccess {
-                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Status berhasil diubah"))
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Status updated successfully"))
                     _refreshTriggerFlow.value++
                 }
                 .onFailure { error ->
-                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Failed: ${error.message}"))
                 }
         }
     }
@@ -190,11 +190,11 @@ class AttendanceViewModel @Inject constructor(
         viewModelScope.launch {
             attendanceRepository.updateRecord(record.recordId, classModel.id, classModel.name)
                 .onSuccess {
-                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Kelas berhasil diperbarui"))
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Class updated successfully"))
                     _refreshTriggerFlow.value++
                 }
                 .onFailure { error ->
-                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Gagal: ${error.message}"))
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Failed: ${error.message}"))
                 }
         }
     }
@@ -209,7 +209,7 @@ class AttendanceViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isExporting = false) }
-                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Ekspor Gagal: ${error.message}"))
+                    _uiEffectFlow.emit(AttendanceUiEffect.ShowToast("Export Failed: ${error.message}"))
                 }
         }
     }

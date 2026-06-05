@@ -20,7 +20,7 @@ data class StudentFormUiState(
     val validationErrors: Map<String, String> = emptyMap(),
     val isSubmitted: Boolean = false,
     val isEditMode: Boolean = false,
-    val pageTitle: String = "Tambah Siswa",
+    val pageTitle: String = "Add Student",
     val capturedBitmap: Bitmap? = null,
 ) {
     val isFormValid: Boolean

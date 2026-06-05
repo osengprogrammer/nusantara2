@@ -69,7 +69,7 @@ fun BulkRegistrationScreen(
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(intent, "Simpan Template..."))
+            context.startActivity(Intent.createChooser(intent, "Save Template..."))
         } catch (e: Exception) {
             context.showToast("Template error: ${e.message}")
         }
@@ -90,7 +90,7 @@ fun BulkRegistrationScreen(
                 fileName = pickedName ?: "data.csv"
                 bulkViewModel.onEvent(RegisterUiEvent.ResetState)
             } else {
-                context.showToast("Hanya file .CSV yang didukung")
+                context.showToast("Only .CSV files are supported")
             }
         }
     }
@@ -113,13 +113,13 @@ fun BulkRegistrationScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.AutoMirrored.Filled.Help, null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(8.dp))
-                            Text("Format CSV Siswa", fontWeight = FontWeight.Bold)
+                            Text("Student CSV Format", fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
                             Icon(if (showCsvFormat) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
                         }
                         if (showCsvFormat) {
                             Text(
-                                text = "Gunakan kolom: student_id, full_name, class_name, photo_url.\nSiswa otomatis akan masuk ke workspace ini.",
+                                text = "Use columns: student_id, full_name, class_name, photo_url.\nStudents will automatically be added to this workspace.",
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(top = 8.dp),
                             )
@@ -127,7 +127,7 @@ fun BulkRegistrationScreen(
                             Button(onClick = { downloadCsvTemplate() }, modifier = Modifier.fillMaxWidth()) {
                                 Icon(Icons.Default.Description, null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Unduh Template")
+                                Text("Download Template")
                             }
                         }
                     }
@@ -145,7 +145,7 @@ fun BulkRegistrationScreen(
                     ) {
                         Icon(Icons.Default.AttachFile, null)
                         Spacer(Modifier.width(8.dp))
-                        Text(fileName ?: "Pilih File .CSV")
+                        Text(fileName ?: "Select .CSV File")
                     }
 
                     if (fileUri != null) {
@@ -160,7 +160,7 @@ fun BulkRegistrationScreen(
                         ) {
                             Icon(Icons.Default.CloudUpload, null)
                             Spacer(Modifier.width(8.dp))
-                            Text(if (bulkState.isProcessing) "Sedang Memproses..." else "Proses Import")
+                            Text(if (bulkState.isProcessing) "Processing..." else "Process Import")
                         }
                     }
                 }

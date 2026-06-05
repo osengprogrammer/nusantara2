@@ -20,7 +20,7 @@ fun RejectedView(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Akses Ditolak",
+            text = "Access Denied",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.error,
@@ -29,7 +29,7 @@ fun RejectedView(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = reason ?: "Silakan hubungi administrator.",
+            text = reason ?: "Please contact your administrator.",
             style = MaterialTheme.typography.bodyMedium,
         )
     }

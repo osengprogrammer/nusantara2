@@ -18,10 +18,10 @@ interface AccountDao {
     suspend fun getAccountByEmail(email: String): AccountEntity?
 
     @Query("SELECT * FROM accounts WHERE accountId = :id")
-    fun observeAccountById(id: String): Flow<AccountEntity?>
+    fun observeAccountByIdFlow(id: String): Flow<AccountEntity?>
 
     @Query("SELECT * FROM accounts")
-    fun observeAllAccounts(): Flow<List<AccountEntity>>
+    fun observeAllAccountsFlow(): Flow<List<AccountEntity>>
 
     @Query("SELECT * FROM accounts")
     suspend fun getAllAccountsOnce(): List<AccountEntity>

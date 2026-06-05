@@ -23,5 +23,5 @@ interface StudentRegistrationRepository {
     /**
      * 🔥 THE BULK ENGINE: Process CSV file and emit progress/results.
      */
-    fun processCsv(uri: String, schoolId: String): Flow<Result<ProcessResult>>
+    fun processCsvFlow(uri: String, schoolId: String): Flow<Result<ProcessResult>>
 }

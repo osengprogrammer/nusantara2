@@ -6,10 +6,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SchoolClassDao {
     @Query("SELECT * FROM schools WHERE accountId = :accountId ORDER BY name ASC")
-    fun getSchools(accountId: String): Flow<List<SchoolEntity>>
+    fun getSchoolsFlow(accountId: String): Flow<List<SchoolEntity>>
 
     @Query("SELECT * FROM schools WHERE id IN (:schoolIds) ORDER BY name ASC")
-    fun observeSchoolsByIds(schoolIds: List<String>): Flow<List<SchoolEntity>>
+    fun observeSchoolsByIdsFlow(schoolIds: List<String>): Flow<List<SchoolEntity>>
 
     @Query("SELECT * FROM schools")
     suspend fun getAllSchoolsOnce(): List<SchoolEntity>
@@ -21,10 +21,10 @@ interface SchoolClassDao {
     suspend fun getSchoolById(id: String): SchoolEntity?
 
     @Query("SELECT * FROM schools WHERE id = :id")
-    fun observeSchoolById(id: String): Flow<SchoolEntity?>
+    fun observeSchoolByIdFlow(id: String): Flow<SchoolEntity?>
 
     @Query("SELECT * FROM schools ORDER BY createdAt DESC")
-    fun observeAllSchools(): Flow<List<SchoolEntity>>
+    fun observeAllSchoolsFlow(): Flow<List<SchoolEntity>>
 
     @Query("SELECT id FROM schools WHERE accountId = :accountId LIMIT 1")
     suspend fun getFirstSchoolId(accountId: String): String?
@@ -43,7 +43,7 @@ interface SchoolClassDao {
         ORDER BY grade, name ASC
     """,
     )
-    fun getClasses(schoolId: String): Flow<List<ClassEntity>>
+    fun getClassesFlow(schoolId: String): Flow<List<ClassEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun assignClass(assignment: SchoolClassAssignment)
@@ -67,7 +67,7 @@ interface SchoolClassDao {
     suspend fun deleteClassById(id: String)
 
     @Query("SELECT * FROM classes WHERE accountId = :accountId ORDER BY name ASC")
-    fun getAllClasses(accountId: String): Flow<List<ClassEntity>>
+    fun getAllClassesFlow(accountId: String): Flow<List<ClassEntity>>
 
     @Query(
         """
@@ -78,7 +78,7 @@ interface SchoolClassDao {
         ORDER BY schools.name, classes.name ASC
     """,
     )
-    fun getAllClassesForAccount(accountId: String): Flow<List<ClassEntity>>
+    fun getAllClassesForAccountFlow(accountId: String): Flow<List<ClassEntity>>
 
     @Query("SELECT * FROM classes WHERE schoolId IS NULL OR schoolId = ''")
     suspend fun getOrphanedClasses(): List<ClassEntity>

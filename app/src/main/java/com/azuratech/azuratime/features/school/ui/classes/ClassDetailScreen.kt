@@ -15,7 +15,7 @@ fun ClassDetailScreen(
     onNavigateBack: () -> Unit,
     @Suppress("UNUSED_PARAMETER") onAddStudent: () -> Unit,
 ) {
-    AzuraScreen(title = "Detail Kelas: $className", onBack = onNavigateBack) {
+    AzuraScreen(title = "Class Detail: $className", onBack = onNavigateBack) {
         // Placeholder
     }
 }

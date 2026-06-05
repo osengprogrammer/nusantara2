@@ -36,7 +36,7 @@ fun RegistrationMenuScreen(
     onNavigateBack: () -> Unit,
 ) {
     AzuraScreen(
-        title = "Pendaftaran",
+        title = "Registration",
         onBack = onNavigateBack,
     ) {
         Column(
@@ -56,7 +56,7 @@ fun RegistrationMenuScreen(
             Spacer(modifier = Modifier.height(AzuraSpacing.md))
 
             Text(
-                text = "Pilih metode pendaftaran siswa",
+                text = "Choose student registration method",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center,
@@ -65,8 +65,8 @@ fun RegistrationMenuScreen(
             Spacer(modifier = Modifier.height(AzuraSpacing.xl))
 
             RegistrationCard(
-                title = "Tambah Siswa Baru",
-                description = "Daftarkan satu siswa lengkap dengan pemindaian wajah biometrik.",
+                title = "Add New Student",
+                description = "Register a single student with full biometric face scanning.",
                 icon = Icons.Default.PersonAdd,
                 gradient = Brush.linearGradient(
                     listOf(MaterialTheme.colorScheme.primary, AzuraPrimaryDark),
@@ -77,8 +77,8 @@ fun RegistrationMenuScreen(
             Spacer(modifier = Modifier.height(AzuraSpacing.lg))
 
             RegistrationCard(
-                title = "Impor Massal (CSV)",
-                description = "Proses ratusan data siswa sekaligus menggunakan file template Excel/CSV.",
+                title = "Bulk Import (CSV)",
+                description = "Process hundreds of students at once using an Excel/CSV template.",
                 icon = Icons.Default.Group,
                 gradient = Brush.linearGradient(
                     listOf(MaterialTheme.colorScheme.secondary, Color(0xFF5C6BC0)),
@@ -89,8 +89,8 @@ fun RegistrationMenuScreen(
             Spacer(modifier = Modifier.height(AzuraSpacing.lg))
 
             RegistrationCard(
-                title = "Manajemen Biometrik",
-                description = "Lihat, cari, dan kelola data pendaftaran wajah yang sudah ada.",
+                title = "Biometric Management",
+                description = "View, search, and manage existing face registration data.",
                 icon = Icons.Default.Face,
                 gradient = Brush.linearGradient(
                     listOf(Color(0xFF4DB6AC), Color(0xFF00796B)),
@@ -101,8 +101,8 @@ fun RegistrationMenuScreen(
             Spacer(modifier = Modifier.height(AzuraSpacing.lg))
 
             RegistrationCard(
-                title = "Penugasan Kelas",
-                description = "Atur penempatan siswa ke dalam sesi kelas atau departemen.",
+                title = "Class Assignment",
+                description = "Set student placements into class sessions or departments.",
                 icon = Icons.AutoMirrored.Filled.Assignment,
                 gradient = Brush.linearGradient(
                     listOf(Color(0xFFFFA726), Color(0xFFF57C00)),
@@ -113,7 +113,7 @@ fun RegistrationMenuScreen(
             Spacer(modifier = Modifier.height(AzuraSpacing.xl))
 
             Text(
-                text = "Pastikan pencahayaan cukup saat melakukan pendaftaran wajah manual.",
+                text = "Ensure adequate lighting when performing manual face registration.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center,

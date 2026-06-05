@@ -44,23 +44,23 @@ class SchoolRepositoryImpl @Inject constructor(
     private val accessRequestDao = database.accessRequestDao()
     private val repositoryScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    override fun observeSchools(accountId: String): Flow<Result<List<School>>> =
-        dao.getSchools(accountId)
+    override fun observeSchoolsFlow(accountId: String): Flow<Result<List<School>>> =
+        dao.getSchoolsFlow(accountId)
             .map { entities -> entities.map { it.toDomain() } }
             .asLocalResult()
 
-    override fun observeSchoolsByIds(schoolIds: List<String>): Flow<Result<List<School>>> =
-        dao.observeSchoolsByIds(schoolIds)
+    override fun observeSchoolsByIdsFlow(schoolIds: List<String>): Flow<Result<List<School>>> =
+        dao.observeSchoolsByIdsFlow(schoolIds)
             .map { entities -> entities.map { it.toDomain() } }
             .asLocalResult()
 
-    override fun observeSchoolById(id: String): Flow<Result<School?>> =
-        dao.observeSchoolById(id)
+    override fun observeSchoolByIdFlow(id: String): Flow<Result<School?>> =
+        dao.observeSchoolByIdFlow(id)
             .map { it?.toDomain() }
             .asLocalResult()
 
-    override fun observeAllSchools(): Flow<Result<List<School>>> =
-        dao.observeAllSchools()
+    override fun observeAllSchoolsFlow(): Flow<Result<List<School>>> =
+        dao.observeAllSchoolsFlow()
             .map { entities -> entities.map { it.toDomain() } }
             .asLocalResult()
 
@@ -259,14 +259,14 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeClasses(schoolId: String): Flow<Result<List<ClassModel>>> =
-        dao.getClasses(schoolId)
+    override fun observeClassesFlow(schoolId: String): Flow<Result<List<ClassModel>>> =
+        dao.getClassesFlow(schoolId)
             .map { entities -> entities.map { it.toDomain() } }
             .asLocalResult()
 
     override suspend fun getClasses(schoolId: String): Result<List<ClassModel>> = withContext(Dispatchers.IO) {
         try {
-            val entities = dao.getClasses(schoolId).first()
+            val entities = dao.getClassesFlow(schoolId).first()
             Result.Success(entities.map { it.toDomain() })
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
@@ -345,7 +345,7 @@ class SchoolRepositoryImpl @Inject constructor(
         return try {
             val studentCount = dao.getStudentCountForClass(schoolId, classId)
             if (studentCount > 0) {
-                return Result.Failure(AppError.BusinessRule("Gagal! Masih ada $studentCount siswa di kelas ini."))
+                return Result.Failure(AppError.BusinessRule("Failed! There are still $studentCount students in this class."))
             }
 
             dao.deleteClassById(classId)
@@ -369,12 +369,12 @@ class SchoolRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getLocalClasses(schoolId: String): Flow<Result<List<ClassEntity>>> =
-        dao.getClasses(schoolId)
+    override fun getLocalClassesFlow(schoolId: String): Flow<Result<List<ClassEntity>>> =
+        dao.getClassesFlow(schoolId)
             .asLocalResult()
 
-    override fun observeAllClassesForAccount(accountId: String): Flow<Result<List<ClassModel>>> =
-        dao.getAllClasses(accountId).map { entities ->
+    override fun observeAllClassesForAccountFlow(accountId: String): Flow<Result<List<ClassModel>>> =
+        dao.getAllClassesFlow(accountId).map { entities ->
             entities.map { it.toDomain() }
         }.asLocalResult()
 

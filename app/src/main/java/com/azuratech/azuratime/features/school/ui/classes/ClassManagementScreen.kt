@@ -18,7 +18,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import androidx.compose.material.icons.filled.Person
@@ -33,18 +32,19 @@ fun ClassManagementScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.uiEventFlow.collect { event ->
-            if (event is UiEvent.ShowSnackbar) {
-                snackbarHostState.showSnackbar(event.message)
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is ClassUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is ClassUiEffect.NavigateTo -> {} // Handle if needed
             }
         }
     }
 
     val title = if (uiState.selectedClassId != null) {
         val selectedClass = uiState.classes.find { it.id == uiState.selectedClassId }
-        "Siswa: ${selectedClass?.name ?: "Kelas"}"
+        "Students: ${selectedClass?.name ?: "Class"}"
     } else {
-        "Manajemen Kelas"
+        "Class Management"
     }
 
     AzuraScreen(
@@ -63,18 +63,18 @@ fun ClassManagementScreen(
                     onClick = { viewModel.onEvent(ClassUiEvent.SyncClasses) },
                     enabled = !uiState.isLoading,
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Sinkronkan Kelas")
+                    Icon(Icons.Default.Refresh, contentDescription = "Sync Classes")
                 }
             }
         },
         floatingActionButton = {
             if (uiState.selectedClassId == null) {
                 FloatingActionButton(onClick = { viewModel.onEvent(ClassUiEvent.ShowAddDialog) }) {
-                    Icon(Icons.Default.Add, contentDescription = "Tambah Kelas")
+                    Icon(Icons.Default.Add, contentDescription = "Add Class")
                 }
             } else {
                 FloatingActionButton(onClick = { viewModel.onEvent(ClassUiEvent.ShowAddStudentDialog) }) {
-                    Icon(Icons.Default.Person, contentDescription = "Tambah Siswa")
+                    Icon(Icons.Default.Person, contentDescription = "Add Student")
                 }
             }
         },
@@ -130,7 +130,7 @@ fun ClassListSection(
         }
     } else if (uiState.classes.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Belum ada kelas yang terdaftar.")
+            Text("No classes registered.")
         }
     } else {
         LazyColumn(
@@ -161,7 +161,7 @@ fun StudentListSection(
         }
     } else if (students.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Belum ada siswa di kelas ini.")
+            Text("No students in this class.")
         }
     } else {
         LazyColumn(
@@ -206,10 +206,10 @@ fun AddStudentToClassDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("Tambah Siswa ke Kelas") },
+        title = { Text("Add Student to Class") },
         text = {
             if (availableToAdd.isEmpty()) {
-                Text("Semua siswa sudah ada di kelas ini.")
+                Text("All students are already in this class.")
             } else {
                 LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
                     items(availableToAdd) { student ->
@@ -226,7 +226,7 @@ fun AddStudentToClassDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Tutup")
+                Text("Close")
             }
         },
     )
@@ -248,7 +248,7 @@ fun ClassItem(classModel: ClassModel, studentCount: Int, onClick: () -> Unit) {
             Column {
                 Text(text = classModel.name, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "$studentCount Siswa",
+                    text = "$studentCount Students",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

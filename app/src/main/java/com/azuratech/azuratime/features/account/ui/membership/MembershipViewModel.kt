@@ -44,13 +44,13 @@ class MembershipViewModel @Inject constructor(
         val accountFlow = sessionManager.currentAccountIdFlow
             .filterNotNull()
             .flatMapLatest { uid ->
-                accountRepository.observeAccountEntity(uid).map { it.getOrNull() }
+                accountRepository.observeAccountEntityFlow(uid).map { it.getOrNull() }
             }
 
         val requestsFlow = sessionManager.currentAccountIdFlow
             .filterNotNull()
             .flatMapLatest { uid ->
-                accessRequestRepository.observeRequestsByAccount(uid).map { it.getOrNull() ?: emptyList() }
+                accessRequestRepository.observeRequestsByAccountFlow(uid).map { it.getOrNull() ?: emptyList() }
             }
 
         combine(accountFlow, requestsFlow) { account, requests ->
@@ -58,7 +58,7 @@ class MembershipViewModel @Inject constructor(
                 account == null -> MembershipStatus.Loading
                 account.status == "PENDING" -> MembershipStatus.Pending
                 account.status == SessionManager.STATUS_ACTIVE -> MembershipStatus.Approved
-                account.status == "REJECTED" -> MembershipStatus.Rejected("Akun Anda ditolak oleh administrator.")
+                account.status == "REJECTED" -> MembershipStatus.Rejected("Your account was rejected by the administrator.")
                 requests.isNotEmpty() -> MembershipStatus.Pending
                 else -> MembershipStatus.Idle
             }

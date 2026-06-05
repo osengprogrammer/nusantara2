@@ -24,7 +24,7 @@ interface ClassDao {
         ORDER BY c.displayOrder ASC, c.name ASC
     """,
     )
-    fun observeClassesBySchool(schoolId: String): Flow<List<ClassEntity>>
+    fun observeClassesBySchoolFlow(schoolId: String): Flow<List<ClassEntity>>
 
     /** Used for UI chips or specific selections */
     @Query(

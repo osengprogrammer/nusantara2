@@ -30,5 +30,5 @@ object SchoolPreviewMocks {
         accountId = "acc_1",
     )
 
-    fun error(): SchoolUiState = SchoolUiState(error = "Gagal memuat data sekolah")
+    fun error(): SchoolUiState = SchoolUiState(error = "Failed to load school data")
 }

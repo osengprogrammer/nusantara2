@@ -39,7 +39,7 @@ fun AddClassDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(if (editingClass == null) "Tambah Kelas" else "Ubah Nama Kelas") },
+        title = { Text(if (editingClass == null) "Add Class" else "Change Class Name") },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
@@ -48,27 +48,27 @@ fun AddClassDialog(
                 AzuraTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = "Nama Kelas",
-                    placeholder = "Contoh: 10-IPA-1",
-                    errorText = if (name.isNotEmpty() && !isNameValid) "Nama tidak boleh kosong" else null,
+                    label = "Class Name",
+                    placeholder = "Example: 10-IPA-1",
+                    errorText = if (name.isNotEmpty() && !isNameValid) "Name cannot be empty" else null,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 if (editingClass == null) {
                     Spacer(modifier = Modifier.height(AzuraSpacing.xs))
                     Text(
-                        text = "Atau Pilih dari Katalog:",
+                        text = "Or Select from Catalog:",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
 
-                    // Search Bar for Katalog
+                    // Search Bar for Catalog
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Cari kelas...", style = MaterialTheme.typography.bodySmall) },
+                        placeholder = { Text("Search class...", style = MaterialTheme.typography.bodySmall) },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
                         shape = AzuraShapes.medium,
                         textStyle = MaterialTheme.typography.bodySmall,
@@ -86,7 +86,7 @@ fun AddClassDialog(
                     ) {
                         if (filteredClasses.isEmpty()) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Text("Belum ada kelas tersedia", style = MaterialTheme.typography.bodySmall)
+                                Text("No classes available", style = MaterialTheme.typography.bodySmall)
                             }
                         } else {
                             LazyColumn {
@@ -138,12 +138,12 @@ fun AddClassDialog(
                 },
                 enabled = isNameValid,
             ) {
-                Text("Simpan")
+                Text("Save")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Batal")
+                Text("Cancel")
             }
         },
     )

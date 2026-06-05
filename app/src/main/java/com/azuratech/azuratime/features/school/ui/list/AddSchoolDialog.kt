@@ -26,13 +26,13 @@ fun AddSchoolDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("Tambah Sekolah Baru") },
+        title = { Text("Add New School") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
                 AzuraTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = "Nama Sekolah",
+                    label = "School Name",
                     modifier = Modifier.fillMaxWidth(),
                 )
                 AzuraTextField(
@@ -45,13 +45,13 @@ fun AddSchoolDialog(
                 if (availableClasses.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(AzuraSpacing.sm))
                     Text(
-                        text = "Pilih Kelas (Opsional):",
+                        text = "Select Classes (Optional):",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        text = "Pilih kelas yang sudah ada untuk dipindahkan ke sekolah ini.",
+                        text = "Select existing classes to move to this school.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -85,12 +85,12 @@ fun AddSchoolDialog(
                 onClick = { onConfirmClick(name, timezone, selectedClassIds.toList()) },
                 enabled = name.isNotBlank(),
             ) {
-                Text("Simpan")
+                Text("Save")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Batal")
+                Text("Cancel")
             }
         },
     )

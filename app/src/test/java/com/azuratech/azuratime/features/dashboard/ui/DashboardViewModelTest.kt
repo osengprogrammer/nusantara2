@@ -77,11 +77,11 @@ class DashboardViewModelTest {
         every { sessionManager.getActiveSchoolId() } returns schoolId
 
         // Mock Repositories
-        every { schoolRepository.observeClasses(schoolId) } returns flowOf(Result.Success(allClasses))
+        every { schoolRepository.observeClassesFlow(schoolId) } returns flowOf(Result.Success(allClasses))
         every { schoolRepository.observeSchoolById(schoolId) } returns flowOf(Result.Success(null))
         every { attendanceRepository.getAttendanceRecords(any(), any(), any(), any(), any(), any(), any()) } returns flowOf(Result.Success(emptyList()))
         every { accountRepository.observePendingRequestsCount(any()) } returns flowOf(0)
-        every { studentRepository.getStudentProfiles() } returns flowOf(Result.Success(emptyList()))
+        every { studentRepository.getStudentProfilesFlow() } returns flowOf(Result.Success(emptyList()))
     }
 
     @After

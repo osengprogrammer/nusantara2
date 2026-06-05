@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface SchoolRemoteDataSource {
     suspend fun saveSchool(accountId: String, school: School): Result<Unit>
     suspend fun deleteSchool(accountId: String, schoolId: String): Result<Unit>
-    fun observeRemoteSchools(accountId: String): Flow<Result<List<School>>>
+    fun observeRemoteSchoolsFlow(accountId: String): Flow<Result<List<School>>>
     suspend fun getSchools(accountId: String): Result<List<School>>
     suspend fun getSchoolsByIds(schoolIds: List<String>): Result<List<School>>
 

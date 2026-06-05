@@ -49,7 +49,7 @@ class AssignClassViewModel @Inject constructor(
             val account = database.accountDao().getAccountById(targetAccountId)
 
             // 2. Get Available Classes
-            schoolRepository.observeClasses(schoolId).first().onSuccess { classes ->
+            schoolRepository.observeClassesFlow(schoolId).first().onSuccess { classes ->
                 // 3. Get Currently Assigned Classes (from Local for immediate UI, but Remote is Source of Truth)
                 val assignedIds = database.accountClassAccessDao().getAssignedClassIds(targetAccountId, schoolId).first()
 
@@ -90,7 +90,7 @@ class AssignClassViewModel @Inject constructor(
             assignClassUseCase(targetId, schoolId, state.selectedClassIds)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isSaving = false) }
-                    _uiEffectFlow.emit(AssignClassUiEffect.ShowSnackbar("Penugasan kelas berhasil disimpan"))
+                    _uiEffectFlow.emit(AssignClassUiEffect.ShowSnackbar("Class assignment saved successfully"))
                     _uiEffectFlow.emit(AssignClassUiEffect.NavigateBack)
                 }
                 .onFailure { error ->

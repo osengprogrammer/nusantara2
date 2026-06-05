@@ -54,7 +54,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override fun observeRemoteSchools(accountId: String): Flow<Result<List<School>>> = callbackFlow {
+    override fun observeRemoteSchoolsFlow(accountId: String): Flow<Result<List<School>>> = callbackFlow {
         // Query by accountId in the global collection
         val subscription = getGlobalSchoolsRef()
             .whereEqualTo("accountId", accountId)
