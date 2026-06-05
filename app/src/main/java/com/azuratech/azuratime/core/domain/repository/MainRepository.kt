@@ -8,6 +8,6 @@ interface MainRepository {
     fun getCurrentUid(): Result<String?>
     fun getCurrentEmail(): Result<String>
     suspend fun initializeAiBrain(context: Context): Result<Unit>
-    fun observeRevokeStatus(uid: String): Flow<Result<Boolean>>
+    fun observeRevokeStatusFlow(uid: String): Flow<Result<Boolean>>
     fun executeRevocationCleanup(): Result<Unit>
 }

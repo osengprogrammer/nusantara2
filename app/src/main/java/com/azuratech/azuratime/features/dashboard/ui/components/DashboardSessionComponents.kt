@@ -26,7 +26,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 fun SessionStudentsList(students: List<StudentBiometricEntity>) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = AzuraSpacing.md)) {
         Text(
-            text = "Daftar Siswa Sesi Ini (${students.size})",
+            text = "Students in this session (${students.size})",
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -63,16 +63,16 @@ fun MyAssignedClassesSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Kelas Saya",
+                text = "My Classes",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary,
             )
-            TextButton(onClick = onNavigateToAll) { Text("Kelola") }
+            TextButton(onClick = onNavigateToAll) { Text("Manage") }
         }
 
         if (myClasses.isEmpty()) {
-            Text("Belum ada kelas yang ditugaskan.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+            Text("No classes assigned yet.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
         } else {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -114,7 +114,7 @@ fun ClassActionCard(
                 maxLines = 1,
             )
             Text(
-                text = "${classItem.studentCount} Siswa",
+                text = "${classItem.studentCount} Students",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

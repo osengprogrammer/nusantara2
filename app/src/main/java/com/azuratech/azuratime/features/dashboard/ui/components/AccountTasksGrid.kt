@@ -49,7 +49,7 @@ fun AccountTasksGrid(
                 modifier = Modifier.weight(1f),
             )
             DashboardActionCard(
-                title = "Input Manual",
+                title = "Manual Input",
                 icon = Icons.Default.EditCalendar,
                 color = MaterialTheme.colorScheme.tertiary,
                 onClick = { navController.navigate(Screen.ManualAttendance.createRoute("", "")) },
@@ -59,14 +59,14 @@ fun AccountTasksGrid(
         }
 
         // ======================================================
-        // 🔥 Row 2: Scanner Wajah & Cetak Barcode
+        // 🔥 Row 2: Face Scanner & Print Barcode
         // ======================================================
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             DashboardActionCard(
-                "Scanner Wajah",
+                "Face Scanner",
                 Icons.Default.CameraAlt,
                 MaterialTheme.colorScheme.primary,
                 { navController.navigate(Screen.AttendanceCapture.route) },
@@ -75,7 +75,7 @@ fun AccountTasksGrid(
             )
 
             DashboardActionCard(
-                "Cetak Barcode",
+                "Print Barcode",
                 Icons.Default.QrCode,
                 MaterialTheme.colorScheme.secondary,
                 { navController.navigate(Screen.StudentRosterBarcode.route) },
@@ -93,7 +93,7 @@ fun AccountTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "Manajemen Kelas",
+                    "Class Management",
                     Icons.Default.Groups,
                     MaterialTheme.colorScheme.primary,
                     {
@@ -105,7 +105,7 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Manajemen Akun",
+                    "Account Management",
                     Icons.Default.ManageAccounts,
                     MaterialTheme.colorScheme.secondary,
                     { navController.navigate(Screen.Following.route) },
@@ -119,7 +119,7 @@ fun AccountTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "Manajemen Siswa",
+                    "Student Management",
                     Icons.Default.People,
                     MaterialTheme.colorScheme.primary,
                     { navController.navigate(Screen.StudentRoster.route) },
@@ -127,7 +127,7 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Registrasi Baru",
+                    "New Registration",
                     Icons.Default.PersonAdd,
                     MaterialTheme.colorScheme.tertiary,
                     onClick = onRegisterStudentClick,
@@ -145,7 +145,7 @@ fun AccountTasksGrid(
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             DashboardActionCard(
-                title = "Manajemen Presensi",
+                title = "Attendance Management",
                 icon = Icons.Default.History,
                 color = MaterialTheme.colorScheme.primary,
                 onClick = { navController.navigate(Screen.AttendanceHistory.route) },
@@ -153,7 +153,7 @@ fun AccountTasksGrid(
                 enabled = isEnabled,
             )
             DashboardActionCard(
-                title = "Laporan Matriks",
+                title = "Matrix Report",
                 icon = Icons.Default.GridOn,
                 color = MaterialTheme.colorScheme.secondary,
                 onClick = { navController.navigate(Screen.AttendanceMatrix.route) },
@@ -170,7 +170,7 @@ fun AccountTasksGrid(
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             DashboardActionCard(
-                "Pilih Sekolah",
+                "Select School",
                 Icons.Default.School,
                 MaterialTheme.colorScheme.tertiary,
                 {
@@ -182,7 +182,7 @@ fun AccountTasksGrid(
                 enabled = isEnabled,
             )
             DashboardActionCard(
-                "Sistem Follow",
+                "Follow System",
                 Icons.Default.GroupAdd,
                 MaterialTheme.colorScheme.outline,
                 { navController.navigate(Screen.Following.route) },

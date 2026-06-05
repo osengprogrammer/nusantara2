@@ -10,16 +10,16 @@ class BackupUtils @Inject constructor(
 ) {
     fun backupAndShareDatabase() {
         try {
-            // 1. Dapatkan lokasi database original
+            // 1. Get original database path
             val dbPath = storageProvider.getDatabasePath(DB_NAME)
 
-            // 2. Buat file copy di folder cache agar bisa di-share tanpa permission storage ribet
+            // 2. Create copy in cache folder for easier sharing
             val backupFileName = "BACKUP_AZURA_${System.currentTimeMillis()}.db"
             val backupPath = storageProvider.save(ByteArray(0), backupFileName, "cache")
 
             if (storageProvider.copyFile(dbPath, backupPath)) {
                 // 3. Share via StorageProvider
-                storageProvider.shareFile(backupPath, "Simpan Backup Azura Ke...", "application/octet-stream")
+                storageProvider.shareFile(backupPath, "Save Azura Backup To...", "application/octet-stream")
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -28,18 +28,17 @@ class BackupUtils @Inject constructor(
 
     /**
      * 🔥 RESTORE DATABASE FROM FILE
-     * Mengambil file .db dari penyimpanan eksternal/URI dan menimpa database lokal.
+     * Restore .db file from external URI and overwrite local database.
      */
     fun restoreDatabase(backupUriString: String, onComplete: () -> Unit) {
         try {
-            // 1. Dapatkan jalur database tujuan
+            // 1. Get destination database path
             val dbPath = storageProvider.getDatabasePath(DB_NAME)
 
-            // 2. Lakukan penyalinan file dengan membaca URI lewat StorageProvider
+            // 2. Copy file by reading URI via StorageProvider
             val backupBytes = storageProvider.read(backupUriString)
             if (backupBytes.isNotEmpty()) {
-                storageProvider.save(backupBytes, DB_NAME, "databases") // Need to ensure \"databases\" is handled or use absolute path
-                // Actually, saving directly to dbPath is better.
+                storageProvider.save(backupBytes, DB_NAME, "databases")
                 java.io.File(dbPath).writeBytes(backupBytes)
                 onComplete()
             }
@@ -49,6 +48,6 @@ class BackupUtils @Inject constructor(
     }
 
     companion object {
-        private const val DB_NAME = "azura.db" // Nama database sesuai AppDatabase.kt
+        private const val DB_NAME = "azura.db" // Database name as per AppDatabase.kt
     }
 }

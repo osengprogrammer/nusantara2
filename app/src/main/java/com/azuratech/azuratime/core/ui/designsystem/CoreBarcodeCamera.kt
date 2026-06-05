@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.azuratech.azuratime.ml.detector.BarcodeAnalyzer // Import analyzer baru kita
+import com.azuratech.azuratime.ml.detector.BarcodeAnalyzer // Import our new analyzer
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -31,8 +31,8 @@ import java.util.concurrent.Executors
 @Composable
 fun CoreBarcodeCamera(
     modifier: Modifier = Modifier,
-    analyzer: BarcodeAnalyzer, // 🔥 Berubah menjadi BarcodeAnalyzer
-    useFrontCamera: Boolean = false, // 🔥 Default-nya false (Kamera Belakang) karena scan barcode biasanya pakai kamera belakang
+    analyzer: BarcodeAnalyzer, // 🔥 Using BarcodeAnalyzer
+    useFrontCamera: Boolean = false, // 🔥 Default to false (Back Camera) as barcode scanning typically uses the back camera
     shape: Shape = AzuraShapes.large,
 ) {
     val context = LocalContext.current
@@ -79,7 +79,7 @@ fun CoreBarcodeCamera(
                                 .build(),
                         )
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        // Output format YUV_420_888 sangat cocok untuk ML Kit Barcode
+                        // YUV_420_888 output format is ideal for ML Kit Barcode
                         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                         .build().also {
                             it.setAnalyzer(executor, analyzer)
@@ -110,8 +110,8 @@ fun CoreBarcodeCamera(
                 factory = { previewView },
                 modifier = Modifier.fillMaxSize(),
             )
-            // 🔥 FaceOverlay Dihapus karena kita tidak menggambar kotak wajah di sini
-            // Nanti kamu bisa tambahkan garis panduan scan barcode (opsional) di atas Box ini
+            // 🔥 FaceOverlay removed as we don't draw face bounding boxes here
+            // You can add barcode scanning guidelines (optional) on top of this Box
         }
     }
 }

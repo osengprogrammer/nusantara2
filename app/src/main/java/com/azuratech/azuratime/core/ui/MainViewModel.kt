@@ -73,7 +73,7 @@ class MainViewModel @Inject constructor(
         revokeJob?.cancel()
 
         revokeJob = viewModelScope.launch {
-            repository.observeRevokeStatus(uid).collect { result ->
+            repository.observeRevokeStatusFlow(uid).collect { result ->
                 if (result is Result.Success && result.data) {
                     onEvent(MainUiEvent.HandleRevoke(true))
                 }

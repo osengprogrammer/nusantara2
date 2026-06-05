@@ -42,11 +42,11 @@ fun AttendanceActionSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.ManageAccounts, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(AzuraSpacing.sm))
-                Text("Kelola Absensi", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Manage Attendance", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
 
             Text(
-                text = "Personil: ${record.studentName}",
+                text = "Student: ${record.studentName}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -54,7 +54,7 @@ fun AttendanceActionSheet(
             Spacer(Modifier.height(AzuraSpacing.lg))
 
             // 1. Quick Status Switch
-            Text("Ubah Status:", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text("Change Status:", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(AzuraSpacing.sm))
 
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
@@ -65,11 +65,11 @@ fun AttendanceActionSheet(
             ) {
                 AttendanceStatus.values().forEach { status ->
                     val label = when (status) {
-                        AttendanceStatus.PRESENT -> "Hadir"
-                        AttendanceStatus.LATE -> "Terlambat"
-                        AttendanceStatus.SICK -> "Sakit"
-                        AttendanceStatus.EXCUSED -> "Izin"
-                        AttendanceStatus.ABSENT -> "Alpa"
+                        AttendanceStatus.PRESENT -> "Present"
+                        AttendanceStatus.LATE -> "Late"
+                        AttendanceStatus.SICK -> "Sick"
+                        AttendanceStatus.EXCUSED -> "Excused"
+                        AttendanceStatus.ABSENT -> "Absent"
                     }
                     FilterChip(
                         selected = record.status == status,
@@ -85,8 +85,8 @@ fun AttendanceActionSheet(
 
             Spacer(Modifier.height(AzuraSpacing.lg))
 
-            // 2. 🔥 THE SAVIOR BUTTON: Koreksi Kelas
-            Text("Salah Sesi/Kelas?", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            // 2. 🔥 THE SAVIOR BUTTON: Class Correction
+            Text("Wrong Session/Class?", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(AzuraSpacing.sm))
 
             OutlinedButton(
@@ -100,8 +100,8 @@ fun AttendanceActionSheet(
                 Icon(Icons.Default.SwapHoriz, null)
                 Spacer(Modifier.width(AzuraSpacing.sm))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Pindahkan Sesi Kelas", fontWeight = FontWeight.Bold)
-                    Text("Saat ini: ${record.className.ifBlank { "Umum" }}", style = MaterialTheme.typography.labelSmall)
+                    Text("Move Class Session", fontWeight = FontWeight.Bold)
+                    Text("Current: ${record.className.ifBlank { "General" }}", style = MaterialTheme.typography.labelSmall)
                 }
                 Icon(Icons.Default.ChevronRight, null)
             }
@@ -120,7 +120,7 @@ fun AttendanceActionSheet(
             ) {
                 Icon(Icons.Default.DeleteForever, null)
                 Spacer(Modifier.width(AzuraSpacing.sm))
-                Text("Hapus Record", fontWeight = FontWeight.Bold)
+                Text("Delete Record", fontWeight = FontWeight.Bold)
             }
         }
     }

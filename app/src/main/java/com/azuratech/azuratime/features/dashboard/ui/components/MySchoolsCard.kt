@@ -38,7 +38,7 @@ fun MySchoolsCard(
     val isLoading = schoolUiState.isLoading
 
     AzuraCard(
-        title = "Sekolah Saya",
+        title = "My Schools",
         modifier = Modifier.fillMaxWidth(),
         actions = {
             IconButton(onClick = { viewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId)) }) {
@@ -62,7 +62,7 @@ fun MySchoolsCard(
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                 ) {
                     Text(
-                        "Anda belum terdaftar di sekolah manapun.",
+                        "You are not registered in any school yet.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -74,14 +74,14 @@ fun MySchoolsCard(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(AzuraSpacing.sm))
-                        Text("Buat Sekolah Baru")
+                        Text("Create New School")
                     }
                     OutlinedButton(
                         onClick = onJoinSchoolClick,
                         modifier = Modifier.fillMaxWidth(),
                         shape = AzuraShapes.medium,
                     ) {
-                        Text("Gabung Sekolah")
+                        Text("Join School")
                     }
                 }
             } else {
@@ -102,7 +102,7 @@ fun MySchoolsCard(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(AzuraSpacing.sm))
-                        Text("Tambah Sekolah")
+                        Text("Add School")
                     }
                 }
             }

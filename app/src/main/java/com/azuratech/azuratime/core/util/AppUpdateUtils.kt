@@ -26,6 +26,6 @@ fun Context.installApk(file: File) {
         }
         startActivity(intent)
     } catch (e: Exception) {
-        showToast("Gagal memasang aplikasi: ${e.message}")
+        showToast("Failed to install app: ${e.message}")
     }
 }

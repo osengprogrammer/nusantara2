@@ -44,7 +44,7 @@ class AzuraFcmService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "Token FCM Baru: $token")
+        Log.d(TAG, "New FCM Token: $token")
 
         val currentUid = FirebaseAuth.getInstance().currentUser?.uid
         if (currentUid != null) {
@@ -56,10 +56,10 @@ class AzuraFcmService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        Log.d(TAG, "Pesan masuk dari: ${remoteMessage.from}")
+        Log.d(TAG, "Message received from: ${remoteMessage.from}")
 
-        val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Notifikasi Azura"
-        val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "Ada pembaruan baru."
+        val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Azura Notification"
+        val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "There is a new update."
 
         // 🔥 AI Native: Check for update trigger in data payload
         val isUpdateTrigger = remoteMessage.data["type"] == "FORCE_UPDATE" ||
@@ -69,10 +69,10 @@ class AzuraFcmService : FirebaseMessagingService() {
             updateEventBus.triggerUpdateCheck()
         }
 
-        tampilkanNotifikasi(title, body, isUpdateTrigger)
+        showNotification(title, body, isUpdateTrigger)
     }
 
-    private fun tampilkanNotifikasi(title: String, message: String, isUpdateTrigger: Boolean) {
+    private fun showNotification(title: String, message: String, isUpdateTrigger: Boolean) {
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             if (isUpdateTrigger) {

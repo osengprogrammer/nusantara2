@@ -149,12 +149,12 @@ fun SyncStatusCard(
             Spacer(Modifier.width(AzuraSpacing.md))
             Column {
                 Text(
-                    text = if (isSyncing) "Sinkronisasi Berjalan..." else "Data Terupdate",
+                    text = if (isSyncing) "Syncing..." else "Data Updated",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Terakhir: $lastSync",
+                    text = "Last sync: $lastSync",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -165,7 +165,7 @@ fun SyncStatusCard(
 
 /**
  * ⏳ PENDING APPROVAL CARD
- * Friendly reminder for new users waiting for admin validation.
+ * Friendly reminder for new accounts waiting for admin validation.
  */
 @Composable
 fun PendingApprovalCard() {
@@ -188,12 +188,12 @@ fun PendingApprovalCard() {
             Spacer(Modifier.width(AzuraSpacing.md))
             Column {
                 Text(
-                    text = "Menunggu Persetujuan",
+                    text = "Pending Approval",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Akun Anda sedang ditinjau oleh Admin Sekolah.",
+                    text = "Your account is being reviewed by the School Admin.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -221,13 +221,13 @@ fun UnassignedAlertButton(count: Int, onClick: () -> Unit) {
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
-                    text = "Perlu Tindakan!",
+                    text = "Action Required!",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                 )
                 Text(
-                    text = "$count Siswa belum masuk ke kelas manapun.",
+                    text = "$count Students not assigned to any class.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.9f),
                 )

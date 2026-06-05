@@ -39,7 +39,7 @@ class MainRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeRevokeStatus(uid: String): Flow<Result<Boolean>> = callbackFlow {
+    override fun observeRevokeStatusFlow(uid: String): Flow<Result<Boolean>> = callbackFlow {
         val listener = firestore.collection("whitelisted_accounts")
             .document(uid)
             .addSnapshotListener { snapshot, error ->

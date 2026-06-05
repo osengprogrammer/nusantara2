@@ -65,11 +65,11 @@ object MigrateRoles {
      */
 
     const val MIGRATION_INSTRUCTIONS = """
-        To migrate existing users:
-        1. Identify all users with role 'TEACHER'.
+        To migrate existing accounts:
+        1. Identify all accounts with role 'TEACHER'.
         2. Update their global role to 'SUPERVISOR'.
         3. Update their school membership role to 'SUPERVISOR'.
         4. Ensure 'assignedClassIds' contains the classes they are responsible for.
-        5. For users with role 'MEMBER', update to 'USER'.
+        5. For accounts with role 'MEMBER', update to 'USER'.
     """
 }
