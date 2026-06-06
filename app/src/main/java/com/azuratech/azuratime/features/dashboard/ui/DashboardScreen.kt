@@ -205,7 +205,7 @@ fun DashboardContent(
                     item {
                         SupervisorOnboardingCard(
                             onClick = {
-                                navController.navigate(Screen.AssignClass.createRoute(data.account?.accountId ?: ""))
+                                navController.navigate(Screen.AssignClass.createRoute(data.account?.accountId ?: "", data.currentRole))
                             },
                         )
                     }

@@ -64,11 +64,14 @@ fun NavGraphBuilder.accountGraph(
             route = NavigationRoutes.ASSIGN_CLASS,
             arguments = listOf(
                 navArgument("targetAccountId") { type = NavType.StringType },
+                navArgument("role") { type = NavType.StringType },
             ),
         ) { backStackEntry ->
             val targetAccountId = backStackEntry.arguments?.getString("targetAccountId") ?: ""
+            val roleStr = backStackEntry.arguments?.getString("role") ?: "USER"
             AssignClassScreen(
                 targetAccountId = targetAccountId,
+                accountRole = com.azuratech.azuratime.core.domain.model.AccountRole.fromString(roleStr),
                 onNavigateBack = { navController.popBackStack() },
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
             )
@@ -76,8 +79,8 @@ fun NavGraphBuilder.accountGraph(
         composable(NavigationRoutes.FOLLOWING) {
             com.azuratech.azuratime.features.account.ui.components.FollowingScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToAssignClass = { targetId ->
-                    navController.navigate(Screen.AssignClass.createRoute(targetId))
+                onNavigateToAssignClass = { targetId, role ->
+                    navController.navigate(Screen.AssignClass.createRoute(targetId, role))
                 },
             )
         }

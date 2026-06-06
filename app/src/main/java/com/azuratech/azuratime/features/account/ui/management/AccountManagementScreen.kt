@@ -1,46 +1,27 @@
 package com.azuratech.azuratime.features.account.ui.management
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
-import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
-import com.azuratech.azuratime.core.ui.designsystem.StudentAvatar
+import com.azuratech.azuratime.core.domain.model.AccountRole
+import com.azuratech.azuratime.core.ui.designsystem.*
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
-import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
 
 /**
- * 👤 ACCOUNT MANAGEMENT SCREEN (v3.2.0-ai-native)
+ * 👤 ACCOUNT MANAGEMENT SCREEN (v3.2.1-ai-native)
+ * Fully cleaned and optimized for administrative role management.
  */
 @Composable
 fun AccountManagementScreen(
@@ -55,16 +36,9 @@ fun AccountManagementScreen(
         viewModel.uiEffectFlow.collect { effect ->
             when (effect) {
                 is AccountUiEffect.ShowToast -> context.showToast(effect.message)
-                is AccountUiEffect.ShowSnackbar -> {
-                    // Could trigger scaffold state snackbar if needed
-                    context.showToast(effect.message)
-                }
-                is AccountUiEffect.NavigateTo -> {
-                    // Navigation logic here
-                }
-                AccountUiEffect.NavigateBack -> {
-                    onNavigateBack()
-                }
+                is AccountUiEffect.ShowSnackbar -> context.showToast(effect.message)
+                is AccountUiEffect.NavigateTo -> { /* Navigation logic */ }
+                AccountUiEffect.NavigateBack -> onNavigateBack()
             }
         }
     }
@@ -99,6 +73,14 @@ fun AccountManagementContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
+                // 🛠️ TEMPORARY DEBUG INFO
+                Text(
+                    text = "DEBUG ROLE: ${uiState.currentAccountRole.name}",
+                    color = Color.Red,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+
                 val profile = uiState.accountProfile
 
                 StudentAvatar(photoPath = profile?.photoUrl, size = 96.dp)
@@ -116,6 +98,7 @@ fun AccountManagementContent(
 
                 Spacer(modifier = Modifier.height(AzuraSpacing.lg))
 
+                // Active Class Selection
                 AzuraCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(AzuraSpacing.md)) {
                         Text("Select Active Class", style = MaterialTheme.typography.titleMedium)
@@ -144,6 +127,7 @@ fun AccountManagementContent(
                     }
                 }
 
+                // Pending Followers (Requests to join school)
                 if (uiState.pendingFollowers.isNotEmpty()) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -170,6 +154,33 @@ fun AccountManagementContent(
                     }
                 }
 
+                // School Network (Member Role Management)
+                if (uiState.allAccountsInSameSchool.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                    ) {
+                        Text(
+                            text = "School Network",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = AzuraSpacing.md),
+                        )
+                        uiState.allAccountsInSameSchool
+                            .filter { it.accountId != uiState.accountProfile?.accountId }
+                            .forEach { account ->
+                                MemberItem(
+                                    account = account,
+                                    currentRole = account.memberships[uiState.activeSchoolId]?.role ?: account.role,
+                                    currentUserRole = uiState.currentAccountRole,
+                                    onChangeRole = { newRole ->
+                                        onEvent(AccountUiEvent.ChangeMemberRole(account.accountId, newRole))
+                                    },
+                                )
+                            }
+                    }
+                }
+
                 Spacer(modifier = Modifier.weight(1f))
 
                 AzuraButton(
@@ -192,6 +203,53 @@ fun AccountManagementContent(
                     }
                 },
             )
+        }
+    }
+}
+
+@Composable
+fun MemberItem(
+    account: AccountEntity,
+    currentRole: String,
+    currentUserRole: AccountRole,
+    onChangeRole: (AccountRole) -> Unit,
+) {
+    AzuraCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(AzuraSpacing.md)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                StudentAvatar(photoPath = account.photoUrl, size = 40.dp)
+                Spacer(modifier = Modifier.width(AzuraSpacing.md))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = account.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    Text(text = "Current Role: $currentRole", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+
+            // 🔥 ADMIN ONLY: Inline Role Selector for School Members
+            if (currentUserRole == AccountRole.ADMIN || currentUserRole == AccountRole.SUPER_ADMIN) {
+                Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+                HorizontalDivider(modifier = Modifier.padding(vertical = AzuraSpacing.xs), thickness = 0.5.dp)
+                Text(text = "Change Role:", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.xs),
+                ) {
+                    listOf(AccountRole.ADMIN, AccountRole.SUPERVISOR, AccountRole.USER).forEach { role ->
+                        FilterChip(
+                            selected = currentRole == role.name,
+                            onClick = { if (currentRole != role.name) onChangeRole(role) },
+                            label = { Text(role.name, style = MaterialTheme.typography.labelSmall) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            ),
+                        )
+                    }
+                }
+            }
         }
     }
 }

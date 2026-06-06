@@ -3,6 +3,7 @@ package com.azuratech.azuratime.features.account.data.repo
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.asLocalResult
+import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.features.account.data.local.AccountDao
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.toProfile
@@ -412,6 +413,37 @@ class AccountRepositoryImpl @Inject constructor(
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun updateMemberRole(targetAccountId: String, schoolId: String, newRole: com.azuratech.azuratime.core.domain.model.AccountRole): Result<Unit> {
+        return try {
+            val account = accountDao.getAccountById(targetAccountId) ?: return Result.Failure(AppError.LocalDB("Account not found"))
+
+            val updatedMemberships = account.memberships.toMutableMap()
+            val membership = updatedMemberships[schoolId] ?: return Result.Failure(AppError.BusinessRule("Membership not found for this school"))
+
+            updatedMemberships[schoolId] = membership.copy(role = newRole.name)
+
+            // If this is the active school, update the top-level role too
+            val updatedRole = if (account.activeSchoolId == schoolId) newRole.name else account.role
+
+            val updatedAccount = account.copy(
+                memberships = updatedMemberships,
+                role = updatedRole,
+                syncStatus = "PENDING_UPDATE",
+            )
+
+            accountDao.upsertAccount(updatedAccount)
+
+            // Push to Firestore immediately for reactive UI updates across devices
+            pushAccount(targetAccountId).onSuccess {
+                accountDao.upsertAccount(updatedAccount.copy(syncStatus = "SYNCED"))
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
         }
     }
 }
