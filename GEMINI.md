@@ -173,10 +173,18 @@
     - **Stability**: Protocol-level cache-busting and 60s network resilience.
     - **Versioning**: Remote `latest_version_code` must be > local `BuildConfig.VERSION_CODE` to trigger UI.
 
-## 🏆 Nusantara v3.2.1-ai-native — 100% MVI & CLEAN CODE COMPLETE
-- ✅ **100% Effect-Driven MVI Compliance**: All ViewModels strictly implement `UiState`, `UiEffect`, `UiEvent`.
-- ✅ **GitHub-Native Update Engine**: Fully decoupled from Firebase Remote Config.
-- ✅ **Zero Ghost States**: Transient events decoupled via `SharedFlow<UiEffect>`.
-- ✅ **Zero Dead Code**: Unused variables, redundant casts, and boilerplate tests removed.
-- ✅ **DRY Repository Layer**: Standardized data flow via `Result.kt` engine.
-- ✅ Build: `compileDebugKotlin` and `spotlessCheck` → ALWAYS SILENT/SUCCESSFUL.
+## 🏆 Azura Time v3.2.1-ai-native — 100% SEMANTIC PURITY & ARCHITECTURAL ALIGNMENT
+- ✅ **100% English-First Policy**: All code, technical comments, and documentation migrated to Common English.
+- ✅ **Global Semantic Sweep**: Eliminated legacy terms (User, Teacher, Staff, Classroom) in favor of standardized taxonomy (Account, Supervisor, Class).
+- ✅ **MVI Effect-Driven Completion**: All transient UI actions (Snackbars, Toasts, Navigation) now use specific `UiEffect` SharedFlows.
+- ✅ **Entity/DAO Package Realignment**: Fixed structural anomalies by moving `StudentClassAssignment` and `AccountClassAccess` to their correct feature slices.
+- ✅ **Repository Method Standardization**: Enforced `Flow` suffix on all reactive methods project-wide (e.g., `observeEnrollmentsFlow`).
+- ✅ **Post-Refactoring Stabilization**: Resolved all syntax corruption and unresolved references caused by the global naming migration.
+
+### Phase 30: Global Semantic Purity & MVI Restoration (June 5, 2026)
+- **Terminology Alignment:** Executed a project-wide sweep to replace "User" with "Account", "Teacher" with "Supervisor", and "Classroom" with "Class".
+- **Architecture Refinement:** Migrated `StudentClassAssignmentEntity` to the `student` package and `AccountClassAccessEntity` to the `account` package.
+- **MVI Purity:** Refactored `BiometricEnrollmentViewModel`, `AttendanceCaptureViewModel`, and `DataIntegrityViewModel` to use specific `UiEffect` types.
+- **Language Policy:** Translated all hardcoded Indonesian UI strings and technical comments to Common English across 20+ files.
+- **Documentation Sync:** Updated `ARCHITECTURE.md`, `PROJECT_INDEX.md`, and `VOCABULARY.md` to reflect the latest semantic standards.
+- **Test Suite Alignment:** Updated unit tests (`GetAccountUseCaseTest`, `DashboardViewModelTest`) to match new repository signatures.

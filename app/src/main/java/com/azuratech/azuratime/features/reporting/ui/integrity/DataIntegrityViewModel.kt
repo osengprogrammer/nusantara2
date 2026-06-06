@@ -3,7 +3,6 @@ package com.azuratech.azuratime.features.reporting.ui.integrity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.reporting.domain.repository.DataIntegrityRepository
@@ -28,8 +27,8 @@ class DataIntegrityViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
 ) : ViewModel() {
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<DataIntegrityUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     private val _isLoadingFlow = MutableStateFlow(false)
     private val _errorFlow = MutableStateFlow<String?>(null)
@@ -91,12 +90,12 @@ class DataIntegrityViewModel @Inject constructor(
             when (val result = attendanceRepository.resolveConflict(conflictId, useCloud)) {
                 is Result.Success -> {
                     _isLoadingFlow.value = false
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Konflik berhasil diselesaikan"))
+                    _uiEffectFlow.emit(DataIntegrityUiEffect.ShowSnackbar("Conflict resolved successfully"))
                 }
                 is Result.Failure -> {
                     _isLoadingFlow.value = false
                     _errorFlow.value = result.error.message
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Gagal: ${result.error.message}"))
+                    _uiEffectFlow.emit(DataIntegrityUiEffect.ShowSnackbar("Failed: ${result.error.message}"))
                 }
                 is Result.Loading -> {}
             }
