@@ -75,6 +75,9 @@ fun FollowingScreen(
                         onChangeRole = { id, role ->
                             viewModel.onEvent(FollowingUiEvent.ChangeMemberRole(id, role))
                         },
+                        onUnfollow = { id ->
+                            viewModel.onEvent(FollowingUiEvent.UnfollowFriend(id))
+                        },
                     )
                 }
             }
@@ -137,6 +140,7 @@ fun ConnectionsTab(
     uiState: FollowingUiState,
     onAssign: (AccountEntity) -> Unit,
     onChangeRole: (String, AccountRole) -> Unit,
+    onUnfollow: (String) -> Unit,
 ) {
     if (uiState.connections.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -151,6 +155,7 @@ fun ConnectionsTab(
                     activeSchoolId = uiState.activeSchoolId,
                     onAssign = { onAssign(account) },
                     onChangeRole = { role -> onChangeRole(account.accountId, role) },
+                    onUnfollow = { onUnfollow(account.accountId) },
                 )
             }
         }
@@ -179,8 +184,34 @@ fun ConnectedFriendItem(
     activeSchoolId: String?,
     onAssign: () -> Unit,
     onChangeRole: (AccountRole) -> Unit,
+    onUnfollow: () -> Unit,
 ) {
     val currentRole = activeSchoolId?.let { account.memberships[it]?.role } ?: account.role
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Remove Friend") },
+            text = { Text("Are you sure you want to remove ${account.name}?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onUnfollow()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text("Remove")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
 
     Card(modifier = Modifier.fillMaxWidth(), shape = AzuraShapes.medium) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -194,6 +225,13 @@ fun ConnectedFriendItem(
                 }
                 if (isAdmin) {
                     IconButton(onClick = onAssign) { Icon(Icons.Default.School, contentDescription = "Grant Class Access", tint = MaterialTheme.colorScheme.primary) }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Remove Friend",
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
 

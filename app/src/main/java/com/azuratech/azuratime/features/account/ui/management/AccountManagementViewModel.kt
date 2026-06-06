@@ -144,6 +144,22 @@ class AccountManagementViewModel @Inject constructor(
             is AccountUiEvent.UpdatePendingRole -> updatePendingRole(event.requestId, event.role)
             is AccountUiEvent.ApproveFollower -> approveFollower(event.requestId)
             is AccountUiEvent.ChangeMemberRole -> changeMemberRole(event.targetAccountId, event.newRole)
+            is AccountUiEvent.RemoveMember -> removeMember(event.targetAccountId)
+        }
+    }
+
+    private fun removeMember(targetAccountId: String) {
+        val currentAccountId = sessionManager.getCurrentAccountId() ?: return
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isLoading = true) }
+            repository.unfollowAccount(currentAccountId, targetAccountId)
+                .onSuccess {
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Member removed from school."))
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+                }
         }
     }
 

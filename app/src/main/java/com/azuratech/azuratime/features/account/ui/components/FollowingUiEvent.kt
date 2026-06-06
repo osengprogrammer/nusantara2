@@ -11,6 +11,7 @@ sealed class FollowingUiEvent {
     data class SelectFriendForAssignment(val friend: com.azuratech.azuratime.features.account.data.local.AccountEntity?) : FollowingUiEvent()
     data class AssignClasses(val targetId: String, val classIds: List<String>) : FollowingUiEvent()
     data class ChangeMemberRole(val targetAccountId: String, val newRole: com.azuratech.azuratime.core.domain.model.AccountRole) : FollowingUiEvent()
+    data class UnfollowFriend(val targetAccountId: String) : FollowingUiEvent()
     object LoadData : FollowingUiEvent()
     object ClearError : FollowingUiEvent()
     object NavigateBack : FollowingUiEvent()

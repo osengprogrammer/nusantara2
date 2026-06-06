@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,8 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 
+import com.azuratech.azuratime.core.domain.model.AccountRole
+
 @Composable
 fun SchoolListScreen(
     viewModel: SchoolViewModel = hiltViewModel(),
@@ -31,6 +34,8 @@ fun SchoolListScreen(
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingSchoolId by remember { mutableStateOf<String?>(null) }
+    var initialSchoolName by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -47,8 +52,10 @@ fun SchoolListScreen(
         onBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add School")
+            if (uiState.currentAccountRole != AccountRole.USER) {
+                FloatingActionButton(onClick = { showAddDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add School")
+                }
             }
         },
     ) {
@@ -152,6 +159,17 @@ fun SchoolListScreen(
                                         )
                                     }
 
+                                    IconButton(onClick = {
+                                        initialSchoolName = school.name
+                                        editingSchoolId = school.id
+                                    }) {
+                                        Icon(
+                                            Icons.Default.Edit,
+                                            contentDescription = "Edit",
+                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                        )
+                                    }
+
                                     if (isActive) {
                                         Icon(
                                             Icons.Default.CheckCircle,
@@ -184,6 +202,40 @@ fun SchoolListScreen(
             onConfirmClick = { name, timezone, selectedClassIds ->
                 viewModel.onEvent(SchoolUiEvent.CreateSchool(name, timezone, selectedClassIds))
                 showAddDialog = false
+            },
+        )
+    }
+
+    editingSchoolId?.let { schoolId ->
+        var newName by remember { mutableStateOf(initialSchoolName) }
+        AlertDialog(
+            onDismissRequest = { editingSchoolId = null },
+            title = { Text("Edit School Name") },
+            text = {
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    label = { Text("School Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newName.isNotBlank()) {
+                            viewModel.onEvent(SchoolUiEvent.UpdateSchoolName(schoolId, newName))
+                            editingSchoolId = null
+                        }
+                    },
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingSchoolId = null }) {
+                    Text("Cancel")
+                }
             },
         )
     }

@@ -90,7 +90,7 @@ export const onregistrationapproved = onDocumentUpdated(
 
         const schoolId = after.schoolId || `SCH-${crypto.createHash("sha1").update(email).digest("hex").substring(0, 8).toUpperCase()}`;
         const schoolName = after.schoolName || "Sekolah Azura";
-        const role = after.role || "ADMIN";
+        const role = after.role || "USER";
         const name = after.name || after.adminName || "User Azura";
 
         const dbSeed = crypto.createHash("sha256").update(uid + SERVER_SECRET).digest("hex");
@@ -101,18 +101,18 @@ export const onregistrationapproved = onDocumentUpdated(
         const whitelistRef = db.collection(COLLECTIONS.WHITELISTED_ACCOUNTS).doc(uid);
         const accountRef = db.collection(COLLECTIONS.ACCOUNTS).doc(uid);
 
-        // 1. Setup Whitelisted Account (Security Layer)
+        // 1. Security Layer (Bouncer): Handles crypto keys and hardware identity
         batch.set(whitelistRef, {
-            userId: uid, email, name,
-            status: "ACTIVE", hardwareId, secureIsoKey, expireDate,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            activeSchoolId: schoolId,
-            memberships: { [schoolId]: { schoolName: schoolName, role: role } },
-            schoolId: schoolId, schoolName: schoolName, role: role,
-            followingIds: [], followerIds: []
+            userId: uid, 
+            email, 
+            status: "ACTIVE", 
+            hardwareId, 
+            secureIsoKey, 
+            expireDate,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // 2. Setup Main Account (Sync Layer)
+        // 2. Operational Layer (SSOT): Handles application state and relationships
         batch.set(accountRef, {
             email,
             name,
@@ -120,25 +120,29 @@ export const onregistrationapproved = onDocumentUpdated(
             role: role,
             activeSchoolId: schoolId,
             memberships: { [schoolId]: { schoolName: schoolName, role: role, status: "ACTIVE" } },
+            followingIds: [],
+            followerIds: [],
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
         // 3. Setup School metadata (Workspace Layer)
-        const orgRef = db.collection(COLLECTIONS.SCHOOLS).doc(schoolId);
-        const schoolData: Partial<SchoolDoc> = {
-            schoolId: schoolId, 
-            schoolName: schoolName, 
-            db_seed: dbSeed,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        };
+        if (role === "ADMIN" || role === "SUPER_ADMIN") {
+            const orgRef = db.collection(COLLECTIONS.SCHOOLS).doc(schoolId);
+            const schoolData: Partial<SchoolDoc> = {
+                schoolId: schoolId, 
+                schoolName: schoolName, 
+                db_seed: dbSeed,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            };
 
-        if (!after.schoolId) {
-            schoolData.accountId = uid;
-            schoolData.ownerEmail = email;
-            schoolData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+            if (!after.schoolId) {
+                schoolData.accountId = uid;
+                schoolData.ownerEmail = email;
+                schoolData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+            }
+
+            batch.set(orgRef, schoolData, { merge: true });
         }
-
-        batch.set(orgRef, schoolData, { merge: true });
 
         // 4. Cleanup temporary membership
         batch.delete(event.data.after.ref);

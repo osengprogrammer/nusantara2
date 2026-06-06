@@ -5,13 +5,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SchoolClassDao {
-    @Query("SELECT * FROM schools WHERE accountId = :accountId ORDER BY name ASC")
+    @Query("SELECT * FROM schools WHERE accountId = :accountId AND status != 'DELETED' ORDER BY name ASC")
     fun getSchoolsFlow(accountId: String): Flow<List<SchoolEntity>>
 
-    @Query("SELECT * FROM schools WHERE id IN (:schoolIds) ORDER BY name ASC")
+    @Query("SELECT * FROM schools WHERE id IN (:schoolIds) AND status != 'DELETED' ORDER BY name ASC")
     fun observeSchoolsByIdsFlow(schoolIds: List<String>): Flow<List<SchoolEntity>>
 
-    @Query("SELECT * FROM schools")
+    @Query("SELECT * FROM schools WHERE status != 'DELETED'")
     suspend fun getAllSchoolsOnce(): List<SchoolEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -23,7 +23,7 @@ interface SchoolClassDao {
     @Query("SELECT * FROM schools WHERE id = :id")
     fun observeSchoolByIdFlow(id: String): Flow<SchoolEntity?>
 
-    @Query("SELECT * FROM schools ORDER BY createdAt DESC")
+    @Query("SELECT * FROM schools WHERE status != 'DELETED' ORDER BY createdAt DESC")
     fun observeAllSchoolsFlow(): Flow<List<SchoolEntity>>
 
     @Query("SELECT id FROM schools WHERE accountId = :accountId LIMIT 1")

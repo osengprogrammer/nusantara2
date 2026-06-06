@@ -7,5 +7,6 @@ sealed class SchoolUiEvent {
     data class SelectSchool(val school: School) : SchoolUiEvent()
     data class CreateSchool(val name: String, val timezone: String, val selectedClassIds: List<String>) : SchoolUiEvent()
     data class DeleteSchool(val id: String) : SchoolUiEvent()
+    data class UpdateSchoolName(val schoolId: String, val newName: String) : SchoolUiEvent()
     data object Retry : SchoolUiEvent()
 }

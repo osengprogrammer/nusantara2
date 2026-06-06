@@ -3,6 +3,8 @@ package com.azuratech.azuratime.features.account.ui.management
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +23,7 @@ import com.azuratech.azuratime.features.account.data.local.AccountEntity
 
 /**
  * 👤 ACCOUNT MANAGEMENT SCREEN (v3.2.1-ai-native)
- * Fully cleaned and optimized for administrative role management.
+ * Nuked and rebuilt for semantic purity and typo-free performance.
  */
 @Composable
 fun AccountManagementScreen(
@@ -31,22 +33,63 @@ fun AccountManagementScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var targetAccountIdToDelete by remember { mutableStateOf<String?>(null) }
+
     // 🔥 AI Native: Collect and Handle UI Effects
     LaunchedEffect(Unit) {
         viewModel.uiEffectFlow.collect { effect ->
             when (effect) {
                 is AccountUiEffect.ShowToast -> context.showToast(effect.message)
                 is AccountUiEffect.ShowSnackbar -> context.showToast(effect.message)
-                is AccountUiEffect.NavigateTo -> { /* Navigation logic */ }
+                is AccountUiEffect.NavigateTo -> { /* Navigation logic handled by host */ }
                 AccountUiEffect.NavigateBack -> onNavigateBack()
             }
         }
+    }
+
+    // Confirmation Dialog for Member Removal
+    if (showDeleteDialog && targetAccountIdToDelete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+                targetAccountIdToDelete = null
+            },
+            title = { Text("Remove Member") },
+            text = { Text("Are you sure you want to remove this member from the school network?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        targetAccountIdToDelete?.let { id ->
+                            viewModel.onEvent(AccountUiEvent.RemoveMember(id))
+                        }
+                        showDeleteDialog = false
+                        targetAccountIdToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text("Remove")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    targetAccountIdToDelete = null
+                }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 
     AccountManagementContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
+        onRemoveMemberRequest = { id ->
+            targetAccountIdToDelete = id
+            showDeleteDialog = true
+        },
     )
 }
 
@@ -55,6 +98,7 @@ fun AccountManagementContent(
     uiState: AccountUiState,
     onEvent: (AccountUiEvent) -> Unit,
     onNavigateBack: () -> Unit,
+    onRemoveMemberRequest: (String) -> Unit,
 ) {
     AzuraScreen(
         title = "Account Settings",
@@ -73,14 +117,6 @@ fun AccountManagementContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
-                // 🛠️ TEMPORARY DEBUG INFO
-                Text(
-                    text = "DEBUG ROLE: ${uiState.currentAccountRole.name}",
-                    color = Color.Red,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-
                 val profile = uiState.accountProfile
 
                 StudentAvatar(photoPath = profile?.photoUrl, size = 96.dp)
@@ -176,6 +212,7 @@ fun AccountManagementContent(
                                     onChangeRole = { newRole ->
                                         onEvent(AccountUiEvent.ChangeMemberRole(account.accountId, newRole))
                                     },
+                                    onRemoveMember = { onRemoveMemberRequest(account.accountId) },
                                 )
                             }
                     }
@@ -213,6 +250,7 @@ fun MemberItem(
     currentRole: String,
     currentUserRole: AccountRole,
     onChangeRole: (AccountRole) -> Unit,
+    onRemoveMember: () -> Unit,
 ) {
     AzuraCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(AzuraSpacing.md)) {
@@ -225,6 +263,17 @@ fun MemberItem(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = account.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                     Text(text = "Current Role: $currentRole", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                }
+
+                // 🔥 ADMIN ONLY: Remove Member Button
+                if (currentUserRole == AccountRole.ADMIN || currentUserRole == AccountRole.SUPER_ADMIN) {
+                    IconButton(onClick = onRemoveMember) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Remove Member",
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
 
@@ -308,6 +357,7 @@ private fun PreviewAccountLoading() {
             uiState = AccountPreviewMocks.loading(),
             onEvent = {},
             onNavigateBack = {},
+            onRemoveMemberRequest = {},
         )
     }
 }
@@ -320,6 +370,7 @@ private fun PreviewAccountPopulated() {
             uiState = AccountPreviewMocks.populated(),
             onEvent = {},
             onNavigateBack = {},
+            onRemoveMemberRequest = {},
         )
     }
 }
@@ -332,6 +383,7 @@ private fun PreviewAccountError() {
             uiState = AccountPreviewMocks.error(),
             onEvent = {},
             onNavigateBack = {},
+            onRemoveMemberRequest = {},
         )
     }
 }
