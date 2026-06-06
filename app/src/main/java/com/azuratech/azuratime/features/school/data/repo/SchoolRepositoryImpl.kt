@@ -15,6 +15,8 @@ import com.azuratech.azuratime.features.account.data.local.SchoolMembership as L
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
+import com.azuratech.azuratime.core.domain.model.AccountRole
+import com.azuratech.azuratime.core.domain.model.toAccountRole
 import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import kotlinx.coroutines.tasks.await
@@ -66,6 +68,24 @@ class SchoolRepositoryImpl @Inject constructor(
 
     override suspend fun createSchool(adminId: String, name: String, timezone: String): Result<String> {
         return try {
+            val account = accountDao.getAccountById(adminId)
+                ?: return Result.Failure(AppError.LocalDB("Account not found."))
+
+            val role = account.role.toAccountRole()
+
+            // 🔥 AI Native: Strict Role Enforcement
+            if (role == AccountRole.USER) {
+                return Result.Failure(AppError.BusinessRule("Regular users cannot create schools. Access denied."))
+            }
+
+            // 🔥 AI Native: Admin Multi-School Restriction
+            if (role == AccountRole.ADMIN) {
+                val schoolCount = dao.getSchoolCountByAccount(adminId)
+                if (schoolCount >= 1) {
+                    return Result.Failure(AppError.BusinessRule("Admin limit reached (1 school max)."))
+                }
+            }
+
             val schoolId = "sch_${System.currentTimeMillis()}"
             database.withTransaction {
                 val school = SchoolEntity(
@@ -90,17 +110,14 @@ class SchoolRepositoryImpl @Inject constructor(
                     ),
                 )
 
-                val account = database.accountDao().getAccountById(adminId)
-                if (account != null) {
-                    val updatedMemberships = account.memberships.toMutableMap()
-                    updatedMemberships[schoolId] = LocalSchoolMembership(
-                        schoolName = name,
-                        role = "ADMIN",
-                        status = "ACTIVE",
-                        assignedClassIds = emptyList(),
-                    )
-                    database.accountDao().updateAccount(account.copy(memberships = updatedMemberships, activeSchoolId = schoolId))
-                }
+                val updatedMemberships = account.memberships.toMutableMap()
+                updatedMemberships[schoolId] = LocalSchoolMembership(
+                    schoolName = name,
+                    role = "ADMIN",
+                    status = "ACTIVE",
+                    assignedClassIds = emptyList(),
+                )
+                accountDao.updateAccount(account.copy(memberships = updatedMemberships, activeSchoolId = schoolId))
             }
             // 🔥 Trigger immediate sync to Firestore
             syncManager.enqueueSchoolSync(schoolId)
@@ -203,16 +220,9 @@ class SchoolRepositoryImpl @Inject constructor(
             when (remoteResult) {
                 is Result.Success -> {
                     database.withTransaction {
-                        // 🔥 SAFETY CHECK: Ensure school exists locally to avoid Foreign Key constraint fail (Code 787)
+                        // 🔥 AI Native: Ensure school exists locally. Do NOT auto-create "Ghost Schools".
                         if (dao.getSchoolById(schoolId) == null) {
-                            dao.upsertSchool(
-                                SchoolEntity(
-                                    id = schoolId,
-                                    accountId = accountId,
-                                    name = "School $schoolId",
-                                    timezone = "Asia/Jakarta",
-                                ),
-                            )
+                            return@withTransaction Result.Failure(AppError.LocalDB("School $schoolId not found locally. Sync aborted."))
                         }
 
                         remoteResult.data.forEach { classModel ->
@@ -230,6 +240,7 @@ class SchoolRepositoryImpl @Inject constructor(
                             dao.upsertClass(entity)
                             dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
                         }
+                        Result.Success(Unit)
                     }
                     Result.Success(Unit)
                 }
@@ -245,13 +256,34 @@ class SchoolRepositoryImpl @Inject constructor(
         return try {
             val existing = dao.getSchoolById(id)
             if (existing != null) {
-                dao.upsertSchool(
-                    existing.copy(
-                        status = "DELETED",
-                        syncStatus = SyncStatus.PENDING_DELETE.name,
-                    ),
-                )
+                database.withTransaction {
+                    // 1. Mark school as deleted for sync
+                    dao.upsertSchool(
+                        existing.copy(
+                            status = "DELETED",
+                            syncStatus = SyncStatus.PENDING_DELETE.name,
+                        ),
+                    )
+
+                    // 2. Remove from local account memberships
+                    val account = accountDao.getAccountById(accountId)
+                    if (account != null) {
+                        val updatedMemberships = account.memberships.toMutableMap()
+                        updatedMemberships.remove(id)
+
+                        // If it was the active school, clear it
+                        val activeSchoolId = if (account.activeSchoolId == id) null else account.activeSchoolId
+
+                        accountDao.updateAccount(
+                            account.copy(
+                                memberships = updatedMemberships,
+                                activeSchoolId = activeSchoolId,
+                            ),
+                        )
+                    }
+                }
                 syncManager.enqueueSchoolSync(id)
+                syncManager.enqueueAccessSync(accountId)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -289,19 +321,13 @@ class SchoolRepositoryImpl @Inject constructor(
                 dao.upsertClass(entity)
 
                 if (schoolId != null) {
-                    // 🔥 SAFETY CHECK: Ensure school exists locally to avoid Foreign Key constraint fail (Code 787)
+                    // 🔥 AI Native: Ensure school exists locally. Do NOT auto-create "Ghost Schools".
                     if (dao.getSchoolById(schoolId) == null) {
-                        dao.upsertSchool(
-                            SchoolEntity(
-                                id = schoolId,
-                                accountId = _accountId,
-                                name = "School $schoolId",
-                                timezone = "Asia/Jakarta",
-                            ),
-                        )
+                        return@withTransaction Result.Failure(AppError.LocalDB("School $schoolId not found locally. Assignment aborted."))
                     }
                     dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
                 }
+                Result.Success(Unit)
             }
 
             repositoryScope.launch {
@@ -380,18 +406,12 @@ class SchoolRepositoryImpl @Inject constructor(
 
     override suspend fun reassignClass(accountId: String, classId: String, newSchoolId: String): Result<Unit> = try {
         database.withTransaction {
-            // 🔥 SAFETY CHECK: Ensure school exists locally
+            // 🔥 AI Native: Ensure school exists locally. Do NOT auto-create "Ghost Schools".
             if (dao.getSchoolById(newSchoolId) == null) {
-                dao.upsertSchool(
-                    SchoolEntity(
-                        id = newSchoolId,
-                        accountId = accountId,
-                        name = "School $newSchoolId",
-                        timezone = "Asia/Jakarta",
-                    ),
-                )
+                return@withTransaction Result.Failure(AppError.LocalDB("Target School $newSchoolId not found locally. Reassignment aborted."))
             }
             dao.reassignClass(SchoolClassAssignment(newSchoolId, classId))
+            Result.Success(Unit)
         }
         Result.Success(Unit)
     } catch (e: Exception) {
@@ -407,20 +427,13 @@ class SchoolRepositoryImpl @Inject constructor(
     override suspend fun updateClassSchool(classId: String, schoolId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.withTransaction {
-                // 🔥 SAFETY CHECK: Ensure school exists locally
+                // 🔥 AI Native: Ensure school exists locally. Do NOT auto-create "Ghost Schools".
                 if (dao.getSchoolById(schoolId) == null) {
-                    val accountId = sessionManager.getCurrentAccountId() ?: "SYSTEM"
-                    dao.upsertSchool(
-                        SchoolEntity(
-                            id = schoolId,
-                            accountId = accountId,
-                            name = "School $schoolId",
-                            timezone = "Asia/Jakarta",
-                        ),
-                    )
+                    return@withTransaction Result.Failure(AppError.LocalDB("School $schoolId not found locally. Update aborted."))
                 }
                 dao.updateClassSchool(classId, schoolId)
                 dao.assignClass(SchoolClassAssignment(schoolId, classId))
+                Result.Success(Unit)
             }
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -458,9 +471,17 @@ class SchoolRepositoryImpl @Inject constructor(
         try {
             val school = dao.getSchoolById(schoolId)
             if (school != null) {
-                val remoteResult = remoteDataSource.saveSchool(school.accountId, school.toDomain())
-                if (remoteResult is Result.Success) {
-                    dao.upsertSchool(school.copy(syncStatus = SyncStatus.SYNCED.name))
+                if (school.status == "DELETED") {
+                    // 🔥 Perform actual deletion from BOTH sources
+                    val remoteResult = remoteDataSource.deleteSchool(school.accountId, school.id)
+                    if (remoteResult is Result.Success) {
+                        dao.deleteSchoolById(school.id)
+                    }
+                } else {
+                    val remoteResult = remoteDataSource.saveSchool(school.accountId, school.toDomain())
+                    if (remoteResult is Result.Success) {
+                        dao.upsertSchool(school.copy(syncStatus = SyncStatus.SYNCED.name))
+                    }
                 }
             }
             Result.Success(Unit)

@@ -44,6 +44,7 @@ class FollowingViewModel @Inject constructor(
             is FollowingUiEvent.SelectFriendForAssignment -> _uiStateFlow.update { it.copy(selectedFriendForAssignment = event.friend) }
             is FollowingUiEvent.AssignClasses -> handleAssignClasses(event.targetId, event.classIds)
             is FollowingUiEvent.ChangeMemberRole -> handleMemberRoleChange(event.targetAccountId, event.newRole)
+            is FollowingUiEvent.UnfollowFriend -> handleUnfollowFriend(event.targetAccountId)
             FollowingUiEvent.LoadData -> loadAllData()
             FollowingUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
             FollowingUiEvent.NavigateBack -> { /* Handled by screen navigation */ }
@@ -136,6 +137,20 @@ class FollowingViewModel @Inject constructor(
             accountRepository.updateMemberRole(targetAccountId, schoolId, newRole)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isProcessing = false, error = "Member role updated to ${newRole.name}") }
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) }
+                }
+        }
+    }
+
+    private fun handleUnfollowFriend(targetAccountId: String) {
+        val accountId = currentAccountId ?: return
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isProcessing = true) }
+            accountRepository.unfollowAccount(accountId, targetAccountId)
+                .onSuccess {
+                    _uiStateFlow.update { it.copy(isProcessing = false, error = "Disconnected successfully!") }
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) }

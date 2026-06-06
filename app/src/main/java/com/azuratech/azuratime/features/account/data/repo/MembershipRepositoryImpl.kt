@@ -70,6 +70,7 @@ class MembershipRepositoryImpl @Inject constructor(
                 accountId = uid,
                 email = email,
                 name = displayName ?: "Account",
+                role = "USER", // 🔥 AI Native Secure Default
                 status = SessionManager.STATUS_PENDING,
                 syncStatus = SyncStatus.PENDING_UPDATE.name,
             )
@@ -82,6 +83,7 @@ class MembershipRepositoryImpl @Inject constructor(
                 "name" to (displayName ?: "Account"),
                 "hardwareId" to hardwareId,
                 "status" to "PENDING",
+                "role" to "USER", // 🔥 AI Native Secure Default
                 "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
             )
             firestore.collection("memberships").document(uid).set(pendingData, com.google.firebase.firestore.SetOptions.merge()).await()

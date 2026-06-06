@@ -19,4 +19,5 @@ sealed class AccountUiEvent {
     data class UpdatePendingRole(val requestId: String, val role: com.azuratech.azuratime.core.domain.model.AccountRole) : AccountUiEvent()
     data class ApproveFollower(val requestId: String) : AccountUiEvent()
     data class ChangeMemberRole(val targetAccountId: String, val newRole: com.azuratech.azuratime.core.domain.model.AccountRole) : AccountUiEvent()
+    data class RemoveMember(val targetAccountId: String) : AccountUiEvent()
 }

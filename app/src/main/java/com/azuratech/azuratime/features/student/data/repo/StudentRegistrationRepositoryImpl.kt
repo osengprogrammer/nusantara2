@@ -124,16 +124,11 @@ class StudentRegistrationRepositoryImpl @Inject constructor(
                         )
                         classDao.insert(newClass)
 
-                        // 🔥 SAFETY CHECK: Ensure school exists locally to avoid Foreign Key constraint fail (Code 787)
+                        // 🔥 AI Native: Ensure school exists locally. Do NOT auto-create "Ghost Schools".
                         if (schoolClassDao.getSchoolById(schoolId) == null) {
-                            schoolClassDao.upsertSchool(
-                                SchoolEntity(
-                                    id = schoolId,
-                                    accountId = accountId,
-                                    name = "School $schoolId",
-                                    timezone = "Asia/Jakarta",
-                                ),
-                            )
+                            // If school is missing, we cannot proceed with class assignment due to FK constraints.
+                            // We throw an exception caught by the catch block to fail the flow.
+                            throw Exception("School $schoolId not found locally. Import aborted to prevent data corruption.")
                         }
 
                         schoolClassDao.assignClass(SchoolClassAssignment(schoolId, newClass.id))

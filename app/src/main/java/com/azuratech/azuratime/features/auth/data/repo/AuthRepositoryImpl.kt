@@ -66,6 +66,7 @@ class AuthRepositoryImpl @Inject constructor(
                     accountId = uid,
                     email = email,
                     name = firebaseUser.displayName ?: "New Account",
+                    role = "USER", // 🔥 AI Native Secure Default
                     memberships = emptyMap(),
                     activeSchoolId = null,
                     status = SessionManager.STATUS_PENDING,

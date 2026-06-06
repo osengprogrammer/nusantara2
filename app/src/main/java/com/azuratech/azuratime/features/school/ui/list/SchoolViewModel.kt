@@ -11,6 +11,7 @@ import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.azuratech.azuratime.core.domain.model.AccountRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -68,6 +69,7 @@ class SchoolViewModel @Inject constructor(
             is SchoolUiEvent.SelectSchool -> selectSchool(event.school)
             is SchoolUiEvent.CreateSchool -> createSchool(event.name, event.timezone, event.selectedClassIds)
             is SchoolUiEvent.DeleteSchool -> deleteSchool(event.id)
+            is SchoolUiEvent.UpdateSchoolName -> updateSchoolName(event.schoolId, event.newName)
             SchoolUiEvent.Retry -> _uiStateFlow.value.accountId.takeIf { it.isNotEmpty() }?.let { loadSchools(it) }
         }
     }
@@ -81,6 +83,9 @@ class SchoolViewModel @Inject constructor(
             accountRepository.observeAccountEntityFlow(accountId)
                 .map { it.getOrNull() }
                 .filterNotNull()
+                .onEach { account ->
+                    _uiStateFlow.update { it.copy(currentAccountRole = AccountRole.fromString(account.role)) }
+                }
                 .distinctUntilChangedBy { it.memberships.keys }
                 .flatMapLatest { account ->
                     val schoolIds = account.memberships.keys.toList()
@@ -134,40 +139,31 @@ class SchoolViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            accountRepository.getAccountById(currentAccountId).onSuccess { account ->
-                // 🔥 RELAXED FOR TESTING: Allow school creation to verify the flow
-                // if (account.role != "SUPER_ADMIN" && _uiStateFlow.value.schools.isNotEmpty()) {
-                //     _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("❌ Failed: Only Super Admin can create more than one school."))
-                //     _uiStateFlow.update { it.copy(isLoading = false) }
-                //     return@onSuccess
-                // }
+            schoolRepository.createSchool(currentAccountId, name, timezone)
+                .onSuccess { newSchoolId ->
+                    // Push the account update immediately (containing the new membership)
+                    accountRepository.pushAccount(currentAccountId)
 
-                schoolRepository.createSchool(currentAccountId, name, timezone)
-                    .onSuccess { newSchoolId ->
-                        // Push the account update immediately (containing the new membership)
-                        accountRepository.pushAccount(currentAccountId)
-
-                        selectedClassIds.forEach { classId ->
-                            schoolRepository.assignClassToSchool(newSchoolId, classId)
-                        }
-
-                        schoolRepository.getSchoolById(newSchoolId).onSuccess { newSchool ->
-                            val status = newSchool.status
-                            if (status == "ACTIVE") {
-                                _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("🎉 School active! You are an Admin."))
-                                selectSchool(newSchool)
-                            } else {
-                                _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("⏳ Waiting for Super Admin verification."))
-                            }
-                        }
-                        loadOrphanedClasses() // 🔥 Refresh available classes
-                        _uiStateFlow.update { it.copy(isLoading = false) }
+                    selectedClassIds.forEach { classId ->
+                        schoolRepository.assignClassToSchool(newSchoolId, classId)
                     }
-                    .onFailure { error ->
-                        _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("❌ Failed: ${error.message}"))
-                        _uiStateFlow.update { it.copy(isLoading = false) }
+
+                    schoolRepository.getSchoolById(newSchoolId).onSuccess { newSchool ->
+                        val status = newSchool.status
+                        if (status == "ACTIVE") {
+                            _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("🎉 School active! You are an Admin."))
+                            selectSchool(newSchool)
+                        } else {
+                            _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("⏳ Waiting for Super Admin verification."))
+                        }
                     }
-            }
+                    loadOrphanedClasses() // 🔥 Refresh available classes
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                }
+                .onFailure { error ->
+                    _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("❌ Failed: ${error.message}"))
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                }
         }
     }
 
@@ -177,6 +173,20 @@ class SchoolViewModel @Inject constructor(
 
         viewModelScope.launch {
             schoolRepository.deleteSchool(id, currentAccountId)
+        }
+    }
+
+    private fun updateSchoolName(schoolId: String, newName: String) {
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isLoading = true) }
+            schoolRepository.updateSchoolDetails(schoolId, newName, null)
+                .onSuccess {
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("School name updated successfully!"))
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+                }
         }
     }
 }
