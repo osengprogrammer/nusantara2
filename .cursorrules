@@ -1,0 +1,47 @@
+# 🤖 AZURATIME AI-NATIVE CORE RULES (v3.2.1)
+# ⚡ MANDATORY: These rules are strictly enforced for all AI agents.
+
+## 🔹 1. TERMINOLOGY (SEMANTIC PURITY)
+*Forbidden terms must be refactored immediately if encountered.*
+
+| Forbidden Term | Approved Term | Context |
+| :--- | :--- | :--- |
+| `User` | **Account** | App identity model |
+| `Staff` | **Account** | Legacy identity term |
+| `Teacher` | **Supervisor** | Role with limited class access |
+| `Classroom` | **Class** | Logical grouping of students |
+| `Institution` | **School** | Workspace/Organization context |
+| `Personnel` | **Student** | The person being tracked |
+| `Record` | **AttendanceRecord**| Specific attendance entry |
+
+## 🔹 2. ARCHITECTURE (VSA & MVI)
+- **Vertical Slice Architecture:** Keep UI, Domain, and Data within the feature package (e.g., `features/attendance/`).
+- **Effect-Driven MVI:**
+  - `UiState`: Persistent state (StateFlow).
+  - `UiEvent`: User actions (Sealed Class).
+  - `UiEffect`: Transient actions like Toasts, Navigation, Snackbars (SharedFlow).
+- **Single Source of Truth (SSOT):** Local Room DB is primary; Firestore is for sync/cloud backup.
+- **Sync Logic:** Use Hybrid Sync. Fetch full lists from DAOs before pushing to Firestore.
+
+## 🔹 3. NAMING CONVENTIONS
+- **Flows:** MUST end with `Flow` suffix (e.g., `uiStateFlow`, `enrollmentsFlow`).
+- **Routes:** MUST use `camelCase` (e.g., `attendanceCapture`, `studentForm`).
+- **Composables:** MUST use `PascalCase` (e.g., `DashboardScreen`, `StudentRow`).
+- **Repositories:** Interface in `domain/repository`, Implementation in `data/repository` (suffix `Impl`).
+- **Result Wrapper:** All repository methods must return `Result<T>` or `Flow<Result<T>>`.
+
+## 🔹 4. LANGUAGE POLICY
+- **English-First:** 100% Common English for code (Variables, Functions, Classes) and Technical Comments.
+- **UI Strings:** Keys in English; values can be localized.
+
+## 🔹 5. AUTHORIZATION & SECURITY
+- **PermissionUtils:** Mandatory use of `PermissionUtils` extension functions (`isAdmin`, `isSupervisorOf`, `canAccessClass`) for all role-based logic.
+- **No Cascade Deletes:** Room ForeignKeys must use `ForeignKey.NO_ACTION` for many-to-many assignments.
+- **Composite Keys:** Use composite primary keys for assignment entities.
+
+## 🔹 6. REPOSITORY STANDARDS
+- Read operations: `Flow<Result<T>>` or `Flow<T>`.
+- Write operations: `suspend Result<T>`.
+- Use `asLocalResult()` extension for Room-to-Result mapping.
+
+✅ .cursorrules generated for maximum AI comprehension.
