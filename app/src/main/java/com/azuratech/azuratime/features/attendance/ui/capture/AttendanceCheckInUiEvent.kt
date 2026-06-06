@@ -14,7 +14,7 @@ sealed class AttendanceCheckInUiEvent {
     object NavigateBack : AttendanceCheckInUiEvent()
 }
 
-sealed class AttendanceSideEffect {
-    data class Speak(val message: String) : AttendanceSideEffect()
-    object NavigateBack : AttendanceSideEffect()
+sealed class AttendanceCaptureUiEffect {
+    data class Speak(val message: String) : AttendanceCaptureUiEffect()
+    object NavigateBack : AttendanceCaptureUiEffect()
 }

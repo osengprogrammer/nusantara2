@@ -35,7 +35,7 @@ fun ManualAttendanceContent(
     onBack: () -> Unit,
 ) {
     AzuraScreen(
-        title = "Input Manual",
+        title = "Manual Input",
         onBack = onBack,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -49,9 +49,9 @@ fun ManualAttendanceContent(
                     ManualAttendanceLockBanner()
                 }
 
-                // 1. Personnel Selection
+                // 1. Student Selection
                 ManualAttendanceFilterDropdown(
-                    label = "Pilih Personil",
+                    label = "Select Student",
                     options = faces,
                     selectedOption = selectedFace,
                     onOptionSelected = onFaceSelected,
@@ -65,14 +65,14 @@ fun ManualAttendanceContent(
                         OutlinedTextField(
                             value = selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                             onValueChange = {},
-                            label = { Text("Tanggal") },
+                            label = { Text("Date") },
                             readOnly = true,
                             modifier = Modifier.weight(1f),
                             shape = AzuraShapes.medium,
                         )
                     } else {
                         AzuraDatePickerButton(
-                            label = "Tanggal",
+                            label = "Date",
                             selectedDate = selectedDate,
                             onDateSelected = onDateSelected,
                             modifier = Modifier.weight(1f),
@@ -80,7 +80,7 @@ fun ManualAttendanceContent(
                     }
 
                     ManualAttendanceTimePickerButton(
-                        label = "Jam",
+                        label = "Time",
                         selectedTime = selectedTime,
                         onTimeSelected = onTimeSelected,
                         modifier = Modifier.weight(1f),
@@ -90,14 +90,14 @@ fun ManualAttendanceContent(
                 Spacer(Modifier.height(AzuraSpacing.sm))
 
                 // 3. Attendance Status
-                Text("Status Kehadiran", style = MaterialTheme.typography.labelLarge)
+                Text("Attendance Status", style = MaterialTheme.typography.labelLarge)
                 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
                 androidx.compose.foundation.layout.FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                 ) {
-                    listOf("H" to "Hadir", "T" to "Terlambat", "S" to "Sakit", "I" to "Izin", "A" to "Alpa").forEach { (code, label) ->
+                    listOf("H" to "Present", "T" to "Late", "S" to "Sick", "I" to "Excused", "A" to "Absent").forEach { (code, label) ->
                         FilterChip(
                             selected = selectedStatus == code,
                             onClick = { onStatusSelected(code) },
@@ -111,11 +111,11 @@ fun ManualAttendanceContent(
 
                 // 4. Session/Class Dropdown
                 ManualAttendanceFilterDropdown(
-                    label = "Pilih Sesi/Kelas (Opsional)",
+                    label = "Select Session/Class (Optional)",
                     options = availableClasses,
                     selectedOption = selectedClass,
                     onOptionSelected = onClassSelected,
-                    getLabel = { it?.name ?: "Umum / Tanpa Kelas" },
+                    getLabel = { it?.name ?: "General / No Class" },
                 )
 
                 Spacer(Modifier.weight(1f))
@@ -130,7 +130,7 @@ fun ManualAttendanceContent(
                         .height(56.dp),
                     shape = AzuraShapes.medium,
                 ) {
-                    Text("Simpan Kehadiran", style = MaterialTheme.typography.titleMedium)
+                    Text("Save Attendance", style = MaterialTheme.typography.titleMedium)
                 }
             }
         }

@@ -37,12 +37,12 @@ fun BarcodeScanScreen(
     val voiceAssistant = rememberVoiceAssistant()
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
-    // Side Effects: Voice Assistant & Navigation
+    // UI Effects: Voice Assistant & Navigation
     LaunchedEffect(Unit) {
-        viewModel.sideEffectFlow.collect { effect ->
+        viewModel.uiEffectFlow.collect { effect ->
             when (effect) {
-                is AttendanceSideEffect.Speak -> voiceAssistant.speak(effect.message)
-                AttendanceSideEffect.NavigateBack -> onNavigateBack()
+                is AttendanceCaptureUiEffect.Speak -> voiceAssistant.speak(effect.message)
+                AttendanceCaptureUiEffect.NavigateBack -> onNavigateBack()
             }
         }
     }
@@ -102,16 +102,16 @@ fun BarcodeScanScreen(
                                 uiState.studentProfile != null -> {
                                     AzuraCard(
                                         modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
-                                        title = "Check-in Berhasil",
+                                        title = "Check-in Success",
                                         content = {
                                             Text(
-                                                text = "Siswa: ${uiState.studentProfile?.name}",
+                                                text = "Student: ${uiState.studentProfile?.name}",
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                                             )
                                             if (uiState.isAlreadyCheckedIn) {
                                                 Text(
-                                                    text = "Sudah absen sebelumnya.",
+                                                    text = "Already checked-in previously.",
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MaterialTheme.colorScheme.primary,
                                                 )
@@ -122,22 +122,22 @@ fun BarcodeScanScreen(
                                 uiState.error != null -> {
                                     AzuraCard(
                                         modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
-                                        title = "Gagal",
+                                        title = "Failed",
                                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                                         content = {
                                             Text(text = uiState.error ?: "", style = MaterialTheme.typography.bodyMedium)
                                         },
                                     )
-                                    AzuraButton(text = "Coba Lagi", onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.Retry) })
+                                    AzuraButton(text = "Try Again", onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.Retry) })
                                 }
                                 uiState.isLoading -> {
                                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                                     Spacer(modifier = Modifier.height(AzuraSpacing.sm))
-                                    Text("Memproses...", color = Color.White)
+                                    Text("Processing...", color = Color.White)
                                 }
                                 else -> {
                                     Text(
-                                        "Arahkan kamera ke QR Code Siswa",
+                                        "Point camera at Student QR Code",
                                         color = Color.White.copy(alpha = 0.7f),
                                         style = MaterialTheme.typography.bodyMedium,
                                     )

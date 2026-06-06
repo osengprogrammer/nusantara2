@@ -16,7 +16,7 @@ object AuthPreviewMocks {
     )
 
     fun error(): AuthUiState = AuthUiState(
-        error = "Gagal menghubungkan ke server Google. Periksa koneksi Anda.",
+        error = "Failed to connect to Google server. Check your connection.",
     )
 
     fun success(): AuthUiState = AuthUiState(

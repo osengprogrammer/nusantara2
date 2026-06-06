@@ -15,5 +15,5 @@ object FollowingPreviewMocks {
         ),
     )
 
-    fun error(): FollowingUiState = FollowingUiState(error = "Gagal mencari akun. Silakan coba lagi.")
+    fun error(): FollowingUiState = FollowingUiState(error = "Failed to search account. Please try again.")
 }

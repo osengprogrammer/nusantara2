@@ -102,7 +102,7 @@ fun ManualAttendanceTimePickerButton(
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) { Text("Batal") }
+                TextButton(onClick = { showTimePicker = false }) { Text("Cancel") }
             },
             text = { TimePicker(state = timePickerState) },
         )

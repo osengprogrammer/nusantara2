@@ -158,7 +158,7 @@ fun ClassPicker(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Pilih Kelas") },
+        title = { Text("Select Class") },
         text = {
             LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                 items(availableClasses) { cls ->
@@ -170,12 +170,12 @@ fun ClassPicker(
                     }
                 }
                 if (availableClasses.isEmpty()) {
-                    item { Text("Tidak ada kelas tersedia", color = Color.Gray) }
+                    item { Text("No classes available", color = Color.Gray) }
                 }
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
