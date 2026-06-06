@@ -26,15 +26,15 @@ fun DataIntegrityScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.uiEventFlow.collect { event ->
-            if (event is com.azuratech.azuratime.core.ui.UiEvent.ShowSnackbar) {
-                snackbarHostState.showSnackbar(event.message)
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is DataIntegrityUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
             }
         }
     }
 
     AzuraScreen(
-        title = "Kesehatan Data",
+        title = "System Health",
         onBack = onNavigateBack,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) {
@@ -49,7 +49,7 @@ fun DataIntegrityScreen(
 
             if (uiState.conflicts.isNotEmpty()) {
                 item {
-                    Text("Konflik Kehadiran", style = MaterialTheme.typography.titleMedium)
+                    Text("Attendance Conflicts", style = MaterialTheme.typography.titleMedium)
                 }
                 items(uiState.conflicts) { conflict ->
                     ConflictItem(
@@ -63,7 +63,7 @@ fun DataIntegrityScreen(
                 item {
                     AzuraCard(modifier = Modifier.fillMaxWidth()) {
                         Box(modifier = Modifier.padding(AzuraSpacing.xl), contentAlignment = Alignment.Center) {
-                            Text("Tidak ada konflik data terdeteksi.")
+                            Text("No data conflicts detected.")
                         }
                     }
                 }
@@ -80,12 +80,12 @@ fun DataIntegrityScreen(
 
 @Composable
 fun IntegritySummarySection(state: DataIntegrityUiState) {
-    AzuraCard(title = "Ringkasan Sistem") {
+    AzuraCard(title = "System Summary") {
         Column(modifier = Modifier.padding(AzuraSpacing.md), verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
-            IntegrityRow("Total Siswa", state.totalStudents.toString())
-            IntegrityRow("Total Presensi", state.totalRecords.toString())
-            IntegrityRow("Siswa Tanpa Kelas", state.missingAssignments.toString(), isError = state.missingAssignments > 0)
-            IntegrityRow("Data Belum Sinkron", state.unsyncedCount.toString(), isWarning = state.unsyncedCount > 0)
+            IntegrityRow("Total Students", state.totalStudents.toString())
+            IntegrityRow("Total Attendance", state.totalRecords.toString())
+            IntegrityRow("Students Without Class", state.missingAssignments.toString(), isError = state.missingAssignments > 0)
+            IntegrityRow("Unsynced Data", state.unsyncedCount.toString(), isWarning = state.unsyncedCount > 0)
         }
     }
 }
@@ -115,17 +115,17 @@ fun ConflictItem(conflict: AttendanceConflict, onResolve: (Boolean) -> Unit) {
 
     AzuraCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(AzuraSpacing.md)) {
-            Text(text = "Konflik: ${conflict.local.studentName}", style = MaterialTheme.typography.labelLarge)
-            Text(text = "Waktu: ${dateTime.format(formatter)}", style = MaterialTheme.typography.bodySmall)
+            Text(text = "Conflict: ${conflict.local.studentName}", style = MaterialTheme.typography.labelLarge)
+            Text(text = "Time: ${dateTime.format(formatter)}", style = MaterialTheme.typography.bodySmall)
 
             Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
                 Button(onClick = { onResolve(true) }, modifier = Modifier.weight(1f)) {
-                    Text("Gunakan Cloud (${conflict.cloud.status})")
+                    Text("Use Cloud (${conflict.cloud.status})")
                 }
                 OutlinedButton(onClick = { onResolve(false) }, modifier = Modifier.weight(1f)) {
-                    Text("Gunakan Lokal (${conflict.local.status})")
+                    Text("Use Local (${conflict.local.status})")
                 }
             }
         }

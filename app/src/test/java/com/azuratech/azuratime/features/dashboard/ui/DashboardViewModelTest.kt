@@ -10,6 +10,7 @@ import com.azuratech.azuratime.features.account.data.local.SchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
+import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
@@ -79,7 +80,9 @@ class DashboardViewModelTest {
         // Mock Repositories
         every { schoolRepository.observeClassesFlow(schoolId) } returns flowOf(Result.Success(allClasses))
         every { schoolRepository.observeSchoolByIdFlow(schoolId) } returns flowOf(Result.Success(null))
-        every { attendanceRepository.getAttendanceRecords(any(), any(), any(), any(), any(), any(), any()) } returns flowOf(Result.Success(emptyList()))
+        every {
+            attendanceRepository.getAttendanceRecordsFlow(any(), any(), any(), any(), any(), any(), any())
+        } returns flowOf(Result.Success<List<AttendanceRecordEntity>>(emptyList()))
         every { accountRepository.observePendingRequestsCountFlow(any()) } returns flowOf(0)
         every { studentRepository.getStudentProfilesFlow() } returns flowOf(Result.Success(emptyList()))
     }
