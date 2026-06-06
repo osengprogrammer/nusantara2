@@ -63,7 +63,7 @@ class DashboardViewModel @Inject constructor(
     private val _recentRecordsFlow = _activeSchoolIdFlow
         .flatMapLatest { schoolId ->
             if (schoolId != null) {
-                attendanceRepository.getAttendanceRecords("", null, null, null, null, emptyList(), schoolId)
+                attendanceRepository.getAttendanceRecordsFlow("", null, null, null, null, emptyList(), schoolId)
                     .map { result -> result.getOrNull()?.take(5) ?: emptyList() }
             } else {
                 flowOf(emptyList())

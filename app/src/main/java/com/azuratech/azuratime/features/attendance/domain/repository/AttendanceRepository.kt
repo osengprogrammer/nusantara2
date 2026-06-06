@@ -23,7 +23,7 @@ data class ProcessAttendanceParams(
  * The single source of truth for Check-In operations.
  */
 interface AttendanceRepository {
-    fun getAttendanceRecords(
+    fun getAttendanceRecordsFlow(
         name: String,
         startDate: LocalDate?,
         endDate: LocalDate?,
@@ -41,11 +41,11 @@ interface AttendanceRepository {
 
     //  SYNC & MISC
     suspend fun syncRecord(record: AttendanceRecord): Result<Unit>
-    fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Result<Int>>
-    fun getUnassignedStudentCount(schoolId: String): Flow<Result<Int>>
-    fun getStudentsByClass(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>>
-    fun getStudentCountInClass(classId: String, schoolId: String): Flow<Result<Int>>
-    fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<Result<List<String>>>
+    fun getTodayPresentCountFlow(date: LocalDate, schoolId: String): Flow<Result<Int>>
+    fun getUnassignedStudentCountFlow(schoolId: String): Flow<Result<Int>>
+    fun getStudentsByClassFlow(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>>
+    fun getStudentCountInClassFlow(classId: String, schoolId: String): Flow<Result<Int>>
+    fun getClassIdsForStudentFlow(studentId: String, schoolId: String): Flow<Result<List<String>>>
     suspend fun getStudentBiometricById(studentId: String, schoolId: String): Result<StudentBiometricEntity?>
     suspend fun getUnsyncedRecords(schoolId: String): Result<List<AttendanceRecord>>
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecord>>
