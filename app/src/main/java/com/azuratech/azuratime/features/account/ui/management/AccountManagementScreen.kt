@@ -15,6 +15,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -25,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
@@ -33,6 +36,8 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.StudentAvatar
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
+import com.azuratech.azuratime.core.domain.model.AccountRole
+import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
 
 /**
  * 👤 ACCOUNT MANAGEMENT SCREEN (v3.2.0-ai-native)
@@ -139,6 +144,32 @@ fun AccountManagementContent(
                     }
                 }
 
+                if (uiState.pendingFollowers.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                    ) {
+                        Text(
+                            text = "Pending Follower Requests",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = AzuraSpacing.md),
+                        )
+                        uiState.pendingFollowers.forEach { request ->
+                            PendingFollowerItem(
+                                request = request,
+                                selectedRole = uiState.selectedRoles[request.requestId] ?: AccountRole.USER,
+                                onRoleSelect = { role ->
+                                    onEvent(AccountUiEvent.UpdatePendingRole(request.requestId, role))
+                                },
+                                onApprove = {
+                                    onEvent(AccountUiEvent.ApproveFollower(request.requestId))
+                                },
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.weight(1f))
 
                 AzuraButton(
@@ -160,6 +191,52 @@ fun AccountManagementContent(
                         Text("OK")
                     }
                 },
+            )
+        }
+    }
+}
+
+@Composable
+fun PendingFollowerItem(
+    request: AccessRequestEntity,
+    selectedRole: AccountRole,
+    onRoleSelect: (AccountRole) -> Unit,
+    onApprove: () -> Unit,
+) {
+    AzuraCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(AzuraSpacing.md)) {
+            Text(
+                text = "ID: ${request.accountId}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.height(AzuraSpacing.xs))
+            Text(
+                text = "Assign Role:",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.xs),
+            ) {
+                listOf(AccountRole.ADMIN, AccountRole.SUPERVISOR, AccountRole.USER).forEach { role ->
+                    FilterChip(
+                        selected = selectedRole == role,
+                        onClick = { onRoleSelect(role) },
+                        label = { Text(role.name, style = MaterialTheme.typography.labelSmall) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+            AzuraButton(
+                text = "Approve",
+                onClick = onApprove,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

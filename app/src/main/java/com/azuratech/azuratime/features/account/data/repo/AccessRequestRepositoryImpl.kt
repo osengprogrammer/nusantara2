@@ -80,13 +80,14 @@ class AccessRequestRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun approveRequest(requestId: String): Result<Unit> {
+    override suspend fun approveRequest(requestId: String, role: com.azuratech.azuratime.core.domain.model.AccountRole): Result<Unit> {
         return try {
             val request = accessRequestDao.getRequestById(requestId)
             if (request != null) {
                 accessRequestDao.insertRequest(
                     request.copy(
                         status = AccessRequestStatus.APPROVED,
+                        assignedRole = role.name,
                         syncStatus = SyncStatus.PENDING_UPDATE,
                         updatedAt = System.currentTimeMillis(),
                     ),

@@ -12,6 +12,7 @@ data class AccessRequestProfile(
     val schoolId: String,
     val schoolName: String,
     val status: AccessRequestStatus,
+    val assignedRole: String = "USER",
     val syncStatus: SyncStatus,
     val createdAt: Long,
     val updatedAt: Long,
