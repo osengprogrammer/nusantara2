@@ -38,5 +38,5 @@ object AssignmentPreviewMocks {
         )
     }
 
-    fun error(): AssignmentUiState = AssignmentUiState(error = "Gagal memuat data penugasan")
+    fun error(): AssignmentUiState = AssignmentUiState(error = "Failed to load assignment data")
 }

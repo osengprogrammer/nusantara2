@@ -38,8 +38,8 @@ class AttendanceCaptureViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(AttendanceCheckInUiState())
     val uiStateFlow: StateFlow<AttendanceCheckInUiState> = _uiStateFlow.asStateFlow()
 
-    private val _sideEffectFlow = Channel<AttendanceSideEffect>()
-    val sideEffectFlow = _sideEffectFlow.receiveAsFlow()
+    private val _uiEffectFlow = Channel<AttendanceCaptureUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.receiveAsFlow()
 
     private var gallery: List<Pair<String, FloatArray>> = emptyList()
     private var currentAccountEmail: String = ""
@@ -61,7 +61,7 @@ class AttendanceCaptureViewModel @Inject constructor(
             is AttendanceCheckInUiEvent.ManualEntryConfirmed -> { /* Logic for manual confirm if needed */ }
             is AttendanceCheckInUiEvent.GrantPermission -> _uiStateFlow.update { it.copy(cameraPermissionGranted = event.granted) }
             AttendanceCheckInUiEvent.Retry -> resetScanningState()
-            AttendanceCheckInUiEvent.NavigateBack -> viewModelScope.launch { _sideEffectFlow.send(AttendanceSideEffect.NavigateBack) }
+            AttendanceCheckInUiEvent.NavigateBack -> viewModelScope.launch { _uiEffectFlow.send(AttendanceCaptureUiEffect.NavigateBack) }
         }
     }
 
@@ -221,16 +221,16 @@ class AttendanceCaptureViewModel @Inject constructor(
                         handleCheckInSuccess(scannedId, attendanceRes.name, attendanceRes.message, false)
                     }
                     is AttendanceResult.AlreadyCheckedIn -> {
-                        handleCheckInSuccess(scannedId, attendanceRes.name, "${attendanceRes.name}, sudah absen.", true)
+                        handleCheckInSuccess(scannedId, attendanceRes.name, "${attendanceRes.name}, already checked in.", true)
                     }
                     is AttendanceResult.Rejected -> {
-                        handleError("${attendanceRes.name}: Bukan Kelas Ini!")
+                        handleError("${attendanceRes.name}: Not in this class!")
                     }
                     AttendanceResult.Unregistered -> handleUnregistered()
                 }
             }
             is Result.Failure -> {
-                handleError(result.error.message ?: "Gagal Absen")
+                handleError(result.error.message ?: "Check-in Failed")
             }
             is Result.Loading -> { /* Not used here */ }
         }
@@ -246,17 +246,17 @@ class AttendanceCaptureViewModel @Inject constructor(
                 isAlreadyCheckedIn = alreadyCheckedIn,
             )
         }
-        _sideEffectFlow.send(AttendanceSideEffect.Speak(speakMessage))
+        _uiEffectFlow.send(AttendanceCaptureUiEffect.Speak(speakMessage))
         enterCooldown()
     }
 
     private suspend fun handleUnregistered() {
-        handleError("Identitas Tidak Dikenal")
+        handleError("Unknown Identity")
     }
 
     private suspend fun handleError(message: String) {
         _uiStateFlow.update { it.copy(isLoading = false, error = message, isScanning = false) }
-        _sideEffectFlow.send(AttendanceSideEffect.Speak(message))
+        _uiEffectFlow.send(AttendanceCaptureUiEffect.Speak(message))
         enterCooldown()
     }
 

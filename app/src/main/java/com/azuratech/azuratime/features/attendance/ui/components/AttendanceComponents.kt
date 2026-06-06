@@ -78,7 +78,7 @@ fun HeaderOverlay(
                         fontWeight = FontWeight.Black,
                     ),
                 )
-                val display = if (activeClass.isBlank()) "SCAN BEBAS" else activeClass.uppercase()
+                val display = if (activeClass.isBlank()) "GENERAL SCAN" else activeClass.uppercase()
                 Text(
                     display,
                     style = MaterialTheme.typography.bodySmall.copy(color = Color.White), // Preserved for camera overlay contrast

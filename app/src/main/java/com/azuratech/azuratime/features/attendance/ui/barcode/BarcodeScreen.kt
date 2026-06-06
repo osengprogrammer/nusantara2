@@ -17,7 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCaptureViewModel
 import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCheckInUiEvent
-import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceSideEffect
+import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCaptureUiEffect
 import com.azuratech.azuratime.features.attendance.ui.capture.ScanMode
 import com.azuratech.azuratime.features.attendance.ui.components.MatchResultLabel
 import com.azuratech.azuratime.features.attendance.ui.components.StatusLabel
@@ -25,7 +25,6 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun BarcodeScreen(
@@ -37,12 +36,12 @@ fun BarcodeScreen(
     var currentCameraIsBack by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        viewModel.sideEffectFlow.onEach { effect ->
+        viewModel.uiEffectFlow.collect { effect ->
             when (effect) {
-                is AttendanceSideEffect.Speak -> voiceAssistant.speak(effect.message)
+                is AttendanceCaptureUiEffect.Speak -> voiceAssistant.speak(effect.message)
                 else -> {}
             }
-        }.collect()
+        }
     }
 
     LaunchedEffect(accountEmail) {
@@ -115,7 +114,7 @@ private fun HeaderOverlayBarcode(activeClass: String, onFlipCamera: () -> Unit) 
                         fontWeight = FontWeight.Black,
                     ),
                 )
-                val display = if (activeClass.isBlank()) "SCAN BEBAS" else activeClass.uppercase()
+                val display = if (activeClass.isBlank()) "GENERAL SCAN" else activeClass.uppercase()
                 Text(
                     display,
                     style = MaterialTheme.typography.bodySmall.copy(color = Color.White),

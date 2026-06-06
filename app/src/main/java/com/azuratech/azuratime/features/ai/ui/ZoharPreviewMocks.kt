@@ -7,10 +7,10 @@ object ZoharPreviewMocks {
     fun loading(): ZoharUiState = ZoharUiState(isLoading = true)
 
     fun success(): ZoharUiState = ZoharUiState(
-        response = "Berdasarkan data hari ini, 90% siswa hadir tepat waktu. Mantap Brother!",
+        response = "Based on today's data, 90% of students attended on time. Great job Brother!",
         conversationHistory = listOf(
-            ChatMessage(ChatRole.USER, "Bagaimana kehadiran hari ini?"),
-            ChatMessage(ChatRole.ZOHAR, "Berdasarkan data hari ini, 90% siswa hadir tepat waktu. Mantap Brother!"),
+            ChatMessage(ChatRole.USER, "How is the attendance today?"),
+            ChatMessage(ChatRole.ZOHAR, "Based on today's data, 90% of students attended on time. Great job Brother!"),
         ),
     )
 

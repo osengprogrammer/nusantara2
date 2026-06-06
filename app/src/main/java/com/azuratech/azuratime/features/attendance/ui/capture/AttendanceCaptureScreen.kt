@@ -48,12 +48,12 @@ fun AttendanceCaptureScreen(
     val voiceAssistant = rememberVoiceAssistant()
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
-    // Side Effects: Voice Assistant
+    // UI Effects: Voice Assistant
     LaunchedEffect(Unit) {
-        viewModel.sideEffectFlow.collect { effect ->
+        viewModel.uiEffectFlow.collect { effect ->
             when (effect) {
-                is AttendanceSideEffect.Speak -> voiceAssistant.speak(effect.message)
-                AttendanceSideEffect.NavigateBack -> onNavigateBack()
+                is AttendanceCaptureUiEffect.Speak -> voiceAssistant.speak(effect.message)
+                AttendanceCaptureUiEffect.NavigateBack -> onNavigateBack()
             }
         }
     }
@@ -146,11 +146,11 @@ fun AttendanceCaptureScreen(
                             uiState.studentProfile != null -> {
                                 AzuraCard(
                                     modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
-                                    title = "Presensi Berhasil",
+                                    title = "Attendance Success",
                                     content = {
-                                        Text(text = "Halo, ${uiState.studentProfile?.name}!", style = MaterialTheme.typography.bodyLarge)
+                                        Text(text = "Hello, ${uiState.studentProfile?.name}!", style = MaterialTheme.typography.bodyLarge)
                                         if (uiState.isAlreadyCheckedIn) {
-                                            Text(text = "Anda sudah melakukan presensi sebelumnya.", style = MaterialTheme.typography.bodySmall)
+                                            Text(text = "You have already checked-in previously.", style = MaterialTheme.typography.bodySmall)
                                         }
                                     },
                                 )
@@ -158,13 +158,13 @@ fun AttendanceCaptureScreen(
                             uiState.error != null -> {
                                 AzuraCard(
                                     modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
-                                    title = "Presensi Gagal",
+                                    title = "Attendance Failed",
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                                     content = {
                                         Text(text = uiState.error ?: "", style = MaterialTheme.typography.bodyMedium)
                                     },
                                 )
-                                AzuraButton(text = "Coba Lagi", onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.Retry) })
+                                AzuraButton(text = "Try Again", onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.Retry) })
                             }
                         }
                     }

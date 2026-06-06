@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
-import com.azuratech.azuratime.core.ui.UiEvent
 import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollmentProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -31,8 +30,8 @@ class BiometricEnrollmentViewModel @Inject constructor(
     private val sessionManager: com.azuratech.azuratime.core.session.SessionManager,
 ) : ViewModel() {
 
-    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
-    val uiEventFlow = _uiEventFlow.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<BiometricUiEffect>()
+    val uiEffectFlow = _uiEffectFlow.asSharedFlow()
 
     private val _stateFlow = MutableStateFlow(BiometricEnrollmentUiState())
     val uiStateFlow: StateFlow<BiometricEnrollmentUiState> = _stateFlow.asStateFlow()
@@ -110,7 +109,7 @@ class BiometricEnrollmentViewModel @Inject constructor(
             biometricRepository.enrollStudent(studentId, embedding)
                 .onSuccess {
                     _stateFlow.update { it.copy(enrollmentStatus = EnrollmentStatus.SUCCESS, capturedEmbedding = embedding) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Pendaftaran biometrik berhasil!"))
+                    _uiEffectFlow.emit(BiometricUiEffect.ShowSnackbar("Biometric registration successful!"))
                 }
                 .onFailure { error ->
                     _stateFlow.update { it.copy(enrollmentStatus = EnrollmentStatus.FAILURE, error = error.message) }
@@ -124,7 +123,7 @@ class BiometricEnrollmentViewModel @Inject constructor(
             biometricRepository.deleteEnrollment(studentId)
                 .onSuccess {
                     _stateFlow.update { it.copy(isLoading = false) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Biometrik berhasil dihapus"))
+                    _uiEffectFlow.emit(BiometricUiEffect.ShowSnackbar("Biometric deleted successfully"))
                 }
                 .onFailure { error ->
                     _stateFlow.update { it.copy(isLoading = false, error = error.message) }
@@ -138,7 +137,7 @@ class BiometricEnrollmentViewModel @Inject constructor(
             biometricRepository.syncBiometrics()
                 .onSuccess {
                     _stateFlow.update { it.copy(isLoading = false) }
-                    _uiEventFlow.emit(UiEvent.ShowSnackbar("Sinkronisasi biometrik selesai"))
+                    _uiEffectFlow.emit(BiometricUiEffect.ShowSnackbar("Biometric sync complete"))
                 }
                 .onFailure { error ->
                     _stateFlow.update { it.copy(isLoading = false, error = error.message) }
