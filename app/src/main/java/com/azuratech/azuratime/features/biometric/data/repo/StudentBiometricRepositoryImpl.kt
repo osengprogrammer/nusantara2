@@ -34,7 +34,7 @@ class StudentBiometricRepositoryImpl @Inject constructor(
     private val schoolId: String
         get() = sessionManager.getActiveSchoolId() ?: ""
 
-    override fun observeEnrollments(): Flow<Result<List<BiometricEnrollmentProfile>>> =
+    override fun observeEnrollmentsFlow(): Flow<Result<List<BiometricEnrollmentProfile>>> =
         localDataSource.getAllStudentsFlow(schoolId)
             .map { entities -> entities.map { it.toProfile() } }
             .asLocalResult()

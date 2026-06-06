@@ -38,7 +38,7 @@ class BiometricEnrollmentViewModel @Inject constructor(
     val uiStateFlow: StateFlow<BiometricEnrollmentUiState> = _stateFlow.asStateFlow()
 
     val enrollmentListFlow: StateFlow<List<BiometricEnrollmentProfile>> =
-        biometricRepository.observeEnrollments()
+        biometricRepository.observeEnrollmentsFlow()
             .map { result: com.azuratech.azuraengine.result.Result<List<BiometricEnrollmentProfile>> ->
                 result.getOrNull() ?: emptyList()
             }

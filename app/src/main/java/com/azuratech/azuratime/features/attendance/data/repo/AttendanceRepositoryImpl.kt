@@ -45,7 +45,7 @@ class AttendanceRepositoryImpl @Inject constructor(
     private val biometricDao = database.biometricDao()
     private val conflictDao = database.attendanceConflictDao()
 
-    override fun getAttendanceRecords(
+    override fun getAttendanceRecordsFlow(
         name: String,
         startDate: LocalDate?,
         endDate: LocalDate?,
@@ -158,27 +158,27 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getTodayPresentCount(date: LocalDate, schoolId: String): Flow<Result<Int>> {
+    override fun getTodayPresentCountFlow(date: LocalDate, schoolId: String): Flow<Result<Int>> {
         return attendanceRecordDao.getTodayPresentCount(date, schoolId)
             .asLocalResult()
     }
 
-    override fun getUnassignedStudentCount(schoolId: String): Flow<Result<Int>> {
+    override fun getUnassignedStudentCountFlow(schoolId: String): Flow<Result<Int>> {
         return assignmentDao.getUnassignedStudentCount(schoolId)
             .asLocalResult()
     }
 
-    override fun getStudentsByClass(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>> {
+    override fun getStudentsByClassFlow(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>> {
         return assignmentDao.getStudentsByClass(classId, schoolId)
             .asLocalResult()
     }
 
-    override fun getStudentCountInClass(classId: String, schoolId: String): Flow<Result<Int>> {
+    override fun getStudentCountInClassFlow(classId: String, schoolId: String): Flow<Result<Int>> {
         return assignmentDao.getStudentCountInClass(classId, schoolId)
             .asLocalResult()
     }
 
-    override fun getClassIdsForStudent(studentId: String, schoolId: String): Flow<Result<List<String>>> {
+    override fun getClassIdsForStudentFlow(studentId: String, schoolId: String): Flow<Result<List<String>>> {
         return assignmentDao.getClassIdsForStudent(studentId, schoolId)
             .asLocalResult()
     }

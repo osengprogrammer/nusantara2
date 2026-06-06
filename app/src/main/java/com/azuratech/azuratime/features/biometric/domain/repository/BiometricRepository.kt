@@ -14,7 +14,7 @@ interface BiometricRepository {
     /**
      * Observe all biometric enrollments for the current school.
      */
-    fun observeEnrollments(): Flow<Result<List<BiometricEnrollmentProfile>>>
+    fun observeEnrollmentsFlow(): Flow<Result<List<BiometricEnrollmentProfile>>>
 
     /**
      * 🔥 One-shot enroll: Save student biometric embedding.

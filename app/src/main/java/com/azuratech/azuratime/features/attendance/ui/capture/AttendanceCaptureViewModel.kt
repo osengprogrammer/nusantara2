@@ -201,7 +201,7 @@ class AttendanceCaptureViewModel @Inject constructor(
             return
         }
 
-        val classIdsResult = attendanceRepository.getClassIdsForStudent(scannedId, schoolId).firstOrNull() ?: Result.Success(emptyList())
+        val classIdsResult = attendanceRepository.getClassIdsForStudentFlow(scannedId, schoolId).firstOrNull() ?: Result.Success(emptyList())
         val studentClassIds = if (classIdsResult is Result.Success) classIdsResult.data else emptyList()
 
         val params = ProcessAttendanceParams(

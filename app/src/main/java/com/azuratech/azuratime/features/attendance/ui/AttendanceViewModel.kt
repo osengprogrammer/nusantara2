@@ -70,7 +70,7 @@ class AttendanceViewModel @Inject constructor(
             Triple(schoolId, classId, query)
         }.flatMapLatest { (schoolId, classId, query) ->
             _uiStateFlow.update { it.copy(isLoading = true) }
-            attendanceRepository.getAttendanceRecords(
+            attendanceRepository.getAttendanceRecordsFlow(
                 name = query,
                 startDate = null,
                 endDate = null,

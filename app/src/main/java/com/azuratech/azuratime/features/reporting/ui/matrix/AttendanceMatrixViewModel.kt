@@ -92,7 +92,7 @@ class AttendanceMatrixViewModel @Inject constructor(
                 .flatMapLatest { params ->
                     val classFilter = params.classId.ifEmpty { null }
 
-                    attendanceRepository.getAttendanceRecords(
+                    attendanceRepository.getAttendanceRecordsFlow(
                         name = params.query,
                         startDate = params.startDate,
                         endDate = params.endDate,
