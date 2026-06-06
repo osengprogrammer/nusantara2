@@ -50,7 +50,7 @@ class GetAccountUseCaseTest {
                 ),
             ),
         )
-        every { repository.getAccount(accountId) } returns flowOf(Result.Success(mockAccount))
+        every { repository.getAccountFlow(accountId) } returns flowOf(Result.Success(mockAccount))
 
         // Act & Assert
         getAccountUseCase(accountId).test {

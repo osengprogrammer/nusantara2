@@ -10,6 +10,7 @@ import com.azuratech.azuratime.core.domain.sync.CsvImportUtils
 import com.azuratech.azuratime.features.school.data.local.*
 import com.azuratech.azuratime.features.account.data.local.*
 import com.azuratech.azuratime.features.attendance.data.local.*
+import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.biometric.data.local.*
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.features.student.domain.repository.StudentRegistrationRepository

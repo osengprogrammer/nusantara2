@@ -60,12 +60,12 @@ class AuthRepositoryImpl @Inject constructor(
             }
 
             if (accountEntity == null) {
-                // Truly a new user (Account)
+                // Truly a new Account
                 println("🔍 AuthRepository: New account detected.")
                 val newAccount = AccountEntity(
                     accountId = uid,
                     email = email,
-                    name = firebaseUser.displayName ?: "Account Baru",
+                    name = firebaseUser.displayName ?: "New Account",
                     memberships = emptyMap(),
                     activeSchoolId = null,
                     status = SessionManager.STATUS_PENDING,

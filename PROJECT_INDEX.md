@@ -22,7 +22,7 @@
 | `AccountManagementViewModel.kt` | `features.account.ui.management` | User profile and school membership mgmt |
 | `ClassViewModel.kt` | `features.school.ui.classes` | Management of school classes and assignments |
 | `AttendanceViewModel.kt` | `features.attendance.ui` | Main scanning and manual entry logic |
-| `StudentFormViewModel.kt` | `features.student.ui.form` | Single student enrollment/editing |
+| `StudentFormViewModel.kt` | `features.student.ui.form` | Single student profile management |
 | `RegisterViewModel.kt` | `features.student.ui.bulk` | Bulk CSV student import engine |
 | `StudentRosterViewModel.kt` | `features.student.ui.roster` | Roster browsing and filtering |
 | `PendingSchoolsViewModel.kt` | `features.school.ui.admin` | Super Admin school verification flow |

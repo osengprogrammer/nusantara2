@@ -19,7 +19,7 @@ data class FeatureUiState(
 ```
 
 ## 3. UI Events (`*UiEvent.kt`)
-- Define user intentions using a `sealed class`.
+- Define account intentions using a `sealed class`.
 
 ```kotlin
 sealed class FeatureUiEvent {

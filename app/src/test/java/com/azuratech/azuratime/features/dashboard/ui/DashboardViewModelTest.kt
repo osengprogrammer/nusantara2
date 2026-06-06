@@ -78,9 +78,9 @@ class DashboardViewModelTest {
 
         // Mock Repositories
         every { schoolRepository.observeClassesFlow(schoolId) } returns flowOf(Result.Success(allClasses))
-        every { schoolRepository.observeSchoolById(schoolId) } returns flowOf(Result.Success(null))
+        every { schoolRepository.observeSchoolByIdFlow(schoolId) } returns flowOf(Result.Success(null))
         every { attendanceRepository.getAttendanceRecords(any(), any(), any(), any(), any(), any(), any()) } returns flowOf(Result.Success(emptyList()))
-        every { accountRepository.observePendingRequestsCount(any()) } returns flowOf(0)
+        every { accountRepository.observePendingRequestsCountFlow(any()) } returns flowOf(0)
         every { studentRepository.getStudentProfilesFlow() } returns flowOf(Result.Success(emptyList()))
     }
 
@@ -105,7 +105,7 @@ class DashboardViewModelTest {
                 ),
             ),
         )
-        every { accountRepository.observeAccountEntity(accountId) } returns flowOf(Result.Success(supervisor))
+        every { accountRepository.observeAccountEntityFlow(accountId) } returns flowOf(Result.Success(supervisor))
 
         viewModel = createViewModel()
 
@@ -140,7 +140,7 @@ class DashboardViewModelTest {
                 ),
             ),
         )
-        every { accountRepository.observeAccountEntity(accountId) } returns flowOf(Result.Success(admin))
+        every { accountRepository.observeAccountEntityFlow(accountId) } returns flowOf(Result.Success(admin))
 
         viewModel = createViewModel()
 

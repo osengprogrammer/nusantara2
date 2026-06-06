@@ -203,7 +203,7 @@ fun PendingApprovalCard() {
 
 /**
  * ⚠️ DATA INTEGRITY ALERT
- * Prompts the admin to assign classes to new student enrollments.
+ * Prompts the admin to assign classes to new student assignments.
  */
 @Composable
 fun UnassignedAlertButton(count: Int, onClick: () -> Unit) {

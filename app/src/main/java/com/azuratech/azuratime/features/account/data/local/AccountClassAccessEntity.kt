@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.core.data.local
+package com.azuratech.azuratime.features.account.data.local
 
 import androidx.room.Entity
 import androidx.room.Index

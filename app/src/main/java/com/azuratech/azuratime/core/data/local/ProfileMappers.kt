@@ -14,7 +14,7 @@ import com.azuratech.azuratime.features.reporting.data.local.ReportEntity
 import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 
-import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
+import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentEntity
 
 /**
  *  PROFILE MAPPERS
@@ -85,7 +85,7 @@ fun StudentBiometricEntity.toProfile(): BiometricEnrollmentProfile {
         studentId = studentId,
         studentName = name,
         photoUri = photoUrl,
-        enrollmentDate = lastUpdated,
+        registrationDate = lastUpdated,
         syncStatus = if (isSynced) SyncStatus.SYNCED else if (isDeleted) SyncStatus.PENDING_DELETE else SyncStatus.PENDING_UPDATE,
     )
 }

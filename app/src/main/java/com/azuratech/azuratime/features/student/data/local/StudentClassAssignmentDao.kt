@@ -1,6 +1,7 @@
-package com.azuratech.azuratime.features.biometric.data.local
+package com.azuratech.azuratime.features.student.data.local
 
 import androidx.room.*
+import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
