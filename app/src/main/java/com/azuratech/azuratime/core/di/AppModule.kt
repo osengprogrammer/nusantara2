@@ -7,7 +7,7 @@ import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictDao
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricDao
-import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentDao
+import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentDao
 import com.azuratech.azuratime.features.account.data.local.AccountDao
 import com.azuratech.azuratime.features.account.data.local.AccessRequestDao
 import com.azuratech.azuratime.features.reporting.data.local.AuditLogDao
@@ -15,7 +15,7 @@ import com.azuratech.azuratime.features.reporting.data.local.ExportJobDao
 import com.azuratech.azuratime.features.reporting.data.local.ReportDao
 import com.azuratech.azuratime.features.school.data.local.ClassDao
 import com.azuratech.azuratime.features.school.data.local.SchoolDao
-import com.azuratech.azuratime.core.data.local.AccountClassAccessDao
+import com.azuratech.azuratime.features.account.data.local.AccountClassAccessDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

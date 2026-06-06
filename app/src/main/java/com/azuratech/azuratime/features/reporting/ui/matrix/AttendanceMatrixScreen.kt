@@ -66,7 +66,7 @@ fun AttendanceMatrixScreen(
 
 /**
  * 🔍 ATTENDANCE MATRIX FILTERS
- * MVI Component for handling user input and triggering matrix updates.
+ * MVI Component for handling account input and triggering matrix updates.
  */
 @Composable
 private fun AttendanceMatrixFilters(

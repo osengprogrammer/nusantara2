@@ -44,19 +44,19 @@ class ZoharAssistantViewModel @Inject constructor(
         }
     }
 
-    private fun handleAskZohar(userQuestion: String) {
+    private fun handleAskZohar(question: String) {
         viewModelScope.launch {
             _uiStateFlow.update {
                 it.copy(
-                    query = userQuestion,
+                    query = question,
                     isLoading = true,
-                    conversationHistory = it.conversationHistory + ChatMessage(ChatRole.USER, userQuestion),
+                    conversationHistory = it.conversationHistory + ChatMessage(ChatRole.USER, question),
                 )
             }
 
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
 
-            zoharRepository.askZohar(userQuestion, schoolId)
+            zoharRepository.askZohar(question, schoolId)
                 .onSuccess { response ->
                     _uiStateFlow.update {
                         it.copy(

@@ -10,7 +10,7 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
+import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.account.data.local.SchoolMembership as LocalSchoolMembership
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
@@ -38,7 +38,7 @@ class SchoolRepositoryImpl @Inject constructor(
 ) : SchoolRepository {
     private val dao = database.schoolClassDao()
     private val schoolDao = database.schoolDao()
-    private val userDao = database.accountDao()
+    private val accountDao = database.accountDao()
     private val classDao = database.classDao()
     private val assignmentDao = database.studentClassAssignmentDao()
     private val accessRequestDao = database.accessRequestDao()
@@ -90,16 +90,16 @@ class SchoolRepositoryImpl @Inject constructor(
                     ),
                 )
 
-                val user = database.accountDao().getAccountById(adminId)
-                if (user != null) {
-                    val updatedMemberships = user.memberships.toMutableMap()
+                val account = database.accountDao().getAccountById(adminId)
+                if (account != null) {
+                    val updatedMemberships = account.memberships.toMutableMap()
                     updatedMemberships[schoolId] = LocalSchoolMembership(
                         schoolName = name,
                         role = "ADMIN",
                         status = "ACTIVE",
                         assignedClassIds = emptyList(),
                     )
-                    database.accountDao().updateAccount(user.copy(memberships = updatedMemberships, activeSchoolId = schoolId))
+                    database.accountDao().updateAccount(account.copy(memberships = updatedMemberships, activeSchoolId = schoolId))
                 }
             }
             // 🔥 Trigger immediate sync to Firestore

@@ -163,7 +163,7 @@ class AccountManagementViewModel @Inject constructor(
         val accountId = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
             database.accountClassAccessDao().insert(
-                com.azuratech.azuratime.core.data.local.AccountClassAccessEntity(
+                com.azuratech.azuratime.features.account.data.local.AccountClassAccessEntity(
                     accountId = accountId,
                     classId = classId,
                     schoolId = sessionManager.getActiveSchoolId() ?: "",

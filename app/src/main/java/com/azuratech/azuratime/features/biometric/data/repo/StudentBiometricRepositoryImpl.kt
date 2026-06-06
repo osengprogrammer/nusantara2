@@ -8,7 +8,7 @@ import com.azuratech.azuratime.core.data.local.BiometricCache
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.toProfile
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
-import com.azuratech.azuratime.features.biometric.data.local.StudentClassAssignmentEntity
+import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDataSource
 import com.azuratech.azuratime.features.biometric.data.local.BiometricLocalDataSource
 import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollmentProfile

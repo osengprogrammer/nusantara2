@@ -357,7 +357,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                     }
                 }
 
-                // CASE B2: Session IS Selected by User
+                // CASE B2: Session IS Selected by Account
                 else -> {
                     // Search for original ID to maintain case sensitivity in DB
                     val matchedOriginalId = params.studentClassIds.find { it.trim().lowercase() == selectedSessionId }
