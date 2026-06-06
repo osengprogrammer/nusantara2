@@ -9,7 +9,9 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.model.toProfileCompat
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.core.domain.model.AccountRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -22,6 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AccountManagementViewModel @Inject constructor(
     private val repository: AccountRepository,
+    private val accessRequestRepository: AccessRequestRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
     private val database: AppDatabase,
@@ -102,6 +105,17 @@ class AccountManagementViewModel @Inject constructor(
                 _uiStateFlow.update { it.copy(targetAssignedClassIds = classIds) }
             }
             .launchIn(viewModelScope)
+
+        // 6. Pending Followers for active school
+        sessionManager.activeSchoolIdFlow
+            .filterNotNull()
+            .flatMapLatest { schoolId ->
+                database.accessRequestDao().observePendingRequestsBySchoolFlow(schoolId)
+            }
+            .onEach { requests ->
+                _uiStateFlow.update { it.copy(pendingFollowers = requests) }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun onEvent(event: AccountUiEvent) {
@@ -116,6 +130,29 @@ class AccountManagementViewModel @Inject constructor(
             is AccountUiEvent.Logout -> logout()
             is AccountUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
             is AccountUiEvent.NavigateBack -> { /* Handled in Screen */ }
+            is AccountUiEvent.UpdatePendingRole -> updatePendingRole(event.requestId, event.role)
+            is AccountUiEvent.ApproveFollower -> approveFollower(event.requestId)
+        }
+    }
+
+    private fun updatePendingRole(requestId: String, role: AccountRole) {
+        _uiStateFlow.update {
+            it.copy(selectedRoles = it.selectedRoles + (requestId to role))
+        }
+    }
+
+    private fun approveFollower(requestId: String) {
+        val role = _uiStateFlow.value.selectedRoles[requestId] ?: AccountRole.USER
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isLoading = true) }
+            accessRequestRepository.approveRequest(requestId, role)
+                .onSuccess {
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Follower approved as ${role.name}"))
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+                }
         }
     }
 

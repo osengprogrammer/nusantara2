@@ -17,6 +17,9 @@ interface AccessRequestDao {
     @Query("SELECT * FROM access_requests WHERE requestId = :requestId")
     suspend fun getRequestById(requestId: String): AccessRequestEntity?
 
+    @Query("SELECT * FROM access_requests WHERE schoolId = :schoolId AND status = 'PENDING' ORDER BY createdAt DESC")
+    fun observePendingRequestsBySchoolFlow(schoolId: String): Flow<List<AccessRequestEntity>>
+
     @Query("SELECT * FROM access_requests WHERE accountId = :accountId AND schoolId = :schoolId LIMIT 1")
     suspend fun getRequestByAccountAndSchool(accountId: String, schoolId: String): AccessRequestEntity?
 

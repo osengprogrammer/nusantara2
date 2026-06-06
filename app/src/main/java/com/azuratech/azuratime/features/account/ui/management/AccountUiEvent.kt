@@ -16,4 +16,6 @@ sealed class AccountUiEvent {
     data object Logout : AccountUiEvent()
     data object ClearError : AccountUiEvent()
     data object NavigateBack : AccountUiEvent()
+    data class UpdatePendingRole(val requestId: String, val role: com.azuratech.azuratime.core.domain.model.AccountRole) : AccountUiEvent()
+    data class ApproveFollower(val requestId: String) : AccountUiEvent()
 }
