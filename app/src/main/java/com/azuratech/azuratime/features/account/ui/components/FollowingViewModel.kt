@@ -43,6 +43,7 @@ class FollowingViewModel @Inject constructor(
             is FollowingUiEvent.DeclineRequest -> handleDeclineRequest(event.senderId)
             is FollowingUiEvent.SelectFriendForAssignment -> _uiStateFlow.update { it.copy(selectedFriendForAssignment = event.friend) }
             is FollowingUiEvent.AssignClasses -> handleAssignClasses(event.targetId, event.classIds)
+            is FollowingUiEvent.ChangeMemberRole -> handleMemberRoleChange(event.targetAccountId, event.newRole)
             FollowingUiEvent.LoadData -> loadAllData()
             FollowingUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
             FollowingUiEvent.NavigateBack -> { /* Handled by screen navigation */ }
@@ -64,7 +65,7 @@ class FollowingViewModel @Inject constructor(
             .combine(schoolIdFlow) { accountResult, schoolId ->
                 accountResult.onSuccess { account ->
                     val isAdmin = schoolId?.let { account.isAdmin(it) } ?: false
-                    _uiStateFlow.update { it.copy(isAdmin = isAdmin) }
+                    _uiStateFlow.update { it.copy(isAdmin = isAdmin, activeSchoolId = schoolId) }
                 }
             }
             .launchIn(viewModelScope)
@@ -125,6 +126,20 @@ class FollowingViewModel @Inject constructor(
             accountRepository.assignClassToConnection(targetId, schoolId, classIds)
                 .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Class access granted!", selectedFriendForAssignment = null) } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
+        }
+    }
+
+    private fun handleMemberRoleChange(targetAccountId: String, newRole: com.azuratech.azuratime.core.domain.model.AccountRole) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: return
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isProcessing = true) }
+            accountRepository.updateMemberRole(targetAccountId, schoolId, newRole)
+                .onSuccess {
+                    _uiStateFlow.update { it.copy(isProcessing = false, error = "Member role updated to ${newRole.name}") }
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) }
+                }
         }
     }
 

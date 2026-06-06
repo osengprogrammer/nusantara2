@@ -19,4 +19,5 @@ data class FollowingUiState(
     val isProcessing: Boolean = false,
     val selectedFriendForAssignment: AccountEntity? = null,
     val isAdmin: Boolean = false,
+    val activeSchoolId: String? = null,
 )

@@ -12,6 +12,9 @@ interface SchoolRepository {
     fun observeSchoolByIdFlow(id: String): Flow<Result<School?>>
     fun observeAllSchoolsFlow(): Flow<Result<List<School>>>
 
+    /**
+     * 🔥 ASSIGNED SCHOOL: School workspace operations.
+     */
     suspend fun createSchool(adminId: String, name: String, timezone: String): Result<String>
     suspend fun updateSchoolDetails(schoolId: String, name: String?, timezone: String?): Result<Unit>
     suspend fun saveSchool(school: School): Result<Unit>
@@ -24,7 +27,7 @@ interface SchoolRepository {
     suspend fun syncClasses(accountId: String, schoolId: String): Result<Unit>
     suspend fun deleteSchool(id: String, accountId: String): Result<Unit>
 
-    // 🏫 CLASS OPERATIONS
+    // 🏫 ASSIGNED SCHOOL: CLASS OPERATIONS
     fun observeClassesFlow(schoolId: String): Flow<Result<List<ClassModel>>>
     suspend fun getClasses(schoolId: String): Result<List<ClassModel>>
     suspend fun saveClass(_accountId: String, schoolId: String?, classModel: ClassModel): Result<Unit>

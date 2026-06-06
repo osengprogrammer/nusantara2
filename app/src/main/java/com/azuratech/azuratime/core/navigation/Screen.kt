@@ -94,7 +94,7 @@ sealed class Screen(val route: String) {
     }
 
     data object AssignClass : Screen(NavigationRoutes.ASSIGN_CLASS) {
-        fun createRoute(targetAccountId: String) = "assignClass/$targetAccountId"
+        fun createRoute(targetAccountId: String, role: String) = "assignClass/$targetAccountId/$role"
     }
     data object FindSchool : Screen(NavigationRoutes.FIND_SCHOOL)
     data object Onboarding : Screen(NavigationRoutes.ONBOARDING)

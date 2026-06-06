@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -20,6 +21,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.domain.model.AccountRole
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,7 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun FollowingScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToAssignClass: (String) -> Unit = {},
+    onNavigateToAssignClass: (String, String) -> Unit = { _, _ -> },
     viewModel: FollowingViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -62,7 +64,18 @@ fun FollowingScreen(
                 when (selectedTab) {
                     0 -> SearchTab(uiState, searchEmail, { searchEmail = it }, { viewModel.onEvent(FollowingUiEvent.SearchByEmail(it)) }, { viewModel.onEvent(FollowingUiEvent.SendConnectionRequest(it)) })
                     1 -> RequestsTab(uiState, { viewModel.onEvent(FollowingUiEvent.AcceptRequest(it)) }, { viewModel.onEvent(FollowingUiEvent.DeclineRequest(it)) })
-                    2 -> ConnectionsTab(uiState, onAssign = { onNavigateToAssignClass(it.accountId) })
+                    2 -> ConnectionsTab(
+                        uiState = uiState,
+                        onAssign = { account ->
+                            val role = uiState.activeSchoolId?.let { schoolId ->
+                                account.memberships[schoolId]?.role
+                            } ?: "USER"
+                            onNavigateToAssignClass(account.accountId, role)
+                        },
+                        onChangeRole = { id, role ->
+                            viewModel.onEvent(FollowingUiEvent.ChangeMemberRole(id, role))
+                        },
+                    )
                 }
             }
         }
@@ -120,15 +133,25 @@ fun RequestsTab(state: FollowingUiState, onAccept: (String) -> Unit, onDecline: 
 }
 
 @Composable
-fun ConnectionsTab(state: FollowingUiState, onAssign: (AccountEntity) -> Unit) {
-    if (state.connections.isEmpty()) {
+fun ConnectionsTab(
+    uiState: FollowingUiState,
+    onAssign: (AccountEntity) -> Unit,
+    onChangeRole: (String, AccountRole) -> Unit,
+) {
+    if (uiState.connections.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("No connected friends yet.")
         }
     } else {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
-            items(state.connections) { account ->
-                ConnectedFriendItem(account, state.isAdmin, { onAssign(account) })
+            items(uiState.connections) { account ->
+                ConnectedFriendItem(
+                    account = account,
+                    isAdmin = uiState.isAdmin,
+                    activeSchoolId = uiState.activeSchoolId,
+                    onAssign = { onAssign(account) },
+                    onChangeRole = { role -> onChangeRole(account.accountId, role) },
+                )
             }
         }
     }
@@ -150,17 +173,55 @@ fun AccountResultItem(account: AccountEntity, isProcessing: Boolean, onAdd: () -
 }
 
 @Composable
-fun ConnectedFriendItem(account: AccountEntity, isAdmin: Boolean, onAssign: () -> Unit) {
+fun ConnectedFriendItem(
+    account: AccountEntity,
+    isAdmin: Boolean,
+    activeSchoolId: String?,
+    onAssign: () -> Unit,
+    onChangeRole: (AccountRole) -> Unit,
+) {
+    val currentRole = activeSchoolId?.let { account.memberships[it]?.role } ?: account.role
+
     Card(modifier = Modifier.fillMaxWidth(), shape = AzuraShapes.medium) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(model = account.photoUrl ?: "https://ui-avatars.com/api/?name=${account.name}", contentDescription = null, modifier = Modifier.size(40.dp).clip(CircleShape))
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(account.name, fontWeight = FontWeight.Bold)
-                Text(account.email, style = MaterialTheme.typography.bodySmall)
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AsyncImage(model = account.photoUrl ?: "https://ui-avatars.com/api/?name=${account.name}", contentDescription = null, modifier = Modifier.size(40.dp).clip(CircleShape))
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(account.name, fontWeight = FontWeight.Bold)
+                    Text(account.email, style = MaterialTheme.typography.bodySmall)
+                    Text(text = "Role: $currentRole", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                }
+                if (isAdmin) {
+                    IconButton(onClick = onAssign) { Icon(Icons.Default.School, contentDescription = "Grant Class Access", tint = MaterialTheme.colorScheme.primary) }
+                }
             }
+
             if (isAdmin) {
-                IconButton(onClick = onAssign) { Icon(Icons.Default.School, contentDescription = "Grant Class Access", tint = MaterialTheme.colorScheme.primary) }
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                Text(
+                    text = "Change Role:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    listOf(AccountRole.ADMIN, AccountRole.SUPERVISOR, AccountRole.USER).forEach { role ->
+                        FilterChip(
+                            selected = currentRole == role.name,
+                            onClick = { if (currentRole != role.name) onChangeRole(role) },
+                            label = { Text(role.name, style = MaterialTheme.typography.labelSmall) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            ),
+                        )
+                    }
+                }
             }
         }
     }

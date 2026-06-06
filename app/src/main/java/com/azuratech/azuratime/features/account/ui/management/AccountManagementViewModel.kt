@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.account.ui.management
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
@@ -46,15 +47,25 @@ class AccountManagementViewModel @Inject constructor(
         // 1. Current Account Profile & Active Class (Mapped from Domain Account)
         sessionManager.currentAccountIdFlow
             .filterNotNull()
-            .flatMapLatest { accountId -> repository.getAccountFlow(accountId) }
-            .onEach { result ->
+            .combine(sessionManager.activeSchoolIdFlow) { accountId, schoolId -> accountId to schoolId }
+            .flatMapLatest { (accountId, schoolId) ->
+                repository.getAccountFlow(accountId).map { it to schoolId }
+            }
+            .onEach { (result, schoolId) ->
                 result.onSuccess { account ->
+                    val roleStr = if (schoolId != null) account.memberships[schoolId]?.role else null
+                    val role = com.azuratech.azuratime.core.domain.model.AccountRole.fromString(roleStr ?: account.role.name)
+
                     _uiStateFlow.update {
                         it.copy(
                             accountProfile = account.toProfileCompat(),
                             activeClassId = account.activeClassId,
+                            currentAccountRole = role,
+                            activeSchoolId = schoolId,
                         )
                     }
+
+                    Log.d("AZURA_DEBUG_ROLE", "Role: ${role.name}, School: $schoolId, NetworkSize: ${_uiStateFlow.value.allAccountsInSameSchool.size}")
                 }
             }
             .launchIn(viewModelScope)
@@ -132,12 +143,28 @@ class AccountManagementViewModel @Inject constructor(
             is AccountUiEvent.NavigateBack -> { /* Handled in Screen */ }
             is AccountUiEvent.UpdatePendingRole -> updatePendingRole(event.requestId, event.role)
             is AccountUiEvent.ApproveFollower -> approveFollower(event.requestId)
+            is AccountUiEvent.ChangeMemberRole -> changeMemberRole(event.targetAccountId, event.newRole)
         }
     }
 
     private fun updatePendingRole(requestId: String, role: AccountRole) {
         _uiStateFlow.update {
             it.copy(selectedRoles = it.selectedRoles + (requestId to role))
+        }
+    }
+
+    private fun changeMemberRole(targetAccountId: String, newRole: AccountRole) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: return
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isLoading = true) }
+            repository.updateMemberRole(targetAccountId, schoolId, newRole)
+                .onSuccess {
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(AccountUiEffect.ShowSnackbar("Member role updated to ${newRole.name}"))
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+                }
         }
     }
 

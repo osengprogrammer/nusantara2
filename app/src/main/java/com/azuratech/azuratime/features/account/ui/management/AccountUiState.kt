@@ -21,4 +21,6 @@ data class AccountUiState(
     val targetAssignedClassIds: List<String> = emptyList(),
     val pendingFollowers: List<com.azuratech.azuratime.features.account.data.local.AccessRequestEntity> = emptyList(),
     val selectedRoles: Map<String, com.azuratech.azuratime.core.domain.model.AccountRole> = emptyMap(),
+    val currentAccountRole: com.azuratech.azuratime.core.domain.model.AccountRole = com.azuratech.azuratime.core.domain.model.AccountRole.USER,
+    val activeSchoolId: String? = null,
 )

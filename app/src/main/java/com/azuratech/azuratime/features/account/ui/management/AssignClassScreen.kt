@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.ui.designsystem.*
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
@@ -21,6 +22,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 @Composable
 fun AssignClassScreen(
     targetAccountId: String,
+    accountRole: AccountRole = AccountRole.USER,
     onNavigateBack: () -> Unit,
     viewModel: AssignClassViewModel,
 ) {
@@ -59,7 +61,7 @@ fun AssignClassScreen(
                         AzuraCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(AzuraSpacing.md)) {
                                 Text(
-                                    text = "Account / Supervisor",
+                                    text = "Role: ${accountRole.name}",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -85,8 +87,13 @@ fun AssignClassScreen(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 4.dp),
                         )
+                        val description = when (accountRole) {
+                            AccountRole.SUPERVISOR -> "Supervisors can only perform attendance for selected classes."
+                            AccountRole.ADMIN, AccountRole.SUPER_ADMIN -> "Admins have full access to all classes in this school."
+                            else -> "Users do not manage classes."
+                        }
                         Text(
-                            text = "Supervisors can only perform attendance for selected classes.",
+                            text = description,
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray,
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
