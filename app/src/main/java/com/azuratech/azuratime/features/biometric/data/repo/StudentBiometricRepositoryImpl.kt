@@ -92,7 +92,17 @@ class StudentBiometricRepositoryImpl @Inject constructor(
 
                     val toDelete = updatedData.filter { !it.second }.map { it.first }
 
-                    if (uniqueBiometrics.isNotEmpty()) localDataSource.upsertAllStudentFaces(uniqueBiometrics)
+                    val toUpsert = uniqueBiometrics.filter { remoteRecord ->
+                        val localRecord = localDataSource.getStudentFaceByIdentity(remoteRecord.studentId, schoolId)
+                        if (localRecord != null && !localRecord.isSynced && localRecord.lastUpdated > remoteRecord.lastUpdated) {
+                            android.util.Log.d("AZURA_SYNC", "Overwrite Prevention Lock triggered for studentId=${remoteRecord.studentId}. Preserving fresher offline local biometric record.")
+                            false
+                        } else {
+                            true
+                        }
+                    }
+
+                    if (toUpsert.isNotEmpty()) localDataSource.upsertAllStudentFaces(toUpsert)
                     if (toDelete.isNotEmpty()) {
                         toDelete.forEach { localDataSource.deleteStudentFaceById(it.studentId, schoolId) }
                     }

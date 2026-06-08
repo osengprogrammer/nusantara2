@@ -4,17 +4,31 @@ import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.features.account.domain.model.Account
 
 /**
- * 🔐 PERMISSION UTILS (v3.2.1-ai-native)
+ * 🔐 PERMISSION UTILS (v3.2.2-ai-native)
  * Centralized authorization logic for Account and School resources.
+ * Enforces strict type-safety against AccountRole enums.
  */
+
+/**
+ * Safely parses a role string to AccountRole, returning null if invalid or unparseable.
+ */
+private fun String?.toSafeAccountRole(): AccountRole? {
+    if (this == null) return null
+    return try {
+        AccountRole.valueOf(this.trim().uppercase())
+    } catch (e: IllegalArgumentException) {
+        null
+    }
+}
 
 /**
  * Returns true if the account has Admin or Super Admin role in the given school.
  */
 fun Account?.isAdmin(schoolId: String): Boolean {
     if (this == null) return false
-    val role = memberships[schoolId]?.role ?: role.name
-    return role == AccountRole.ADMIN.name || role == AccountRole.SUPER_ADMIN.name
+    val roleStr = memberships[schoolId]?.role ?: role.name
+    val parsedRole = roleStr.toSafeAccountRole() ?: return false
+    return parsedRole == AccountRole.ADMIN || parsedRole == AccountRole.SUPER_ADMIN
 }
 
 /**
@@ -24,7 +38,8 @@ fun Account?.isSupervisorOf(schoolId: String, classId: String): Boolean {
     if (this == null) return false
     val membership = memberships[schoolId] ?: return false
     val roleStr = membership.role
-    val isSupervisorRole = roleStr == AccountRole.SUPERVISOR.name || roleStr == "TEACHER" // Backwards compat
+    val parsedRole = roleStr.toSafeAccountRole() ?: return false
+    val isSupervisorRole = parsedRole == AccountRole.SUPERVISOR
     return isSupervisorRole && membership.assignedClassIds.contains(classId)
 }
 
@@ -50,8 +65,8 @@ fun Account?.isSuperAdmin(): Boolean {
 fun Account?.canAccessFeature(schoolId: String): Boolean {
     if (this == null) return false
     val roleStr = memberships[schoolId]?.role ?: role.name
-    return roleStr == AccountRole.ADMIN.name ||
-        roleStr == AccountRole.SUPER_ADMIN.name ||
-        roleStr == AccountRole.SUPERVISOR.name ||
-        roleStr == "TEACHER"
+    val parsedRole = roleStr.toSafeAccountRole() ?: return false
+    return parsedRole == AccountRole.ADMIN ||
+        parsedRole == AccountRole.SUPER_ADMIN ||
+        parsedRole == AccountRole.SUPERVISOR
 }

@@ -183,9 +183,14 @@ class AttendanceRepositoryImpl @Inject constructor(
             .asLocalResult()
     }
 
-    override suspend fun getStudentBiometricById(studentId: String, schoolId: String): Result<StudentBiometricEntity?> {
+    override suspend fun getStudentBiometricById(studentId: String, schoolId: String): Result<StudentBiometricEntity> {
         return try {
-            Result.Success(biometricDao.getStudentBiometricById(studentId, schoolId))
+            val entity = biometricDao.getStudentBiometricById(studentId, schoolId)
+            if (entity != null) {
+                Result.Success(entity)
+            } else {
+                Result.Failure(AppError.BusinessRule("ENTITY_NOT_FOUND"))
+            }
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
         }

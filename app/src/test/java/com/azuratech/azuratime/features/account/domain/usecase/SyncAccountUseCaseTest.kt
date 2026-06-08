@@ -35,7 +35,7 @@ class SyncAccountUseCaseTest {
         val mockEntity = AccountEntity(
             accountId = accountId,
             email = "test@azura.com",
-            name = "Test User",
+            name = "Test Account",
             photoUrl = "https://photo.url",
             role = "SUPERVISOR",
             activeSchoolId = "school_123",

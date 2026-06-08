@@ -42,4 +42,9 @@ interface AccountRepository {
      */
     suspend fun assignClassToConnection(targetId: String, schoolId: String, classIds: List<String>): Result<Unit>
     suspend fun updateMemberRole(targetAccountId: String, schoolId: String, newRole: AccountRole): Result<Unit>
+
+    // 🔒 v3.2.2 Hardened Transactional RBAC methods
+    suspend fun selectActiveClass(accountId: String, classId: String?): Result<Unit>
+    suspend fun assignClassToAccount(accountId: String, classId: String, schoolId: String): Result<Unit>
+    suspend fun removeClassAccess(accountId: String, classId: String): Result<Unit>
 }

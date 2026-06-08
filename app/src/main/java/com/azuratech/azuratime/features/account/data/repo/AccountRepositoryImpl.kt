@@ -1,6 +1,8 @@
 package com.azuratech.azuratime.features.account.data.repo
 
+import androidx.room.withTransaction
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuraengine.result.onSuccess
@@ -29,6 +31,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AccountRepositoryImpl @Inject constructor(
+    private val database: AppDatabase,
     private val accountDao: AccountDao,
     private val schoolDao: SchoolDao,
     private val syncManager: SyncManager,
@@ -506,6 +509,55 @@ class AccountRepositoryImpl @Inject constructor(
                 accountDao.upsertAccount(updatedAccount.copy(syncStatus = "SYNCED"))
             }
 
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun selectActiveClass(accountId: String, classId: String?): Result<Unit> {
+        return try {
+            val txResult = database.withTransaction {
+                val account = accountDao.getAccountById(accountId)
+                if (account == null) {
+                    Result.Failure(AppError.LocalDB("Account not found"))
+                } else {
+                    val updated = account.copy(activeClassId = classId)
+                    accountDao.updateAccount(updated)
+                    syncManager.enqueueAccountSync(accountId)
+                    Result.Success(Unit)
+                }
+            }
+            if (txResult is Result.Success<*>) {
+                pushAccount(accountId)
+            }
+            txResult
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun assignClassToAccount(accountId: String, classId: String, schoolId: String): Result<Unit> {
+        return try {
+            database.withTransaction {
+                val accessEntity = com.azuratech.azuratime.features.account.data.local.AccountClassAccessEntity(
+                    accountId = accountId,
+                    classId = classId,
+                    schoolId = schoolId,
+                )
+                database.accountClassAccessDao().insert(accessEntity)
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun removeClassAccess(accountId: String, classId: String): Result<Unit> {
+        return try {
+            database.withTransaction {
+                database.accountClassAccessDao().deleteSpecificAccess(accountId, classId)
+            }
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))

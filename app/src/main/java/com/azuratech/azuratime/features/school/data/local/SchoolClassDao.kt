@@ -66,6 +66,12 @@ interface SchoolClassDao {
     @Query("DELETE FROM classes WHERE id = :id")
     suspend fun deleteClassById(id: String)
 
+    @Transaction
+    suspend fun deleteClassWithAssignments(schoolId: String, classId: String) {
+        unassignClass(schoolId, classId)
+        deleteClassById(classId)
+    }
+
     @Query("SELECT * FROM classes WHERE accountId = :accountId ORDER BY name ASC")
     fun getAllClassesFlow(accountId: String): Flow<List<ClassEntity>>
 

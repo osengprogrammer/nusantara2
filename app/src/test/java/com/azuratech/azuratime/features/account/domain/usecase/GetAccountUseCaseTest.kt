@@ -38,7 +38,7 @@ class GetAccountUseCaseTest {
         val mockAccount = Account(
             accountId = accountId,
             email = "test@azura.com",
-            name = "Test User",
+            name = "Test Account",
             photoUrl = "https://photo.url",
             role = AccountRole.SUPERVISOR,
             activeSchoolId = "school_123",

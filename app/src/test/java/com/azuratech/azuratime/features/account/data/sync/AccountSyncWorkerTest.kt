@@ -61,7 +61,7 @@ class AccountSyncWorkerTest {
         val mockEntity = AccountEntity(
             accountId = accountId,
             email = "test@azura.com",
-            name = "Test User",
+            name = "Test Account",
         )
 
         coEvery { accountRepository.syncAccount(accountId) } returns DomainResult.Success(mockEntity)

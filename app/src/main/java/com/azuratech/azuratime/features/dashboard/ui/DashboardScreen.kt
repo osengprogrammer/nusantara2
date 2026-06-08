@@ -41,7 +41,7 @@ fun DashboardScreen(
     LaunchedEffect(uiEffect) {
         when (val effect = uiEffect) {
             is DashboardUiEffect.NavigateTo -> navController.navigate(effect.route)
-            DashboardUiEffect.NavigateToLogin -> {
+            DashboardUiEffect.TriggerAtomicExit -> {
                 android.util.Log.d("LogoutNav", "Navigating to: ${com.azuratech.azuratime.core.navigation.NavigationRoutes.LOGIN}")
                 navController.navigate(com.azuratech.azuratime.core.navigation.NavigationRoutes.LOGIN) {
                     popUpTo(0) { inclusive = true }
@@ -146,7 +146,7 @@ fun DashboardContent(
                 viewModel = schoolViewModel,
                 accountId = account?.accountId ?: "",
                 isApproved = data.isApproved,
-                globalRole = account?.role ?: "USER",
+                globalRole = account?.role ?: "GUEST",
                 onSchoolClick = { school ->
                     schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
                 },
@@ -216,7 +216,7 @@ fun DashboardContent(
             }
 
             if (data.isApproved) {
-                if (data.needsClassAssignment) {
+                if (data.showSupervisorOnboarding) {
                     item {
                         SupervisorOnboardingCard(
                             onClick = {

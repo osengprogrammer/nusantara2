@@ -1,4 +1,4 @@
-# 🗂️ AzuraTime — PROJECT FILE INDEX (v3.2.1-ai-native)
+# 🗂️ AzuraTime — PROJECT FILE INDEX (v3.2.2-ai-native)
 ⚡ *Status: 100% English-First & Effect-Driven Architecture Standardized.*
 
 ## 💾 Room Entities (Local SSOT)
@@ -9,7 +9,7 @@
 | `AttendanceRecordEntity.kt` | `features.attendance.data.local` | Individual attendance logs (scanned/manual) | ✅ Migrated |
 | `AttendanceConflictEntity.kt` | `features.attendance.data.local` | Resolves offline/online sync collisions | ✅ Migrated |
 | `StudentBiometricEntity.kt` | `features.biometric.data.local` | Native face embeddings and matching data | ✅ Migrated |
-| `StudentClassAssignmentEntity.kt` | `features.biometric.data.local` | Link table between Student and Class (Composite PK) | ✅ Migrated |
+| `StudentClassAssignmentEntity.kt` | `features.student.data.local` | Link table between Student and Class (Composite PK) | ✅ Migrated |
 | `ClassEntity.kt` | `features.school.data.local` | School class metadata (Grade, Name) | ✅ Migrated |
 | `SchoolEntity.kt` | `features.school.data.local` | Multi-tenant school workspace identity | ✅ Migrated |
 | `StudentEntity.kt` | `features.student.data.local` | Core student profile (Name, Photo URL) | ✅ Migrated |

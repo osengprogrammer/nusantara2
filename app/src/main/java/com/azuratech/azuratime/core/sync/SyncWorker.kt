@@ -35,7 +35,27 @@ class SyncWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        Log.d("WORKER_DEBUG", "⚠️ SYNC WORKER DISABLED FOR DEBUGGING ⚠️")
+        Log.d("AZURA_SYNC", "Starting background data synchronization...")
+
+        // 1. Sync Biometrics (Cloud <-> Local)
+        val biometricsResult = biometricRepository.syncBiometrics()
+        if (biometricsResult is com.azuratech.azuraengine.result.Result.Failure) {
+            return handleSyncError(biometricsResult.error, "Biometrics")
+        }
+
+        // 2. Sync Assignments (Cloud <-> Local)
+        val assignmentsResult = biometricRepository.syncAssignments()
+        if (assignmentsResult is com.azuratech.azuraengine.result.Result.Failure) {
+            return handleSyncError(assignmentsResult.error, "Assignments")
+        }
+
+        // 3. Sync Attendance Records (Cloud <-> Local)
+        val recordsResult = attendanceRepository.syncRecords()
+        if (recordsResult is com.azuratech.azuraengine.result.Result.Failure) {
+            return handleSyncError(recordsResult.error, "Records")
+        }
+
+        Log.i("AZURA_SYNC", "Successfully completed background data synchronization.")
         return Result.success()
     }
 

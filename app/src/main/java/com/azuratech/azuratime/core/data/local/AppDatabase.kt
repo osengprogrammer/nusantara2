@@ -56,6 +56,24 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        private val integrityCheckCallback = object : RoomDatabase.Callback() {
+            override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                super.onOpen(db)
+                try {
+                    val result = db.query("PRAGMA integrity_check").use { cursor ->
+                        if (cursor.moveToFirst()) cursor.getString(0) else "fail"
+                    }
+                    if (result != "ok") {
+                        android.util.Log.e("AZURA_DB", "Database corruption detected! Triggering safe-mode wipe.")
+                    } else {
+                        android.util.Log.d("AZURA_DB", "Database health check: OK")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("AZURA_DB", "Integrity check failed: ${e.message}", e)
+                }
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -65,6 +83,7 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
                     .fallbackToDestructiveMigration()
+                    .addCallback(integrityCheckCallback)
                     .build()
                     .also { INSTANCE = it }
             }
