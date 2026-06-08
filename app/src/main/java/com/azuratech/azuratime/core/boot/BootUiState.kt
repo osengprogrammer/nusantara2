@@ -5,8 +5,8 @@ package com.azuratech.azuratime.core.boot
  */
 sealed class BootUiState {
     data object Loading : BootUiState()
+    data object Auth : BootUiState()
     data object Ready : BootUiState()
-    data object NeedLogin : BootUiState()
     data object NeedActivation : BootUiState()
     data class Error(val message: String) : BootUiState()
 }

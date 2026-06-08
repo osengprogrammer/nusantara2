@@ -55,8 +55,18 @@ class FollowingViewModel @Inject constructor(
     private fun loadAllData() {
         observePendingRequests()
         observeConnections()
+        observeSentRequests()
         loadAvailableClasses()
         observeAdminStatus()
+    }
+
+    private fun observeSentRequests() {
+        val accountId = currentAccountId ?: return
+        accountRepository.observeSentRequestsFlow(accountId)
+            .onEach { result ->
+                result.onSuccess { ids -> _uiStateFlow.update { it.copy(sentRequestIds = ids.toSet()) } }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeAdminStatus() {
@@ -96,7 +106,15 @@ class FollowingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
             accountRepository.sendConnectionRequest(accountId, targetAccountId)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Connection request sent!") } }
+                .onSuccess {
+                    _uiStateFlow.update {
+                        it.copy(
+                            isProcessing = false,
+                            successMessage = "Connection request sent!",
+                            sentRequestIds = it.sentRequestIds + targetAccountId,
+                        )
+                    }
+                }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
@@ -135,13 +153,29 @@ class FollowingViewModel @Inject constructor(
         val schoolId = sessionManager.getActiveSchoolId() ?: return
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
+
+            // 🛡️ AI Native: Optimistic UI Update
+            val currentConnections = _uiStateFlow.value.connections
+            val updatedConnections = currentConnections.map { account ->
+                if (account.accountId == targetAccountId) {
+                    val updatedMemberships = account.memberships.toMutableMap()
+                    val existing = updatedMemberships[schoolId]
+                    if (existing != null) {
+                        updatedMemberships[schoolId] = existing.copy(role = newRole.name)
+                    }
+                    account.copy(memberships = updatedMemberships)
+                } else {
+                    account
+                }
+            }
+            _uiStateFlow.update { it.copy(connections = updatedConnections) }
+
             accountRepository.updateMemberRole(targetAccountId, schoolId, newRole)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Member role updated to ${newRole.name}") }
-                    observeConnections() // 🔥 AI Native: Force refresh to see updated role immediately
                 }
                 .onFailure { error ->
-                    _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) }
+                    _uiStateFlow.update { it.copy(isProcessing = false, error = error.message, connections = currentConnections) }
                 }
         }
     }

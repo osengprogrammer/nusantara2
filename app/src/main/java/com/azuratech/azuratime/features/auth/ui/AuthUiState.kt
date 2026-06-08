@@ -11,6 +11,7 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val isLoggingOut: Boolean = false,
     val isGoogleSigning: Boolean = false,
+    val isWelcomeVisible: Boolean = true, // 🔥 AI Native: Initial entry state
     val error: String? = null,
     val authStatus: AuthStatus = AuthStatus.Idle,
     val accountRole: String? = null,

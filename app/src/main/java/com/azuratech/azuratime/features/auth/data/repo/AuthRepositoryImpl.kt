@@ -125,9 +125,9 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun clearAllDataAndSignOut(): DomainResult<Unit> = withContext(Dispatchers.IO) {
         try {
-            // 🔥 AI Native FIX: Removed database.clearAllTables()
-            // We now preserve students, classes, and local records across sessions
-            // to support offline-first continuity and prevent accidental data loss.
+            // 🔥 AI Native: Set logging out state early
+            sessionManager.setLoggingOut(true)
+
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(application.getString(R.string.my_web_client_id))
                 .requestEmail()
@@ -137,6 +137,7 @@ class AuthRepositoryImpl @Inject constructor(
             firebaseAuth.signOut()
             DomainResult.Success(Unit)
         } catch (e: Exception) {
+            sessionManager.setLoggingOut(false)
             DomainResult.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule(e.message))
         }
     }

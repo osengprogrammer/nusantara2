@@ -69,7 +69,19 @@ fun FollowingScreen(
 
             Column(modifier = Modifier.fillMaxSize().padding(AzuraSpacing.md)) {
                 when (selectedTab) {
-                    0 -> SearchTab(uiState, searchEmail, { searchEmail = it }, { viewModel.onEvent(FollowingUiEvent.SearchByEmail(it)) }, { viewModel.onEvent(FollowingUiEvent.SendConnectionRequest(it)) })
+                    0 -> SearchTab(
+                        state = uiState,
+                        email = searchEmail,
+                        onEmailChange = { searchEmail = it },
+                        onSearch = { viewModel.onEvent(FollowingUiEvent.SearchByEmail(it)) },
+                        onAdd = { targetId ->
+                            if (uiState.connections.any { it.accountId == targetId }) {
+                                viewModel.onEvent(FollowingUiEvent.UnfollowFriend(targetId))
+                            } else {
+                                viewModel.onEvent(FollowingUiEvent.SendConnectionRequest(targetId))
+                            }
+                        },
+                    )
                     1 -> RequestsTab(uiState, { viewModel.onEvent(FollowingUiEvent.AcceptRequest(it)) }, { viewModel.onEvent(FollowingUiEvent.DeclineRequest(it)) })
                     2 -> ConnectionsTab(
                         uiState = uiState,
@@ -117,7 +129,11 @@ fun SearchTab(state: FollowingUiState, email: String, onEmailChange: (String) ->
             } else if (state.results.isNotEmpty()) {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
                     items(state.results) { account ->
-                        AccountResultItem(account, state.isProcessing, { onAdd(account.accountId) })
+                        AccountResultItem(
+                            account = account,
+                            state = state,
+                            onAdd = { onAdd(account.accountId) },
+                        )
                     }
                 }
             } else {
@@ -170,7 +186,15 @@ fun ConnectionsTab(
 }
 
 @Composable
-fun AccountResultItem(account: AccountEntity, isProcessing: Boolean, onAdd: () -> Unit) {
+fun AccountResultItem(
+    account: AccountEntity,
+    state: FollowingUiState,
+    onAdd: () -> Unit,
+) {
+    val isFriend = state.connections.any { it.accountId == account.accountId }
+    val isSent = state.sentRequestIds.contains(account.accountId)
+    val isIncoming = state.pendingRequests.any { it.accountId == account.accountId }
+
     Card(modifier = Modifier.fillMaxWidth(), shape = AzuraShapes.medium) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(model = account.photoUrl ?: "https://ui-avatars.com/api/?name=${account.name}", contentDescription = null, modifier = Modifier.size(40.dp).clip(CircleShape))
@@ -179,7 +203,44 @@ fun AccountResultItem(account: AccountEntity, isProcessing: Boolean, onAdd: () -
                 Text(account.name, fontWeight = FontWeight.Bold)
                 Text(account.email, style = MaterialTheme.typography.bodySmall)
             }
-            Button(onClick = onAdd, enabled = !isProcessing, shape = AzuraShapes.small) { Text("Add") }
+
+            when {
+                isFriend -> {
+                    IconButton(onClick = onAdd) { // In this context, onAdd will be mapped to Unfollow
+                        Icon(
+                            imageVector = Icons.Default.PersonRemove,
+                            contentDescription = "Disconnect",
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+                isSent -> {
+                    Button(
+                        onClick = { },
+                        enabled = false,
+                        shape = AzuraShapes.small,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                    ) {
+                        Text("Requested")
+                    }
+                }
+                isIncoming -> {
+                    Text(
+                        text = "Pending Response",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                }
+                else -> {
+                    Button(onClick = onAdd, enabled = !state.isProcessing, shape = AzuraShapes.small) {
+                        Text("Add")
+                    }
+                }
+            }
         }
     }
 }
@@ -230,15 +291,17 @@ fun ConnectedFriendItem(
                     Text(account.email, style = MaterialTheme.typography.bodySmall)
                     Text(text = "Role: $currentRole", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 }
+
                 if (isAdmin) {
                     IconButton(onClick = onAssign) { Icon(Icons.Default.School, contentDescription = "Grant Class Access", tint = MaterialTheme.colorScheme.primary) }
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Remove Friend",
-                            tint = MaterialTheme.colorScheme.error,
-                        )
-                    }
+                }
+
+                IconButton(onClick = { showDeleteDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Remove Friend",
+                        tint = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
 

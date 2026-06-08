@@ -91,18 +91,6 @@ fun MainScreen() {
                 navController = navController,
                 startDestination = Screen.Dashboard.route,
             ) {
-                composable(com.azuratech.azuratime.core.navigation.NavigationRoutes.WELCOME) {
-                    val context = LocalContext.current
-                    LaunchedEffect(Unit) {
-                        (context as? android.app.Activity)?.recreate()
-                    }
-                }
-                composable(com.azuratech.azuratime.core.navigation.NavigationRoutes.LOGIN) {
-                    val context = LocalContext.current
-                    LaunchedEffect(Unit) {
-                        (context as? android.app.Activity)?.recreate()
-                    }
-                }
                 dashboardGraph(navController)
                 attendanceGraph(navController)
                 managementGraph(navController)

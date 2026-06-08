@@ -67,21 +67,23 @@ fun MySchoolsCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(AzuraSpacing.xs))
-                    Button(
-                        onClick = onAddSchoolClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = AzuraShapes.medium,
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(Modifier.width(AzuraSpacing.sm))
-                        Text("Create New School")
+                    if (globalRole == "SUPER_ADMIN" || globalRole == "ADMIN") {
+                        Button(
+                            onClick = onAddSchoolClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = AzuraShapes.medium,
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(Modifier.width(AzuraSpacing.sm))
+                            Text("Create New School")
+                        }
                     }
                     OutlinedButton(
                         onClick = onJoinSchoolClick,
                         modifier = Modifier.fillMaxWidth(),
                         shape = AzuraShapes.medium,
                     ) {
-                        Text("Join School")
+                        Text("Join Existing School")
                     }
                 }
             } else {

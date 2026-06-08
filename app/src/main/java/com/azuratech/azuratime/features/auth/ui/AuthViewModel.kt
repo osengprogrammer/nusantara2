@@ -36,6 +36,7 @@ class AuthViewModel @Inject constructor(
             is AuthUiEvent.RegisterSchool -> registerNewSchool()
             is AuthUiEvent.SignInWithGoogle -> loginWithGoogle(event.idToken)
             is AuthUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
+            is AuthUiEvent.GoToLogin -> _uiStateFlow.update { it.copy(isWelcomeVisible = false) }
             is AuthUiEvent.Logout -> logout(event.onComplete)
             is AuthUiEvent.NavigateToDashboard -> { /* Managed by screen */ }
         }

@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
 class SessionManager private constructor(private val context: Context) {
-
     companion object {
         private const val TAG = "AZURA_SESSION"
         const val STATUS_GUEST = "GUEST"
@@ -30,6 +29,7 @@ class SessionManager private constructor(private val context: Context) {
         private const val KEY_ACCOUNT_EMAIL = "account_email"
         private const val KEY_ACCOUNT_ID = "current_account_id"
         private const val KEY_ACTIVE_SCHOOL_ID = "active_school_id"
+        private const val KEY_ACCOUNT_ROLE = "account_role"
 
         @Volatile
         private var INSTANCE: SessionManager? = null
@@ -116,6 +116,12 @@ class SessionManager private constructor(private val context: Context) {
 
     fun getAccountStatus(): String = sharedPreferences.getString(KEY_ACCOUNT_STATUS, STATUS_PENDING) ?: STATUS_PENDING
 
+    fun saveAccountRole(role: String) {
+        sharedPreferences.edit().putString(KEY_ACCOUNT_ROLE, role.trim()).apply()
+    }
+
+    fun getAccountRole(): String = sharedPreferences.getString(KEY_ACCOUNT_ROLE, "USER")?.trim() ?: "USER"
+
     fun getExpireDate(): Long = sharedPreferences.getLong(KEY_EXPIRE_DATE, 0L)
 
     fun getCloudKey(): String = sharedPreferences.getString(KEY_DB_CLOUD, "") ?: ""
@@ -146,12 +152,13 @@ class SessionManager private constructor(private val context: Context) {
 
     fun getHardwareId(): String = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "UNKNOWN"
 
-    fun injectSecurityEnvelope(isoKey: String, expireDateMillis: Long) {
+    fun injectSecurityEnvelope(isoKey: String, expireDateMillis: Long, role: String = "USER") {
         sharedPreferences.edit().apply {
             putString(KEY_DB_CLOUD, isoKey)
             putLong(KEY_EXPIRE_DATE, expireDateMillis)
             putLong(KEY_LAST_SYNC, System.currentTimeMillis())
             putString(KEY_ACCOUNT_STATUS, STATUS_ACTIVE)
+            putString(KEY_ACCOUNT_ROLE, role.trim())
         }.apply()
         Log.d(TAG, "Security envelope injected successfully.")
     }
