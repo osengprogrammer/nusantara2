@@ -25,6 +25,14 @@ fun NavGraphBuilder.accountGraph(
             AccountManagementScreen(
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToWelcome = {
+                    android.util.Log.d("LogoutNav", "Navigating to Welcome...")
+                    // If WELCOME doesn't exist, we fallback to LOGIN as the entry point
+                    val destination = try { NavigationRoutes.WELCOME } catch (e: Exception) { NavigationRoutes.LOGIN }
+                    navController.navigate(destination) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
             )
         }
         composable(

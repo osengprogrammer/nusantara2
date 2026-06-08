@@ -1,9 +1,9 @@
 package com.azuratech.azuratime.features.dashboard.ui
 
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,10 +36,17 @@ fun DashboardScreen(
     val uiEffect by viewModel.uiEffectFlow.collectAsStateWithLifecycle(initialValue = null)
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddSchoolDialog by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiEffect) {
         when (val effect = uiEffect) {
             is DashboardUiEffect.NavigateTo -> navController.navigate(effect.route)
+            DashboardUiEffect.NavigateToLogin -> {
+                android.util.Log.d("LogoutNav", "Navigating to: ${com.azuratech.azuratime.core.navigation.NavigationRoutes.LOGIN}")
+                navController.navigate(com.azuratech.azuratime.core.navigation.NavigationRoutes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
             is DashboardUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
             is DashboardUiEffect.ShowToast -> { /* Handle Toast if needed */ }
             null -> {}
@@ -50,8 +57,21 @@ fun DashboardScreen(
         title = "Azura Time",
         snackbarHost = { SnackbarHost(snackbarHostState) },
         actions = {
-            IconButton(onClick = { viewModel.onEvent(DashboardUiEvent.Logout) }) {
-                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
+            IconButton(onClick = { showMenu = true }) {
+                Icon(Icons.Default.MoreVert, contentDescription = "Settings")
+            }
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Logout") },
+                    onClick = {
+                        showMenu = false
+                        viewModel.onEvent(DashboardUiEvent.Logout)
+                    },
+                    leadingIcon = { Icon(Icons.Default.ExitToApp, contentDescription = null) },
+                )
             }
         },
     ) {
@@ -79,9 +99,6 @@ fun DashboardScreen(
                     onRosterClick = { classId ->
                         viewModel.onEvent(DashboardUiEvent.SelectActiveClass(classId, Screen.StudentRoster.route))
                     },
-                    onLogoutClick = {
-                        viewModel.onEvent(DashboardUiEvent.Logout)
-                    },
                 )
             }
         }
@@ -103,7 +120,6 @@ fun DashboardContent(
     onSelectClass: (String?) -> Unit,
     onAttendanceClick: (String) -> Unit,
     onRosterClick: (String) -> Unit,
-    onLogoutClick: () -> Unit,
 ) {
     val schoolUiState by schoolViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val activeSchoolId = schoolUiState.activeSchoolId
@@ -120,8 +136,7 @@ fun DashboardContent(
                 name = account?.name ?: "Guest",
                 email = account?.email,
                 schoolName = data.currentSchool?.name,
-                photoUrl = account?.photoUrl,
-                onLogout = onLogoutClick,
+                photoUrl = account?.photoUrl?.let { Uri.parse(it) },
                 onProfileClick = { navController.navigate(Screen.Profile.route) },
             )
         }
@@ -217,6 +232,15 @@ fun DashboardContent(
                         activeClassId = account?.activeClassId,
                         onSelectClass = onSelectClass,
                     )
+                }
+
+                if (data.isApproved && account?.toDomain().isAdmin(activeSchoolId ?: "")) {
+                    item {
+                        GpsGeofenceCard(
+                            geofence = data.geofence,
+                            onClick = { navController.navigate(Screen.GpsManagement.route) },
+                        )
+                    }
                 }
 
                 if (data.sessionStudents.isNotEmpty()) {

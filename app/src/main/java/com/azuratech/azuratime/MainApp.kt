@@ -23,13 +23,19 @@ import com.azuratech.azuratime.core.ui.MainViewModel
 import com.azuratech.azuratime.features.account.ui.membership.MembershipScreen
 import com.azuratech.azuratime.features.auth.ui.AuthUiEvent
 import com.azuratech.azuratime.features.auth.ui.AuthViewModel
+import androidx.navigation.compose.*
 import com.azuratech.azuratime.features.auth.ui.LoginScreen
+import com.azuratech.azuratime.features.auth.ui.WelcomeScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun MainApp(onBootReady: () -> Unit = {}) {
     val bootViewModel: BootViewModel = hiltViewModel()
     val bootState by bootViewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val isLoggingOut by bootViewModel.isLoggingOut.collectAsStateWithLifecycle()
+    val isSessionClearing by bootViewModel.isSessionClearing.collectAsStateWithLifecycle()
+
+    val isClearingEffect = isLoggingOut || isSessionClearing
 
     LaunchedEffect(bootState) {
         if (bootState != BootUiState.Loading) {
@@ -47,14 +53,29 @@ fun MainApp(onBootReady: () -> Unit = {}) {
             label = "BootStateTransition",
         ) { state ->
             when (state) {
-                BootUiState.Loading -> LoadingScreen(onRetry = { bootViewModel.onEvent(BootUiEvent.Recheck) })
+                BootUiState.Loading -> LoadingScreen(
+                    onRetry = { bootViewModel.onEvent(BootUiEvent.Recheck) },
+                    isLoggingOut = isClearingEffect,
+                )
 
                 BootUiState.NeedLogin -> {
-                    LoginScreen(
-                        onNavigateToDashboard = {
-                            bootViewModel.onEvent(BootUiEvent.Recheck)
-                        },
-                    )
+                    val authNavController = rememberNavController()
+                    NavHost(
+                        navController = authNavController,
+                        startDestination = "welcome",
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        composable("welcome") {
+                            WelcomeScreen(onNavigateToLogin = { authNavController.navigate("login") })
+                        }
+                        composable("login") {
+                            LoginScreen(
+                                onNavigateToDashboard = {
+                                    bootViewModel.onEvent(BootUiEvent.Recheck)
+                                },
+                            )
+                        }
+                    }
                 }
 
                 BootUiState.NeedActivation -> {
@@ -69,9 +90,7 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                         onApprovedClick = { bootViewModel.onEvent(BootUiEvent.Recheck) },
                         onLogoutClick = {
                             authViewModel.onEvent(
-                                AuthUiEvent.Logout {
-                                    bootViewModel.onEvent(BootUiEvent.Recheck)
-                                },
+                                AuthUiEvent.Logout(),
                             )
                         },
                     )
@@ -91,9 +110,7 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                             message = "Akses Anda telah dicabut.",
                             onReLogin = {
                                 authViewModel.onEvent(
-                                    AuthUiEvent.Logout {
-                                        bootViewModel.onEvent(BootUiEvent.Recheck)
-                                    },
+                                    AuthUiEvent.Logout(),
                                 )
                             },
                         )
@@ -121,18 +138,23 @@ fun MainApp(onBootReady: () -> Unit = {}) {
 }
 
 @Composable
-fun LoadingScreen(onRetry: () -> Unit) {
+fun LoadingScreen(onRetry: () -> Unit, isLoggingOut: Boolean = false) {
     var showRetry by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(5000)
         showRetry = true
     }
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center,
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (!showRetry) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Menyiapkan Enkripsi...", style = MaterialTheme.typography.bodySmall)
+                if (isLoggingOut) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Logging out...", style = MaterialTheme.typography.bodyMedium)
+                }
             } else {
                 Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(48.dp))
                 Spacer(modifier = Modifier.height(16.dp))
@@ -146,9 +168,9 @@ fun LoadingScreen(onRetry: () -> Unit) {
 fun SecurityAlertDialog(message: String, onReLogin: () -> Unit) {
     AlertDialog(
         onDismissRequest = {},
-        title = { Text("Keamanan Sistem", fontWeight = FontWeight.Bold) },
+        title = { Text("System Security", fontWeight = FontWeight.Bold) },
         text = { Text(message) },
-        confirmButton = { TextButton(onClick = onReLogin) { Text("Login Ulang") } },
-        dismissButton = { TextButton(onClick = { android.os.Process.killProcess(android.os.Process.myPid()) }) { Text("Tutup") } },
+        confirmButton = { TextButton(onClick = onReLogin) { Text("Relogin") } },
+        dismissButton = { TextButton(onClick = { android.os.Process.killProcess(android.os.Process.myPid()) }) { Text("Close") } },
     )
 }

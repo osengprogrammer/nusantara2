@@ -141,7 +141,9 @@ class AuthViewModel @Inject constructor(
 
     private fun logout(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isLoggingOut = true, isLoading = true) }
             repository.clearAllDataAndSignOut()
+            // Ensure session is fully cleared before resetting state
             _uiStateFlow.value = AuthUiState()
             onComplete()
         }

@@ -12,6 +12,7 @@ import com.azuratech.azuratime.features.school.domain.repository.SchoolRepositor
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.core.domain.model.AccountRole
+import com.azuratech.azuratime.core.util.LocationProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -31,6 +32,7 @@ class SchoolViewModel @Inject constructor(
     private val workspaceRepository: SchoolWorkspaceRepository,
     private val accountRepository: AccountRepository,
     private val syncManager: SyncManager,
+    private val locationProvider: LocationProvider,
 ) : ViewModel() {
 
     private val _uiEffectFlow = MutableSharedFlow<SchoolUiEffect>()
@@ -51,6 +53,17 @@ class SchoolViewModel @Inject constructor(
         viewModelScope.launch {
             sessionManager.activeSchoolIdFlow.collect { id ->
                 _uiStateFlow.update { it.copy(activeSchoolId = id) }
+                if (id != null) {
+                    observeGeofence(id)
+                }
+            }
+        }
+    }
+
+    private fun observeGeofence(schoolId: String) {
+        viewModelScope.launch {
+            schoolRepository.observeGeofenceFlow(schoolId).collect { geofence ->
+                _uiStateFlow.update { it.copy(geofence = geofence) }
             }
         }
     }
@@ -71,6 +84,33 @@ class SchoolViewModel @Inject constructor(
             is SchoolUiEvent.DeleteSchool -> deleteSchool(event.id)
             is SchoolUiEvent.UpdateSchoolName -> updateSchoolName(event.schoolId, event.newName)
             SchoolUiEvent.Retry -> _uiStateFlow.value.accountId.takeIf { it.isNotEmpty() }?.let { loadSchools(it) }
+            is SchoolUiEvent.SaveGeofence -> saveGeofence(event.schoolId, event.latitude, event.longitude, event.radius, event.isActive)
+            is SchoolUiEvent.PickLocation -> _uiStateFlow.update { it.copy(pickedLocation = event.location) }
+            SchoolUiEvent.FetchCurrentLocation -> fetchCurrentLocation()
+        }
+    }
+
+    private fun fetchCurrentLocation() {
+        viewModelScope.launch {
+            locationProvider.getCurrentLocation().onSuccess { location ->
+                val latLng = com.google.android.gms.maps.model.LatLng(location.latitude, location.longitude)
+                _uiStateFlow.update { it.copy(pickedLocation = latLng) }
+            }
+        }
+    }
+
+    private fun saveGeofence(schoolId: String, lat: Double, lng: Double, radius: Int, isActive: Boolean) {
+        viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isLoading = true) }
+            schoolRepository.saveGeofence(schoolId, lat, lng, radius, isActive)
+                .onSuccess {
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("✅ Geofence saved successfully!"))
+                }
+                .onFailure { error ->
+                    _uiStateFlow.update { it.copy(isLoading = false) }
+                    _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("❌ Failed to save geofence: ${error.message}"))
+                }
         }
     }
 

@@ -56,7 +56,7 @@ class MainRepositoryImpl @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    override fun executeRevocationCleanup(): Result<Unit> {
+    override suspend fun executeRevocationCleanup(): Result<Unit> {
         return try {
             Log.w("MainRepository", "🚨 AKSES DICABUT OLEH ADMIN! Membersihkan sesi...")
             sessionManager.clearSession()

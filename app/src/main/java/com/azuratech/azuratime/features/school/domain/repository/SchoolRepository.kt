@@ -4,6 +4,7 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.school.data.local.ClassEntity
+import com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity
 import kotlinx.coroutines.flow.Flow
 
 interface SchoolRepository {
@@ -50,4 +51,8 @@ interface SchoolRepository {
 
     // 🔥 CLASS-CENTRIC ASSIGNMENT
     suspend fun addStudentToClass(schoolId: String, classId: String, studentId: String): Result<Unit>
+
+    // 📍 GPS GEOFENCE
+    suspend fun saveGeofence(schoolId: String, lat: Double, lng: Double, radius: Int, isActive: Boolean): Result<Unit>
+    fun observeGeofenceFlow(schoolId: String): Flow<GpsGeofenceEntity?>
 }

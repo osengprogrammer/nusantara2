@@ -138,7 +138,7 @@ class AccountManagementViewModel @Inject constructor(
             is AccountUiEvent.AssignClassToAccount -> assignClassToAccount(event.classId, event.targetAccountId)
             is AccountUiEvent.RemoveClassAccess -> removeClassAccess(event.classId, event.targetAccountId)
             is AccountUiEvent.ClearPhoto -> clearPhoto()
-            is AccountUiEvent.Logout -> logout()
+            is AccountUiEvent.Logout -> handleLogout()
             is AccountUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
             is AccountUiEvent.NavigateBack -> { /* Handled in Screen */ }
             is AccountUiEvent.UpdatePendingRole -> updatePendingRole(event.requestId, event.role)
@@ -278,10 +278,11 @@ class AccountManagementViewModel @Inject constructor(
         _uiStateFlow.update { it.copy(pendingPhotoUri = null) }
     }
 
-    private fun logout() {
+    private fun handleLogout() {
         viewModelScope.launch {
+            _uiStateFlow.update { it.copy(isLoggingOut = true) }
             sessionManager.clearSession()
-            _uiEffectFlow.emit(AccountUiEffect.NavigateTo("login"))
+            _uiEffectFlow.emit(AccountUiEffect.NavigateToWelcome)
         }
     }
 

@@ -23,4 +23,5 @@ data class AccountUiState(
     val selectedRoles: Map<String, com.azuratech.azuratime.core.domain.model.AccountRole> = emptyMap(),
     val currentAccountRole: com.azuratech.azuratime.core.domain.model.AccountRole = com.azuratech.azuratime.core.domain.model.AccountRole.USER,
     val activeSchoolId: String? = null,
+    val isLoggingOut: Boolean = false,
 )

@@ -37,8 +37,8 @@ interface SchoolClassDao {
 
     @Query(
         """
-        SELECT * FROM classes 
-        WHERE schoolId = :schoolId 
+        SELECT * FROM classes
+        WHERE schoolId = :schoolId
         OR id IN (SELECT classId FROM school_class_assignments WHERE schoolId = :schoolId)
         ORDER BY grade, name ASC
     """,
@@ -71,10 +71,10 @@ interface SchoolClassDao {
 
     @Query(
         """
-        SELECT classes.* FROM classes 
+        SELECT classes.* FROM classes
         INNER JOIN school_class_assignments ON classes.id = school_class_assignments.classId
-        INNER JOIN schools ON school_class_assignments.schoolId = schools.id 
-        WHERE schools.accountId = :accountId 
+        INNER JOIN schools ON school_class_assignments.schoolId = schools.id
+        WHERE schools.accountId = :accountId
         ORDER BY schools.name, classes.name ASC
     """,
     )
@@ -88,4 +88,14 @@ interface SchoolClassDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun reassignClass(assignment: SchoolClassAssignment)
+
+    // 📍 GPS GEOFENCE OPERATIONS
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertGeofence(geofence: GpsGeofenceEntity)
+
+    @Query("SELECT * FROM gps_geofences WHERE schoolId = :schoolId LIMIT 1")
+    fun observeGeofenceFlow(schoolId: String): Flow<GpsGeofenceEntity?>
+
+    @Query("DELETE FROM gps_geofences WHERE id = :id")
+    suspend fun deleteGeofence(id: String)
 }

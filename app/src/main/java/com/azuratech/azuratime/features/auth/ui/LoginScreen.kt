@@ -83,7 +83,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = "Selamat Datang di Azura Time",
+                text = "Welcome to Azura Time",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -92,7 +92,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
             Text(
-                text = "Sistem Presensi Biometrik Sekolah Terintegrasi",
+                text = "Integrated School Biometric Attendance System",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -107,13 +107,13 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(AzuraSpacing.md))
                 Text(
-                    text = if (uiState.isGoogleSigning) "Menghubungkan Akun Google..." else "Memproses...",
+                    text = if (uiState.isGoogleSigning) "Connecting Google Account..." else "Processing...",
                     style = MaterialTheme.typography.labelMedium,
                 )
             } else {
                 GoogleSignInButton(
                     modifier = Modifier.fillMaxWidth(),
-                    text = "Masuk dengan Google",
+                    text = "Sign in with Google",
                     isLoading = uiState.isGoogleSigning,
                     onClick = { googleAuthLauncher.launch(googleSignInClient.signInIntent) },
                     icon = painterResource(id = R.drawable.ic_google_logo),

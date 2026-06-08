@@ -11,6 +11,7 @@ sealed class AttendanceCheckInUiEvent {
     object ManualEntryConfirmed : AttendanceCheckInUiEvent()
     object Retry : AttendanceCheckInUiEvent()
     data class GrantPermission(val granted: Boolean) : AttendanceCheckInUiEvent()
+    data class GeofenceValidated(val latitude: Double, val longitude: Double) : AttendanceCheckInUiEvent() // 🔥 AI Native: Geofence security
     object NavigateBack : AttendanceCheckInUiEvent()
 }
 

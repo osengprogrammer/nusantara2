@@ -38,8 +38,10 @@ class MainViewModel @Inject constructor(
             MainUiEvent.InitializeApp -> initializeApp()
             is MainUiEvent.HandleRevoke -> {
                 if (event.isRevoked) {
-                    repository.executeRevocationCleanup()
-                    _uiStateFlow.update { it.copy(isRevoked = true) }
+                    viewModelScope.launch {
+                        repository.executeRevocationCleanup()
+                        _uiStateFlow.update { it.copy(isRevoked = true) }
+                    }
                 }
             }
         }

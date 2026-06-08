@@ -32,7 +32,7 @@ fun AzuraAuditTrail(
     ) {
         Column(modifier = Modifier.padding(AzuraSpacing.md)) {
             Text(
-                text = "LOG AUDIT & HISTORY",
+                text = "AUDIT LOG & HISTORY",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -41,8 +41,8 @@ fun AzuraAuditTrail(
             Spacer(Modifier.height(AzuraSpacing.sm))
 
             AuditRow(
-                label = "Dibuat oleh",
-                value = createdBy ?: "Sistem",
+                label = "Created by",
+                value = createdBy ?: "System",
                 date = dateFormatter.format(java.util.Date(createdAt)),
                 icon = Icons.Filled.AddModerator,
             )
@@ -54,8 +54,8 @@ fun AzuraAuditTrail(
             )
 
             AuditRow(
-                label = "Update Terakhir",
-                value = "Sesi Saat Ini",
+                label = "Last Update",
+                value = "Current Session",
                 date = dateFormatter.format(java.util.Date(lastUpdated)),
                 icon = Icons.Filled.HistoryEdu,
             )

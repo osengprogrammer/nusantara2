@@ -9,16 +9,12 @@ import com.azuratech.azuratime.features.attendance.domain.repository.BiometricSc
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -26,12 +22,14 @@ import javax.inject.Inject
 /**
  * 🚀 ATTENDANCE CAPTURE VIEW MODEL (v3.2.0-ai-native)
  * Manages biometric and barcode attendance check-in.
+ * Integrated Geofence security for "Out of Location" enforcement.
  */
 @HiltViewModel
 class AttendanceCaptureViewModel @Inject constructor(
     application: Application,
     private val repository: BiometricScannerRepository,
     private val attendanceRepository: AttendanceRepository,
+    private val schoolRepository: SchoolRepository, // 🔥 AI Native: For Geofence settings
     private val sessionManager: SessionManager,
 ) : AndroidViewModel(application) {
 
@@ -53,6 +51,23 @@ class AttendanceCaptureViewModel @Inject constructor(
     private var lastProcessedTime: Long = 0L
     private val REPEAT_SCAN_SUPPRESSION_MS = 600_000L // 10 minutes
 
+    init {
+        // 🔥 AI Native: Automatically observe geofence when school is active
+        viewModelScope.launch {
+            sessionManager.activeSchoolIdFlow.collect { schoolId ->
+                if (schoolId != null) {
+                    schoolRepository.observeGeofenceFlow(schoolId).collect { geofence ->
+                        _uiStateFlow.update { it.copy(geofenceEntity = geofence) }
+                        // Initial state: if geofence is inactive, user is "within" by default
+                        if (geofence?.isActive != true) {
+                            _uiStateFlow.update { it.copy(isWithinGeofence = true) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun onEvent(event: AttendanceCheckInUiEvent) {
         when (event) {
             is AttendanceCheckInUiEvent.StartScan -> startScannerSession(event.accountEmail, event.mode)
@@ -60,9 +75,22 @@ class AttendanceCaptureViewModel @Inject constructor(
             is AttendanceCheckInUiEvent.FaceMatched -> processScannedBiometric(event.embedding)
             is AttendanceCheckInUiEvent.ManualEntryConfirmed -> { /* Logic for manual confirm if needed */ }
             is AttendanceCheckInUiEvent.GrantPermission -> _uiStateFlow.update { it.copy(cameraPermissionGranted = event.granted) }
+            is AttendanceCheckInUiEvent.GeofenceValidated -> validateGeofence(event.latitude, event.longitude)
             AttendanceCheckInUiEvent.Retry -> resetScanningState()
             AttendanceCheckInUiEvent.NavigateBack -> viewModelScope.launch { _uiEffectFlow.send(AttendanceCaptureUiEffect.NavigateBack) }
         }
+    }
+
+    private fun validateGeofence(lat: Double, lng: Double) {
+        val geofence = _uiStateFlow.value.geofenceEntity ?: return
+        if (!geofence.isActive) {
+            _uiStateFlow.update { it.copy(isWithinGeofence = true) }
+            return
+        }
+
+        val distance = calculateDistance(lat, lng, geofence.latitude, geofence.longitude)
+        val isInside = distance <= geofence.radiusMeters
+        _uiStateFlow.update { it.copy(isWithinGeofence = isInside) }
     }
 
     private fun resetScanningState() {
@@ -83,13 +111,13 @@ class AttendanceCaptureViewModel @Inject constructor(
             val resolvedSchoolId = sessionManager.getActiveSchoolId()
 
             when (val sessionResult = repository.getSessionData(resolvedEmail, resolvedSchoolId)) {
-                is com.azuratech.azuraengine.result.Result.Success -> {
+                is Result.Success -> {
                     val (classId, className, schoolId) = sessionResult.data
                     activeClassId = classId
 
                     if (schoolId != null) {
                         when (val galleryResult = repository.loadGallery(schoolId)) {
-                            is com.azuratech.azuraengine.result.Result.Success -> {
+                            is Result.Success -> {
                                 gallery = galleryResult.data
                                 _uiStateFlow.update {
                                     it.copy(
@@ -101,7 +129,7 @@ class AttendanceCaptureViewModel @Inject constructor(
                                     )
                                 }
                             }
-                            is com.azuratech.azuraengine.result.Result.Failure -> {
+                            is Result.Failure -> {
                                 _uiStateFlow.update { it.copy(isLoading = false, error = galleryResult.error.message, isScanning = false) }
                             }
                             else -> {}
@@ -110,7 +138,7 @@ class AttendanceCaptureViewModel @Inject constructor(
                         _uiStateFlow.update { it.copy(isLoading = false, error = "Workspace Belum Dipilih", isScanning = false) }
                     }
                 }
-                is com.azuratech.azuraengine.result.Result.Failure -> {
+                is Result.Failure -> {
                     _uiStateFlow.update { it.copy(isLoading = false, error = sessionResult.error.message, isScanning = false) }
                 }
                 else -> {}
@@ -131,7 +159,7 @@ class AttendanceCaptureViewModel @Inject constructor(
             _uiStateFlow.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null) }
 
             when (val matchResult = repository.performMatch(embedding, gallery)) {
-                is com.azuratech.azuraengine.result.Result.Success -> {
+                is Result.Success -> {
                     val matchedStudentId = matchResult.data
                     if (matchedStudentId != null) {
                         processAttendanceRecord(matchedStudentId, schoolId)
@@ -139,7 +167,7 @@ class AttendanceCaptureViewModel @Inject constructor(
                         handleUnregistered()
                     }
                 }
-                is com.azuratech.azuraengine.result.Result.Failure -> {
+                is Result.Failure -> {
                     handleError(matchResult.error.message ?: "Match Error")
                 }
                 else -> {}
@@ -258,6 +286,22 @@ class AttendanceCaptureViewModel @Inject constructor(
         _uiStateFlow.update { it.copy(isLoading = false, error = message, isScanning = false) }
         _uiEffectFlow.send(AttendanceCaptureUiEffect.Speak(message))
         enterCooldown()
+    }
+
+    // 🔥 AI Native: Geofence security calculation (Haversine formula)
+    fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371e3 // Earth radius in meters
+        val phi1 = lat1 * Math.PI / 180
+        val phi2 = lat2 * Math.PI / 180
+        val deltaPhi = (lat2 - lat1) * Math.PI / 180
+        val deltaLambda = (lon2 - lon1) * Math.PI / 180
+
+        val a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+            Math.cos(phi1) * Math.cos(phi2) *
+            Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+        return r * c
     }
 
     private suspend fun enterCooldown(duration: Long = 4000) {

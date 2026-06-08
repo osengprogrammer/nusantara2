@@ -148,6 +148,15 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
+    private val _geofenceFlow = _activeSchoolIdFlow
+        .flatMapLatest { schoolId ->
+            if (schoolId != null) {
+                schoolRepository.observeGeofenceFlow(schoolId)
+            } else {
+                flowOf(null)
+            }
+        }
+
     val uiStateFlow: StateFlow<DashboardUiState> = combine(
         _accountFlow,
         _recentRecordsFlow,
@@ -157,6 +166,8 @@ class DashboardViewModel @Inject constructor(
         _activeSchoolFlow,
         _pendingRequestsCountFlow,
         _totalActiveStudentsFlow,
+        _geofenceFlow,
+        sessionManager.isLoggingOutFlow,
         _refreshTriggerFlow,
     ) { params ->
         val account = params[0] as AccountEntity?
@@ -177,6 +188,8 @@ class DashboardViewModel @Inject constructor(
         val activeSchool = params[5] as School?
         val pendingCount = params[6] as Int
         val totalActiveStudents = params[7] as Int
+        val geofence = params[8] as com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity?
+        val isLoggingOut = params[9] as Boolean
 
         val activeSchoolId = activeSchool?.id
         val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
@@ -198,6 +211,8 @@ class DashboardViewModel @Inject constructor(
             needsClassAssignment = needsAssignment,
             pendingRequests = pendingCount,
             totalActiveStudents = totalActiveStudents,
+            geofence = geofence,
+            isLoggingOut = isLoggingOut,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState(isLoading = true))
 
@@ -302,8 +317,14 @@ class DashboardViewModel @Inject constructor(
 
     private fun logout() {
         viewModelScope.launch {
+            _refreshTriggerFlow.update { -1 } // Optional: stop other combine flows
+            // We can't update uiStateFlow directly as it is a combine(...) stateIn
+            // But we can add it to the combine if we want, or just rely on the effect.
+            // Actually, let's just make it emit the effect and let the UI handle it.
+            // Wait, the UI needs to show the overlay.
+            // Since uiStateFlow is a combine of many things, adding one more StateFlow is best.
             authRepository.clearAllDataAndSignOut()
-            _uiEffectFlow.emit(DashboardUiEffect.NavigateTo("login"))
+            _uiEffectFlow.emit(DashboardUiEffect.NavigateToLogin)
         }
     }
 

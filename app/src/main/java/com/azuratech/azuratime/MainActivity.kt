@@ -19,47 +19,36 @@ import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.sync.SyncWorker
 import com.azuratech.azuratime.core.push.AzuraFcmService
 import com.azuratech.azuratime.features.update.ui.UpdateEventBus
+import com.google.android.gms.maps.MapsInitializer
+import com.google.android.gms.maps.OnMapsSdkInitializedCallback
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), OnMapsSdkInitializedCallback {
 
     @Inject
     lateinit var updateEventBus: UpdateEventBus
 
-    // Menggunakan variabel biasa agar lebih responsif di level sistem
     private var isBootReady = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 🔥 1. Pasang Splash Screen
         val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
         android.util.Log.i("AzuraApp", "✅ App Started - v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
 
+        MapsInitializer.initialize(applicationContext, MapsInitializer.Renderer.LATEST, this)
+
         handleUpdateIntent(intent)
 
-        // 🔥 2. Tahan Splash Screen dengan kondisi yang stabil
         splashScreen.setKeepOnScreenCondition { !isBootReady }
 
         enableEdgeToEdge()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setupFullscreen()
 
-        // 🔥 AI Native: Custom In-App Update Engine is now the primary update mechanism.
-        // We disable the built-in Firebase App Distribution automatic prompt to avoid
-        // the "Update Check Failed" toast and conflict with our custom UI.
-        /*
-        Firebase.appDistribution.updateIfNewReleaseAvailable()
-            .addOnFailureListener { e ->
-                android.util.Log.e("AzuraApp", "❌ App Distribution Error", e)
-            }
-         */
-
-        // 🔥 3. Pindahkan Background Sync agar tidak berebut CPU saat Start-up
-        // Kita beri jeda 2 detik setelah UI tampil
         window.decorView.postDelayed({
             setupBackgroundSync()
         }, 2000)
@@ -67,10 +56,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             AzuraTheme {
                 MainApp(onBootReady = {
-                    // Panggil ini saat BootState sudah bukan Loading
                     isBootReady = true
                 })
             }
+        }
+    }
+
+    override fun onMapsSdkInitialized(renderer: MapsInitializer.Renderer) {
+        when (renderer) {
+            MapsInitializer.Renderer.LATEST -> android.util.Log.d("AzuraApp", "🗺️ Maps SDK: Latest renderer initialized.")
+            MapsInitializer.Renderer.LEGACY -> android.util.Log.d("AzuraApp", "🗺️ Maps SDK: Legacy renderer initialized.")
         }
     }
 

@@ -269,4 +269,51 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
             Result.Failure(AppError.Network(e.message))
         }
     }
+
+    // 📍 GPS GEOFENCE
+    override suspend fun saveGeofence(
+        schoolId: String,
+        geofence: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity,
+    ): Result<Unit> {
+        return try {
+            val data = hashMapOf(
+                "id" to geofence.id,
+                "schoolId" to geofence.schoolId,
+                "latitude" to geofence.latitude,
+                "longitude" to geofence.longitude,
+                "radiusMeters" to geofence.radiusMeters,
+                "isActive" to geofence.isActive,
+                "updatedAt" to com.google.firebase.Timestamp.now(),
+            )
+            db.collection("gps_geofences").document(schoolId).set(data, SetOptions.merge()).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override fun observeGeofenceFlow(schoolId: String): Flow<Result<com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity?>> = callbackFlow {
+        val subscription = db.collection("gps_geofences").document(schoolId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.Failure(AppError.Network(error.message)))
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val geofence = com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity(
+                        id = snapshot.getString("id") ?: snapshot.id,
+                        schoolId = snapshot.getString("schoolId") ?: schoolId,
+                        latitude = snapshot.getDouble("latitude") ?: 0.0,
+                        longitude = snapshot.getDouble("longitude") ?: 0.0,
+                        radiusMeters = snapshot.getLong("radiusMeters")?.toInt() ?: 100,
+                        isActive = snapshot.getBoolean("isActive") ?: false,
+                        syncStatus = "SYNCED",
+                    )
+                    trySend(Result.Success(geofence))
+                } else {
+                    trySend(Result.Success(null))
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
 }

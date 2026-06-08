@@ -12,6 +12,8 @@ import com.azuratech.azuratime.features.account.data.local.SchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.domain.model.AccountProfile
+import com.azuratech.azuratime.features.school.data.local.SchoolDao
+import com.azuratech.azuratime.core.sync.SyncManager
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +30,8 @@ import javax.inject.Singleton
 @Singleton
 class AccountRepositoryImpl @Inject constructor(
     private val accountDao: AccountDao,
+    private val schoolDao: SchoolDao,
+    private val syncManager: SyncManager,
     private val db: FirebaseFirestore,
 ) : AccountRepository {
 
@@ -421,9 +425,20 @@ class AccountRepositoryImpl @Inject constructor(
             val account = accountDao.getAccountById(targetAccountId) ?: return Result.Failure(AppError.LocalDB("Account not found"))
 
             val updatedMemberships = account.memberships.toMutableMap()
-            val membership = updatedMemberships[schoolId] ?: return Result.Failure(AppError.BusinessRule("Membership not found for this school"))
 
-            updatedMemberships[schoolId] = membership.copy(role = newRole.name)
+            // 🛡️ AI Native: Auto-Enroll logic if membership doesn't exist
+            val existingMembership = updatedMemberships[schoolId]
+            if (existingMembership == null) {
+                val school = schoolDao.getSchoolById(schoolId)
+                val newMembership = SchoolMembership(
+                    schoolName = school?.name ?: "Unknown School",
+                    role = newRole.name,
+                    status = "ACTIVE",
+                )
+                updatedMemberships[schoolId] = newMembership
+            } else {
+                updatedMemberships[schoolId] = existingMembership.copy(role = newRole.name)
+            }
 
             // If this is the active school, update the top-level role too
             val updatedRole = if (account.activeSchoolId == schoolId) newRole.name else account.role
@@ -436,7 +451,10 @@ class AccountRepositoryImpl @Inject constructor(
 
             accountDao.upsertAccount(updatedAccount)
 
-            // Push to Firestore immediately for reactive UI updates across devices
+            // ⚡ AI Native: Trigger sync via SyncManager for background resilience
+            syncManager.enqueueAccountSync(targetAccountId)
+
+            // Also push immediately for rapid UI updates if online
             pushAccount(targetAccountId).onSuccess {
                 accountDao.upsertAccount(updatedAccount.copy(syncStatus = "SYNCED"))
             }

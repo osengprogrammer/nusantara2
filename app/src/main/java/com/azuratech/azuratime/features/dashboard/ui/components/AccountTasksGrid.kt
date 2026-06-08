@@ -105,10 +105,10 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Account Management",
-                    Icons.Default.ManageAccounts,
+                    "Student Management",
+                    Icons.Default.People,
                     MaterialTheme.colorScheme.secondary,
-                    { navController.navigate(Screen.Following.route) },
+                    { navController.navigate(Screen.StudentRoster.route) },
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
@@ -119,14 +119,6 @@ fun AccountTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "Student Management",
-                    Icons.Default.People,
-                    MaterialTheme.colorScheme.primary,
-                    { navController.navigate(Screen.StudentRoster.route) },
-                    modifier = Modifier.weight(1f),
-                    enabled = isEnabled,
-                )
-                DashboardActionCard(
                     "New Registration",
                     Icons.Default.PersonAdd,
                     MaterialTheme.colorScheme.tertiary,
@@ -134,6 +126,7 @@ fun AccountTasksGrid(
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
 
@@ -182,9 +175,9 @@ fun AccountTasksGrid(
                 enabled = isEnabled,
             )
             DashboardActionCard(
-                "Follow System",
-                Icons.Default.GroupAdd,
-                MaterialTheme.colorScheme.outline,
+                "School Network",
+                Icons.Default.ManageAccounts,
+                MaterialTheme.colorScheme.secondary,
                 { navController.navigate(Screen.Following.route) },
                 modifier = Modifier.weight(1f),
                 enabled = isEnabled,

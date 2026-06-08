@@ -18,6 +18,8 @@ data class AttendanceCheckInUiState(
     val activeClassId: String? = null,
     val activeSchoolId: String? = null,
     val isAlreadyCheckedIn: Boolean = false,
+    val isWithinGeofence: Boolean = true, // 🔥 AI Native: Geofence security flag
+    val geofenceEntity: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity? = null,
 )
 
 enum class ScanMode {

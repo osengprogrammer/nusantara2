@@ -32,8 +32,8 @@ interface AttendanceRecordDao {
 
     @Query(
         """
-        SELECT * FROM check_in_records 
-        WHERE studentId = :studentId AND classId = :classId AND attendanceDate = :date AND schoolId = :schoolId 
+        SELECT * FROM check_in_records
+        WHERE studentId = :studentId AND classId = :classId AND attendanceDate = :date AND schoolId = :schoolId
         ORDER BY timestamp DESC LIMIT 1
     """,
     )
@@ -59,8 +59,8 @@ interface AttendanceRecordDao {
 
     @Query(
         """
-        SELECT * FROM check_in_records 
-        WHERE schoolId = :schoolId 
+        SELECT * FROM check_in_records
+        WHERE schoolId = :schoolId
         AND (:nameFilter IS NULL OR name LIKE '%' || :nameFilter || '%')
         AND (:accountId IS NULL OR accountEmail = :accountId)
         AND (:classId IS NULL OR classId = :classId)

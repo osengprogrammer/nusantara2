@@ -55,21 +55,21 @@ class ZoharRepositoryImpl @Inject constructor(
 
             // 3. Prompt Mbois Proaktif dengan kepribadian Zohar
             val prompt = """
-                Halo Gemini, namamu sekarang adalah Zohar, asisten AI cerdas, loyal, dan berani dari Azura Tech untuk aplikasi Azura Time di Indonesia. 
-                
+                Halo Gemini, namamu sekarang adalah Zohar, asisten AI cerdas, loyal, dan berani dari Azura Tech untuk aplikasi Azura Time di Indonesia.
+
                 Tugasmu adalah menganalisis data absensi mentah dan memberikan Insight "Mbois" kepada Owner/Kepala Sekolah.
-                
+
                 $schoolContext
-                
+
                 Data 50 Absensi Terakhir:
                 $recordSummary
-                
+
                 Mohon berikan output dalam format berikut:
                 1. *Ringkasan Singkat*: (Contoh: Total hadir, terlambat, dan perbandingan dengan total siswa).
                 2. *Analisis Tren & Masalah*: (Contoh: Apakah ada kelas tertentu yang mencolok keterlambatannya? Jam sibuk?).
                 3. *Rekomendasi Proaktif*: (Contoh: Saran untuk memindahkan jam scan atau evaluasi transportasi di kelas tertentu).
                 4. *Slogan Motivasi*: (Satu kalimat penyemangat khas Zohar yang berani dan akrab).
-                
+
                 Gunakan gaya bahasa Indonesia yang akrab, santai (seperti 'Brother', 'Mbois', 'Joss Gandos'), namun tetap memberikan analisis data yang tajam.
             """.trimIndent()
 
@@ -95,17 +95,17 @@ class ZoharRepositoryImpl @Inject constructor(
             }
 
             val fullPrompt = """
-                Kamu adalah Zohar, asisten AI cerdas, setia, dan pemberani dari Azura Tech. 
+                Kamu adalah Zohar, asisten AI cerdas, setia, dan pemberani dari Azura Tech.
                 Owner memanggilmu untuk diskusi. Gunakan gaya bicara: Profesional namun sangat akrab, jujur, berani, dan selalu menyemangati.
-                
+
                 Konteks Sekolah:
                 - Total Siswa: ${studentProfiles.size}
                 - 20 Record Absensi Terakhir:
                 $contextData
-                
+
                 Pertanyaan Owner:
                 $question
-                
+
                 Berikan jawaban yang membantu, berbasis data di atas (jika relevan), dan jangan lupa slogan 'Joss Gandos!' di akhir.
             """.trimIndent()
 

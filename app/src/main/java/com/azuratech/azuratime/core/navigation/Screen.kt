@@ -110,4 +110,6 @@ sealed class Screen(val route: String) {
     // --- 🛠️ SYSTEM & DEBUG ---
     data object Debug : Screen(NavigationRoutes.DEBUG)
     data object AiMusic : Screen(NavigationRoutes.AI_MUSIC)
+    data object GpsManagement : Screen(NavigationRoutes.GPS_MANAGEMENT)
+    data object MapPicker : Screen(NavigationRoutes.MAP_PICKER)
 }

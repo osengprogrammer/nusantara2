@@ -1,12 +1,8 @@
-import {onDocumentUpdated, onDocumentCreated} from "firebase-functions/v2/firestore";
-import {onCall, HttpsError} from "firebase-functions/v2/https";
+import { onDocumentUpdated, onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 
-/**
- * 🛠️ AI-NATIVE CONFIGURATION (v3.2.1)
- * Centralized constants and types for system-wide consistency.
- */
 if (admin.apps.length === 0) {
     admin.initializeApp();
 }
@@ -24,10 +20,6 @@ const COLLECTIONS = {
     CHECKIN_RECORDS: "checkin_records",
 };
 
-/**
- * 🧩 DATA MODELS
- * Explicit interfaces for Firestore documents to ensure AI-predictability.
- */
 interface MembershipDoc {
     email: string;
     name?: string;
@@ -61,16 +53,8 @@ interface SchoolDoc {
     updatedAt: admin.firestore.FieldValue;
 }
 
-/**
- * 👑 ON REGISTRATION APPROVED
- * Triggered when a membership status is set to ACTIVE.
- * Sets up whitelisted_accounts, main account, and school data.
- */
 export const onregistrationapproved = onDocumentUpdated(
-    {
-        document: `${COLLECTIONS.MEMBERSHIPS}/{uid}`,
-        region: "asia-southeast2"
-    }, 
+    { document: `${COLLECTIONS.MEMBERSHIPS}/{uid}`, region: "asia-southeast2" },
     async (event) => {
         const before = event.data?.before.data() as MembershipDoc | undefined;
         const after = event.data?.after.data() as MembershipDoc | undefined;
@@ -89,9 +73,9 @@ export const onregistrationapproved = onDocumentUpdated(
         if (!hardwareId || typeof hardwareId !== "string" || hardwareId.length < 5) return;
 
         const schoolId = after.schoolId || `SCH-${crypto.createHash("sha1").update(email).digest("hex").substring(0, 8).toUpperCase()}`;
-        const schoolName = after.schoolName || "Sekolah Azura";
+        const schoolName = after.schoolName || "Azura School";
         const role = after.role || "USER";
-        const name = after.name || after.adminName || "User Azura";
+        const name = after.name || after.adminName || "Azura User";
 
         const dbSeed = crypto.createHash("sha256").update(uid + SERVER_SECRET).digest("hex");
         const secureIsoKey = crypto.createHmac("sha256", SERVER_SECRET).update(`${hardwareId}-${dbSeed}-${uid}`).digest("hex");
@@ -101,50 +85,35 @@ export const onregistrationapproved = onDocumentUpdated(
         const whitelistRef = db.collection(COLLECTIONS.WHITELISTED_ACCOUNTS).doc(uid);
         const accountRef = db.collection(COLLECTIONS.ACCOUNTS).doc(uid);
 
-        // 1. Security Layer (Bouncer): Handles crypto keys and hardware identity
         batch.set(whitelistRef, {
-            userId: uid, 
-            email, 
-            status: "ACTIVE", 
-            hardwareId, 
-            secureIsoKey, 
-            expireDate,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            userId: uid, email, name, status: "ACTIVE", hardwareId, secureIsoKey, expireDate,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            activeSchoolId: schoolId,
+            memberships: { [schoolId]: { schoolName: schoolName, role: role } },
+            schoolId: schoolId, schoolName: schoolName, role: role,
+            followingIds: [], followerIds: []
         });
 
-        // 2. Operational Layer (SSOT): Handles application state and relationships
         batch.set(accountRef, {
-            email,
-            name,
-            status: "ACTIVE",
-            role: role,
-            activeSchoolId: schoolId,
+            email, name, status: "ACTIVE", role: role, activeSchoolId: schoolId,
             memberships: { [schoolId]: { schoolName: schoolName, role: role, status: "ACTIVE" } },
-            followingIds: [],
-            followerIds: [],
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        // 3. Setup School metadata (Workspace Layer)
         if (role === "ADMIN" || role === "SUPER_ADMIN") {
             const orgRef = db.collection(COLLECTIONS.SCHOOLS).doc(schoolId);
             const schoolData: Partial<SchoolDoc> = {
-                schoolId: schoolId, 
-                schoolName: schoolName, 
-                db_seed: dbSeed,
+                schoolId: schoolId, schoolName: schoolName, db_seed: dbSeed,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             };
-
             if (!after.schoolId) {
                 schoolData.accountId = uid;
                 schoolData.ownerEmail = email;
                 schoolData.createdAt = admin.firestore.FieldValue.serverTimestamp();
             }
-
             batch.set(orgRef, schoolData, { merge: true });
         }
 
-        // 4. Cleanup temporary membership
         batch.delete(event.data.after.ref);
 
         try {
@@ -156,39 +125,26 @@ export const onregistrationapproved = onDocumentUpdated(
     }
 );
 
-/**
- * 🔔 ON CONNECTION REQUEST CREATED
- * Triggered when someone sends a connection request (Facebook-style).
- */
 export const onconnectionrequestcreated = onDocumentCreated(
-    {
-        document: `${COLLECTIONS.CONNECTION_REQUESTS}/{requestId}`,
-        region: "asia-southeast2"
-    },
+    { document: `${COLLECTIONS.CONNECTION_REQUESTS}/{requestId}`, region: "asia-southeast2" },
     async (event) => {
         const data = event.data?.data();
         if (!data) return;
-
         const senderId = data.senderId;
         const targetId = data.targetId;
         const db = admin.firestore();
 
         try {
             const senderDoc = await db.collection(COLLECTIONS.WHITELISTED_ACCOUNTS).doc(senderId).get();
-            const senderName = senderDoc.data()?.name || "Seseorang";
-
+            const senderName = senderDoc.data()?.name || "Someone";
             const targetDoc = await db.collection(COLLECTIONS.ACCOUNTS).doc(targetId).get();
             const fcmToken = targetDoc.data()?.fcmToken;
 
             if (fcmToken) {
                 await admin.messaging().send({
-                    notification: {
-                        title: "Permintaan Pertemanan! 🤝",
-                        body: `${senderName} ingin terhubung dengan Anda.`
-                    },
+                    notification: { title: "Connection Request! 🤝", body: `${senderName} wants to connect with you.` },
                     token: fcmToken
                 });
-                console.log(`✅ AI-NATIVE: Connection notification sent to ${targetId}`);
             }
         } catch (error) {
             console.error("❌ AI-NATIVE: Connection notification error:", error);
@@ -196,20 +152,12 @@ export const onconnectionrequestcreated = onDocumentCreated(
     }
 );
 
-/**
- * 🔔 ON CONNECTION ACCEPTED
- * Handled via whitelisted_accounts update (followingIds).
- */
 export const onaccountfollowed = onDocumentUpdated(
-    {
-        document: `${COLLECTIONS.WHITELISTED_ACCOUNTS}/{uid}`,
-        region: "asia-southeast2"
-    },
+    { document: `${COLLECTIONS.WHITELISTED_ACCOUNTS}/{uid}`, region: "asia-southeast2" },
     async (event) => {
         const before = event.data?.before.data();
         const after = event.data?.after.data();
         const uid = event.params.uid;
-
         if (!before || !after) return;
 
         const beforeFollowers = (before.followerIds || []) as string[];
@@ -221,17 +169,13 @@ export const onaccountfollowed = onDocumentUpdated(
 
             try {
                 const followerDoc = await db.collection(COLLECTIONS.WHITELISTED_ACCOUNTS).doc(newFollowerUid).get();
-                const followerName = followerDoc.data()?.name || "Seseorang";
-
+                const followerName = followerDoc.data()?.name || "Someone";
                 const targetDoc = await db.collection(COLLECTIONS.ACCOUNTS).doc(uid).get();
                 const fcmToken = targetDoc.data()?.fcmToken;
 
                 if (fcmToken) {
                     await admin.messaging().send({
-                        notification: {
-                            title: "Terhubung! 🤝",
-                            body: `${followerName} sekarang terhubung dengan Anda.`
-                        },
+                        notification: { title: "Connected! 🤝", body: `${followerName} is now connected with you.` },
                         token: fcmToken
                     });
                 }
@@ -242,16 +186,8 @@ export const onaccountfollowed = onDocumentUpdated(
     }
 );
 
-/**
- * 🔔 SEND PARENT NOTIFICATION
- * Triggered when a new attendance record is pushed.
- * Uses studentId (Unified Identity).
- */
 export const sendparentnotification = onDocumentCreated(
-    {
-        document: `${COLLECTIONS.SCHOOLS}/{schoolId}/${COLLECTIONS.CHECKIN_RECORDS}/{recordId}`,
-        region: "asia-southeast2"
-    },
+    { document: `${COLLECTIONS.SCHOOLS}/{schoolId}/${COLLECTIONS.CHECKIN_RECORDS}/{recordId}`, region: "asia-southeast2" },
     async (event) => {
         const snap = event.data;
         if (!snap) return;
@@ -259,12 +195,9 @@ export const sendparentnotification = onDocumentCreated(
         const schoolId = event.params.schoolId;
         const studentId = data.studentId || data.faceId;
         const studentName = data.name;
-        const status = data.status; 
+        const status = data.status;
 
-        if (!schoolId || !studentId) {
-            console.log("⚠️ AI-NATIVE: Missing schoolId or studentId, skipping.");
-            return;
-        }
+        if (!schoolId || !studentId) return;
 
         try {
             const linksSnapshot = await admin.firestore().collection(COLLECTIONS.SCHOOLS).doc(schoolId)
@@ -279,9 +212,7 @@ export const sendparentnotification = onDocumentCreated(
                     .where("faceId", "==", studentId)
                     .where("status", "==", "APPROVED")
                     .get();
-                
-                if (legacySnapshot.empty) return;
-                await sendToFCM(legacySnapshot, studentName, status);
+                if (!legacySnapshot.empty) await sendToFCM(legacySnapshot, studentName, status);
             } else {
                 await sendToFCM(linksSnapshot, studentName, status);
             }
@@ -291,10 +222,6 @@ export const sendparentnotification = onDocumentCreated(
     }
 );
 
-/**
- * 🛡️ GET SECURITY ISO KEY
- * Https Callable function for the app to refresh its security key.
- */
 export const getsecurityisokey = onCall(
     { region: "asia-southeast2" },
     async (request) => {
@@ -331,10 +258,6 @@ export const getsecurityisokey = onCall(
     }
 );
 
-/**
- * 📦 INTERNAL HELPER: SEND TO FCM
- * Standardized notification dispatcher for parents.
- */
 async function sendToFCM(snapshot: admin.firestore.QuerySnapshot, studentName: string, status: string) {
     const promises: Promise<any>[] = [];
     snapshot.forEach(doc => {
@@ -343,18 +266,15 @@ async function sendToFCM(snapshot: admin.firestore.QuerySnapshot, studentName: s
             if (parentDoc.exists) {
                 const fcmToken = parentDoc.data()?.fcmToken;
                 if (fcmToken) {
-                    let statusText = "Hadir";
+                    let statusText = "Present";
                     const s = (status || "").toUpperCase();
-                    if (s === "A" || s === "ALPA") statusText = "Alpa (Tanpa Keterangan)";
-                    else if (s === "S" || s === "SAKIT") statusText = "Sakit";
-                    else if (s === "I" || s === "IZIN") statusText = "Izin";
-                    
-                    return admin.messaging().send({ 
-                        notification: { 
-                            title: "Azura Time: Info Kehadiran", 
-                            body: `${studentName} telah melakukan presensi (${statusText}).` 
-                        }, 
-                        token: fcmToken 
+                    if (s === "A" || s === "ABSENT") statusText = "Absent (No Notice)";
+                    else if (s === "S" || s === "SICK") statusText = "Sick";
+                    else if (s === "P" || s === "PERMISSION") statusText = "Permission";
+
+                    return admin.messaging().send({
+                        notification: { title: "Azura Time: Attendance Info", body: `${studentName} has recorded attendance (${statusText}).` },
+                        token: fcmToken
                     });
                 }
             }

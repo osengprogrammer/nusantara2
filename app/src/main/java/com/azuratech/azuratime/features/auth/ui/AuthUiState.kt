@@ -9,6 +9,7 @@ data class AuthUiState(
     val password: String = "",
     val schoolName: String = "",
     val isLoading: Boolean = false,
+    val isLoggingOut: Boolean = false,
     val isGoogleSigning: Boolean = false,
     val error: String? = null,
     val authStatus: AuthStatus = AuthStatus.Idle,

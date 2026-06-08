@@ -36,7 +36,7 @@ interface StudentBiometricDao {
     @Transaction
     @Query(
         """
-        SELECT student_biometrics.*, 
+        SELECT student_biometrics.*,
                classes.name as className,
                classes.id as classId
         FROM student_biometrics
@@ -78,8 +78,8 @@ interface StudentBiometricDao {
 
     @Query(
         """
-        SELECT * FROM student_biometrics 
-        WHERE schoolId = :schoolId 
+        SELECT * FROM student_biometrics
+        WHERE schoolId = :schoolId
         AND studentId NOT IN (SELECT studentId FROM student_class_assignments WHERE schoolId = :schoolId)
     """,
     )

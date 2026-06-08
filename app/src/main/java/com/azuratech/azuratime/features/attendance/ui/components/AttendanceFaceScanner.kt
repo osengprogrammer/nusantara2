@@ -11,35 +11,35 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 
 /**
  * AZURA FACE SCANNER
- * Komponen utama pemindai wajah dengan dukungan Liveness Detection.
+ * Main face scanner component with Liveness Detection support.
  */
 @Composable
 fun FaceScanner(
     useBackCamera: Boolean = false,
     shape: Shape = AzuraShapes.large,
     modifier: Modifier = Modifier,
-    onLivenessStatus: (String) -> Unit, // 🔥 Status instruksi: "Silakan Berkedip", dsb.
-    onFaceEmbedding: (Rect, FloatArray) -> Unit, // Hasil embedding wajah
+    onLivenessStatus: (String) -> Unit, // 🔥 Instruction status: "Please Blink", etc.
+    onFaceEmbedding: (Rect, FloatArray) -> Unit, // Face embedding result
 ) {
-    // 1. Inisialisasi Analyzer secara reaktif terhadap pergantian kamera (Flip)
+    // 1. Initialize Analyzer reactively to camera changes (Flip)
     val analyzer = remember(useBackCamera) {
         FaceAnalyzer(
             isFrontCamera = !useBackCamera,
-            bypassLiveness = false, // 🔥 Untuk absen, liveness HARUS aktif (false)
+            bypassLiveness = false, // 🔥 For attendance, liveness MUST be active (false)
             onFaceEmbedding = onFaceEmbedding,
             onFaceCaptured = null,
             onLivenessStatus = onLivenessStatus,
         )
     }
 
-    // 2. Lifecycle Management: Pastikan kamera & detektor ditutup saat pindah layar
+    // 2. Lifecycle Management: Ensure camera & detector are closed when screen changes
     DisposableEffect(analyzer) {
         onDispose {
             analyzer.close()
         }
     }
 
-    // 3. Render Kamera Core Azura
+    // 3. Render Azura Core Face Camera
     CoreFaceCamera(
         analyzer = analyzer,
         useFrontCamera = !useBackCamera,
