@@ -324,7 +324,6 @@ class DashboardViewModel @Inject constructor(
             // Wait, the UI needs to show the overlay.
             // Since uiStateFlow is a combine of many things, adding one more StateFlow is best.
             authRepository.clearAllDataAndSignOut()
-            _uiEffectFlow.emit(DashboardUiEffect.NavigateToLogin)
         }
     }
 

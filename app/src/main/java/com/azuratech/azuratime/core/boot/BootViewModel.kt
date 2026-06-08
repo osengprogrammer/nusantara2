@@ -14,13 +14,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.azuratech.azuratime.core.session.SessionManager
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 /**
  * 🚀 BOOT VIEW MODEL (v3.2.0-ai-native)
- * First gate of the application. Strict MVI implementation.
+ * First gate of the application. Optimized for "Ultra-Stable" Solid-State transitions.
  */
 @HiltViewModel
 class BootViewModel @Inject constructor(
@@ -30,22 +31,29 @@ class BootViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     private val _uiStateFlow = MutableStateFlow<BootUiState>(
-        if (sessionManager.getCurrentAccountId() == null) BootUiState.NeedLogin else BootUiState.Loading,
+        if (sessionManager.getCurrentAccountId() == null) BootUiState.Auth else BootUiState.Loading,
     )
     val uiStateFlow: StateFlow<BootUiState> = _uiStateFlow.asStateFlow()
 
     val isLoggingOut: StateFlow<Boolean> = sessionManager.isLoggingOutFlow
     val isSessionClearing: StateFlow<Boolean> = sessionManager.isSessionClearingFlow
 
+    private var authCheckJob: Job? = null
+
     init {
         observeSession()
     }
 
+    /**
+     * 🔐 OBSERVE SESSION
+     * Reactive entry point. Uses StateFlow's native distinctUntilChanged behavior.
+     */
     private fun observeSession() {
         sessionManager.currentAccountIdFlow
             .onEach { accountId ->
                 if (accountId == null) {
-                    _uiStateFlow.value = BootUiState.NeedLogin
+                    authCheckJob?.cancel()
+                    _uiStateFlow.value = BootUiState.Auth
                 } else {
                     handleCheckAuthStatus()
                 }
@@ -60,20 +68,43 @@ class BootViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 🛡️ HANDLE CHECK AUTH STATUS
+     * "Ultra-Stable" logic with Synchronous Decoupling and Double-Lock Guarding.
+     */
     private fun handleCheckAuthStatus() {
+        // 1. Job Hygiene: Instantly kill any ghost repository checks.
+        authCheckJob?.cancel()
+
+        // 2. Early Exit: Respect the atomic exit flag.
         if (sessionManager.isLoggingOutFlow.value) return
 
-        viewModelScope.launch {
+        // 3. Synchronous Validation: Force Auth state synchronously without
+        // spinning up a coroutine or Loading UI if the ID is null.
+        if (sessionManager.getCurrentAccountId() == null) {
+            _uiStateFlow.value = BootUiState.Auth
+            return
+        }
+
+        // 4. Safe to proceed with async verification.
+        authCheckJob = viewModelScope.launch {
             _uiStateFlow.value = BootUiState.Loading
 
             withContext(Dispatchers.IO) {
                 delay(600) // For encryption stability
-                val accountResult = repository.getCurrentAccount()
 
+                // 🔒 Double-Lock Guarding: Re-verify logout/ID status after delay.
+                if (sessionManager.isLoggingOutFlow.value) return@withContext
+                if (sessionManager.getCurrentAccountId() == null) {
+                    _uiStateFlow.value = BootUiState.Auth
+                    return@withContext
+                }
+
+                val accountResult = repository.getCurrentAccount()
                 val isLoggedIn = accountResult is Result.Success && accountResult.data != null
 
                 if (!isLoggedIn) {
-                    _uiStateFlow.value = BootUiState.NeedLogin
+                    _uiStateFlow.value = BootUiState.Auth
                 } else {
                     when (val result = repository.isSessionActive()) {
                         is Result.Success -> {

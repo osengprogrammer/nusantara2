@@ -328,19 +328,52 @@ class AccountRepositoryImpl @Inject constructor(
                             trySend(Result.Success(emptyList()))
                             return@addSnapshotListener
                         }
-                        db.collection("accounts").whereIn("accountId", senderIds).get()
+                        db.collection("accounts").whereIn(com.google.firebase.firestore.FieldPath.documentId(), senderIds).get()
                             .addOnSuccessListener { accountSnap ->
                                 val accounts = accountSnap.documents.map { doc ->
+                                    val membershipsRaw = doc.data?.get("memberships") as? Map<*, *>
+                                    val memberships = membershipsRaw?.mapNotNull { (key, value) ->
+                                        val k = key as? String ?: return@mapNotNull null
+                                        val v = value as? Map<*, *> ?: return@mapNotNull null
+                                        k to SchoolMembership(
+                                            schoolName = v["schoolName"] as? String ?: "",
+                                            role = v["role"] as? String ?: "USER",
+                                            status = v["status"] as? String ?: "ACTIVE",
+                                            assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                                        )
+                                    }?.toMap() ?: emptyMap()
+
                                     AccountEntity(
                                         accountId = doc.id,
                                         email = doc.getString("email") ?: "",
                                         name = doc.getString("name") ?: "",
                                         photoUrl = doc.getString("photoUrl"),
                                         status = "ACTIVE",
+                                        memberships = memberships,
+                                        role = doc.getString("role") ?: "USER",
                                     )
                                 }
                                 trySend(Result.Success(accounts))
                             }
+                    }
+                }
+            awaitClose { listener.remove() }
+        }
+    }
+
+    override fun observeSentRequestsFlow(accountId: String): Flow<Result<List<String>>> {
+        return callbackFlow {
+            val listener = db.collection("connection_requests")
+                .whereEqualTo("senderId", accountId)
+                .whereEqualTo("status", "PENDING")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        trySend(Result.Failure(AppError.Network(error.message)))
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null) {
+                        val targetIds = snapshot.documents.mapNotNull { it.getString("targetId") }
+                        trySend(Result.Success(targetIds))
                     }
                 }
             awaitClose { listener.remove() }
@@ -376,15 +409,29 @@ class AccountRepositoryImpl @Inject constructor(
                             trySend(Result.Success(emptyList()))
                             return@addSnapshotListener
                         }
-                        db.collection("accounts").whereIn("accountId", connectedIds).get()
+                        db.collection("accounts").whereIn(com.google.firebase.firestore.FieldPath.documentId(), connectedIds).get()
                             .addOnSuccessListener { accountSnap ->
                                 val accounts = accountSnap.documents.map { doc ->
+                                    val membershipsRaw = doc.data?.get("memberships") as? Map<*, *>
+                                    val memberships = membershipsRaw?.mapNotNull { (key, value) ->
+                                        val k = key as? String ?: return@mapNotNull null
+                                        val v = value as? Map<*, *> ?: return@mapNotNull null
+                                        k to SchoolMembership(
+                                            schoolName = v["schoolName"] as? String ?: "",
+                                            role = v["role"] as? String ?: "USER",
+                                            status = v["status"] as? String ?: "ACTIVE",
+                                            assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                                        )
+                                    }?.toMap() ?: emptyMap()
+
                                     AccountEntity(
                                         accountId = doc.id,
                                         email = doc.getString("email") ?: "",
                                         name = doc.getString("name") ?: "",
                                         photoUrl = doc.getString("photoUrl"),
                                         status = "ACTIVE",
+                                        memberships = memberships,
+                                        role = doc.getString("role") ?: "USER",
                                     )
                                 }
                                 trySend(Result.Success(accounts))

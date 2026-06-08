@@ -9,6 +9,7 @@ import com.azuratech.azuratime.features.account.data.local.AccountEntity
 data class FollowingUiState(
     val searchQuery: String = "",
     val results: List<AccountEntity> = emptyList(),
+    val sentRequestIds: Set<String> = emptySet(),
     val pendingRequests: List<AccountEntity> = emptyList(),
     val connections: List<AccountEntity> = emptyList(),
     val availableClasses: List<ClassModel> = emptyList(),

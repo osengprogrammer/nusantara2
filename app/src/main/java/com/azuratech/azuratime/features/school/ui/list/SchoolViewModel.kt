@@ -177,6 +177,14 @@ class SchoolViewModel @Inject constructor(
         val currentAccountId = _uiStateFlow.value.accountId
         if (currentAccountId.isEmpty()) return
 
+        val currentRole = _uiStateFlow.value.currentAccountRole
+        if (currentRole != AccountRole.ADMIN && currentRole != AccountRole.SUPER_ADMIN) {
+            viewModelScope.launch {
+                _uiEffectFlow.emit(SchoolUiEffect.ShowSnackbar("❌ Permission Denied: Only Admins can create schools."))
+            }
+            return
+        }
+
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
             schoolRepository.createSchool(currentAccountId, name, timezone)

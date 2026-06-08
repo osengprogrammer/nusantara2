@@ -74,8 +74,8 @@ class SchoolRepositoryImpl @Inject constructor(
             val role = account.role.toAccountRole()
 
             // 🔥 AI Native: Strict Role Enforcement
-            if (role == AccountRole.USER) {
-                return Result.Failure(AppError.BusinessRule("Regular users cannot create schools. Access denied."))
+            if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN) {
+                return Result.Failure(AppError.BusinessRule("Only Admins can create schools. Access denied."))
             }
 
             // 🔥 AI Native: Admin Multi-School Restriction

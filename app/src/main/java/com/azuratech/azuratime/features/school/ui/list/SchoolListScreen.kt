@@ -52,7 +52,7 @@ fun SchoolListScreen(
         onBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
         floatingActionButton = {
-            if (uiState.currentAccountRole != AccountRole.USER) {
+            if (uiState.currentAccountRole == AccountRole.ADMIN || uiState.currentAccountRole == AccountRole.SUPER_ADMIN) {
                 FloatingActionButton(onClick = { showAddDialog = true }) {
                     Icon(Icons.Default.Add, contentDescription = "Add School")
                 }

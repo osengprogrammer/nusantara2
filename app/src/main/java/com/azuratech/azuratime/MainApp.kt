@@ -23,9 +23,7 @@ import com.azuratech.azuratime.core.ui.MainViewModel
 import com.azuratech.azuratime.features.account.ui.membership.MembershipScreen
 import com.azuratech.azuratime.features.auth.ui.AuthUiEvent
 import com.azuratech.azuratime.features.auth.ui.AuthViewModel
-import androidx.navigation.compose.*
-import com.azuratech.azuratime.features.auth.ui.LoginScreen
-import com.azuratech.azuratime.features.auth.ui.WelcomeScreen
+import com.azuratech.azuratime.features.auth.ui.AuthFlowContainer
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -34,7 +32,6 @@ fun MainApp(onBootReady: () -> Unit = {}) {
     val bootState by bootViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val isLoggingOut by bootViewModel.isLoggingOut.collectAsStateWithLifecycle()
     val isSessionClearing by bootViewModel.isSessionClearing.collectAsStateWithLifecycle()
-
     val isClearingEffect = isLoggingOut || isSessionClearing
 
     LaunchedEffect(bootState) {
@@ -58,24 +55,12 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                     isLoggingOut = isClearingEffect,
                 )
 
-                BootUiState.NeedLogin -> {
-                    val authNavController = rememberNavController()
-                    NavHost(
-                        navController = authNavController,
-                        startDestination = "welcome",
-                        modifier = Modifier.fillMaxSize(),
-                    ) {
-                        composable("welcome") {
-                            WelcomeScreen(onNavigateToLogin = { authNavController.navigate("login") })
-                        }
-                        composable("login") {
-                            LoginScreen(
-                                onNavigateToDashboard = {
-                                    bootViewModel.onEvent(BootUiEvent.Recheck)
-                                },
-                            )
-                        }
-                    }
+                BootUiState.Auth -> {
+                    AuthFlowContainer(
+                        onNavigateToDashboard = {
+                            bootViewModel.onEvent(BootUiEvent.Recheck)
+                        },
+                    )
                 }
 
                 BootUiState.NeedActivation -> {
@@ -90,7 +75,9 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                         onApprovedClick = { bootViewModel.onEvent(BootUiEvent.Recheck) },
                         onLogoutClick = {
                             authViewModel.onEvent(
-                                AuthUiEvent.Logout(),
+                                AuthUiEvent.Logout {
+                                    bootViewModel.onEvent(BootUiEvent.Recheck)
+                                },
                             )
                         },
                     )
@@ -110,7 +97,9 @@ fun MainApp(onBootReady: () -> Unit = {}) {
                             message = "Akses Anda telah dicabut.",
                             onReLogin = {
                                 authViewModel.onEvent(
-                                    AuthUiEvent.Logout(),
+                                    AuthUiEvent.Logout {
+                                        bootViewModel.onEvent(BootUiEvent.Recheck)
+                                    },
                                 )
                             },
                         )
@@ -141,24 +130,51 @@ fun MainApp(onBootReady: () -> Unit = {}) {
 fun LoadingScreen(onRetry: () -> Unit, isLoggingOut: Boolean = false) {
     var showRetry by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(5000)
+        kotlinx.coroutines.delay(10000) // ⚡ AI Native: Increased timeout to 10s for stability
         showRetry = true
     }
     Box(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
             if (!showRetry) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                if (isLoggingOut) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Logging out...", style = MaterialTheme.typography.bodyMedium)
-                }
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 3.dp,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = if (isLoggingOut) "Logging out..." else "Initializing...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                )
             } else {
-                Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(48.dp))
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(64.dp),
+                )
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = onRetry) { Text("Segarkan") }
+                Text(
+                    text = "Connection timeout or session error.",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        showRetry = false
+                        onRetry()
+                    },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                ) {
+                    Text("Segarkan")
+                }
             }
         }
     }
@@ -168,9 +184,9 @@ fun LoadingScreen(onRetry: () -> Unit, isLoggingOut: Boolean = false) {
 fun SecurityAlertDialog(message: String, onReLogin: () -> Unit) {
     AlertDialog(
         onDismissRequest = {},
-        title = { Text("System Security", fontWeight = FontWeight.Bold) },
+        title = { Text("Keamanan Sistem", fontWeight = FontWeight.Bold) },
         text = { Text(message) },
-        confirmButton = { TextButton(onClick = onReLogin) { Text("Relogin") } },
-        dismissButton = { TextButton(onClick = { android.os.Process.killProcess(android.os.Process.myPid()) }) { Text("Close") } },
+        confirmButton = { TextButton(onClick = onReLogin) { Text("Login Ulang") } },
+        dismissButton = { TextButton(onClick = { android.os.Process.killProcess(android.os.Process.myPid()) }) { Text("Tutup") } },
     )
 }

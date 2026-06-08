@@ -11,6 +11,8 @@ import com.azuratech.azuratime.features.account.domain.repository.AccessRequestR
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
+import com.azuratech.azuratime.core.domain.model.AccountRole
+import com.azuratech.azuratime.core.domain.model.toAccountRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -136,6 +138,15 @@ class WorkspaceViewModel @Inject constructor(
     private fun createNewSchool(accountId: String, @Suppress("UNUSED_PARAMETER") accountEmail: String, schoolName: String) {
         viewModelScope.launch {
             _statusFlow.value = WorkspaceStatus.Switching
+
+            // 🔥 AI Native: Strict Role Enforcement
+            val account = accountRepository.getAccountById(accountId).getOrNull()
+            val role = account?.role.toAccountRole()
+            if (account == null || (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN)) {
+                _statusFlow.value = WorkspaceStatus.Error("Only Admins can create schools.")
+                return@launch
+            }
+
             schoolRepository.createSchool(accountId, schoolName, "Asia/Jakarta")
                 .onSuccess { _statusFlow.value = WorkspaceStatus.Success(schoolName) }
                 .onFailure { _statusFlow.value = WorkspaceStatus.Error(it.message ?: "Failed to create school") }

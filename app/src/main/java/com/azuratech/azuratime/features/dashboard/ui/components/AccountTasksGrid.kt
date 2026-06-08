@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -17,16 +18,23 @@ import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
+/**
+ * 🛠️ ACCOUNT TASKS GRID (v3.2.1-ai-native)
+ * Restored dashboard actions with strict RBAC enforcement.
+ */
 @Composable
 fun AccountTasksGrid(
     navController: NavController,
     isAdmin: Boolean,
-    currentRole: String = "USER", // 👈 Updated
-    onRegisterStudentClick: () -> Unit, // 👈 Added
+    currentRole: String = "USER",
+    onRegisterStudentClick: () -> Unit,
     accountId: String? = null,
-    isEnabled: Boolean = true, // 🔥 Added
+    pendingRequests: Int = 0,
+    isEnabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
+    val isSupervisor = currentRole == "SUPERVISOR" || currentRole == "TEACHER"
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -34,67 +42,16 @@ fun AccountTasksGrid(
         verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
     ) {
         // ======================================================
-        // 🔥 Row 1: QUICK ACTIONS
+        // 🔥 Row 1: Academic Management (ADMIN ONLY)
         // ======================================================
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
-        ) {
-            DashboardActionCard(
-                title = "Scan Barcode",
-                icon = Icons.Default.QrCodeScanner,
-                color = MaterialTheme.colorScheme.error,
-                onClick = { navController.navigate(Screen.BarcodeScan.route) },
-                enabled = isEnabled, // 🔥 Added
-                modifier = Modifier.weight(1f),
-            )
-            DashboardActionCard(
-                title = "Manual Input",
-                icon = Icons.Default.EditCalendar,
-                color = MaterialTheme.colorScheme.tertiary,
-                onClick = { navController.navigate(Screen.ManualAttendance.createRoute("", "")) },
-                enabled = isEnabled, // 🔥 Added
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        // ======================================================
-        // 🔥 Row 2: Face Scanner & Print Barcode
-        // ======================================================
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
-        ) {
-            DashboardActionCard(
-                "Face Scanner",
-                Icons.Default.CameraAlt,
-                MaterialTheme.colorScheme.primary,
-                { navController.navigate(Screen.AttendanceCapture.route) },
-                modifier = Modifier.weight(1f),
-                enabled = isEnabled,
-            )
-
-            DashboardActionCard(
-                "Print Barcode",
-                Icons.Default.QrCode,
-                MaterialTheme.colorScheme.secondary,
-                { navController.navigate(Screen.StudentRosterBarcode.route) },
-                modifier = Modifier.weight(1f),
-                enabled = isEnabled,
-            )
-        }
-
-        // ======================================================
-        // 🔥 Row 3: Admin Only Management
-        // ======================================================
-        if (isAdmin || currentRole == "SUPER_ADMIN") {
+        if (isAdmin) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "Class Management",
-                    Icons.Default.Groups,
+                    "Class Mgmt",
+                    Icons.Default.Class,
                     MaterialTheme.colorScheme.primary,
                     {
                         if (accountId != null) {
@@ -105,7 +62,7 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Student Management",
+                    "Student Roster",
                     Icons.Default.People,
                     MaterialTheme.colorScheme.secondary,
                     { navController.navigate(Screen.StudentRoster.route) },
@@ -113,50 +70,92 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
             }
+        }
 
+        // ======================================================
+        // 🔥 Row 2: Attendance & Reports (ADMIN & SUPERVISOR)
+        // ======================================================
+        if (isAdmin || isSupervisor) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "New Registration",
-                    Icons.Default.PersonAdd,
+                    "Attendance Matrix",
+                    Icons.Default.GridView,
                     MaterialTheme.colorScheme.tertiary,
-                    onClick = onRegisterStudentClick,
+                    { navController.navigate(Screen.AttendanceMatrix.route) },
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
-                Spacer(modifier = Modifier.weight(1f))
+                DashboardActionCard(
+                    "Reports",
+                    Icons.Default.Assessment,
+                    MaterialTheme.colorScheme.error,
+                    { navController.navigate(Screen.AttendanceHistory.route) },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
             }
         }
 
         // ======================================================
-        // 🔥 Row 4: Attendance & Analytics
+        // 🔥 Row 3: Identity & Security (ADMIN ONLY)
         // ======================================================
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
-        ) {
-            DashboardActionCard(
-                title = "Attendance Management",
-                icon = Icons.Default.History,
-                color = MaterialTheme.colorScheme.primary,
-                onClick = { navController.navigate(Screen.AttendanceHistory.route) },
-                modifier = Modifier.weight(1f),
-                enabled = isEnabled,
-            )
-            DashboardActionCard(
-                title = "Matrix Report",
-                icon = Icons.Default.GridOn,
-                color = MaterialTheme.colorScheme.secondary,
-                onClick = { navController.navigate(Screen.AttendanceMatrix.route) },
-                modifier = Modifier.weight(1f),
-                enabled = isEnabled,
-            )
+        if (isAdmin) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+            ) {
+                DashboardActionCard(
+                    "Account Mgmt",
+                    Icons.Default.ManageAccounts,
+                    MaterialTheme.colorScheme.primary,
+                    { navController.navigate(Screen.Profile.route) },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+                DashboardActionCard(
+                    "Access Requests",
+                    Icons.Default.NotificationsActive,
+                    MaterialTheme.colorScheme.secondary,
+                    { navController.navigate(Screen.PendingSchools.route) },
+                    badgeCount = pendingRequests,
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+            }
         }
 
         // ======================================================
-        // 🔥 Row 5: School & Connection (Visible for ALL)
+        // 🔥 Row 4: Quick Actions (ADMIN & SUPERVISOR)
+        // ======================================================
+        if (isAdmin || isSupervisor) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+            ) {
+                DashboardActionCard(
+                    "Register Student",
+                    Icons.Default.PersonAdd,
+                    MaterialTheme.colorScheme.primary,
+                    onRegisterStudentClick,
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+                DashboardActionCard(
+                    "Bulk Import",
+                    Icons.Default.UploadFile,
+                    MaterialTheme.colorScheme.secondary,
+                    { navController.navigate(Screen.BulkRegister.route) },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+            }
+        }
+
+        // ======================================================
+        // 🔥 Row 5: Workspace & Network (Visible for ALL)
         // ======================================================
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -176,32 +175,12 @@ fun AccountTasksGrid(
             )
             DashboardActionCard(
                 "School Network",
-                Icons.Default.ManageAccounts,
+                Icons.Default.Hub,
                 MaterialTheme.colorScheme.secondary,
                 { navController.navigate(Screen.Following.route) },
                 modifier = Modifier.weight(1f),
                 enabled = isEnabled,
             )
-        }
-
-        // ======================================================
-        // 🔥 Row 6: Debug System
-        // ======================================================
-        if (isAdmin || currentRole == "SUPER_ADMIN") {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
-            ) {
-                DashboardActionCard(
-                    "Debug System",
-                    Icons.Default.BugReport,
-                    MaterialTheme.colorScheme.outline,
-                    { navController.navigate(Screen.Debug.route) },
-                    modifier = Modifier.weight(1f),
-                    enabled = isEnabled,
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
         }
     }
 }
@@ -213,30 +192,51 @@ fun DashboardActionCard(
     icon: ImageVector,
     color: Color,
     onClick: () -> Unit,
+    badgeCount: Int = 0,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true, // 🔥 Added
+    enabled: Boolean = true,
 ) {
     val alpha = if (enabled) 1f else 0.4f
     Surface(
         onClick = onClick,
-        enabled = enabled, // 🔥 Pass to Surface
+        enabled = enabled,
         modifier = modifier.height(110.dp),
         shape = AzuraShapes.large,
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = if (enabled) 2.dp else 0.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f * alpha)),
     ) {
-        Row {
-            Box(Modifier.width(6.dp).fillMaxHeight().background(color.copy(alpha = alpha)))
-            Column(Modifier.padding(AzuraSpacing.md), verticalArrangement = Arrangement.Center) {
-                Icon(icon, null, tint = color.copy(alpha = alpha), modifier = Modifier.size(28.dp))
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    title,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-                )
+        Box {
+            Row {
+                Box(Modifier.width(6.dp).fillMaxHeight().background(color.copy(alpha = alpha)))
+                Column(
+                    Modifier
+                        .padding(AzuraSpacing.md)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Icon(icon, null, tint = color.copy(alpha = alpha), modifier = Modifier.size(28.dp))
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                        maxLines = 1,
+                    )
+                }
+            }
+
+            if (badgeCount > 0) {
+                Badge(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(AzuraSpacing.sm),
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ) {
+                    Text(badgeCount.toString())
+                }
             }
         }
     }

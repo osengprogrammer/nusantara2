@@ -266,6 +266,7 @@ fun DashboardContent(
                         currentRole = data.currentRole,
                         onRegisterStudentClick = onRegisterStudentClick,
                         accountId = account?.accountId,
+                        pendingRequests = data.pendingRequests, // 🔥 Added
                     )
                 }
 

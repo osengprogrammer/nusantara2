@@ -27,7 +27,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), OnMapsSdkInitializedCallback {
-
     @Inject
     lateinit var updateEventBus: UpdateEventBus
 

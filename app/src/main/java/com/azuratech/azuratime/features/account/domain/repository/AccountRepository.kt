@@ -35,6 +35,7 @@ interface AccountRepository {
     fun observePendingRequestsFlow(accountId: String): Flow<Result<List<AccountEntity>>>
     fun observePendingRequestsCountFlow(accountId: String): Flow<Int>
     fun observeConnectionsFlow(accountId: String): Flow<Result<List<AccountEntity>>>
+    fun observeSentRequestsFlow(accountId: String): Flow<Result<List<String>>>
 
     /**
      * 🔥 ASSIGNED SCHOOL: Change role of an existing member in the Current Active School.
