@@ -46,7 +46,7 @@ interface AttendanceRepository {
     fun getStudentsByClassFlow(classId: String, schoolId: String): Flow<Result<List<StudentBiometricEntity>>>
     fun getStudentCountInClassFlow(classId: String, schoolId: String): Flow<Result<Int>>
     fun getClassIdsForStudentFlow(studentId: String, schoolId: String): Flow<Result<List<String>>>
-    suspend fun getStudentBiometricById(studentId: String, schoolId: String): Result<StudentBiometricEntity?>
+    suspend fun getStudentBiometricById(studentId: String, schoolId: String): Result<StudentBiometricEntity>
     suspend fun getUnsyncedRecords(schoolId: String): Result<List<AttendanceRecord>>
     suspend fun getRecordUpdates(schoolId: String, lastSync: Long): Result<List<AttendanceRecord>>
     suspend fun syncRecords(): Result<Unit>

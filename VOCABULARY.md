@@ -1,4 +1,4 @@
-# 📖 AzuraTime Semantic Vocabulary (v3.2.1-ai-native)
+# 📖 AzuraTime Semantic Vocabulary (v3.2.2-ai-native)
 ⚡ *Mandatory semantic reference for all AI agents. Prevents domain ambiguity and terminology regression.*
 
 ## 🔹 Core Taxonomy
@@ -34,14 +34,19 @@
 
 ---
 
-## 🚫 Forbidden Synonyms (Terminology Graveyard)
+## 🚫 Forbidden Synonyms & Semantic Purge (Terminology Graveyard)
 *NEVER use these terms in code, comments, or prompts. If found, refactor immediately.*
+
+- **Identity & Role Purge Rules**:
+  - **`USER` / `User`**: **STRICTLY FORBIDDEN** (except for Firebase internal `Auth` user handles or standard library system wrappers). Use **`Account`** for user context and **`GUEST`** for unauthenticated/fallback roles.
+  - **`TEACHER` / `Teacher`**: **STRICTLY FORBIDDEN** in all logical gates and models. Use **`Supervisor`** instead.
+  - **Only Authorized Roles**: **`GUEST`**, **`SUPERVISOR`**, **`ADMIN`**, and **`SUPER_ADMIN`** are the only authorized identity/state roles in local database schemas, permission managers, and ViewModels.
 
 | Forbidden Term | Use This Instead | Reasoning |
 | :--- | :--- | :--- |
-| `User` | **Account** | "User" is too generic and often confused with Firebase Auth User. |
+| `User` | **Account** (context) / **GUEST** (role) | "User" is too generic, often confused with Firebase Auth User, and violates our semantic purity standard. |
 | `Staff` | **Account** | Legacy term from v2.0. |
-| `Teacher` | **Supervisor** | "Teacher" implies a job title; "Supervisor" describes the system role. |
+| `Teacher` | **Supervisor** | "Teacher" implies a job title; "Supervisor" describes the system role in our VSA. |
 | `Classroom` | **Class** | Standardized to "Class" to match KMP engine models. |
 | `Institution` | **School** | Too verbose. "School" is the canonical domain term. |
 | `GradeLevel` | **Grade** | Redundant. |

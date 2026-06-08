@@ -55,19 +55,19 @@ class BiometricScannerRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun performMatch(embedding: FloatArray, gallery: List<Pair<String, FloatArray>>): Result<String?> = withContext(Dispatchers.Default) {
+    override suspend fun performMatch(embedding: FloatArray, gallery: List<Pair<String, FloatArray>>): Result<String> = withContext(Dispatchers.Default) {
         try {
-            if (gallery.isEmpty()) return@withContext Result.Success(null)
+            if (gallery.isEmpty()) {
+                return@withContext Result.Failure(AppError.BusinessRule("ENTITY_NOT_FOUND"))
+            }
 
             // 🔥 FIX: Use centralized FaceEngine with stricter thresholds (0.35f)
             val matchResult = FaceEngine.findBestMatch(embedding, gallery)
 
-            val studentId = when (matchResult) {
-                is FaceEngine.MatchResult.Success -> matchResult.name
-                else -> null
+            when (matchResult) {
+                is FaceEngine.MatchResult.Success -> Result.Success(matchResult.name)
+                else -> Result.Failure(AppError.BusinessRule("ENTITY_NOT_FOUND"))
             }
-
-            Result.Success(studentId)
         } catch (e: Exception) {
             Result.Failure(AppError.BusinessRule(e.message))
         }

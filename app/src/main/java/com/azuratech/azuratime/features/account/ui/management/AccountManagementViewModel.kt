@@ -231,31 +231,22 @@ class AccountManagementViewModel @Inject constructor(
     private fun selectActiveClass(classId: String?, targetAccountId: String?) {
         val accountId = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
-            repository.getAccountById(accountId).onSuccess { account ->
-                val updated = account.copy(activeClassId = classId)
-                database.accountDao().updateAccount(updated)
-                repository.pushAccount(accountId)
-            }
+            repository.selectActiveClass(accountId, classId)
         }
     }
 
     private fun assignClassToAccount(classId: String, targetAccountId: String?) {
         val accountId = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
-            database.accountClassAccessDao().insert(
-                com.azuratech.azuratime.features.account.data.local.AccountClassAccessEntity(
-                    accountId = accountId,
-                    classId = classId,
-                    schoolId = sessionManager.getActiveSchoolId() ?: "",
-                ),
-            )
+            val schoolId = sessionManager.getActiveSchoolId() ?: ""
+            repository.assignClassToAccount(accountId, classId, schoolId)
         }
     }
 
     private fun removeClassAccess(classId: String, targetAccountId: String?) {
         val accountId = targetAccountId ?: sessionManager.getCurrentAccountId() ?: return
         viewModelScope.launch {
-            database.accountClassAccessDao().deleteSpecificAccess(accountId, classId)
+            repository.removeClassAccess(accountId, classId)
         }
     }
 

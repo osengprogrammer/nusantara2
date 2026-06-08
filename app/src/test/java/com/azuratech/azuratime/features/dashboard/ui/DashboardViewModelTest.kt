@@ -35,7 +35,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var accountRepository: AccountRepository
     private lateinit var schoolRepository: SchoolRepository
@@ -50,12 +50,12 @@ class DashboardViewModelTest {
     private lateinit var viewModel: DashboardViewModel
 
     private val schoolId = "school_1"
-    private val accountId = "user_1"
+    private val accountId = "account_1"
 
     private val allClasses = listOf(
-        ClassModel("class_1", "school_1", "Kelas A", "10", "user_1", 10, emptyList(), 0L),
-        ClassModel("class_2", "school_1", "Kelas B", "12", "user_1", 12, emptyList(), 0L),
-        ClassModel("class_3", "school_1", "Kelas C", "8", "user_1", 8, emptyList(), 0L),
+        ClassModel("class_1", "school_1", "Kelas A", "10", "account_1", 10, emptyList(), 0L),
+        ClassModel("class_2", "school_1", "Kelas B", "12", "account_1", 12, emptyList(), 0L),
+        ClassModel("class_3", "school_1", "Kelas C", "8", "account_1", 8, emptyList(), 0L),
     )
 
     @Before
@@ -85,6 +85,8 @@ class DashboardViewModelTest {
         } returns flowOf(Result.Success<List<AttendanceRecordEntity>>(emptyList()))
         every { accountRepository.observePendingRequestsCountFlow(any()) } returns flowOf(0)
         every { studentRepository.getStudentProfilesFlow() } returns flowOf(Result.Success(emptyList()))
+        every { schoolRepository.observeGeofenceFlow(schoolId) } returns flowOf(null)
+        every { sessionManager.isLoggingOutFlow } returns MutableStateFlow(false).asStateFlow()
     }
 
     @After
@@ -97,9 +99,9 @@ class DashboardViewModelTest {
         // 1. GIVEN: Supervisor with only class_1 assigned
         val supervisor = AccountEntity(
             accountId = accountId,
-            email = "teacher@school.com",
-            name = "Teacher X",
-            role = "USER", // membership role is what matters
+            email = "supervisor@school.com",
+            name = "Supervisor X",
+            role = "GUEST", // membership role is what matters
             memberships = mapOf(
                 schoolId to SchoolMembership(
                     schoolName = "My School",

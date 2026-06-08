@@ -193,7 +193,7 @@ class DashboardViewModel @Inject constructor(
 
         val activeSchoolId = activeSchool?.id
         val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
-        val effectiveRole = membershipRole ?: account?.role ?: "USER"
+        val effectiveRole = membershipRole ?: account?.role ?: "GUEST"
         val isReady = account != null
 
         val needsAssignment = effectiveRole == "SUPERVISOR" && assignedClasses.isEmpty()
@@ -208,7 +208,7 @@ class DashboardViewModel @Inject constructor(
             isReady = isReady,
             currentRole = effectiveRole,
             isApproved = account?.status == "ACTIVE",
-            needsClassAssignment = needsAssignment,
+            showSupervisorOnboarding = needsAssignment,
             pendingRequests = pendingCount,
             totalActiveStudents = totalActiveStudents,
             geofence = geofence,
@@ -317,13 +317,8 @@ class DashboardViewModel @Inject constructor(
 
     private fun logout() {
         viewModelScope.launch {
-            _refreshTriggerFlow.update { -1 } // Optional: stop other combine flows
-            // We can't update uiStateFlow directly as it is a combine(...) stateIn
-            // But we can add it to the combine if we want, or just rely on the effect.
-            // Actually, let's just make it emit the effect and let the UI handle it.
-            // Wait, the UI needs to show the overlay.
-            // Since uiStateFlow is a combine of many things, adding one more StateFlow is best.
             authRepository.clearAllDataAndSignOut()
+            _uiEffectFlow.emit(DashboardUiEffect.TriggerAtomicExit)
         }
     }
 

@@ -20,9 +20,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
- * 🚀 ATTENDANCE CAPTURE VIEW MODEL (v3.2.0-ai-native)
+ * 🚀 ATTENDANCE CAPTURE VIEW MODEL (v3.2.2-ai-native)
  * Manages biometric and barcode attendance check-in.
  * Integrated Geofence security for "Out of Location" enforcement.
+ * Hardened to 100% pure MVI with zero class-level private vars.
  */
 @HiltViewModel
 class AttendanceCaptureViewModel @Inject constructor(
@@ -39,20 +40,13 @@ class AttendanceCaptureViewModel @Inject constructor(
     private val _uiEffectFlow = Channel<AttendanceCaptureUiEffect>()
     val uiEffectFlow = _uiEffectFlow.receiveAsFlow()
 
-    private var gallery: List<Pair<String, FloatArray>> = emptyList()
-    private var currentAccountEmail: String = ""
-    private var activeClassId: String? = null
-
     // Gatekeeper: Prevents multiple concurrent processing
     private val isProcessing = AtomicBoolean(false)
 
-    // Tracking for deduplication to prevent "double output"
-    private var lastProcessedStudentId: String? = null
-    private var lastProcessedTime: Long = 0L
     private val REPEAT_SCAN_SUPPRESSION_MS = 600_000L // 10 minutes
 
     init {
-        // 🔥 AI Native: Automatically observe geofence when school is active
+        // Automatically observe geofence when school is active
         viewModelScope.launch {
             sessionManager.activeSchoolIdFlow.collect { schoolId ->
                 if (schoolId != null) {
@@ -104,8 +98,15 @@ class AttendanceCaptureViewModel @Inject constructor(
         } else {
             email
         }
-        currentAccountEmail = resolvedEmail
-        _uiStateFlow.update { it.copy(isLoading = true, error = null, scanMode = mode) }
+
+        _uiStateFlow.update {
+            it.copy(
+                currentAccountEmail = resolvedEmail,
+                isLoading = true,
+                error = null,
+                scanMode = mode,
+            )
+        }
 
         viewModelScope.launch {
             val resolvedSchoolId = sessionManager.getActiveSchoolId()
@@ -113,12 +114,10 @@ class AttendanceCaptureViewModel @Inject constructor(
             when (val sessionResult = repository.getSessionData(resolvedEmail, resolvedSchoolId)) {
                 is Result.Success -> {
                     val (classId, className, schoolId) = sessionResult.data
-                    activeClassId = classId
 
                     if (schoolId != null) {
                         when (val galleryResult = repository.loadGallery(schoolId)) {
                             is Result.Success -> {
-                                gallery = galleryResult.data
                                 _uiStateFlow.update {
                                     it.copy(
                                         isLoading = false,
@@ -126,6 +125,7 @@ class AttendanceCaptureViewModel @Inject constructor(
                                         activeClassName = className,
                                         activeSchoolId = schoolId,
                                         isScanning = true,
+                                        gallery = galleryResult.data,
                                     )
                                 }
                             }
@@ -150,7 +150,8 @@ class AttendanceCaptureViewModel @Inject constructor(
         if (isProcessing.getAndSet(true)) return
 
         viewModelScope.launch {
-            val schoolId = _uiStateFlow.value.activeSchoolId
+            val state = _uiStateFlow.value
+            val schoolId = state.activeSchoolId
             if (schoolId == null) {
                 handleError("Error: Context Hilang")
                 return@launch
@@ -158,17 +159,16 @@ class AttendanceCaptureViewModel @Inject constructor(
 
             _uiStateFlow.update { it.copy(isLoading = true, isScanning = false, error = null, studentProfile = null) }
 
-            when (val matchResult = repository.performMatch(embedding, gallery)) {
+            when (val matchResult = repository.performMatch(embedding, state.gallery)) {
                 is Result.Success -> {
-                    val matchedStudentId = matchResult.data
-                    if (matchedStudentId != null) {
-                        processAttendanceRecord(matchedStudentId, schoolId)
-                    } else {
-                        handleUnregistered()
-                    }
+                    processAttendanceRecord(matchResult.data, schoolId)
                 }
                 is Result.Failure -> {
-                    handleError(matchResult.error.message ?: "Match Error")
+                    if (matchResult.error.message == "ENTITY_NOT_FOUND") {
+                        handleUnregistered()
+                    } else {
+                        handleError(matchResult.error.message ?: "Match Error")
+                    }
                 }
                 else -> {}
             }
@@ -185,7 +185,6 @@ class AttendanceCaptureViewModel @Inject constructor(
                 return@launch
             }
 
-            // 🔥 AI Native: Smart Barcode Parsing
             // Support format: schoolId|classId|studentId
             val parts = barcode.split("|")
             val (scannedSchoolId, scannedClassId, scannedStudentId) = when (parts.size) {
@@ -215,7 +214,9 @@ class AttendanceCaptureViewModel @Inject constructor(
 
     private suspend fun processAttendanceRecord(scannedId: String, schoolId: String) {
         val currentTime = System.currentTimeMillis()
-        if (scannedId == lastProcessedStudentId && (currentTime - lastProcessedTime < REPEAT_SCAN_SUPPRESSION_MS)) {
+        val state = _uiStateFlow.value
+
+        if (scannedId == state.lastProcessedStudentId && (currentTime - state.lastProcessedTime < REPEAT_SCAN_SUPPRESSION_MS)) {
             // Deduplication logic
             isProcessing.set(false)
             _uiStateFlow.update { it.copy(isLoading = false, isScanning = true) }
@@ -223,11 +224,11 @@ class AttendanceCaptureViewModel @Inject constructor(
         }
 
         val biometricResult = attendanceRepository.getStudentBiometricById(scannedId, schoolId)
-        val studentBiometric = (biometricResult as? Result.Success)?.data
-        if (studentBiometric == null) {
+        if (biometricResult is Result.Failure) {
             handleUnregistered()
             return
         }
+        val studentBiometric = (biometricResult as Result.Success).data
 
         val classIdsResult = attendanceRepository.getClassIdsForStudentFlow(scannedId, schoolId).firstOrNull() ?: Result.Success(emptyList())
         val studentClassIds = if (classIdsResult is Result.Success) classIdsResult.data else emptyList()
@@ -235,8 +236,8 @@ class AttendanceCaptureViewModel @Inject constructor(
         val params = ProcessAttendanceParams(
             studentId = scannedId,
             studentName = studentBiometric.name,
-            accountEmail = currentAccountEmail,
-            activeClassId = _uiStateFlow.value.activeClassId,
+            accountEmail = state.currentAccountEmail,
+            activeClassId = state.activeClassId,
             studentClassIds = studentClassIds,
         )
 
@@ -265,13 +266,13 @@ class AttendanceCaptureViewModel @Inject constructor(
     }
 
     private suspend fun handleCheckInSuccess(studentId: String, name: String, speakMessage: String, alreadyCheckedIn: Boolean) {
-        lastProcessedStudentId = studentId
-        lastProcessedTime = System.currentTimeMillis()
         _uiStateFlow.update {
             it.copy(
                 isLoading = false,
-                studentProfile = StudentProfile(studentId = studentId, name = name, schoolId = _uiStateFlow.value.activeSchoolId ?: ""),
+                studentProfile = StudentProfile(studentId = studentId, name = name, schoolId = it.activeSchoolId ?: ""),
                 isAlreadyCheckedIn = alreadyCheckedIn,
+                lastProcessedStudentId = studentId,
+                lastProcessedTime = System.currentTimeMillis(),
             )
         }
         _uiEffectFlow.send(AttendanceCaptureUiEffect.Speak(speakMessage))

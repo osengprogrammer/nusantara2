@@ -1,4 +1,4 @@
-# 📐 NUSANTARA v3.2 — AI-OPTIMIZED NAMING CONVENTIONS
+# 📐 NUSANTARA v3.2.2 — AI-OPTIMIZED NAMING CONVENTIONS
 ⚡ *Mandatory for all AI prompts & code generation.*
 
 ## 🔹 LANGUAGE POLICY (STRICT)
@@ -7,7 +7,7 @@
 - **UI Strings:** Localized (Indonesian for end-users), but Keys must be in English.
 - **Reasoning:** Maximizes AI comprehension speed and aligns with global Kotlin/Android standards.
 
-## 🔹 TERMINOLOGY POLICY (v3.2.0 - PHASE 29)
+## 🔹 TERMINOLOGY POLICY (v3.2.2 - PHASE 30)
 - **Account**: The unified identity model. NO "User", "Staff", or "Teacher" variants allowed for app identity.
 - **Student**: Refers to the person being recorded/tracked.
 - **Supervisor**: An Account with limited access to specific classes (formerly "Teacher").
@@ -21,10 +21,12 @@
 - Classes/Objects: `PascalCase` → `class AttendanceViewModel`
 - Interfaces: `PascalCase` (No 'I' prefix) → `interface StudentRepository`
 - Implementations: `PascalCaseImpl` → `class StudentRepositoryImpl`
+- MVI Contracts: MUST use `UiState`, `UiEvent`, and `UiEffect` suffixes → `LoginUiState`, `LoginUiEvent`, `LoginUiEffect`
 
 ## 🔹 FUNCTION NAMING
 - Functions: `camelCase` (verb-first) → `fun calculateAttendance()`
-- Composables: `PascalCase` → `@Composable fun StudentRow()`
+- Composables (UI Components): `PascalCase` → `@Composable fun StudentRow()`
+- Composables (Top-Level Screens): MUST end in `Screen` suffix → `@Composable fun DashboardScreen()`, `@Composable fun AttendanceCaptureScreen()`
 - Mappers: `toDomain()`, `toEntity()`, `toProfile()`
 
 ## 🔹 VARIABLE & FLOW NAMING
