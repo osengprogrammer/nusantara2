@@ -30,7 +30,7 @@ interface StudentDao {
     @Transaction
     @Query(
         """
-        SELECT students.*, 
+        SELECT students.*,
                student_biometrics.studentId as faceId,
                student_biometrics.embedding as embedding,
                student_biometrics.photoUrl as photoUrl,
@@ -53,7 +53,7 @@ interface StudentDao {
     @Transaction
     @Query(
         """
-        SELECT students.*, 
+        SELECT students.*,
                student_biometrics.studentId as faceId,
                student_biometrics.embedding as embedding,
                student_biometrics.photoUrl as photoUrl,

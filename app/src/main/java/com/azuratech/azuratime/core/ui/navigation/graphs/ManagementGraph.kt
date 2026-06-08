@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
+import androidx.compose.runtime.remember
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,6 +24,9 @@ import com.azuratech.azuratime.features.school.ui.classes.ClassDetailScreen
 import com.azuratech.azuratime.features.school.ui.admin.PendingSchoolsScreen
 import com.azuratech.azuratime.features.reporting.ui.integrity.DataIntegrityScreen
 import com.azuratech.azuratime.features.reporting.ui.integrity.DataManagementScreen
+import com.azuratech.azuratime.features.school.ui.geofence.GpsManagementScreen
+import com.azuratech.azuratime.features.school.ui.geofence.MapPickerScreen
+import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 
 fun NavGraphBuilder.managementGraph(
     navController: NavController,
@@ -33,6 +37,28 @@ fun NavGraphBuilder.managementGraph(
         startDestination = NavigationRoutes.REGISTRATION_MENU,
         route = NavigationRoutes.MANAGEMENT_GRAPH,
     ) {
+        composable(NavigationRoutes.GPS_MANAGEMENT) { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(NavigationRoutes.MANAGEMENT_GRAPH)
+            }
+            val schoolViewModel: SchoolViewModel = hiltViewModel(parentEntry)
+            GpsManagementScreen(
+                viewModel = schoolViewModel,
+                onNavigateToMapPicker = { navController.navigate(NavigationRoutes.MAP_PICKER) },
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+        composable(NavigationRoutes.MAP_PICKER) { backStackEntry ->
+            // Use parent graph to share the same ViewModel instance
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(NavigationRoutes.MANAGEMENT_GRAPH)
+            }
+            val schoolViewModel: SchoolViewModel = hiltViewModel(parentEntry)
+            MapPickerScreen(
+                viewModel = schoolViewModel,
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
         composable(NavigationRoutes.REGISTRATION_MENU) {
             RegistrationMenuScreen(
                 onNavigateToAddStudent = { navController.navigate(NavigationRoutes.ADD_STUDENT) },

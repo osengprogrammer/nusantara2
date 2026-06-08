@@ -16,6 +16,7 @@ data class FollowingUiState(
     val isLoadingRequests: Boolean = false,
     val isLoadingConnections: Boolean = false,
     val error: String? = null,
+    val successMessage: String? = null,
     val isProcessing: Boolean = false,
     val selectedFriendForAssignment: AccountEntity? = null,
     val isAdmin: Boolean = false,

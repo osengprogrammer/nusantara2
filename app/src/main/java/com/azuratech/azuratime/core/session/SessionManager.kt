@@ -5,9 +5,11 @@ import android.provider.Settings
 import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 
 class SessionManager private constructor(private val context: Context) {
 
@@ -58,7 +60,6 @@ class SessionManager private constructor(private val context: Context) {
         }
     }
 
-    // 🔥 REACTIVE TRIGGER: SSOT flows for account and school context
     private val _activeSchoolIdFlow = MutableStateFlow<String?>(getActiveSchoolId())
     val activeSchoolIdFlow: StateFlow<String?> = _activeSchoolIdFlow.asStateFlow()
 
@@ -67,9 +68,24 @@ class SessionManager private constructor(private val context: Context) {
     )
     val currentAccountIdFlow: StateFlow<String?> = _currentAccountIdFlow.asStateFlow()
 
-    // =====================================================
-    // IDENTITAS & TENANT
-    // =====================================================
+    private val _isLoggingOutFlow = MutableStateFlow(false)
+    val isLoggingOutFlow: StateFlow<Boolean> = _isLoggingOutFlow.asStateFlow()
+
+    private val _isSessionClearingFlow = MutableStateFlow(false)
+    val isSessionClearingFlow: StateFlow<Boolean> = _isSessionClearingFlow.asStateFlow()
+
+    fun setLoggingOut(isLoggingOut: Boolean) {
+        _isLoggingOutFlow.value = isLoggingOut
+    }
+
+    fun initializeEncryption() {
+        try {
+            sharedPreferences
+            Log.d(TAG, "Encryption initialized successfully.")
+        } catch (e: Exception) {
+            Log.e(TAG, "Encryption initialization failed.", e)
+        }
+    }
 
     fun saveActiveSchoolId(schoolId: String) {
         sharedPreferences.edit().putString(KEY_ACTIVE_SCHOOL_ID, schoolId).apply()
@@ -88,7 +104,6 @@ class SessionManager private constructor(private val context: Context) {
 
     fun getCurrentAccountId(): String? = sharedPreferences.getString(KEY_ACCOUNT_ID, null)
 
-    // 🔥 RESTORED MISSING FUNCTIONS
     fun saveAccountEmail(email: String) {
         sharedPreferences.edit().putString(KEY_ACCOUNT_EMAIL, email).apply()
     }
@@ -104,10 +119,6 @@ class SessionManager private constructor(private val context: Context) {
     fun getExpireDate(): Long = sharedPreferences.getLong(KEY_EXPIRE_DATE, 0L)
 
     fun getCloudKey(): String = sharedPreferences.getString(KEY_DB_CLOUD, "") ?: ""
-
-    // =====================================================
-    // SYNC & SECURITY
-    // =====================================================
 
     fun saveLastSyncTime(millis: Long = System.currentTimeMillis()) {
         sharedPreferences.edit().putLong(KEY_LAST_SYNC, millis).apply()
@@ -145,12 +156,19 @@ class SessionManager private constructor(private val context: Context) {
         Log.d(TAG, "Security envelope injected successfully.")
     }
 
-    // =====================================================
-    // LOGOUT & CLEANUP
-    // =====================================================
+    suspend fun clearSession() {
+        _isLoggingOutFlow.value = true
+        _isSessionClearingFlow.value = true
 
-    fun clearSession() {
-        sharedPreferences.edit().clear().apply()
-        Log.d(TAG, "Local session cleared successfully.")
+        withContext(Dispatchers.IO) {
+            sharedPreferences.edit().clear().commit()
+            Log.d(TAG, "Local session cleared successfully.")
+        }
+
+        _activeSchoolIdFlow.value = null
+        _currentAccountIdFlow.value = null
+
+        _isLoggingOutFlow.value = false
+        _isSessionClearingFlow.value = false
     }
 }

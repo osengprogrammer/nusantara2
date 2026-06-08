@@ -27,5 +27,7 @@ data class DashboardUiState(
     val brokenAssignments: Int = 0,
     val unsyncedRecords: Int = 0,
     val conflicts: List<AttendanceConflict> = emptyList(),
+    val geofence: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity? = null,
     val error: String? = null,
+    val isLoggingOut: Boolean = false,
 )

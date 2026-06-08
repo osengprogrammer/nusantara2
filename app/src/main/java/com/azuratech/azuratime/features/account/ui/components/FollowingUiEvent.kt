@@ -14,5 +14,6 @@ sealed class FollowingUiEvent {
     data class UnfollowFriend(val targetAccountId: String) : FollowingUiEvent()
     object LoadData : FollowingUiEvent()
     object ClearError : FollowingUiEvent()
+    object ClearSuccessMessage : FollowingUiEvent()
     object NavigateBack : FollowingUiEvent()
 }

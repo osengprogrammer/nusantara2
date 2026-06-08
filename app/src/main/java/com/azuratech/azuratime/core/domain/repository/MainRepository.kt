@@ -9,5 +9,5 @@ interface MainRepository {
     fun getCurrentEmail(): Result<String>
     suspend fun initializeAiBrain(context: Context): Result<Unit>
     fun observeRevokeStatusFlow(uid: String): Flow<Result<Boolean>>
-    fun executeRevocationCleanup(): Result<Unit>
+    suspend fun executeRevocationCleanup(): Result<Unit>
 }

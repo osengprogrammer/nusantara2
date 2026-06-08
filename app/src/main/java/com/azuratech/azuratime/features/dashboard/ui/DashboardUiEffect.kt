@@ -7,4 +7,5 @@ sealed class DashboardUiEffect {
     data class ShowToast(val message: String) : DashboardUiEffect()
     data class ShowSnackbar(val message: String) : DashboardUiEffect()
     data class NavigateTo(val route: String) : DashboardUiEffect()
+    data object NavigateToLogin : DashboardUiEffect()
 }

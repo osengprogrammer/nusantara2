@@ -545,4 +545,39 @@ class SchoolRepositoryImpl @Inject constructor(
             Result.Failure(AppError.Network(e.message))
         }
     }
+
+    override suspend fun saveGeofence(
+        schoolId: String,
+        lat: Double,
+        lng: Double,
+        radius: Int,
+        isActive: Boolean,
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val geofenceId = "geo_$schoolId"
+            val entity = GpsGeofenceEntity(
+                id = geofenceId,
+                schoolId = schoolId,
+                latitude = lat,
+                longitude = lng,
+                radiusMeters = radius,
+                isActive = isActive,
+                syncStatus = SyncStatus.PENDING_UPDATE.name,
+            )
+            dao.upsertGeofence(entity)
+
+            // 🔥 AI Native: Sync to Firestore SSOT
+            val remoteResult = remoteDataSource.saveGeofence(schoolId, entity)
+            if (remoteResult is Result.Success) {
+                dao.upsertGeofence(entity.copy(syncStatus = SyncStatus.SYNCED.name))
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override fun observeGeofenceFlow(schoolId: String): Flow<GpsGeofenceEntity?> =
+        dao.observeGeofenceFlow(schoolId)
 }

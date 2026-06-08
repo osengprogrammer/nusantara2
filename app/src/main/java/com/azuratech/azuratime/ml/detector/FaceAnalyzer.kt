@@ -105,13 +105,13 @@ class FaceAnalyzer(
 
                         if (leftEye < BLINK_THRESHOLD && rightEye < BLINK_THRESHOLD) {
                             isEyeClosed = true
-                            onLivenessStatus("Mata Tertutup...")
+                            onLivenessStatus("Eyes Closed...")
                         } else if (isEyeClosed && leftEye > 0.6f && rightEye > 0.6f) {
                             hasBlinked = true
                             isEyeClosed = false
-                            onLivenessStatus("Kedipan Terdeteksi!")
+                            onLivenessStatus("Blink Detected!")
                         } else {
-                            onLivenessStatus("Silakan Berkedip")
+                            onLivenessStatus("Please Blink")
                         }
 
                         if (!hasBlinked) {
@@ -131,7 +131,7 @@ class FaceAnalyzer(
                             applyMirroring = false,
                         )
                     } catch (e: Exception) {
-                        Log.e("FaceAnalyzer", "Gagal convert ImageProxy: ${e.message}")
+                        Log.e("FaceAnalyzer", "Failed to convert ImageProxy: ${e.message}")
                         null
                     }
 
@@ -160,7 +160,7 @@ class FaceAnalyzer(
                                 if (safeCrop != safeBitmap) safeCrop.recycle()
                                 safeBitmap.recycle()
                             } catch (e: Exception) {
-                                Log.e("FaceAnalyzer", "Error di Coroutine: ${e.message}")
+                                Log.e("FaceAnalyzer", "Error in Coroutine: ${e.message}")
                             } finally {
                                 // 🔓 Buka gembok processing agar frame berikutnya bisa masuk
                                 isProcessing.set(false)
@@ -173,7 +173,7 @@ class FaceAnalyzer(
                     // Reset liveness jika wajah hilang dari frame kamera
                     hasBlinked = false
                     isEyeClosed = false
-                    onLivenessStatus("Cari Wajah...")
+                    onLivenessStatus("Searching for Face...")
                     imageProxy.close()
                     isProcessing.set(false)
                 }

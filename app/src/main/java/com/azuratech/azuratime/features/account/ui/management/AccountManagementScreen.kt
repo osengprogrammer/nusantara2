@@ -29,6 +29,7 @@ import com.azuratech.azuratime.features.account.data.local.AccountEntity
 fun AccountManagementScreen(
     viewModel: AccountManagementViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToWelcome: () -> Unit,
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -42,7 +43,8 @@ fun AccountManagementScreen(
             when (effect) {
                 is AccountUiEffect.ShowToast -> context.showToast(effect.message)
                 is AccountUiEffect.ShowSnackbar -> context.showToast(effect.message)
-                is AccountUiEffect.NavigateTo -> { /* Navigation logic handled by host */ }
+                is AccountUiEffect.NavigateTo -> { /* Generic navigation if needed */ }
+                AccountUiEffect.NavigateToWelcome -> onNavigateToWelcome()
                 AccountUiEffect.NavigateBack -> onNavigateBack()
             }
         }
@@ -104,128 +106,136 @@ fun AccountManagementContent(
         title = "Account Settings",
         onBack = onNavigateBack,
     ) {
-        if (uiState.isLoading) {
+        if (uiState.isLoggingOut) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Logging out...", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(AzuraSpacing.lg),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
-            ) {
-                val profile = uiState.accountProfile
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(AzuraSpacing.lg),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+                ) {
+                    val profile = uiState.accountProfile
 
-                StudentAvatar(photoPath = profile?.photoUrl, size = 96.dp)
+                    StudentAvatar(photoPath = profile?.photoUrl, size = 96.dp)
 
-                Text(
-                    text = profile?.name ?: "—",
-                    style = MaterialTheme.typography.headlineSmall,
-                )
+                    Text(
+                        text = profile?.name ?: "—",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
 
-                Text(
-                    text = profile?.email ?: "—",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
+                    Text(
+                        text = profile?.email ?: "—",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
 
-                Spacer(modifier = Modifier.height(AzuraSpacing.lg))
+                    Spacer(modifier = Modifier.height(AzuraSpacing.lg))
 
-                // Active Class Selection
-                AzuraCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(AzuraSpacing.md)) {
-                        Text("Select Active Class", style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+                    // Active Class Selection
+                    AzuraCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(AzuraSpacing.md)) {
+                            Text("Select Active Class", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
-                        if (uiState.availableClasses.isEmpty()) {
-                            Text(
-                                "No classes available in this school.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.outline,
-                            )
-                        } else {
-                            uiState.availableClasses.forEach { classModel ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    RadioButton(
-                                        selected = classModel.id == uiState.activeClassId,
-                                        onClick = { onEvent(AccountUiEvent.SelectActiveClass(classModel.id)) },
-                                    )
-                                    Text(classModel.name)
+                            if (uiState.availableClasses.isEmpty()) {
+                                Text(
+                                    "No classes available in this school.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline,
+                                )
+                            } else {
+                                uiState.availableClasses.forEach { classModel ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        RadioButton(
+                                            selected = classModel.id == uiState.activeClassId,
+                                            onClick = { onEvent(AccountUiEvent.SelectActiveClass(classModel.id)) },
+                                        )
+                                        Text(classModel.name)
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // Pending Followers (Requests to join school)
-                if (uiState.pendingFollowers.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                    ) {
-                        Text(
-                            text = "Pending Follower Requests",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = AzuraSpacing.md),
-                        )
-                        uiState.pendingFollowers.forEach { request ->
-                            PendingFollowerItem(
-                                request = request,
-                                selectedRole = uiState.selectedRoles[request.requestId] ?: AccountRole.USER,
-                                onRoleSelect = { role ->
-                                    onEvent(AccountUiEvent.UpdatePendingRole(request.requestId, role))
-                                },
-                                onApprove = {
-                                    onEvent(AccountUiEvent.ApproveFollower(request.requestId))
-                                },
+                    // Pending Followers (Requests to join school)
+                    if (uiState.pendingFollowers.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                        ) {
+                            Text(
+                                text = "Pending Follower Requests",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = AzuraSpacing.md),
                             )
-                        }
-                    }
-                }
-
-                // School Network (Member Role Management)
-                if (uiState.allAccountsInSameSchool.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
-                    ) {
-                        Text(
-                            text = "School Network",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = AzuraSpacing.md),
-                        )
-                        uiState.allAccountsInSameSchool
-                            .filter { it.accountId != uiState.accountProfile?.accountId }
-                            .forEach { account ->
-                                MemberItem(
-                                    account = account,
-                                    currentRole = account.memberships[uiState.activeSchoolId]?.role ?: account.role,
-                                    currentUserRole = uiState.currentAccountRole,
-                                    onChangeRole = { newRole ->
-                                        onEvent(AccountUiEvent.ChangeMemberRole(account.accountId, newRole))
+                            uiState.pendingFollowers.forEach { request ->
+                                PendingFollowerItem(
+                                    request = request,
+                                    selectedRole = uiState.selectedRoles[request.requestId] ?: AccountRole.USER,
+                                    onRoleSelect = { role ->
+                                        onEvent(AccountUiEvent.UpdatePendingRole(request.requestId, role))
                                     },
-                                    onRemoveMember = { onRemoveMemberRequest(account.accountId) },
+                                    onApprove = {
+                                        onEvent(AccountUiEvent.ApproveFollower(request.requestId))
+                                    },
                                 )
                             }
+                        }
                     }
+
+                    // School Network (Member Role Management)
+                    if (uiState.allAccountsInSameSchool.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+                        ) {
+                            Text(
+                                text = "School Network",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = AzuraSpacing.md),
+                            )
+                            uiState.allAccountsInSameSchool
+                                .filter { it.accountId != uiState.accountProfile?.accountId }
+                                .forEach { account ->
+                                    MemberItem(
+                                        account = account,
+                                        currentRole = account.memberships[uiState.activeSchoolId]?.role ?: account.role,
+                                        currentUserRole = uiState.currentAccountRole,
+                                        onChangeRole = { newRole ->
+                                            onEvent(AccountUiEvent.ChangeMemberRole(account.accountId, newRole))
+                                        },
+                                        onRemoveMember = { onRemoveMemberRequest(account.accountId) },
+                                    )
+                                }
+                        }
+                    }
+
+                    AzuraButton(
+                        text = "Logout",
+                        onClick = { onEvent(AccountUiEvent.Logout) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    )
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                AzuraButton(
-                    text = "Logout",
-                    onClick = { onEvent(AccountUiEvent.Logout) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                )
             }
         }
 

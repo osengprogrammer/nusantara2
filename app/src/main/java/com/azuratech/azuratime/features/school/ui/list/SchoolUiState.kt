@@ -12,4 +12,6 @@ data class SchoolUiState(
     val error: String? = null,
     val accountId: String = "",
     val currentAccountRole: AccountRole = AccountRole.USER,
+    val geofence: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity? = null,
+    val pickedLocation: com.google.android.gms.maps.model.LatLng? = null,
 )

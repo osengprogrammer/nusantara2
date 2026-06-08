@@ -47,6 +47,7 @@ class FollowingViewModel @Inject constructor(
             is FollowingUiEvent.UnfollowFriend -> handleUnfollowFriend(event.targetAccountId)
             FollowingUiEvent.LoadData -> loadAllData()
             FollowingUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
+            FollowingUiEvent.ClearSuccessMessage -> _uiStateFlow.update { it.copy(successMessage = null) }
             FollowingUiEvent.NavigateBack -> { /* Handled by screen navigation */ }
         }
     }
@@ -95,7 +96,7 @@ class FollowingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
             accountRepository.sendConnectionRequest(accountId, targetAccountId)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Request sent!") } }
+                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Connection request sent!") } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
@@ -105,7 +106,7 @@ class FollowingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
             accountRepository.acceptConnectionRequest(accountId, senderId)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Connected successfully!") } }
+                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Connected successfully!") } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
@@ -115,7 +116,7 @@ class FollowingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
             accountRepository.declineConnectionRequest(accountId, senderId)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Request declined.") } }
+                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Request declined.") } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
@@ -125,7 +126,7 @@ class FollowingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
             accountRepository.assignClassToConnection(targetId, schoolId, classIds)
-                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, error = "Class access granted!", selectedFriendForAssignment = null) } }
+                .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Class access granted!", selectedFriendForAssignment = null) } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }
     }
@@ -136,7 +137,8 @@ class FollowingViewModel @Inject constructor(
             _uiStateFlow.update { it.copy(isProcessing = true) }
             accountRepository.updateMemberRole(targetAccountId, schoolId, newRole)
                 .onSuccess {
-                    _uiStateFlow.update { it.copy(isProcessing = false, error = "Member role updated to ${newRole.name}") }
+                    _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Member role updated to ${newRole.name}") }
+                    observeConnections() // 🔥 AI Native: Force refresh to see updated role immediately
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) }
@@ -150,7 +152,7 @@ class FollowingViewModel @Inject constructor(
             _uiStateFlow.update { it.copy(isProcessing = true) }
             accountRepository.unfollowAccount(accountId, targetAccountId)
                 .onSuccess {
-                    _uiStateFlow.update { it.copy(isProcessing = false, error = "Disconnected successfully!") }
+                    _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Disconnected successfully!") }
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) }

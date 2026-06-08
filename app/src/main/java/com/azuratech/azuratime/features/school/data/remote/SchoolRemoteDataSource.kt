@@ -16,4 +16,8 @@ interface SchoolRemoteDataSource {
     suspend fun deleteClass(_accountId: String, schoolId: String, classId: String): Result<Unit>
     suspend fun getClasses(_accountId: String, schoolId: String): Result<List<ClassModel>>
     suspend fun addStudentToClass(schoolId: String, classId: String, studentId: String): Result<Unit>
+
+    // 📍 GPS GEOFENCE
+    suspend fun saveGeofence(schoolId: String, geofence: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity): Result<Unit>
+    fun observeGeofenceFlow(schoolId: String): Flow<Result<com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity?>>
 }

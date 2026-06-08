@@ -44,6 +44,13 @@ fun FollowingScreen(
         }
     }
 
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let {
+            snackbarHostState.showSnackbar(it, duration = SnackbarDuration.Long)
+            viewModel.onEvent(FollowingUiEvent.ClearSuccessMessage)
+        }
+    }
+
     AzuraScreen(
         title = "Following",
         onBack = onNavigateBack,

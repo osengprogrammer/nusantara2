@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.azuratech.azuratime.core.session.SessionManager
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 /**
@@ -23,13 +26,31 @@ import javax.inject.Inject
 class BootViewModel @Inject constructor(
     application: Application,
     private val repository: BootRepository,
+    private val sessionManager: SessionManager,
 ) : AndroidViewModel(application) {
 
-    private val _uiStateFlow = MutableStateFlow<BootUiState>(BootUiState.Loading)
+    private val _uiStateFlow = MutableStateFlow<BootUiState>(
+        if (sessionManager.getCurrentAccountId() == null) BootUiState.NeedLogin else BootUiState.Loading,
+    )
     val uiStateFlow: StateFlow<BootUiState> = _uiStateFlow.asStateFlow()
 
+    val isLoggingOut: StateFlow<Boolean> = sessionManager.isLoggingOutFlow
+    val isSessionClearing: StateFlow<Boolean> = sessionManager.isSessionClearingFlow
+
     init {
-        onEvent(BootUiEvent.CheckAuthStatus)
+        observeSession()
+    }
+
+    private fun observeSession() {
+        sessionManager.currentAccountIdFlow
+            .onEach { accountId ->
+                if (accountId == null) {
+                    _uiStateFlow.value = BootUiState.NeedLogin
+                } else {
+                    handleCheckAuthStatus()
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun onEvent(event: BootUiEvent) {
@@ -40,6 +61,8 @@ class BootViewModel @Inject constructor(
     }
 
     private fun handleCheckAuthStatus() {
+        if (sessionManager.isLoggingOutFlow.value) return
+
         viewModelScope.launch {
             _uiStateFlow.value = BootUiState.Loading
 

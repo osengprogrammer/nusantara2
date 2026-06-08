@@ -14,8 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 
 @Composable
 fun ProfileHeader(
@@ -23,7 +21,6 @@ fun ProfileHeader(
     email: String?,
     schoolName: String?,
     photoUrl: Uri?,
-    onLogoutClick: () -> Unit,
     onProfileClick: () -> Unit,
 ) {
     Card(
@@ -51,12 +48,6 @@ fun ProfileHeader(
                 Text(text = name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(text = email ?: "", style = MaterialTheme.typography.bodyMedium)
                 Text(text = schoolName ?: "", style = MaterialTheme.typography.bodyMedium)
-            }
-            IconButton(onClick = onLogoutClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = "Logout",
-                )
             }
         }
     }

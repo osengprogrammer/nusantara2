@@ -22,7 +22,7 @@ fun AppUpdateDialog(
             onDismissRequest = { onEvent(AppUpdateUiEvent.DismissDialog) },
             title = {
                 Text(
-                    text = "Update Tersedia! 🚀",
+                    text = "Update Available! 🚀",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
@@ -30,14 +30,14 @@ fun AppUpdateDialog(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Versi baru telah tersedia. Silakan perbarui aplikasi Anda untuk mendapatkan fitur terbaru dan perbaikan stabilitas.",
+                        text = "A new version is available. Please update your application to get the latest features and stability improvements.",
                         style = MaterialTheme.typography.bodyMedium,
                     )
 
                     if (state.releaseNotes.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Apa yang baru:",
+                            text = "What's new:",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -57,7 +57,7 @@ fun AppUpdateDialog(
                             strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
                         )
                         Text(
-                            text = "Mengunduh: ${(state.downloadProgress * 100).toInt()}%",
+                            text = "Downloading: ${(state.downloadProgress * 100).toInt()}%",
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(top = 4.dp),
                         )
@@ -80,7 +80,7 @@ fun AppUpdateDialog(
                         onClick = { onEvent(AppUpdateUiEvent.InstallUpdate) },
                         shape = AzuraShapes.medium,
                     ) {
-                        Text("Pasang Sekarang")
+                        Text("Install Now")
                     }
                 } else {
                     // Retain fix: Allow retry on error by ensuring enabled is true if not currently downloading
@@ -90,13 +90,13 @@ fun AppUpdateDialog(
                         enabled = !isDownloading,
                         shape = AzuraShapes.medium,
                     ) {
-                        Text(if (isDownloading) "Mengunduh..." else "Unduh & Perbarui")
+                        Text(if (isDownloading) "Downloading..." else "Download & Update")
                     }
                 }
             },
             dismissButton = {
                 TextButton(onClick = { onEvent(AppUpdateUiEvent.DismissDialog) }) {
-                    Text("Nanti Saja")
+                    Text("Maybe Later")
                 }
             },
         )

@@ -2,6 +2,7 @@ package com.azuratech.azuratime.core.navigation
 
 object NavigationRoutes {
     // --- 🚪 AUTH & ONBOARDING ---
+    const val WELCOME = "welcome"
     const val LOGIN = "login"
     const val MEMBERSHIP = "membership"
     const val SCHOOL_REGISTRATION = "schoolRegistration"
@@ -49,6 +50,8 @@ object NavigationRoutes {
     const val FOLLOWING = "following"
     const val DEBUG = "debug"
     const val AI_MUSIC = "aiMusic"
+    const val GPS_MANAGEMENT = "gpsManagement"
+    const val MAP_PICKER = "mapPicker"
 
     // --- 🗺️ NAVIGATION GRAPHS ---
     const val DASHBOARD_GRAPH = "dashboardGraph"

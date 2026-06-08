@@ -27,8 +27,9 @@ import com.azuratech.azuratime.features.aimusic.data.local.*
         ExportJobEntity::class,
         ReportEntity::class,
         AiMusicEntity::class,
+        GpsGeofenceEntity::class,
     ],
-    version = 15,
+    version = 16,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
