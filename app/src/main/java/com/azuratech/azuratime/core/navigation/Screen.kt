@@ -33,6 +33,8 @@ sealed class Screen(val route: String) {
     }
 
     // --- 📊 ATTENDANCE & REPORT ---
+    data object SessionPicker : Screen(NavigationRoutes.SESSION_PICKER)
+    data object SessionManagement : Screen(NavigationRoutes.SESSION_MANAGEMENT)
     data object AttendanceMatrix : Screen(NavigationRoutes.ATTENDANCE_MATRIX)
     data object AttendanceHistory : Screen(NavigationRoutes.ATTENDANCE_HISTORY)
     data object AuditLog : Screen(NavigationRoutes.AUDIT_LOG)

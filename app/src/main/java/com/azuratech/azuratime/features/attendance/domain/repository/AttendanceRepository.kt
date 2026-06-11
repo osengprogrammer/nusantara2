@@ -16,6 +16,7 @@ data class ProcessAttendanceParams(
     val studentClassIds: List<String>,
     val status: AttendanceStatus = AttendanceStatus.PRESENT,
     val timestamp: Long? = null,
+    val sessionId: String? = null,
 )
 
 /**
@@ -33,7 +34,7 @@ interface AttendanceRepository {
         schoolId: String,
     ): Flow<Result<List<AttendanceRecordEntity>>>
 
-    suspend fun saveRecord(record: AttendanceRecord): Result<Unit>
+    suspend fun saveRecord(record: AttendanceRecord, sessionId: String? = null): Result<Unit>
     suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit>
     suspend fun updateRecordStatus(recordId: String, status: AttendanceStatus, schoolId: String): Result<Unit>
     suspend fun deleteRecord(recordId: String, schoolId: String): Result<Unit>

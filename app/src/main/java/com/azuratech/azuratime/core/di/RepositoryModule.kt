@@ -144,6 +144,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun provideSessionRepository(
+        impl: com.azuratech.azuratime.features.session.SessionRepositoryImpl,
+    ): com.azuratech.azuratime.features.session.SessionRepository
+
+    @Binds
+    @Singleton
     abstract fun provideFileStorage(
         impl: com.azuratech.azuratime.core.domain.media.PhotoStorageUtils,
     ): com.azuratech.azuratime.core.domain.media.FileStorage

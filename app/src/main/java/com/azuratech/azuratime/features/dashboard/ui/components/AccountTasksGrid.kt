@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.azuratech.azuratime.BuildConfig
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -96,11 +97,31 @@ fun AccountTasksGrid(
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
+                if (BuildConfig.ENABLE_SUBJECT_SESSION) {
+                    DashboardActionCard(
+                        "Subject Sessions",
+                        Icons.Default.Schedule,
+                        MaterialTheme.colorScheme.primary,
+                        { navController.navigate(Screen.SessionPicker.route) },
+                        modifier = Modifier.weight(1f),
+                        enabled = isEnabled,
+                    )
+                }
+                if (isAdmin && BuildConfig.ENABLE_SUBJECT_SESSION) {
+                    DashboardActionCard(
+                        "Manage Sessions",
+                        Icons.Default.EditCalendar,
+                        MaterialTheme.colorScheme.secondary,
+                        { navController.navigate(Screen.SessionManagement.route) },
+                        modifier = Modifier.weight(1f),
+                        enabled = isEnabled,
+                    )
+                }
             }
         }
 
         // ======================================================
-        // 🔥 Row 3: Identity & Security (ADMIN ONLY)
+        // 🔥 Row 3: Account & Support (ALL ROLES)
         // ======================================================
         if (isAdmin) {
             Row(

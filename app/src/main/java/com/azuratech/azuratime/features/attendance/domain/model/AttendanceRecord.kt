@@ -13,6 +13,7 @@ data class AttendanceRecord(
     val schoolId: String,
     val timestamp: Long,
     val status: AttendanceStatus,
+    val sessionId: String? = null,
     val photoUrl: String? = null,
     val isSynced: Boolean = false,
     val accountEmail: String = "",

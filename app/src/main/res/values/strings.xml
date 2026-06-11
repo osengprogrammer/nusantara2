@@ -1,4 +1,26 @@
 <resources>
    <string name="app_name">AzuraTime</string>
    <string name="my_web_client_id">735604901610-rcknkvu6hj9em6ha5mbj4m0cqtnsbi8o.apps.googleusercontent.com</string>
+
+   <!-- 📅 SESSION PICKER -->
+   <string name="select_session">Select Session</string>
+   <string name="refresh">Refresh</string>
+   <string name="no_sessions_available">No sessions available for today.</string>
+   <string name="failed_to_load_sessions">Failed to load sessions</string>
+   <string name="class_label">Class: %s</string>
+
+   <!-- 📅 SESSION MANAGEMENT -->
+   <string name="session_management">Session Management</string>
+   <string name="add_subject">Add Subject</string>
+   <string name="subject_name">Subject Name</string>
+   <string name="subject_description">Description (Optional)</string>
+   <string name="add_session">Add Session</string>
+   <string name="select_subject">Select Subject</string>
+   <string name="select_class">Select Class</string>
+   <string name="select_day">Select Day</string>
+   <string name="start_time">Start Time</string>
+   <string name="end_time">End Time</string>
+   <string name="save_success">Saved successfully</string>
+   <string name="cancel">Cancel</string>
+   <string name="save">Save</string>
 </resources>

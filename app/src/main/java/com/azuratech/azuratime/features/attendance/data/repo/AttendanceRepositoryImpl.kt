@@ -65,9 +65,12 @@ class AttendanceRepositoryImpl @Inject constructor(
         ).asLocalResult()
     }
 
-    override suspend fun saveRecord(record: AttendanceRecord): Result<Unit> {
+    override suspend fun saveRecord(record: AttendanceRecord, sessionId: String?): Result<Unit> {
         return try {
-            localDataSource.insert(AttendanceRecordEntity.fromDomain(record))
+            val entity = AttendanceRecordEntity.fromDomain(record).let {
+                if (sessionId != null) it.copy(sessionId = sessionId) else it
+            }
+            localDataSource.insert(entity)
             syncManager.enqueueSync() // Background sync
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -386,12 +389,13 @@ class AttendanceRepositoryImpl @Inject constructor(
                 schoolId = schoolId,
                 classId = resolvedClassId,
                 className = resolvedClassName,
+                sessionId = params.sessionId,
                 timestamp = recordTimestamp,
                 status = params.status,
                 accountEmail = params.accountEmail,
             )
 
-            saveRecord(record)
+            saveRecord(record, params.sessionId)
 
             auditLogRepository.logAction(
                 schoolId = schoolId,
