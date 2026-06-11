@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.attendance.ui.capture
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
@@ -28,12 +29,14 @@ import javax.inject.Inject
 @HiltViewModel
 class AttendanceCaptureViewModel @Inject constructor(
     application: Application,
+    private val savedStateHandle: SavedStateHandle,
     private val repository: BiometricScannerRepository,
     private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: SchoolRepository, // 🔥 AI Native: For Geofence settings
     private val sessionManager: SessionManager,
 ) : AndroidViewModel(application) {
 
+    private val sessionId: String? = savedStateHandle["sessionId"]
     private val _uiStateFlow = MutableStateFlow(AttendanceCheckInUiState())
     val uiStateFlow: StateFlow<AttendanceCheckInUiState> = _uiStateFlow.asStateFlow()
 
@@ -239,6 +242,7 @@ class AttendanceCaptureViewModel @Inject constructor(
             accountEmail = state.currentAccountEmail,
             activeClassId = state.activeClassId,
             studentClassIds = studentClassIds,
+            sessionId = sessionId,
         )
 
         val result = attendanceRepository.processAttendance(params)

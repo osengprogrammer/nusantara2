@@ -30,6 +30,7 @@ data class AttendanceRecordEntity(
     val attendanceTime: LocalDateTime? = null,
     val classId: String? = null,
     val className: String? = null,
+    @ColumnInfo(name = "sessionId", defaultValue = "") val sessionId: String = "",
     val isSynced: Boolean = false,
     val timestamp: Long = System.currentTimeMillis(),
 ) {
@@ -54,6 +55,7 @@ data class AttendanceRecordEntity(
             schoolId = schoolId,
             timestamp = timestamp,
             status = AttendanceStatus.fromCode(status),
+            sessionId = sessionId,
             isSynced = isSynced,
             accountEmail = accountEmail,
         )
@@ -73,6 +75,7 @@ data class AttendanceRecordEntity(
             "attendanceTime" to attendanceTime?.toString(),
             "classId" to classId,
             "className" to className,
+            "sessionId" to sessionId,
             "timestamp" to FieldValue.serverTimestamp(),
             "createdAt" to timestamp,
             "isSynced" to true,
@@ -96,6 +99,7 @@ data class AttendanceRecordEntity(
                 attendanceTime = dateTime,
                 classId = domain.classId,
                 className = domain.className,
+                sessionId = domain.sessionId ?: "",
                 isSynced = domain.isSynced,
                 timestamp = domain.timestamp,
             )
@@ -155,6 +159,7 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
             attendanceTime = parsedTime,
             classId = getString("classId"),
             className = getString("className"),
+            sessionId = getString("sessionId") ?: "",
             isSynced = true,
             timestamp = finalTimestamp,
         )

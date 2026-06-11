@@ -16,7 +16,9 @@ object NavigationRoutes {
     const val ADMIN_DASHBOARD = "adminDashboard"
 
     // --- 📊 ATTENDANCE & REPORT ---
-    const val ATTENDANCE_CAPTURE = "attendanceCapture"
+    const val SESSION_PICKER = "sessionPicker"
+    const val SESSION_MANAGEMENT = "sessionManagement"
+    const val ATTENDANCE_CAPTURE = "attendanceCapture?sessionId={sessionId}"
     const val BARCODE_SCAN = "barcodeScan"
     const val ATTENDANCE_HISTORY = "attendanceHistory"
     const val ATTENDANCE_MATRIX = "attendanceMatrix"
