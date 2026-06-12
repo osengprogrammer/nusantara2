@@ -1,5 +1,47 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 33: Session Tiering Foundation (June 12, 2026)
+- **Phase 1: Schema Evolution:** Implemented `SessionType` enum and updated `ClassSessionEntity`. Successfully migrated to Room v23.
+- **Phase 3: UI/UX Implementation:**
+    - Updated `SessionManagementScreen` with a dynamic **Tier Selector** using `FilterChip`.
+    - Implemented **Conditional Forms** in `AddSessionDialog` that adapt fields based on `SessionType`.
+    - Added visual **Tier Badges** and smooth layout transitions.
+- **Phase 4: Reporting & Final Polish:**
+    - **Denormalization:** Added `sessionType` to `AttendanceRecordEntity` for O(1) reporting performance.
+    - **Database Migration:** Successfully migrated to Room v24 (`MIGRATION_23_24`).
+    - **Reporting DAOs:** Added `getRecordsByTier` and `getTierSummaryCount` to `AttendanceRecordDao`.
+    - **Hardened Logic:** Updated `processAttendance` in `AttendanceRepositoryImpl` to auto-resolve `sessionType` from `sessionId`.
+    - **Documentation:** Created `docs/SESSION_TIERING.md` as the official technical spec.
+    - **Verification:** 100% pass rate for unit tests; zero compilation/lint errors.
+
+### Phase 32: Kiosk Feature Decommissioning & Cleanup (June 12, 2026)
+- **Feature Decommissioned:** Successfully removed the Corporate Kiosk mode and related autonomous terminal features to maintain core focus.
+- **Structural Cleanup:**
+  - Purged `TerminalEntity`, `TerminalDao`, and related database configurations.
+  - Removed `KioskSessionResolverUseCase`, `KioskSyncWorker`, and `KioskLockHelper`.
+- **Semantic Purity:** Removed `AttendanceDirection` (IN/OUT/BREAK) and reverted `AttendanceRecord` to a simplified model.
+- **Database Rollback:** Incremented Room version to 22 with a no-op migration (`MIGRATION_21_22`) to safely isolate legacy kiosk schema changes.
+- **Verification:** Confirmed 0 occurrences of 'kiosk' and 'terminal' in functional code; verified 100% compilation success.
+
+### Phase 31: Multi-Subject Attendance Hardening (v3.3.2-final) (June 11, 2026)
+- **Feature Locked:** Successfully delivered a multi-subject attendance system decoupled from physical classes. Attendance is now attached to `ClassSession` (Class + Subject + Supervisor + Schedule).
+- **Data Integrity & Soft Delete:**
+  - Implemented `isActive` flag in `ClassSessionEntity` for soft-delete support, preventing orphaned `AttendanceRecord` links.
+  - Added `lookupKey` (unique composite index) for high-performance daily schedule queries and collision prevention.
+  - Enforced "Subject Deletion Guard": Subjects cannot be deleted if active sessions are linked.
+- **Room Migration (v18):** Successfully migrated database to version 18 with explicit `MIGRATION_17_18` paths and index efficiency hardening.
+- **UseCase Centralization:** Created `CreateSessionUseCase` to unify `sessionId` and `lookupKey` generation logic.
+- **MVI Refinement:** Updated `SessionManagementViewModel` with robust error handling (Conflicts/Validation) and SharedFlow `UiEffect` feedback.
+- **Verification:** 100% compilation success, `spotlessCheck` passing, and `v3.3.2` release tagged on `main`.
+
+### Phase 30: Global Semantic Purity & MVI Restoration (June 5, 2026)
+- **Terminology Alignment:** Executed a project-wide sweep to replace "User" with "Account", "Teacher" with "Supervisor", and "Classroom" with "Class".
+- **Architecture Refinement:** Migrated `StudentClassAssignmentEntity` to the `student` package and `AccountClassAccessEntity` to the `account` package.
+- **MVI Purity:** Refactored `BiometricEnrollmentViewModel`, `AttendanceCaptureViewModel`, and `DataIntegrityViewModel` to use specific `UiEffect` types.
+- **Language Policy:** Translated all hardcoded Indonesian UI strings and technical comments to Common English across 20+ files.
+- **Documentation Sync:** Updated `ARCHITECTURE.md`, `PROJECT_INDEX.md`, and `VOCABULARY.md` to reflect the latest semantic standards.
+- **Test Suite Alignment:** Updated unit tests (`GetAccountUseCaseTest`, `DashboardViewModelTest`) to match new repository signatures.
+
 ### Phase 29: Robust Multi-Class Persistence & Sync Harmonization (June 5, 2026)
 - **Feature Completion:** Successfully implemented persistent multi-class assignment. A single student can now belong to multiple classes (e.g., 10-IPA-1 and 10-IPA-2) without data loss during sync or logout.
 - **Data Model Refinement:**

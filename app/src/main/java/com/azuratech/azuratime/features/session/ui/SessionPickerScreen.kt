@@ -108,7 +108,7 @@ fun SessionItem(
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
             Column {
                 Text(
-                    text = session.subjectName,
+                    text = session.subjectName ?: session.session.sessionType.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )

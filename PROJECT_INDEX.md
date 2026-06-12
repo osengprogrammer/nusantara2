@@ -1,5 +1,5 @@
-# 🗂️ AzuraTime — PROJECT FILE INDEX (v3.2.2-ai-native)
-⚡ *Status: 100% English-First & Effect-Driven Architecture Standardized.*
+# 🗂️ AzuraTime — PROJECT FILE INDEX (v3.7.0-base)
+⚡ *Status: 100% English-First & Session Tiering Hierarchy Integrated.*
 
 ## 💾 Room Entities (Local SSOT)
 | File | Package | Responsibility | SSOT Status |
@@ -14,6 +14,8 @@
 | `SchoolEntity.kt` | `features.school.data.local` | Multi-tenant school workspace identity | ✅ Migrated |
 | `StudentEntity.kt` | `features.student.data.local` | Core student profile (Name, Photo URL) | ✅ Migrated |
 | `AuditLogEntity.kt` | `features.reporting.data.local` | System traceability and action history | ✅ Migrated |
+| `SubjectEntity.kt` | `features.session.data.local` | Academic subjects for attendance tracking | ✅ New (v3.3) |
+| `ClassSessionEntity.kt` | `features.session.data.local` | Tiered sessions (Academic/Class/Global) | ✅ Tiered (v3.7) |
 
 ## 🧠 ViewModels (MVI Effect-Driven)
 | File | Package | Responsibility |
@@ -27,6 +29,9 @@
 | `StudentRosterViewModel.kt` | `features.student.ui.roster` | Roster browsing and filtering |
 | `PendingSchoolsViewModel.kt` | `features.school.ui.admin` | Super Admin school verification flow |
 | `AppUpdateViewModel.kt` | `features.update.ui` | Custom GitHub-based update engine state |
+| `SessionManagementViewModel.kt` | `features.session.ui` | Tiered session and subject management |
+| `SessionPickerViewModel.kt` | `features.session.ui` | Manual session selection engine |
+
 
 ## ⚡ UI Effects (Transient Event Stream)
 | File | Package | Responsibility |
@@ -38,6 +43,7 @@
 | `AttendanceUiEffect.kt` | `features.attendance.ui` | Verification success/failure transient UI |
 | `RegisterUiEffect.kt` | `features.student.ui.bulk` | CSV parsing status and result summary |
 | `PendingSchoolsUiEffect.kt` | `features.school.ui.admin` | Approval/Rejection success messages |
+| `SessionManagementUiEffect.kt` | `features.session.ui` | Session/Subject creation feedback |
 
 ## 🏰 Repositories (Interface/Impl DRY standard)
 | File | Package | Responsibility | DRY Status |
@@ -47,6 +53,8 @@
 | `AttendanceRepository.kt` | `features.attendance.domain.repository` | Attendance tracking SSOT | ✅ asLocalResult |
 | `StudentRepository.kt` | `features.student.domain.repository` | Student profile management | ✅ asLocalResult |
 | `BiometricRepository.kt` | `features.biometric.domain.repository` | Native face engine and assignment logic | ✅ asLocalResult |
+| `SessionRepository.kt` | `features.session.domain.repository` | Tiered session SSOT & management | ✅ asLocalResult |
+
 
 ---
 
@@ -65,6 +73,14 @@
 *   **Automatic Identity Healing:**
     1. `AccessSyncWorker` detects new biometrics without local Student profiles.
     2. Calls `StudentRepository.autoHealStudentIdentities` to fetch missing data from Firestore.
+*   **Session Tiering Resolution:**
+    1. Student scans barcode/face.
+    2. `GetActiveTieredSessionUseCase` fetches all sessions for the current day.
+    3. Hierarchy enforced: **GLOBAL > CLASS_WIDE > ACADEMIC**.
+    4. Deterministic tie-breaker: `startTime ASC` -> `sessionId ASC`.
+*   **Performance-Optimized Reporting:**
+    1. Attendance records are saved with denormalized `sessionType`.
+    2. `AttendanceRecordDao.getRecordsByTier` queries O(1) without JOINs.
 
 ## 🚨 Architectural Constraints (AI Safety)
 

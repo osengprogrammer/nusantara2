@@ -57,6 +57,12 @@ interface AttendanceRecordDao {
     @Query("SELECT COUNT(*) FROM check_in_records WHERE schoolId = :schoolId AND isSynced = 0")
     fun getUnsyncedRecordsCountFlow(schoolId: String): Flow<Int>
 
+    @Query("SELECT * FROM check_in_records WHERE schoolId = :schoolId AND sessionType = :sessionType ORDER BY timestamp DESC")
+    fun getRecordsByTier(schoolId: String, sessionType: String): Flow<List<AttendanceRecordEntity>>
+
+    @Query("SELECT COUNT(*) FROM check_in_records WHERE schoolId = :schoolId AND sessionType = :sessionType AND attendanceDate = :date")
+    fun getTierSummaryCount(schoolId: String, sessionType: String, date: LocalDate): Flow<Int>
+
     @Query(
         """
         SELECT * FROM check_in_records

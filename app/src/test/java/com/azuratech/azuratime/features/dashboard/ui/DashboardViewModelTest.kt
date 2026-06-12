@@ -15,6 +15,8 @@ import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
+import com.azuratech.azuratime.features.session.SessionRepository
+import com.azuratech.azuratime.features.session.GetActiveTieredSessionUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +46,9 @@ class DashboardViewModelTest {
     private lateinit var attendanceRepository: AttendanceRepository
     private lateinit var biometricRepository: BiometricRepository
     private lateinit var studentRepository: StudentRepository
+    private lateinit var sessionRepository: SessionRepository
     private lateinit var sessionManager: SessionManager
+    private lateinit var getActiveSessionUseCase: GetActiveTieredSessionUseCase
     private lateinit var database: AppDatabase
 
     private lateinit var viewModel: DashboardViewModel
@@ -69,8 +73,10 @@ class DashboardViewModelTest {
         attendanceRepository = mockk(relaxed = true)
         biometricRepository = mockk(relaxed = true)
         studentRepository = mockk(relaxed = true)
-        sessionManager = mockk(relaxed = true)
-        database = mockk(relaxed = true)
+        sessionRepository = mockk<SessionRepository>(relaxed = true)
+        sessionManager = mockk<SessionManager>(relaxed = true)
+        getActiveSessionUseCase = mockk<GetActiveTieredSessionUseCase>(relaxed = true)
+        database = mockk<AppDatabase>(relaxed = true)
 
         // Mock Session
         every { sessionManager.currentAccountIdFlow } returns MutableStateFlow(accountId).asStateFlow()
@@ -87,6 +93,10 @@ class DashboardViewModelTest {
         every { studentRepository.getStudentProfilesFlow() } returns flowOf(Result.Success(emptyList()))
         every { schoolRepository.observeGeofenceFlow(schoolId) } returns flowOf(null)
         every { sessionManager.isLoggingOutFlow } returns MutableStateFlow(false).asStateFlow()
+
+        // Mock Session Tiering
+        every { sessionRepository.getSessionsByDayFlow(any(), any()) } returns flowOf(Result.Success(emptyList()))
+        every { getActiveSessionUseCase(any(), any(), any()) } returns flowOf(Result.Success(null))
     }
 
     @After
@@ -170,7 +180,9 @@ class DashboardViewModelTest {
         attendanceRepository,
         biometricRepository,
         studentRepository,
+        sessionRepository,
         sessionManager,
+        getActiveSessionUseCase,
         database,
     )
 }

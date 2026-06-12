@@ -1,4 +1,4 @@
-# 📖 AzuraTime Semantic Vocabulary (v3.2.2-ai-native)
+# 📖 AzuraTime Semantic Vocabulary (v3.7.0-base)
 ⚡ *Mandatory semantic reference for all AI agents. Prevents domain ambiguity and terminology regression.*
 
 ## 🔹 Core Taxonomy
@@ -11,6 +11,8 @@
 | **Student** | The person being recorded or tracked in the system. | `StudentEntity`, `StudentRepository` |
 | **School** | A multi-tenant workspace/institution context. | `SchoolEntity`, `SchoolRepository` |
 | **Class** | A logical grouping of students within a school (e.g., "10-IPA-1"). | `ClassEntity`, `ClassDao` |
+| **Session** | A time-bound attendance event. Includes **Global**, **Class-Wide**, and **Academic** tiers. | `ClassSessionEntity`, `SessionType` |
+| **Subject** | An academic course (e.g., Mathematics) linked to Academic Sessions. | `SubjectEntity` |
 | **Biometric** | Face embeddings and native matching data. | `StudentBiometricEntity`, `BiometricRepository` |
 | **Assignment** | The many-to-many link between a Student and a Class. | `StudentClassAssignmentEntity` |
 | **Membership** | The link between an Account and a School workspace. | `SchoolMembership` (nested in `AccountEntity`) |
@@ -31,6 +33,10 @@
 - **Pull:** Unidirectional data flow from **Cloud (Firestore)** to **Local (Room)**.
 - **Push:** Unidirectional data flow from **Local (Room)** to **Cloud (Firestore)**.
 - **Sync:** Bidirectional reconciliation logic that ensures both sources match (typically involves a Pull followed by a conditional Push).
+
+### 4. Resolution Hierarchy
+- **Resolution Hierarchy:** The deterministic order of priority when multiple sessions overlap. Order: **GLOBAL > CLASS_WIDE > ACADEMIC**.
+- **Tie-Breaker:** The secondary logic when sessions have the same tier (e.g., `startTime ASC`).
 
 ---
 

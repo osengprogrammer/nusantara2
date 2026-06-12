@@ -32,6 +32,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
         buildConfigField("boolean", "ENABLE_SUBJECT_SESSION", "true")
+        buildConfigField("boolean", "ENABLE_BIOMETRIC_FALLBACK", "false")
         manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY") ?: ""
 
         externalNativeBuild {

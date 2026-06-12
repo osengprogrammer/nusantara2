@@ -4,6 +4,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
+import com.azuratech.azuratime.features.session.domain.model.SessionType
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -53,6 +54,9 @@ interface AttendanceRepository {
     suspend fun syncRecords(): Result<Unit>
     suspend fun resolveConflict(conflictId: String, useCloud: Boolean): Result<Unit>
     suspend fun processAttendance(params: ProcessAttendanceParams): Result<com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult>
+
+    fun getAttendanceByTierFlow(schoolId: String, sessionType: SessionType): Flow<Result<List<AttendanceRecordEntity>>>
+    fun getTierSummaryCountFlow(schoolId: String, sessionType: SessionType, date: LocalDate): Flow<Result<Int>>
 
     /**
      * 🔥 THE EXPORTER: Export raw attendance logs to CSV.

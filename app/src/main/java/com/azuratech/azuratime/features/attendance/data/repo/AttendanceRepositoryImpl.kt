@@ -13,21 +13,22 @@ import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEn
 import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSource
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
+import com.azuratech.azuratime.features.session.domain.model.SessionType
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.reporting.domain.repository.AuditLogRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 🏛️ ATTENDANCE REPOSITORY IMPLEMENTATION (v3.2.0-ai-native)
+ * 🏛️ ATTENDANCE REPOSITORY IMPLEMENTATION (v3.7.0-base)
  * Unified SSOT for check-in records and export engines.
+ * Supports tiered attendance resolution and reporting.
  */
 @Singleton
 class AttendanceRepositoryImpl @Inject constructor(
@@ -223,53 +224,32 @@ class AttendanceRepositoryImpl @Inject constructor(
             return@withContext Result.Success(Unit)
         }
 
-        // 1. PUSH PHASE: Upload local changes to cloud
+        // 1. PUSH PHASE
         try {
             val unsyncedResult = getUnsyncedRecords(schoolId)
             if (unsyncedResult is Result.Success) {
                 val records = unsyncedResult.data
-                if (records.isNotEmpty()) {
-                    android.util.Log.d("AttendanceRepo", "📤 Pushing ${records.size} unsynced records...")
-                    for (record in records) {
-                        val syncRes = syncRecord(record)
-                        if (syncRes is Result.Failure && syncRes.error is AppError.Network) {
-                            return@withContext Result.Failure(syncRes.error)
-                        }
-                    }
+                for (record in records) {
+                    syncRecord(record)
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AttendanceRepo", "❌ Error during push phase: ${e.message}")
+            android.util.Log.e("AttendanceRepo", "❌ Push error: ${e.message}")
         }
 
-        // 2. PULL PHASE: Delta sync from cloud to local
+        // 2. PULL PHASE
         val lastSync = sessionManager.getLastRecordsSyncTime()
-        android.util.Log.d("AttendanceRepo", "📥 Starting Pull Phase (lastSync: $lastSync)...")
-
         try {
             val syncResult = getRecordUpdates(schoolId, lastSync)
             if (syncResult is Result.Success) {
-                val remoteRecords = syncResult.data
-                if (remoteRecords.isNotEmpty()) {
-                    android.util.Log.i("AttendanceRepo", "✅ Pulled ${remoteRecords.size} records from Firestore.")
-
-                    // Bulk insert using DAO directly
-                    val entities = remoteRecords.map { AttendanceRecordEntity.fromDomain(it) }
-                    attendanceRecordDao.insertAll(entities)
-
-                    sessionManager.saveLastRecordsSyncTime()
-                    android.util.Log.d("AttendanceRepo", "💾 Successfully persisted ${entities.size} pulled records to Room.")
-                } else {
-                    android.util.Log.d("AttendanceRepo", "📭 No new records found in Firestore.")
-                }
+                val entities = syncResult.data.map { AttendanceRecordEntity.fromDomain(it) }
+                attendanceRecordDao.insertAll(entities)
+                sessionManager.saveLastRecordsSyncTime()
                 Result.Success(Unit)
             } else {
-                val error = (syncResult as Result.Failure).error
-                android.util.Log.e("AttendanceRepo", "❌ Pull failed: ${error.message}")
-                syncResult
+                syncResult as Result.Failure
             }
         } catch (e: Exception) {
-            android.util.Log.e("AttendanceRepo", "❌ Unexpected error during pull: ${e.message}")
             Result.Failure(AppError.Network(e.message))
         }
     }
@@ -280,12 +260,10 @@ class AttendanceRepositoryImpl @Inject constructor(
                 ?: return@withContext Result.Failure(AppError.BusinessRule("Conflict not found"))
 
             if (useCloud) {
-                // If cloud version is selected, overwrite local record and sync
                 val cloudEntity = conflict.cloud.copy(isSynced = true)
                 attendanceRecordDao.insert(cloudEntity)
                 remoteDataSource.syncRecord(cloudEntity)
             } else {
-                // If local version is selected, just trigger a sync to cloud
                 val localEntity = conflict.local.copy(isSynced = false)
                 attendanceRecordDao.update(localEntity)
                 val syncResult = remoteDataSource.syncRecord(localEntity)
@@ -305,12 +283,6 @@ class AttendanceRepositoryImpl @Inject constructor(
         try {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Failure(AppError.BusinessRule("School not selected"))
 
-            // 🔥 ATTENDANCE_DEBUG: Log context for diagnosis
-            android.util.Log.d("ATTENDANCE_DEBUG", "-----------------------------------------")
-            android.util.Log.d("ATTENDANCE_DEBUG", "Processing: ${params.studentName} (${params.studentId})")
-            android.util.Log.d("ATTENDANCE_DEBUG", "Active Session: ${params.activeClassId ?: "NONE (Free Scan)"}")
-            android.util.Log.d("ATTENDANCE_DEBUG", "Student Classes: ${params.studentClassIds}")
-
             val recordTimestamp = params.timestamp ?: System.currentTimeMillis()
             val logicalDate = java.time.Instant.ofEpochMilli(recordTimestamp)
                 .atZone(java.time.ZoneId.systemDefault())
@@ -327,60 +299,23 @@ class AttendanceRepositoryImpl @Inject constructor(
             if (latest != null) {
                 val timeDiff = recordTimestamp - latest.timestamp
                 if (timeDiff >= 0 && timeDiff < 600_000L) {
-                    android.util.Log.w("ATTENDANCE_DEBUG", "Deduplicated: Student already scanned ${timeDiff / 1000}s ago.")
                     return@withContext Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.AlreadyCheckedIn(params.studentName))
                 }
             }
 
-            // 2. 🔥 AI Native: Robust Class Resolution Hierarchy (V2 - Strict Comparison)
-            val studentClasses = params.studentClassIds.map { it.trim().lowercase() }
-            val selectedSessionId = params.activeClassId?.trim()?.lowercase()
-
-            // Exhaustive comparison logging
-            android.util.Log.d("ATTENDANCE_DEBUG", "Strict Check: Selected($selectedSessionId) against List($studentClasses)")
-            params.studentClassIds.forEachIndexed { index, id ->
-                val match = id.trim().lowercase() == selectedSessionId
-                android.util.Log.d("ATTENDANCE_DEBUG", "   [$index] '$id' -> Match: $match")
+            // 2. Class Resolution
+            val selectedClassId = params.activeClassId
+            val (resolvedClassId, resolvedClassName) = if (selectedClassId != null) {
+                val className = database.classDao().getClassById(selectedClassId)?.name ?: "Kelas"
+                selectedClassId to className
+            } else {
+                "UNASSIGNED" to "Scan Bebas"
             }
 
-            val (resolvedClassId, resolvedClassName) = when {
-                // CASE A: Student has NO registered classes
-                studentClasses.isEmpty() -> {
-                    android.util.Log.i("ATTENDANCE_DEBUG", "Result: CASE A - Unassigned Student -> Free Scan")
-                    "UNASSIGNED" to "Scan Bebas"
-                }
-
-                // CASE B1: No Session Selected (Free Scan Mode)
-                selectedSessionId.isNullOrBlank() -> {
-                    if (studentClasses.size == 1) {
-                        // Auto-assign ONLY if there is zero ambiguity
-                        val originalId = params.studentClassIds.first()
-                        val name = database.classDao().getClassById(originalId)?.name ?: "Kelas"
-                        android.util.Log.i("ATTENDANCE_DEBUG", "Result: CASE B1 - Auto-assign to single class: $name ($originalId)")
-                        originalId to name
-                    } else {
-                        // Multi-class students MUST go to Scan Bebas to avoid incorrect reporting
-                        android.util.Log.i("ATTENDANCE_DEBUG", "Result: CASE B1 - Multi-class Ambiguity -> Free Scan")
-                        "UNASSIGNED" to "Scan Bebas (Multi-Kelas)"
-                    }
-                }
-
-                // CASE B2: Session IS Selected by Account
-                else -> {
-                    // Search for original ID to maintain case sensitivity in DB
-                    val matchedOriginalId = params.studentClassIds.find { it.trim().lowercase() == selectedSessionId }
-
-                    if (matchedOriginalId != null) {
-                        val name = database.classDao().getClassById(matchedOriginalId)?.name ?: "Kelas"
-                        android.util.Log.i("ATTENDANCE_DEBUG", "Result: CASE B2 - Session Match: $name ($matchedOriginalId)")
-                        matchedOriginalId to name
-                    } else {
-                        // Fallback to Scan Bebas instead of Rejection to ensure record is saved
-                        android.util.Log.w("ATTENDANCE_DEBUG", "Result: CASE B2 - Session Mismatch -> Fallback Free Scan")
-                        "UNASSIGNED" to "Scan Bebas (Luar Sesi)"
-                    }
-                }
-            }
+            // 3. Session Tier Resolution
+            val sessionType = params.sessionId?.let { sid ->
+                database.sessionDao().getSessionById(sid)?.sessionType
+            } ?: SessionType.ACADEMIC
 
             val record = AttendanceRecord(
                 recordId = "rec_${System.currentTimeMillis()}",
@@ -390,6 +325,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                 classId = resolvedClassId,
                 className = resolvedClassName,
                 sessionId = params.sessionId,
+                sessionType = sessionType,
                 timestamp = recordTimestamp,
                 status = params.status,
                 accountEmail = params.accountEmail,
@@ -401,17 +337,21 @@ class AttendanceRepositoryImpl @Inject constructor(
                 schoolId = schoolId,
                 accountId = params.accountEmail,
                 action = "CHECK_IN",
-                details = "Student: ${params.studentName} assigned to $resolvedClassName",
+                details = "Student: ${params.studentName}",
             )
-
-            android.util.Log.d("ATTENDANCE_DEBUG", "Saved record for $resolvedClassName")
-            android.util.Log.d("ATTENDANCE_DEBUG", "-----------------------------------------")
 
             Result.Success(com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult.Success(params.studentName, "Berhasil Absen"))
         } catch (e: Exception) {
-            android.util.Log.e("ATTENDANCE_DEBUG", "FATAL ERROR: ${e.message}", e)
             Result.Failure(AppError.LocalDB(e.message))
         }
+    }
+
+    override fun getAttendanceByTierFlow(schoolId: String, sessionType: SessionType): Flow<Result<List<AttendanceRecordEntity>>> {
+        return attendanceRecordDao.getRecordsByTier(schoolId, sessionType.name).asLocalResult()
+    }
+
+    override fun getTierSummaryCountFlow(schoolId: String, sessionType: SessionType, date: LocalDate): Flow<Result<Int>> {
+        return attendanceRecordDao.getTierSummaryCount(schoolId, sessionType.name, date).asLocalResult()
     }
 
     override suspend fun exportLogs(records: List<AttendanceRecord>): Result<String> = withContext(Dispatchers.IO) {

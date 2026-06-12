@@ -21,6 +21,9 @@ import com.azuratech.azuratime.features.school.domain.repository.SchoolRepositor
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.core.util.isAdmin
 import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.features.session.GetActiveTieredSessionUseCase
+import com.azuratech.azuratime.features.session.SessionRepository
+import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -40,7 +43,9 @@ class DashboardViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
     private val biometricRepository: BiometricRepository,
     private val studentRepository: StudentRepository,
+    private val sessionRepository: SessionRepository,
     private val sessionManager: SessionManager,
+    private val getActiveSessionUseCase: GetActiveTieredSessionUseCase,
     private val database: AppDatabase,
 ) : ViewModel() {
 
@@ -157,6 +162,28 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
+    private val _activeSessionFlow = _activeSchoolIdFlow
+        .flatMapLatest { schoolId ->
+            if (schoolId != null) {
+                val dayOfWeek = java.time.LocalDate.now().dayOfWeek.value
+                getActiveSessionUseCase(schoolId, dayOfWeek)
+                    .map { it.getOrNull() }
+            } else {
+                flowOf(null)
+            }
+        }
+
+    private val _allSessionsTodayFlow = _activeSchoolIdFlow
+        .flatMapLatest { schoolId ->
+            if (schoolId != null) {
+                val dayOfWeek = java.time.LocalDate.now().dayOfWeek.value
+                sessionRepository.getSessionsByDayFlow(schoolId, dayOfWeek)
+                    .map { it.getOrNull() ?: emptyList() }
+            } else {
+                flowOf(emptyList())
+            }
+        }
+
     val uiStateFlow: StateFlow<DashboardUiState> = combine(
         _accountFlow,
         _recentRecordsFlow,
@@ -167,6 +194,8 @@ class DashboardViewModel @Inject constructor(
         _pendingRequestsCountFlow,
         _totalActiveStudentsFlow,
         _geofenceFlow,
+        _activeSessionFlow,
+        _allSessionsTodayFlow, // 🔥 Added
         sessionManager.isLoggingOutFlow,
         _refreshTriggerFlow,
     ) { params ->
@@ -189,7 +218,9 @@ class DashboardViewModel @Inject constructor(
         val pendingCount = params[6] as Int
         val totalActiveStudents = params[7] as Int
         val geofence = params[8] as com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity?
-        val isLoggingOut = params[9] as Boolean
+        val activeSession = params[9] as SessionWithDetails?
+        val allSessionsToday = params[10] as List<SessionWithDetails>
+        val isLoggingOut = params[11] as Boolean
 
         val activeSchoolId = activeSchool?.id
         val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
@@ -201,6 +232,8 @@ class DashboardViewModel @Inject constructor(
         DashboardUiState(
             account = account,
             currentSchool = activeSchool,
+            activeSession = activeSession, // 🔥 Unified Session
+            allSessionsToday = allSessionsToday, // 🔥 Fallback Picker
             recentRecords = recentRecords,
             sessionStudents = sessionStudents,
             assignedClasses = assignedClasses,
