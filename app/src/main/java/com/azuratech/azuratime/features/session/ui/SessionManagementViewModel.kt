@@ -57,6 +57,7 @@ class SessionManagementViewModel @Inject constructor(
         when (event) {
             is SessionManagementUiEvent.AddSubject -> addSubject(event.name, event.description)
             is SessionManagementUiEvent.DeleteSubject -> deleteSubject(event.subject)
+            is SessionManagementUiEvent.SelectTier -> _uiStateFlow.update { it.copy(selectedTier = event.tier) }
             is SessionManagementUiEvent.AddSession -> addSession(event)
             is SessionManagementUiEvent.DeleteSession -> deleteSession(event.session)
         }
@@ -93,6 +94,7 @@ class SessionManagementViewModel @Inject constructor(
             createSessionUseCase(
                 classId = event.classId,
                 subjectId = event.subjectId,
+                sessionType = event.sessionType,
                 supervisorEmail = supervisorEmail,
                 dayOfWeek = event.dayOfWeek,
                 startTime = event.startTime,

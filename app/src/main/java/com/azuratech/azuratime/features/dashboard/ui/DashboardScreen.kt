@@ -228,9 +228,14 @@ fun DashboardContent(
 
                 item {
                     ActiveSessionCard(
-                        allClasses = data.allClasses,
-                        activeClassId = account?.activeClassId,
-                        onSelectClass = onSelectClass,
+                        activeSession = data.activeSession,
+                        allSessionsToday = data.allSessionsToday,
+                        onStartAttendance = { sessionId ->
+                            navController.navigate(com.azuratech.azuratime.core.navigation.NavigationRoutes.ATTENDANCE_CAPTURE.replace("{sessionId}", sessionId))
+                        },
+                        onManualPick = {
+                            navController.navigate(Screen.SessionPicker.route)
+                        },
                     )
                 }
 

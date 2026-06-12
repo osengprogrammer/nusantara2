@@ -37,6 +37,8 @@ sealed class Screen(val route: String) {
     data object SessionManagement : Screen(NavigationRoutes.SESSION_MANAGEMENT)
     data object AttendanceMatrix : Screen(NavigationRoutes.ATTENDANCE_MATRIX)
     data object AttendanceHistory : Screen(NavigationRoutes.ATTENDANCE_HISTORY)
+    data object Attendance : Screen(NavigationRoutes.ATTENDANCE_MATRIX)
+    data object Reports : Screen(NavigationRoutes.ATTENDANCE_HISTORY)
     data object AuditLog : Screen(NavigationRoutes.AUDIT_LOG)
 
     // 🔥 PERBAIKAN BUG: Gunakan Uri.encode() untuk nama agar tidak crash jika ada karakter "/"
@@ -105,6 +107,7 @@ sealed class Screen(val route: String) {
 
     // --- 🤝 FOLLOWING & CONNECTIONS ---
     data object Following : Screen(NavigationRoutes.FOLLOWING)
+    data object Supervisors : Screen(NavigationRoutes.FOLLOWING)
 
     // --- 👑 ADMIN & MODERATION ---
     data object PendingSchools : Screen(NavigationRoutes.PENDING_SCHOOLS)

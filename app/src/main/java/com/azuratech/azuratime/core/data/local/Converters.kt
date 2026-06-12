@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import com.azuratech.azuratime.features.account.data.local.SchoolMembership
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
+import com.azuratech.azuratime.features.session.domain.model.SessionType
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.nio.ByteBuffer
@@ -91,4 +92,14 @@ class Converters {
 
     @TypeConverter
     fun toSyncStatus(value: String): SyncStatus = SyncStatus.valueOf(value)
+
+    @TypeConverter
+    fun fromSessionType(type: SessionType): String = type.name
+
+    @TypeConverter
+    fun toSessionType(value: String): SessionType = try {
+        SessionType.valueOf(value)
+    } catch (e: Exception) {
+        SessionType.ACADEMIC
+    }
 }

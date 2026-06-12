@@ -62,6 +62,7 @@ class SessionPickerViewModelTest {
                     startTime = "08:00",
                     endTime = "09:00",
                     schoolId = "school_123",
+                    lookupKey = "",
                 ),
                 subjectName = "Physics",
             ),

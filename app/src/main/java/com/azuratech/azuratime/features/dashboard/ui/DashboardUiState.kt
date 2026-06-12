@@ -6,11 +6,14 @@ import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 
 data class DashboardUiState(
     val isLoading: Boolean = false,
     val account: AccountEntity? = null,
     val currentSchool: School? = null,
+    val activeSession: SessionWithDetails? = null, // 🔥 v3.4.0 Smart Session
+    val allSessionsToday: List<SessionWithDetails> = emptyList(), // 🔥 Fallback Picker
     val assignedClasses: List<ClassModel> = emptyList(),
     val allClasses: List<ClassModel> = emptyList(),
     val recentRecords: List<AttendanceRecordEntity> = emptyList(),

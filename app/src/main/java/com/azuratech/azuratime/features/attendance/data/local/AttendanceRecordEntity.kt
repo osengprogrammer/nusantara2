@@ -8,6 +8,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
+import com.azuratech.azuratime.features.session.domain.model.SessionType
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,6 +32,7 @@ data class AttendanceRecordEntity(
     val classId: String? = null,
     val className: String? = null,
     @ColumnInfo(name = "sessionId", defaultValue = "") val sessionId: String = "",
+    val sessionType: SessionType = SessionType.ACADEMIC, // ✅ Denormalized Tier
     val isSynced: Boolean = false,
     val timestamp: Long = System.currentTimeMillis(),
 ) {
@@ -56,6 +58,7 @@ data class AttendanceRecordEntity(
             timestamp = timestamp,
             status = AttendanceStatus.fromCode(status),
             sessionId = sessionId,
+            sessionType = sessionType,
             isSynced = isSynced,
             accountEmail = accountEmail,
         )
@@ -76,6 +79,7 @@ data class AttendanceRecordEntity(
             "classId" to classId,
             "className" to className,
             "sessionId" to sessionId,
+            "sessionType" to sessionType.name,
             "timestamp" to FieldValue.serverTimestamp(),
             "createdAt" to timestamp,
             "isSynced" to true,
@@ -100,6 +104,7 @@ data class AttendanceRecordEntity(
                 classId = domain.classId,
                 className = domain.className,
                 sessionId = domain.sessionId ?: "",
+                sessionType = domain.sessionType,
                 isSynced = domain.isSynced,
                 timestamp = domain.timestamp,
             )
@@ -148,6 +153,13 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
             null
         }
 
+        val sessionTypeStr = getString("sessionType")
+        val parsedSessionType = try {
+            if (sessionTypeStr != null) SessionType.valueOf(sessionTypeStr) else SessionType.ACADEMIC
+        } catch (e: Exception) {
+            SessionType.ACADEMIC
+        }
+
         AttendanceRecordEntity(
             id = id,
             schoolId = getString("schoolId") ?: schoolId,
@@ -160,6 +172,7 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
             classId = getString("classId"),
             className = getString("className"),
             sessionId = getString("sessionId") ?: "",
+            sessionType = parsedSessionType,
             isSynced = true,
             timestamp = finalTimestamp,
         )

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  */
 data class SessionWithDetails(
     @Embedded val session: ClassSessionEntity,
-    val subjectName: String,
+    val subjectName: String? = null, // ✅ Nullable for non-academic sessions
     val className: String? = null, // Optional: Can be filled if we join with ClassEntity too
 )
 
@@ -17,12 +17,13 @@ interface SessionDao {
     /**
      * Returns sessions for a specific day with their subject details.
      * Uses lookupKey-style logic (dayOfWeek) for fast daily schedule queries.
+     * 🔥 AI Native: Uses LEFT JOIN to ensure GLOBAL/CLASS_WIDE sessions are visible.
      */
     @Query(
         """
         SELECT s.*, subj.name as subjectName 
         FROM class_sessions s 
-        INNER JOIN subjects subj ON s.subjectId = subj.subjectId 
+        LEFT JOIN subjects subj ON s.subjectId = subj.subjectId 
         WHERE s.schoolId = :schoolId AND s.dayOfWeek = :day AND s.isActive = 1
         ORDER BY s.startTime ASC
     """,
@@ -39,7 +40,7 @@ interface SessionDao {
         """
         SELECT s.*, subj.name as subjectName 
         FROM class_sessions s 
-        INNER JOIN subjects subj ON s.subjectId = subj.subjectId 
+        LEFT JOIN subjects subj ON s.subjectId = subj.subjectId 
         WHERE s.schoolId = :schoolId AND s.isActive = 1
         ORDER BY s.dayOfWeek ASC, s.startTime ASC
     """,

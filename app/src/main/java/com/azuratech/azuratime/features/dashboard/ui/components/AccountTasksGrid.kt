@@ -11,10 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.azuratech.azuratime.BuildConfig
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -82,40 +86,50 @@ fun AccountTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "Attendance Matrix",
+                    stringResource(R.string.dashboard_attendance),
                     Icons.Default.GridView,
                     MaterialTheme.colorScheme.tertiary,
-                    { navController.navigate(Screen.AttendanceMatrix.route) },
+                    { navController.navigate(Screen.Attendance.route) },
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Reports",
+                    stringResource(R.string.dashboard_reports),
                     Icons.Default.Assessment,
                     MaterialTheme.colorScheme.error,
-                    { navController.navigate(Screen.AttendanceHistory.route) },
+                    { navController.navigate(Screen.Reports.route) },
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
-                if (BuildConfig.ENABLE_SUBJECT_SESSION) {
+            }
+
+            // 🔥 Row 2b: Session & Supervisor Management
+            if (BuildConfig.ENABLE_SUBJECT_SESSION) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+                ) {
                     DashboardActionCard(
-                        "Subject Sessions",
+                        stringResource(R.string.dashboard_subjects),
                         Icons.Default.Schedule,
                         MaterialTheme.colorScheme.primary,
-                        { navController.navigate(Screen.SessionPicker.route) },
-                        modifier = Modifier.weight(1f),
-                        enabled = isEnabled,
-                    )
-                }
-                if (isAdmin && BuildConfig.ENABLE_SUBJECT_SESSION) {
-                    DashboardActionCard(
-                        "Manage Sessions",
-                        Icons.Default.EditCalendar,
-                        MaterialTheme.colorScheme.secondary,
                         { navController.navigate(Screen.SessionManagement.route) },
                         modifier = Modifier.weight(1f),
                         enabled = isEnabled,
                     )
+                    if (isAdmin) {
+                        DashboardActionCard(
+                            stringResource(R.string.dashboard_supervisors),
+                            Icons.Default.EditCalendar,
+                            MaterialTheme.colorScheme.secondary,
+                            { navController.navigate(Screen.Supervisors.route) },
+                            modifier = Modifier.weight(1f),
+                            enabled = isEnabled,
+                        )
+                    } else {
+                        // Spacer to keep grid balanced for non-admins
+                        Spacer(Modifier.weight(1f))
+                    }
                 }
             }
         }
@@ -244,6 +258,9 @@ fun DashboardActionCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }

@@ -45,6 +45,7 @@ class SessionRepositoryTest {
                     startTime = "08:00",
                     endTime = "09:00",
                     schoolId = schoolId,
+                    lookupKey = "",
                 ),
                 subjectName = "Math",
             ),
@@ -73,6 +74,7 @@ class SessionRepositoryTest {
             startTime = "08:00",
             endTime = "09:00",
             schoolId = "school_123",
+            lookupKey = "",
         )
         coEvery { dao.getSessionById(sessionId) } returns mockSession
         every { sessionManager.getAccountEmail() } returns email
@@ -98,6 +100,7 @@ class SessionRepositoryTest {
             startTime = "08:00",
             endTime = "09:00",
             schoolId = "school_123",
+            lookupKey = "",
         )
         coEvery { dao.getSessionById(sessionId) } returns mockSession
         every { sessionManager.getAccountEmail() } returns "test@azura.com"

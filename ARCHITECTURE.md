@@ -1,4 +1,4 @@
-# 🏗️ AzuraTime Architecture Guide (v3.2.2-ai-native)
+# 🏗️ AzuraTime Architecture Guide (v3.7.0-base)
 
 ## 🤖 AI Prime Directives
 These directives are **absolute mandates** for all AI development within this codebase. They govern system predictability, state integrity, and codebase consistency.
@@ -30,6 +30,7 @@ To ensure codebase consistency and maximize AI comprehension speed, the followin
 - **Account**: The unified identity model. Replaces legacy "User" and "Staff" variant terminology.
 - **Supervisor**: An Account with management access to specific classes (formerly "Teacher").
 - **Admin**: An Account with full management rights for a School.
+- **Session**: A time-bound attendance event. Tiers: **Global** (School-wide), **Class-Wide** (Homeroom), and **Academic** (Subject-specific).
 - **Student**: Refers to the person being recorded/tracked.
 - **Biometric**: Refers to face embeddings and enrollment data.
 - **Assignment**: The link between a Student and a Class.
@@ -67,6 +68,11 @@ To ensure robust student-to-class assignments across offline/online cycles:
 2. **Cloud Source**: Primary source is `studentIds` array in Firestore **Class** documents.
 3. **Cloud Fallback**: Secondary source is `classIds` array in Firestore **Student** documents.
 4. **Push Rule**: When pushing profiles, the full list of assignments must be fetched from the DAO to prevent partial overwrites.
+
+### 📊 Performance-Optimized Denormalization
+To ensure high-performance reporting for tiered sessions:
+1. **Denormalized sessionType**: The `sessionType` is stored directly in the `check_in_records` table.
+2. **JOIN-Free Queries**: Reporting filters by tier use O(1) indexed lookups instead of expensive multi-table JOINs.
 
 ### 🔄 Sync Engine Protocols (Atomic Reconciliation)
 To guarantee robust data reconciliation and offline-first durability in extremely low-connectivity environments:
@@ -120,6 +126,7 @@ app/src/main/java/com/azuratech/azuratime/
 │   ├── biometric/      # Enrollment, Matching, Face Local DB
 │   ├── dashboard/      # Unified Admin/Supervisor Landing
 │   ├── reporting/      # Audit Logs, CSV/PDF Export
+│   ├── session/        # 📅 Tiered Session & Subject Management
 │   └── student/        # Roster, Forms, Assignments
 ```
 
@@ -169,6 +176,7 @@ If an Account has the `SUPERVISOR` role but no classes assigned:
 ### Version History
 | Version | Date | Description | Contributor |
 | :--- | :--- | :--- | :--- |
+| 3.7.0 | 2026-06-12 | Session Tiering System, Resolution Hierarchy, denormalized sessionType | Gemini CLI |
 | 3.2.2 | 2026-06-08 | AI Prime Directives, Explicit Error Handling, Feature Boundaries, Boot State Machine | Gemini CLI |
 | 3.2.1 | 2026-06-05 | English-First Policy, Effect-Driven MVI, Hybrid Sync | Gemini CLI |
 | 1.0 | 2026-05-12 | Initial VSA Architecture Release | Gemini CLI |
