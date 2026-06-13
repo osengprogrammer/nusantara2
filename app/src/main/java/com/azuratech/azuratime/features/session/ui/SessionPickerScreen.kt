@@ -107,13 +107,18 @@ fun SessionItem(
             )
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
             Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = session.subjectName ?: session.session.sessionType.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    Spacer(Modifier.width(AzuraSpacing.sm))
+                    TierBadge(session.session.sessionType)
+                }
                 Text(
-                    text = session.subjectName ?: session.session.sessionType.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "${session.session.startTime} - ${session.session.endTime}",
+                    text = "${getDayName(session.session.dayOfWeek)} | ${session.session.startTime} - ${session.session.endTime}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -121,6 +126,7 @@ fun SessionItem(
                     Text(
                         text = stringResource(R.string.class_label, session.className),
                         style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
