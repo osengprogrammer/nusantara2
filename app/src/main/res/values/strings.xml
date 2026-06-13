@@ -29,4 +29,10 @@
    <string name="dashboard_reports">Reports</string>
    <string name="dashboard_subjects">Subjects</string>
    <string name="dashboard_supervisors">Supervisors</string>
+
+   <!-- 📸 ATTENDANCE CAPTURE -->
+   <string name="searching_for_face">Searching for Face...</string>
+   <string name="please_blink">Please Blink</string>
+   <string name="blink_detected">Blink Detected!</string>
+   <string name="eyes_closed">Eyes Closed...</string>
    </resources>
