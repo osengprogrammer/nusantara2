@@ -21,6 +21,13 @@ fun NavGraphBuilder.reportingGraph(
                 },
             )
         }
+        composable(NavigationRoutes.ATTENDANCE_HISTORY) {
+            com.azuratech.azuratime.features.attendance.ui.AttendanceScreen(
+                onNavigateBack = { navController.popBackStack() },
+                viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                accountViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+            )
+        }
         composable(
             route = NavigationRoutes.DAILY_DETAIL,
             arguments = listOf(
