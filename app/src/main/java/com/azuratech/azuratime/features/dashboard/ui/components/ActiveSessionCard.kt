@@ -15,9 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
-
-import androidx.compose.foundation.shape.CircleShape
-import com.azuratech.azuratime.features.session.domain.model.SessionType
+import com.azuratech.azuratime.features.session.ui.TierBadge
 
 /**
  * 🚀 SMART SESSION CARD (v3.7.0)
@@ -157,27 +155,5 @@ fun ActiveSessionCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-fun TierBadge(type: SessionType) {
-    val (color, label) = when (type) {
-        SessionType.ACADEMIC -> MaterialTheme.colorScheme.primary to "Academic"
-        SessionType.CLASS_WIDE -> MaterialTheme.colorScheme.secondary to "Class"
-        SessionType.GLOBAL -> MaterialTheme.colorScheme.tertiary to "Global"
-    }
-    Surface(
-        color = color.copy(alpha = 0.1f),
-        shape = CircleShape,
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f)),
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            fontWeight = FontWeight.Bold,
-        )
     }
 }

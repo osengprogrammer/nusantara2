@@ -33,12 +33,10 @@ When a student scans their barcode/face, the system resolves the active session 
 
 ## 🛠️ Implementation Details
 
-### MVI UI Strategy
-*   `SessionManagementScreen` uses dynamic forms.
-*   `AddSessionDialog` adapts based on `SessionType`:
-    *   Academic: Shows Subject & Class.
-    *   Class-Wide: Shows Class only.
-    *   Global: Hides both (inherits school context).
+### Session Selection (Picker)
+*   **Today's Resolution**: Dashboard automatically resolves the active session for the current day/time.
+*   **Manual Selection**: The `SessionPickerScreen` provides a full view of **ALL** scheduled sessions for the school, sorted by day and time. This ensures supervisors can pick sessions for makeup classes or early starts regardless of the current day.
+*   **Visual Cues**: Each session in the picker displays its **Day Name**, **Time Range**, and **Tier Badge** for unambiguous selection.
 
 ### Reporting
 *   New DAO methods: `getRecordsByTier` and `getTierSummaryCount`.

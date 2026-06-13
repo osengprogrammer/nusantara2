@@ -4,16 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.session.GetSessionsByDayUseCase
+import com.azuratech.azuratime.features.session.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class SessionPickerViewModel @Inject constructor(
-    private val getSessionsByDayUseCase: GetSessionsByDayUseCase,
+    private val sessionRepository: SessionRepository,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
@@ -41,12 +40,11 @@ class SessionPickerViewModel @Inject constructor(
     }
 
     private fun loadSessions(schoolId: String) {
-        val dayOfWeek = LocalDate.now().dayOfWeek.value // 1-7
-
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
 
-            getSessionsByDayUseCase(schoolId, dayOfWeek).collect { result ->
+            // 🔥 AI Native: Show ALL sessions in manual picker to prevent "empty list" confusion
+            sessionRepository.observeAllSessionsFlow(schoolId).collect { result ->
                 when (result) {
                     is Result.Success -> {
                         _uiStateFlow.update {
