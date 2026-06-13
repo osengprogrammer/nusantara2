@@ -49,7 +49,7 @@ fun CoreFaceCamera(
         val previewView = remember {
             PreviewView(context).apply {
                 scaleType = PreviewView.ScaleType.FILL_CENTER
-                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                implementationMode = PreviewView.ImplementationMode.PERFORMANCE
             }
         }
 

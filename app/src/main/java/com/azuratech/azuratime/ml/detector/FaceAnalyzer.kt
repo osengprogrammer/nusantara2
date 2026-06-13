@@ -194,5 +194,6 @@ class FaceAnalyzer(
 
     fun close() {
         detector.close()
+        analyzerScope.cancel() // 🔥 Stop background processing immediately
     }
 }
