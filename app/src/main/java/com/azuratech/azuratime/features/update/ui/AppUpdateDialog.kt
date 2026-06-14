@@ -52,7 +52,7 @@ fun AppUpdateDialog(
                     if (state.downloadProgress > 0f && state.downloadProgress < 1f) {
                         Spacer(modifier = Modifier.height(8.dp))
                         LinearProgressIndicator(
-                            progress = state.downloadProgress,
+                            progress = { state.downloadProgress },
                             modifier = Modifier.fillMaxWidth(),
                             strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
                         )

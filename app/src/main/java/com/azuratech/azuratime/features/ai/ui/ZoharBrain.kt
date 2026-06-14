@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.ai.ui
 
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.RequestOptions
 import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,6 +15,18 @@ data class ZoharResponse(
     val details: String? = null,
 )
 
+/**
+ * 🛠️ GRPC ERROR MODEL
+ * Used to handle structured error responses from Gemini API.
+ */
+@Serializable
+data class GRpcError(
+    val code: Int? = null,
+    val message: String? = null,
+    val status: String? = null,
+    val details: kotlinx.serialization.json.JsonElement? = null,
+)
+
 // 🔥 Konfigurasi Json agar tidak "rewel" terhadap field tambahan atau yang hilang
 val json = Json {
     ignoreUnknownKeys = true
@@ -25,8 +38,9 @@ class ZoharBrain(apiKey: String) {
 
     // Konfigurasi "Kepribadian" Zohar
     private val model = GenerativeModel(
-        modelName = "gemini-2.5-flash-lite",
+        modelName = "gemini-2.5-flash",
         apiKey = apiKey,
+        requestOptions = RequestOptions(apiVersion = "v1beta"),
         systemInstruction = content {
             text(
                 """
@@ -47,7 +61,7 @@ class ZoharBrain(apiKey: String) {
     suspend fun think(prompt: String): String = withContext(Dispatchers.IO) {
         try {
             val response = model.generateContent(prompt)
-            val responseText = response.text ?: return@withContext "Maaf Brother, Zohar sedang merenung. Coba tanya lagi nanti."
+            val responseText = response.text ?: return@withContext "AI service temporarily unavailable. Please try again later."
 
             // Mencoba mendeteksi jika response adalah JSON (opsional, sesuai kebutuhan account)
             if (responseText.trim().startsWith("{")) {
@@ -61,7 +75,8 @@ class ZoharBrain(apiKey: String) {
                 responseText
             }
         } catch (e: Exception) {
-            "Zohar mendeteksi gangguan sinyal: ${e.localizedMessage}"
+            android.util.Log.e("ZoharBrain", "AI Error: ${e.message}", e)
+            "AI service temporarily unavailable. Please try again later."
         }
     }
 }

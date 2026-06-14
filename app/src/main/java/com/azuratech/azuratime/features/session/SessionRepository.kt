@@ -45,4 +45,14 @@ interface SessionRepository {
      * 🔥 RBAC: Validates if the current supervisor has access to the session.
      */
     suspend fun validateSessionAccess(sessionId: String): Result<Boolean>
+
+    /**
+     * 🔥 Sync Engine: Synchronize subjects between local and remote.
+     */
+    suspend fun syncSubjects(): Result<Unit>
+
+    /**
+     * 🔥 Sync Engine: Synchronize sessions between local and remote.
+     */
+    suspend fun syncSessions(): Result<Unit>
 }

@@ -30,6 +30,10 @@ class AiMusicRepositoryImpl @Inject constructor(
 
     override suspend fun getSuggestions(mood: String?, region: String?): Result<List<TraditionalMusicTrack>> {
         return try {
+            // Fetch from AI API
+            val aiSuggestions = api.fetchSuggestions(mood, region)
+
+            // Fallback to local dataset if AI fails or returns empty
             var filtered = trackDataset
 
             if (!region.isNullOrBlank()) {
@@ -40,16 +44,13 @@ class AiMusicRepositoryImpl @Inject constructor(
                 filtered = filtered.filter { it.mood.contains(mood, ignoreCase = true) }
             }
 
-            val result = if (filtered.isEmpty()) {
-                trackDataset.shuffled().take(3)
-            } else {
-                filtered.shuffled()
-            }
+            val result = (aiSuggestions + filtered).distinctBy { it.name }.shuffled()
+            val finalResult = result.ifEmpty { trackDataset.shuffled().take(3) }
 
             // Save to local for offline support
-            result.forEach { saveTrack(it) }
+            finalResult.forEach { saveTrack(it) }
 
-            Result.Success(result)
+            Result.Success(finalResult)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
         }

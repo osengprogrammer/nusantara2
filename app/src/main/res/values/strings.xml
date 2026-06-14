@@ -35,4 +35,10 @@
    <string name="please_blink">Please Blink</string>
    <string name="blink_detected">Blink Detected!</string>
    <string name="eyes_closed">Eyes Closed...</string>
+
+   <!-- 🤖 ZOHAR AI -->
+   <string name="gemini_api_key_missing">Gemini API Key is not set in local.properties. Please configure it to enable Zohar.</string>
+   <string name="zohar_no_data">No attendance data available for analysis today. Keep up the spirit and remind supervisors to scan students!</string>
+   <string name="zohar_thinking_error">Zohar is currently reflecting on the code. Please try again later.</string>
+   <string name="zohar_signal_interference">Zohar detected signal interference: %s</string>
    </resources>

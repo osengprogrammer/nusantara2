@@ -129,9 +129,6 @@ fun NavGraphBuilder.managementGraph(
         ) {
             ClassManagementScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onClassSelected = { id, name ->
-                    navController.navigate(Screen.ClassDetail.createRoute(id, name))
-                },
             )
         }
         composable(
@@ -140,9 +137,6 @@ fun NavGraphBuilder.managementGraph(
         ) {
             ClassManagementScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onClassSelected = { id, name ->
-                    navController.navigate(Screen.ClassDetail.createRoute(id, name))
-                },
             )
         }
         composable(

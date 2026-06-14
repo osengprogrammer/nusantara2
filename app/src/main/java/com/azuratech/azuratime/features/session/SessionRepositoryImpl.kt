@@ -4,16 +4,22 @@ import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 import com.azuratech.azuratime.features.session.data.local.SessionDao
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 import com.azuratech.azuratime.features.session.data.local.SubjectEntity
+import com.azuratech.azuratime.features.session.data.remote.SessionRemoteDataSource
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SessionRepositoryImpl @Inject constructor(
     private val sessionDao: SessionDao,
     private val sessionManager: SessionManager,
+    private val remoteDataSource: SessionRemoteDataSource,
+    private val syncManager: SyncManager,
 ) : SessionRepository {
 
     override fun getSessionsByDayFlow(schoolId: String, day: Int): Flow<Result<List<SessionWithDetails>>> {
@@ -35,7 +41,8 @@ class SessionRepositoryImpl @Inject constructor(
 
     override suspend fun saveSession(session: ClassSessionEntity): Result<Unit> {
         return try {
-            sessionDao.insertSession(session)
+            sessionDao.insertSession(session.copy(isSynced = false))
+            syncManager.enqueueSync()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message ?: "Failed to save session"))
@@ -44,7 +51,8 @@ class SessionRepositoryImpl @Inject constructor(
 
     override suspend fun saveSubject(subject: SubjectEntity): Result<Unit> {
         return try {
-            sessionDao.insertSubject(subject)
+            sessionDao.insertSubject(subject.copy(isSynced = false))
+            syncManager.enqueueSync()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message ?: "Failed to save subject"))
@@ -54,6 +62,7 @@ class SessionRepositoryImpl @Inject constructor(
     override suspend fun softDeleteSession(sessionId: String): Result<Unit> {
         return try {
             sessionDao.softDeleteSession(sessionId)
+            syncManager.enqueueSync()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message ?: "Failed to soft delete session"))
@@ -71,6 +80,7 @@ class SessionRepositoryImpl @Inject constructor(
                 Result.Failure(AppError.BusinessRule("Cannot delete subject with active sessions."))
             } else {
                 sessionDao.deleteSubject(subject)
+                syncManager.enqueueSync()
                 Result.Success(Unit)
             }
         } catch (e: Exception) {
@@ -109,6 +119,66 @@ class SessionRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message ?: "Validation error"))
+        }
+    }
+
+    override suspend fun syncSubjects(): Result<Unit> = withContext(Dispatchers.IO) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Success(Unit)
+
+        // 1. PUSH: Unsynced local subjects to Remote
+        try {
+            val unsynced = sessionDao.getUnsyncedSubjects(schoolId)
+            for (subject in unsynced) {
+                val pushResult = remoteDataSource.syncSubject(subject)
+                if (pushResult is Result.Success) {
+                    sessionDao.insertSubject(subject.copy(isSynced = true))
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SessionRepo", "❌ Push Subjects failed: ${e.message}")
+        }
+
+        // 2. PULL: Remote subjects to Local
+        try {
+            val remoteResult = remoteDataSource.getSubjectUpdates(schoolId)
+            if (remoteResult is Result.Success) {
+                sessionDao.insertSubjects(remoteResult.data)
+                Result.Success(Unit)
+            } else {
+                remoteResult as Result.Failure
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun syncSessions(): Result<Unit> = withContext(Dispatchers.IO) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: return@withContext Result.Success(Unit)
+
+        // 1. PUSH: Unsynced local sessions to Remote
+        try {
+            val unsynced = sessionDao.getUnsyncedSessions(schoolId)
+            for (session in unsynced) {
+                val pushResult = remoteDataSource.syncSession(session)
+                if (pushResult is Result.Success) {
+                    sessionDao.insertSession(session.copy(isSynced = true))
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SessionRepo", "❌ Push Sessions failed: ${e.message}")
+        }
+
+        // 2. PULL: Remote sessions to Local
+        try {
+            val remoteResult = remoteDataSource.getSessionUpdates(schoolId)
+            if (remoteResult is Result.Success) {
+                sessionDao.insertSessions(remoteResult.data)
+                Result.Success(Unit)
+            } else {
+                remoteResult as Result.Failure
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
         }
     }
 }

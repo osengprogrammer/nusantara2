@@ -1,14 +1,14 @@
 #!/bin/bash
-# 🛡️ Azura Time — Safe & Verified Deploy Pipeline (v2.5 Low-RAM Optimized)
+# 🛡️ Azura Time — Tag-Based Deploy Pipeline (v3.0)
 # =============================================================================
 # Usage: 
 #   ./deploy.sh                          # Build with current version
-#   ./deploy.sh --bump                   # Auto-bump versionCode +1
-#   ./deploy.sh --bump 3.8.0             # Bump to specific versionName
-#   ./deploy.sh "Release Notes"          # Build with specific notes
+#   ./deploy.sh --bump                   # Auto-bump versionCode +1, create tag
+#   ./deploy.sh --bump 3.8.0             # Bump to specific versionName, create tag
+#   ./deploy.sh "Release Notes"          # Build with specific notes (no tag)
 # =============================================================================
 
-set -e  # Stop on error (Safer)
+set -e  # Stop on error
 
 GRADLE_FILE="app/build.gradle.kts"
 
@@ -29,20 +29,17 @@ bump_version() {
     
     echo "📈 Bumping version: $VERSION_NAME ($VERSION_CODE) → $new_name ($new_code)"
 
-    # Update Gradle file
     sed -i -E "s/versionCode\s*=\s*$VERSION_CODE/versionCode = $new_code/" "$GRADLE_FILE"
     if [[ -n "$target_name" ]]; then
         sed -i "s/versionName\s*=\s*\"$VERSION_NAME\"/versionName = \"$new_name\"/" "$GRADLE_FILE"
     fi
 
-    # Update variables for the rest of the script
     VERSION_CODE=$new_code
     VERSION_NAME=$new_name
 
-    # Auto-commit bump
     if git rev-parse --git-dir > /dev/null 2>&1; then
         git add "$GRADLE_FILE"
-        git commit -m "chore(release): bump to $VERSION_NAME ($VERSION_CODE)" --no-verify 2>/dev/null || true
+        git commit -m "chore(release): bump to $VERSION_NAME ($VERSION_CODE)" --no-verify
     fi
 }
 
@@ -51,7 +48,6 @@ bump_version() {
 # =============================================================================
 BUMP_MODE=false
 TARGET_NAME=""
-RELEASE_NOTES="MVI ✅, FCM ✅, Theme ✅ — Automated deploy"
 
 if [[ "$1" == "--bump" ]]; then
     BUMP_MODE=true
@@ -63,9 +59,23 @@ if [[ "$1" == "--bump" ]]; then
     bump_version "$TARGET_NAME"
 else
     extract_version
-    if [[ -n "$1" ]]; then
-        RELEASE_NOTES="$1"
-    fi
+fi
+
+# Version-aware release notes
+if [[ -n "$1" ]]; then
+    RELEASE_NOTES="$1"
+else
+    case "$VERSION_NAME" in
+        3.7.*)
+            RELEASE_NOTES="🎓 Session Tiering (Academic/Class/Global) • 🧠 Smart Resolution Hierarchy • 📊 Denormalized Reporting • 🤖 Zohar AI (gemini-2.5-flash)"
+            ;;
+        3.14.*)
+            RELEASE_NOTES="🛡️ Production Hygiene & Build Warning Cleanup • 🧹 Room Entity Hardening • 🚀 Hardened Deployment Pipeline"
+            ;;
+        *)
+            RELEASE_NOTES="🛡️ Bug fixes & performance improvements"
+            ;;
+    esac
 fi
 
 # =============================================================================
@@ -78,7 +88,28 @@ echo "🚀 Azura Time v${VERSION_NAME} (${VERSION_CODE})"
 echo "   Notes: ${RELEASE_NOTES}"
 echo "=================================================="
 
-# === 1. BUILD (Low-RAM Optimized) ===
+# === TAG-BASED DEPLOYMENT (CI-First Mode) ===
+if [[ "$BUMP_MODE" == true ]]; then
+    echo "🏷️  Creating tag v${VERSION_NAME}..."
+    git tag -a "v${VERSION_NAME}" -m "Release v${VERSION_NAME}: ${RELEASE_NOTES}"
+    
+    echo "📤 Pushing to main and tags..."
+    if git push origin main --tags 2>&1; then
+        echo ""
+        echo "✅ Tag v${VERSION_NAME} created and pushed!"
+        echo "🔗 GitHub Actions will now build and deploy."
+        echo "📊 Monitor: https://github.com/$GITHUB_REPO/actions"
+        echo ""
+        echo "📋 After CI completes, update docs/version.json manually if needed:"
+        echo "   ./update_version_json.sh v${VERSION_NAME}"
+        exit 0
+    else
+        echo "❌ Tag push failed. Check network/permissions."
+        exit 1
+    fi
+fi
+
+# === LOCAL BUILD (Manual / Testing Mode) ===
 echo "🔨 Building APK (Low-RAM Mode)..."
 ./gradlew :app:assembleRelease --no-daemon -Dorg.gradle.workers.max=1 --quiet
 if [ $? -ne 0 ]; then
@@ -86,7 +117,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# === 2. FIND APK ===
+# === FIND APK ===
 APK_PATH=$(find "$APK_DIR" -name "*universal*.apk" -type f 2>/dev/null | head -n 1)
 [ -z "$APK_PATH" ] && APK_PATH=$(find "$APK_DIR" -name "*.apk" -type f ! -name "*unaligned*" 2>/dev/null | head -n 1)
 if [ -z "$APK_PATH" ]; then
@@ -95,11 +126,11 @@ if [ -z "$APK_PATH" ]; then
 fi
 APK_NAME=$(basename "$APK_PATH")
 
-# === 3. INTEGRITY CHECK ===
+# === INTEGRITY CHECK ===
 SHA=$(sha256sum "$APK_PATH" | awk '{print $1}')
 echo "🔐 SHA256: $SHA"
 
-# === 4. GITHUB UPLOAD ===
+# === GITHUB UPLOAD ===
 echo "📤 Uploading to GitHub Releases (v${VERSION_NAME})..."
 if gh release view "v${VERSION_NAME}" >/dev/null 2>&1; then
     gh release upload "v${VERSION_NAME}" "$APK_PATH" --clobber
@@ -107,7 +138,7 @@ else
     gh release create "v${VERSION_NAME}" --title "Azura Time v${VERSION_NAME}" --notes "$RELEASE_NOTES" "$APK_PATH"
 fi
 
-# === 5. UPDATE VERSION.JSON ===
+# === UPDATE VERSION.JSON (Local build only) ===
 echo "🌐 Updating docs/version.json..."
 mkdir -p docs
 cat > docs/version.json << EOF
@@ -122,8 +153,13 @@ cat > docs/version.json << EOF
 EOF
 
 git add docs/version.json
-git commit -m "chore: update version.json to v${VERSION_NAME}" 2>/dev/null || true
-git push origin main 2>/dev/null || true
+if git commit -m "chore: update version.json to v${VERSION_NAME}" 2>/dev/null; then
+    if git push origin main 2>&1; then
+        echo "✅ GitHub Pages updated: https://osengprogrammer.github.io/nusantara2/version.json"
+    else
+        echo "⚠️  Git push failed. version.json committed locally but not pushed."
+        echo "   Manual push: git push origin main"
+    fi
+fi
 
-echo "✅ GitHub Pages updated: https://osengprogrammer.github.io/nusantara2/version.json"
 echo "🎉 DEPLOY COMPLETE."

@@ -15,6 +15,7 @@ import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRep
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.azuratech.azuratime.features.session.SessionRepository
 
 /**
  * 🛡️ THE INVISIBLE GUARDRAIL: Persistent Background Sync
@@ -31,6 +32,7 @@ class SyncWorker @AssistedInject constructor(
     private val studentRepository: StudentRepository,
     private val attendanceRepository: AttendanceRepository,
     private val accountRepository: AccountRepository,
+    private val sessionRepository: SessionRepository,
     private val sessionManager: SessionManager,
 ) : CoroutineWorker(context, workerParams) {
 
@@ -49,7 +51,19 @@ class SyncWorker @AssistedInject constructor(
             return handleSyncError(assignmentsResult.error, "Assignments")
         }
 
-        // 3. Sync Attendance Records (Cloud <-> Local)
+        // 3. Sync Subjects (Cloud <-> Local)
+        val subjectsResult = sessionRepository.syncSubjects()
+        if (subjectsResult is com.azuratech.azuraengine.result.Result.Failure) {
+            return handleSyncError(subjectsResult.error, "Subjects")
+        }
+
+        // 4. Sync Sessions (Cloud <-> Local)
+        val sessionsResult = sessionRepository.syncSessions()
+        if (sessionsResult is com.azuratech.azuraengine.result.Result.Failure) {
+            return handleSyncError(sessionsResult.error, "Sessions")
+        }
+
+        // 5. Sync Attendance Records (Cloud <-> Local)
         val recordsResult = attendanceRepository.syncRecords()
         if (recordsResult is com.azuratech.azuraengine.result.Result.Failure) {
             return handleSyncError(recordsResult.error, "Records")
