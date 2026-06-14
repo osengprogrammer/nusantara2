@@ -15,18 +15,20 @@ import com.azuratech.azuratime.ml.utils.FaceGeometryUtils
 import com.azuratech.azuratime.ml.utils.ImageConversionUtils
 import com.azuratech.azuratime.ml.recognizer.FaceRecognizer
 import com.azuratech.azuratime.ml.recognizer.FacePreprocessor
-import com.azuratech.azuratime.core.ml.model.IndividualRecognition
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FaceAnalyzer(
     private val isFrontCamera: Boolean = true,
     private val bypassLiveness: Boolean = false,
     private val onFaceEmbedding: (Rect, FloatArray) -> Unit,
-    private val onBatchFaceEmbedding: ((List<IndividualRecognition>) -> Unit)? = null,
     private val onFaceCaptured: ((Bitmap) -> Unit)? = null,
     private val onLivenessStatus: (String) -> Unit,
 ) : ImageAnalysis.Analyzer {
@@ -94,21 +96,22 @@ class FaceAnalyzer(
                 faceBounds = faces.map { it.boundingBox }
 
                 if (faces.isNotEmpty()) {
-                    // --- LIVENESS LOGIC (Single face only for now) ---
-                    if (!bypassLiveness && !hasBlinked && faces.size == 1) {
-                        val face = faces[0]
+                    val face = faces[0]
+
+                    // --- LIVENESS LOGIC ---
+                    if (!bypassLiveness && !hasBlinked) {
                         val leftEye = face.leftEyeOpenProbability ?: 1.0f
                         val rightEye = face.rightEyeOpenProbability ?: 1.0f
 
                         if (leftEye < BLINK_THRESHOLD && rightEye < BLINK_THRESHOLD) {
                             isEyeClosed = true
-                            onLivenessStatus("Eyes Closed...")
+                            onLivenessStatus("Mata Tertutup...")
                         } else if (isEyeClosed && leftEye > 0.6f && rightEye > 0.6f) {
                             hasBlinked = true
                             isEyeClosed = false
-                            onLivenessStatus("Blink Detected!")
+                            onLivenessStatus("Kedipan Terdeteksi!")
                         } else {
-                            onLivenessStatus("Please Blink")
+                            onLivenessStatus("Silakan Berkedip")
                         }
 
                         if (!hasBlinked) {
@@ -118,7 +121,9 @@ class FaceAnalyzer(
                         }
                     }
 
-                    // --- EKSTRAK BITMAP ---
+                    // --- 🔥 PERBAIKAN KRUSIAL: EKSTRAK BITMAP DI SINI (SINKRON) ---
+                    // Jangan mengekstrak imageProxy di dalam coroutine (background)
+                    // karena sistem bisa menutupnya kapan saja.
                     val safeBitmap = try {
                         ImageConversionUtils.convertImageProxyToBitmap(
                             imageProxy = imageProxy,
@@ -126,51 +131,38 @@ class FaceAnalyzer(
                             applyMirroring = false,
                         )
                     } catch (e: Exception) {
-                        Log.e("FaceAnalyzer", "Failed to convert ImageProxy: ${e.message}")
+                        Log.e("FaceAnalyzer", "Gagal convert ImageProxy: ${e.message}")
                         null
                     }
 
+                    // 🛑 SEKARANG AMAN UNTUK MENUTUP PROXY (RAM langsung lega)
                     imageProxy.close()
 
-                    // --- PROCESS DI BACKGROUND ---
+                    // --- PROCESS EMBEDDING DI BACKGROUND ---
                     if (safeBitmap != null) {
+                        val bounds = face.boundingBox
+
                         analyzerScope.launch {
                             try {
-                                if (onBatchFaceEmbedding != null && faces.size > 1) {
-                                    // 🔥 v3.6.0: Parallel Batch Processing
-                                    val recognitions = faces.map { face ->
-                                        async {
-                                            val crop = FaceGeometryUtils.cropAndPadFace(safeBitmap, face.boundingBox)
-                                            val buffer = FacePreprocessor.bitmapToModelInput(crop)
-                                            val emb = FaceRecognizer.recognizeFace(buffer)
-                                            IndividualRecognition(
-                                                personId = "PENDING",
-                                                confidence = 0f,
-                                                boundingBox = face.boundingBox,
-                                                faceEmbedding = emb,
-                                            )
-                                        }
-                                    }.awaitAll()
+                                // Potong wajah, convert ke TFLite buffer, dan jalankan AI
+                                val safeCrop = FaceGeometryUtils.cropAndPadFace(safeBitmap, bounds)
+                                val buffer = FacePreprocessor.bitmapToModelInput(safeCrop)
+                                val embedding = FaceRecognizer.recognizeFace(buffer)
 
-                                    withContext(Dispatchers.Main) {
-                                        onBatchFaceEmbedding.invoke(recognitions)
-                                    }
-                                } else {
-                                    // Standard Single Processing
-                                    val bounds = faces[0].boundingBox
-                                    val safeCrop = FaceGeometryUtils.cropAndPadFace(safeBitmap, bounds)
-                                    val buffer = FacePreprocessor.bitmapToModelInput(safeCrop)
-                                    val embedding = FaceRecognizer.recognizeFace(buffer)
-
-                                    withContext(Dispatchers.Main) {
-                                        onFaceEmbedding(bounds, embedding)
-                                        onFaceCaptured?.invoke(safeCrop)
-                                    }
+                                // Kirim hasil ke Main Thread (UI/ViewModel)
+                                withContext(Dispatchers.Main) {
+                                    onFaceEmbedding(bounds, embedding)
+                                    onFaceCaptured?.invoke(safeCrop)
                                 }
+
+                                // Bersihkan memori Bitmap secara manual agar tidak memory leak
+                                // SANGAT PENTING: Consumer harus meng-copy bitmap jika ingin menyimpannya!
+                                if (safeCrop != safeBitmap) safeCrop.recycle()
                                 safeBitmap.recycle()
                             } catch (e: Exception) {
-                                Log.e("FaceAnalyzer", "Error in Coroutine: ${e.message}")
+                                Log.e("FaceAnalyzer", "Error di Coroutine: ${e.message}")
                             } finally {
+                                // 🔓 Buka gembok processing agar frame berikutnya bisa masuk
                                 isProcessing.set(false)
                             }
                         }
@@ -178,9 +170,10 @@ class FaceAnalyzer(
                         isProcessing.set(false)
                     }
                 } else {
+                    // Reset liveness jika wajah hilang dari frame kamera
                     hasBlinked = false
                     isEyeClosed = false
-                    onLivenessStatus("Searching for Face...")
+                    onLivenessStatus("Cari Wajah...")
                     imageProxy.close()
                     isProcessing.set(false)
                 }
@@ -194,6 +187,5 @@ class FaceAnalyzer(
 
     fun close() {
         detector.close()
-        analyzerScope.cancel() // 🔥 Stop background processing immediately
     }
 }

@@ -10,8 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
-import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 /**
@@ -26,15 +24,7 @@ fun AttendanceScannerView(
     modifier: Modifier = Modifier,
     showLivenessLabel: Boolean,
 ) {
-    var livenessInstruction by remember { mutableStateOf("") }
-    val defaultInstruction = stringResource(R.string.searching_for_face)
-
-    // Set initial value
-    LaunchedEffect(Unit) {
-        if (livenessInstruction.isEmpty()) {
-            livenessInstruction = defaultInstruction
-        }
-    }
+    var livenessInstruction by remember { mutableStateOf("Mencari Wajah...") }
 
     Box(modifier = modifier) {
         FaceScanner(

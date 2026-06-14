@@ -5,8 +5,11 @@ import android.util.Log
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.gpu.GpuDelegate
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import java.nio.channels.FileChannel
 import kotlin.math.sqrt
 import com.azuratech.azuratime.core.domain.model.ModelGuard
 import java.util.concurrent.atomic.AtomicBoolean
@@ -16,101 +19,111 @@ object FaceRecognizer {
     private var gpuDelegate: GpuDelegate? = null
     private var tfliteModelBuffer: ByteBuffer? = null
 
-    // 🔥 Using AtomicBoolean to ensure thread-safety across multiple camera threads
+    // 🔥 Menggunakan AtomicBoolean agar aman diakses dari banyak thread kamera
     private val isInitializing = AtomicBoolean(false)
 
     var isInitialized = false
         private set
 
-    // Pre-allocated output buffer to optimize garbage collection and minimize RAM usage
+    // Buffer output tetap (Pre-allocated) untuk hemat RAM
     private val outputBuffer = Array(1) { FloatArray(FaceNetConstants.EMBEDDING_SIZE) }
 
     /**
-     * MODEL INITIALIZATION (Thread-Safe & Crash-Proof)
+     * INISIALISASI MODEL (Thread-Safe & Crash-Proof)
      */
     fun initialize(context: Context) {
-        // If already initialized or currently initializing, bypass duplicate execution
+        // Jika sudah siap atau sedang dalam proses, jangan double-init
         if (isInitialized || isInitializing.getAndSet(true)) return
 
         try {
-            Log.d("AzuraBrain", "⚙️ Preparing Azura AI Engine...")
+            Log.d("AzuraBrain", "⚙️ Menyiapkan Otak AI Azura...")
 
             if (!ModelGuard.isNativeReady) {
                 throw Exception("Native ModelGuard library is not ready!")
             }
 
-            // 1. Read & Decrypt via Native Guard (Ultra Secure)
+            // 1. Read & Decrypt via Native Guard (Super Aman!)
             val inputStream = context.assets.open(FaceNetConstants.MODEL_NAME)
             val encryptedBytes = inputStream.readBytes()
             inputStream.close()
 
             val guard = ModelGuard()
             val decryptedBytes = guard.decryptTfliteModel(encryptedBytes)
+            Log.d("AzuraBrain", "🔓 Model decrypted: ${decryptedBytes.size} bytes")
 
-            // 2. Direct ByteBuffer Allocation (Optimized for TFLite speed)
-            tfliteModelBuffer = ByteBuffer.allocateDirect(decryptedBytes.size).apply {
-                order(ByteOrder.nativeOrder())
-                put(decryptedBytes)
-                rewind()
+            // 2. Memory-Mapped Loading (Safe for 128MB Heap Limit)
+            // We decrypt into a private temp file and map it. This bypasses the Java heap limit
+            // and satisfies TFLite's preference for MappedByteBuffers on low-RAM devices.
+            val tempFile = File(context.cacheDir, "decrypted_model.tflite")
+            FileOutputStream(tempFile).use { fos ->
+                fos.write(decryptedBytes)
             }
 
-            // Security: Instantly clear raw decrypted bytes to prevent RAM leaks
-            decryptedBytes.fill(0)
+            val fileInputStream = FileInputStream(tempFile)
+            val fileChannel = fileInputStream.channel
+            tfliteModelBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size())
 
-            // 3. Configure Interpreter Options
+            // Cleanup: Close streams and delete temp file (the mapping remains in RAM)
+            fileChannel.close()
+            fileInputStream.close()
+            tempFile.delete()
+
+            Log.d("AzuraBrain", "✅ Model loaded successfully via MappedByteBuffer (Low-RAM safe).")
+
+            // 3. Konfigurasi Interpreter
             val options = Interpreter.Options()
 
-            // 🔥 CRASH PREVENTION: Safely check GPU compatibility
+            // 🔥 FIX FATAL CRASH: Cek kompabilitas GPU secara aman!
             val compatList = CompatibilityList()
             if (compatList.isDelegateSupportedOnThisDevice) {
                 try {
-                    Log.d("AzuraBrain", "🚀 GPU Compatible! Enabling Turbo performance mode.")
-                    // Apply optimized configurations tailored for this device
+                    Log.d("AzuraBrain", "🚀 GPU Kompatibel! Mengaktifkan mode Turbo.")
+                    // Gunakan opsi terbaik khusus untuk HP ini
                     gpuDelegate = GpuDelegate(compatList.bestOptionsForThisDevice)
                     options.addDelegate(gpuDelegate)
                 } catch (e: Exception) {
-                    Log.w("AzuraBrain", "⚠️ Failed to attach GPU Delegate, falling back to CPU: ${e.message}")
+                    Log.w("AzuraBrain", "⚠️ GPU Delegate gagal dipasang, beralih ke CPU: ${e.message}")
                     options.setNumThreads(4)
                 }
             } else {
-                Log.w("AzuraBrain", "⚠️ Device GPU architecture does not support the model. Using CPU (4 Threads).")
-                options.setNumThreads(4) // Fallback to a highly stable CPU execution
+                Log.w("AzuraBrain", "⚠️ Arsitektur GPU HP ini tidak mendukung model. Menggunakan CPU (4 Threads).")
+                options.setNumThreads(4) // Fallback ke CPU yang jauh lebih stabil
             }
 
-            // 4. Load Model into the TFLite Interpreter
+            // 4. Load Model ke Interpreter
             interpreter = Interpreter(tfliteModelBuffer!!, options)
             isInitialized = true
-            Log.d("AzuraBrain", "✅✅✅ SUCCESS! FaceRecognizer is Ready & Secured")
+            Log.d("AzuraBrain", "✅✅✅ JOSS! FaceRecognizer Ready & Secured")
         } catch (e: Exception) {
             Log.e("AzuraBrain", "❌ Initialization FAILED: ${e.message}")
             isInitialized = false
-            close() // 🔥 Ensure resources are fully cleared on failure to prevent memory leaks
+            close() // 🔥 Pastikan memori dibersihkan jika gagal agar tidak bocor
         } finally {
             isInitializing.set(false)
         }
     }
 
     /**
-     * FACE RECOGNITION (Anti-Null & Thread-Safe)
+     * FUNGSI PENGENALAN (Anti-Null & Thread-Safe)
      */
     fun recognizeFace(input: ByteBuffer): FloatArray {
-        // 🔥 SELF-HEALING: If interpreter is not yet initialized
+        // 🔥 SELF-HEALING: Jika interpreter belum siap
         val currentInterpreter = interpreter
         if (currentInterpreter == null) {
-            Log.e("AzuraBrain", "⚠️ Interpreter is NULL! Ensure initialize() runs successfully in MainActivity/ViewModel.")
+            Log.e("AzuraBrain", "⚠️ Interpreter NULL! Pastikan initialize() sukses di MainActivity/ViewModel.")
             return FloatArray(FaceNetConstants.EMBEDDING_SIZE)
         }
 
         return synchronized(this) {
             try {
-                // Execute AI inference model
+                // Jalankan AI
                 currentInterpreter.run(input, outputBuffer)
 
-                // Fetch results and perform L2 Normalization for precise distance calculations
+                // Ambil hasil dan lakukan Normalisasi L2 agar jarak (Distance) akurat
                 val embedding = outputBuffer[0].clone()
                 val normalized = l2Normalize(embedding)
 
-                Log.d("AzuraBrain", "🧠 AI Inference Completed... Vector projection: ${normalized[0]}, ${normalized[1]}")
+                Log.d("AzuraBrain", "🧠 AI Berpikir... Vector: ${normalized[0]}, ${normalized[1]}")
                 normalized
             } catch (e: Exception) {
                 Log.e("AzuraBrain", "❌ Inference error: ${e.message}")
@@ -120,7 +133,7 @@ object FaceRecognizer {
     }
 
     /**
-     * L2 Normalization: Required for FaceNet models to enable accurate Euclidean distance matching
+     * Normalisasi L2: Wajib untuk Model FaceNet agar Embedding bisa dibandingan (Euclidean)
      */
     private fun l2Normalize(embedding: FloatArray): FloatArray {
         var sum = 0f
