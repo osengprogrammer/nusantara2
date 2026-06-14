@@ -9,8 +9,9 @@ import kotlinx.coroutines.flow.Flow
 data class SessionWithDetails(
     @Embedded val session: ClassSessionEntity,
     val subjectName: String? = null, // ✅ Nullable for non-academic sessions
-    val className: String? = null, // Optional: Can be filled if we join with ClassEntity too
-)
+) {
+    @Ignore var className: String? = null // Optional: Can be filled if we join with ClassEntity too
+}
 
 @Dao
 interface SessionDao {
@@ -21,9 +22,9 @@ interface SessionDao {
      */
     @Query(
         """
-        SELECT s.*, subj.name as subjectName 
-        FROM class_sessions s 
-        LEFT JOIN subjects subj ON s.subjectId = subj.subjectId 
+        SELECT s.*, subj.name as subjectName
+        FROM class_sessions s
+        LEFT JOIN subjects subj ON s.subjectId = subj.subjectId
         WHERE s.schoolId = :schoolId AND s.dayOfWeek = :day AND s.isActive = 1
         ORDER BY s.startTime ASC
     """,
@@ -38,9 +39,9 @@ interface SessionDao {
 
     @Query(
         """
-        SELECT s.*, subj.name as subjectName 
-        FROM class_sessions s 
-        LEFT JOIN subjects subj ON s.subjectId = subj.subjectId 
+        SELECT s.*, subj.name as subjectName
+        FROM class_sessions s
+        LEFT JOIN subjects subj ON s.subjectId = subj.subjectId
         WHERE s.schoolId = :schoolId AND s.isActive = 1
         ORDER BY s.dayOfWeek ASC, s.startTime ASC
     """,
@@ -53,15 +54,27 @@ interface SessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSubject(subject: SubjectEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSubjects(subjects: List<SubjectEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSessions(sessions: List<ClassSessionEntity>)
+
+    @Query("SELECT * FROM subjects WHERE schoolId = :schoolId AND isSynced = 0")
+    suspend fun getUnsyncedSubjects(schoolId: String): List<SubjectEntity>
+
+    @Query("SELECT * FROM class_sessions WHERE schoolId = :schoolId AND isSynced = 0")
+    suspend fun getUnsyncedSessions(schoolId: String): List<ClassSessionEntity>
+
     @Query("UPDATE class_sessions SET isActive = 0 WHERE sessionId = :sessionId")
     suspend fun softDeleteSession(sessionId: String)
-
-    @Query("SELECT COUNT(*) FROM check_in_records WHERE sessionId = :sessionId")
-    suspend fun getAttendanceCountForSession(sessionId: String): Int
 
     @Query("SELECT COUNT(*) FROM class_sessions WHERE subjectId = :subjectId AND isActive = 1")
     suspend fun getSessionCountForSubject(subjectId: String): Int
 
     @Delete
     suspend fun deleteSubject(subject: SubjectEntity)
+
+    @Query("SELECT COUNT(*) FROM check_in_records WHERE sessionId = :sessionId")
+    suspend fun getAttendanceCountForSession(sessionId: String): Int
 }

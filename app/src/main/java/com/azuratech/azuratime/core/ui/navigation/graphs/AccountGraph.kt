@@ -26,12 +26,9 @@ fun NavGraphBuilder.accountGraph(
                 viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToWelcome = {
-                    android.util.Log.d("LogoutNav", "Navigating to Welcome...")
-                    // If WELCOME doesn't exist, we fallback to LOGIN as the entry point
-                    val destination = try { NavigationRoutes.WELCOME } catch (e: Exception) { NavigationRoutes.LOGIN }
-                    navController.navigate(destination) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    // 🔥 AI Native: BootViewModel will handle root UI transition.
+                    // No need to navigate local navController to auth routes.
+                    android.util.Log.d("LogoutNav", "Logout triggered, awaiting root state transition...")
                 },
             )
         }

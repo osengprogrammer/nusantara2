@@ -53,6 +53,12 @@ class BootViewModel @Inject constructor(
             .onEach { accountId ->
                 if (accountId == null) {
                     authCheckJob?.cancel()
+
+                    // 🔥 AI Native: If logging out, add a small buffer for cleanup
+                    if (sessionManager.isLoggingOutFlow.value) {
+                        kotlinx.coroutines.delay(500)
+                    }
+
                     _uiStateFlow.value = BootUiState.Auth
                 } else {
                     handleCheckAuthStatus()

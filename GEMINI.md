@@ -201,7 +201,8 @@
 - **Project-Wide Entity Realignment**: Fixed unresolved references to `BiometricFaceEntity` and `FaceWithDetails` across 10+ files.
 
 ## 🛠️ Build Status
-- Kotlin compilation: ✅ **SUCCESSFUL** (0 Warnings)
+- Kotlin compilation: ✅ **SUCCESSFUL** (0 Critical Warnings)
+- KSP Processing: ✅ **CLEAN** (Room merge and cursor warnings resolved)
 - Unit Tests: ✅ **PASSING** (MVI Contract Tests Verified)
 - Check Suite: ✅ **SUCCESSFUL** (Spotless applied)
 
@@ -224,6 +225,13 @@
 - ✅ **Post-Refactoring Stabilization**: Resolved all syntax corruption and unresolved references caused by the global naming migration.
 
 ### Phase 30: Global Semantic Purity & MVI Restoration (June 5, 2026)
+- **Terminology Alignment:** Executed a project-wide sweep to replace "User" with "Account", "Teacher" with "Supervisor", and "Classroom" with "Class".
+- **Architecture Refinement:** Migrated `StudentClassAssignmentEntity` to the `student` package and `AccountClassAccessEntity` to the `account` package.
+- **MVI Purity:** Refactored `BiometricEnrollmentViewModel`, `AttendanceCaptureViewModel`, and `DataIntegrityViewModel` to use specific `UiEffect` types.
+- **Language Policy:** Translated all hardcoded Indonesian UI strings and technical comments to Common English across 20+ files.
+- **Documentation Sync:** Updated `ARCHITECTURE.md`, `PROJECT_INDEX.md`, and `VOCABULARY.md` to reflect the latest semantic standards.
+- **Test Suite Alignment:** Updated unit tests (`GetAccountUseCaseTest`, `DashboardViewModelTest`) to match new repository signatures.
+# Phase 30: Global Semantic Purity & MVI Restoration (June 5, 2026)
 - **Terminology Alignment:** Executed a project-wide sweep to replace "User" with "Account", "Teacher" with "Supervisor", and "Classroom" with "Class".
 - **Architecture Refinement:** Migrated `StudentClassAssignmentEntity` to the `student` package and `AccountClassAccessEntity` to the `account` package.
 - **MVI Purity:** Refactored `BiometricEnrollmentViewModel`, `AttendanceCaptureViewModel`, and `DataIntegrityViewModel` to use specific `UiEffect` types.

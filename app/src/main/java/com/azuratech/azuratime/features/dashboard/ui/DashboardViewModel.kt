@@ -219,7 +219,10 @@ class DashboardViewModel @Inject constructor(
         val totalActiveStudents = params[7] as Int
         val geofence = params[8] as com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity?
         val activeSession = params[9] as SessionWithDetails?
-        val allSessionsToday = params[10] as List<SessionWithDetails>
+
+        @Suppress("UNCHECKED_CAST")
+        val allSessionsToday = (params[10] as? List<SessionWithDetails>) ?: emptyList()
+
         val isLoggingOut = params[11] as Boolean
 
         val activeSchoolId = activeSchool?.id
@@ -351,7 +354,8 @@ class DashboardViewModel @Inject constructor(
     private fun logout() {
         viewModelScope.launch {
             authRepository.clearAllDataAndSignOut()
-            _uiEffectFlow.emit(DashboardUiEffect.TriggerAtomicExit)
+            // 🔥 AI Native: Session clearing will trigger BootViewModel to switch to Auth state.
+            // We don't emit a navigation effect here to prevent crashing the local navController.
         }
     }
 

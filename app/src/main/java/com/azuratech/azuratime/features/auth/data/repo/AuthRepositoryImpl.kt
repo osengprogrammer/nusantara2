@@ -128,13 +128,27 @@ class AuthRepositoryImpl @Inject constructor(
             // 🔥 AI Native: Set logging out state early
             sessionManager.setLoggingOut(true)
 
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(application.getString(R.string.my_web_client_id))
-                .requestEmail()
-                .build()
-            GoogleSignIn.getClient(application, gso).signOut().await()
+            // 1. Google Sign Out (Non-blocking)
+            try {
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(application.getString(R.string.my_web_client_id))
+                    .requestEmail()
+                    .build()
+                GoogleSignIn.getClient(application, gso).signOut()
+            } catch (e: Exception) {
+                Log.e("AuthRepository", "Google SignOut Error: ${e.message}")
+            }
+
+            // 2. Firebase Sign Out
+            try {
+                firebaseAuth.signOut()
+            } catch (e: Exception) {
+                Log.e("AuthRepository", "Firebase SignOut Error: ${e.message}")
+            }
+
+            // 3. Clear Local Session (This triggers UI switch via BootViewModel)
             sessionManager.clearSession()
-            firebaseAuth.signOut()
+
             DomainResult.Success(Unit)
         } catch (e: Exception) {
             sessionManager.setLoggingOut(false)

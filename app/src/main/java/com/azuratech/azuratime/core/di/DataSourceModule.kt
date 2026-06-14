@@ -10,6 +10,8 @@ import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteD
 import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSourceImpl
 import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDataSource
 import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDataSourceImpl
+import com.azuratech.azuratime.features.session.data.remote.SessionRemoteDataSource
+import com.azuratech.azuratime.features.session.data.remote.SessionRemoteDataSourceImpl
 import com.azuratech.azuraengine.core.ImageProcessor
 import com.azuratech.azuraengine.core.StorageProvider
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
@@ -23,6 +25,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DataSourceModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindSessionRemoteDataSource(
+        impl: SessionRemoteDataSourceImpl,
+    ): SessionRemoteDataSource
 
     @Binds
     @Singleton

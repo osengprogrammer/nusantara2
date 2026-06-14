@@ -273,7 +273,7 @@ class AccountManagementViewModel @Inject constructor(
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoggingOut = true) }
             sessionManager.clearSession()
-            _uiEffectFlow.emit(AccountUiEffect.NavigateToWelcome)
+            // 🔥 AI Native: BootViewModel will handle root UI transition.
         }
     }
 

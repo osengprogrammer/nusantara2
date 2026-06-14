@@ -63,15 +63,15 @@ abstract class AppDatabase : RoomDatabase() {
         private var INSTANCE: AppDatabase? = null
 
         private val MIGRATION_23_24 = object : Migration(23, 24) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `sessionType` TEXT NOT NULL DEFAULT 'ACADEMIC'")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `sessionType` TEXT NOT NULL DEFAULT 'ACADEMIC'")
             }
         }
 
         private val MIGRATION_22_23 = object : Migration(22, 23) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // 1. Create new table with nullable classId/subjectId and sessionType
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `class_sessions_new` (
                         `sessionId` TEXT NOT NULL, 
@@ -92,7 +92,7 @@ abstract class AppDatabase : RoomDatabase() {
                 )
 
                 // 2. Copy data and Prefix lookupKey for legacy ACADEMIC sessions
-                database.execSQL(
+                db.execSQL(
                     """
                     INSERT INTO `class_sessions_new` (
                         sessionId, classId, subjectId, sessionType, supervisorEmail, 
@@ -106,54 +106,54 @@ abstract class AppDatabase : RoomDatabase() {
                 )
 
                 // 3. Swap tables
-                database.execSQL("DROP TABLE `class_sessions`")
-                database.execSQL("ALTER TABLE `class_sessions_new` RENAME TO `class_sessions`")
+                db.execSQL("DROP TABLE `class_sessions`")
+                db.execSQL("ALTER TABLE `class_sessions_new` RENAME TO `class_sessions`")
 
                 // 4. Recreate Indices
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_schoolId` ON `class_sessions` (`schoolId`)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_classId` ON `class_sessions` (`classId`)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_subjectId` ON `class_sessions` (`subjectId`)")
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_class_sessions_lookupKey` ON `class_sessions` (`lookupKey`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_schoolId` ON `class_sessions` (`schoolId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_classId` ON `class_sessions` (`classId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_subjectId` ON `class_sessions` (`subjectId`)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_class_sessions_lookupKey` ON `class_sessions` (`lookupKey`)")
             }
         }
 
         private val MIGRATION_21_22 = object : Migration(21, 22) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // No-op rollback: Keeping version bump to avoid crashes on existing installs
             }
         }
 
         private val MIGRATION_20_21 = object : Migration(20, 21) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `processingType` TEXT NOT NULL DEFAULT 'SINGLE'")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `processingType` TEXT NOT NULL DEFAULT 'SINGLE'")
             }
         }
 
         private val MIGRATION_19_20 = object : Migration(19, 20) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `authMethod` TEXT NOT NULL DEFAULT 'FACE'")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `authMethod` TEXT NOT NULL DEFAULT 'FACE'")
             }
         }
 
         private val MIGRATION_18_19 = object : Migration(18, 19) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // LEGACY: Support for polymorphic sessions and directional tracking
-                database.execSQL("ALTER TABLE `class_sessions` ADD COLUMN `sessionType` TEXT NOT NULL DEFAULT 'SCHOOL'")
-                database.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `direction` TEXT")
+                db.execSQL("ALTER TABLE `class_sessions` ADD COLUMN `sessionType` TEXT NOT NULL DEFAULT 'SCHOOL'")
+                db.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `direction` TEXT")
             }
         }
 
         private val MIGRATION_17_18 = object : Migration(17, 18) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE `class_sessions` ADD COLUMN `lookupKey` TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE `class_sessions` ADD COLUMN `isActive` INTEGER NOT NULL DEFAULT 1")
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_class_sessions_lookupKey` ON `class_sessions` (`lookupKey`)")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `class_sessions` ADD COLUMN `lookupKey` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `class_sessions` ADD COLUMN `isActive` INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_class_sessions_lookupKey` ON `class_sessions` (`lookupKey`)")
             }
         }
 
         private val MIGRATION_16_17 = object : Migration(16, 17) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `subjects` (
                         `subjectId` TEXT NOT NULL, 
@@ -165,7 +165,7 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent(),
                 )
-                database.execSQL(
+                db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `class_sessions` (
                         `sessionId` TEXT NOT NULL, 
@@ -181,10 +181,10 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent(),
                 )
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_schoolId` ON `class_sessions` (`schoolId`)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_classId` ON `class_sessions` (`classId`)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_subjectId` ON `class_sessions` (`subjectId`)")
-                database.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `sessionId` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_schoolId` ON `class_sessions` (`schoolId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_classId` ON `class_sessions` (`classId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_subjectId` ON `class_sessions` (`subjectId`)")
+                db.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `sessionId` TEXT NOT NULL DEFAULT ''")
             }
         }
 

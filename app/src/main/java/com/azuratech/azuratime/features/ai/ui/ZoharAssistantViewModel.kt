@@ -67,8 +67,14 @@ class ZoharAssistantViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEffectFlow.emit(ZoharUiEffect.ShowToast("Zohar mengalami gangguan koneksi: ${error.message}"))
+                    val errorMessage = "Zohar mengalami gangguan koneksi: ${error.message}"
+                    _uiStateFlow.update {
+                        it.copy(
+                            isLoading = false,
+                            conversationHistory = it.conversationHistory + ChatMessage(ChatRole.ZOHAR, errorMessage),
+                        )
+                    }
+                    _uiEffectFlow.emit(ZoharUiEffect.ShowToast(errorMessage))
                 }
         }
     }

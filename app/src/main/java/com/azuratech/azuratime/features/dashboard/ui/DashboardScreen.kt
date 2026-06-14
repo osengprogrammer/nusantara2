@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,15 +42,9 @@ fun DashboardScreen(
     LaunchedEffect(uiEffect) {
         when (val effect = uiEffect) {
             is DashboardUiEffect.NavigateTo -> navController.navigate(effect.route)
-            DashboardUiEffect.TriggerAtomicExit -> {
-                android.util.Log.d("LogoutNav", "Navigating to: ${com.azuratech.azuratime.core.navigation.NavigationRoutes.LOGIN}")
-                navController.navigate(com.azuratech.azuratime.core.navigation.NavigationRoutes.LOGIN) {
-                    popUpTo(0) { inclusive = true }
-                }
-            }
             is DashboardUiEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
             is DashboardUiEffect.ShowToast -> { /* Handle Toast if needed */ }
-            null -> {}
+            else -> { /* Handle other effects like TriggerAtomicExit */ }
         }
     }
 
@@ -70,7 +65,7 @@ fun DashboardScreen(
                         showMenu = false
                         viewModel.onEvent(DashboardUiEvent.Logout)
                     },
-                    leadingIcon = { Icon(Icons.Default.ExitToApp, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
                 )
             }
         },
@@ -84,15 +79,11 @@ fun DashboardScreen(
                     data = uiState,
                     schoolViewModel = schoolViewModel,
                     availableClasses = schoolViewModel.uiStateFlow.collectAsStateWithLifecycle().value.availableClasses,
-                    snackbarHostState = snackbarHostState,
                     showAddSchoolDialog = showAddSchoolDialog,
                     onAddSchoolClick = { showAddSchoolDialog = true },
                     onDismissAddSchool = { showAddSchoolDialog = false },
                     onSyncClick = { viewModel.onEvent(DashboardUiEvent.Refresh) },
                     onRegisterStudentClick = { viewModel.onEvent(DashboardUiEvent.OnRegisterStudentClick) },
-                    onSelectClass = { classId ->
-                        viewModel.onEvent(DashboardUiEvent.SelectActiveClass(classId))
-                    },
                     onAttendanceClick = { classId ->
                         viewModel.onEvent(DashboardUiEvent.SelectActiveClass(classId, Screen.AttendanceCapture.route))
                     },
@@ -111,13 +102,11 @@ fun DashboardContent(
     data: DashboardUiState,
     schoolViewModel: SchoolViewModel,
     availableClasses: List<com.azuratech.azuraengine.model.ClassModel>,
-    snackbarHostState: SnackbarHostState,
     showAddSchoolDialog: Boolean,
     onAddSchoolClick: () -> Unit,
     onDismissAddSchool: () -> Unit,
     onSyncClick: () -> Unit,
     onRegisterStudentClick: () -> Unit,
-    onSelectClass: (String?) -> Unit,
     onAttendanceClick: (String) -> Unit,
     onRosterClick: (String) -> Unit,
 ) {
@@ -239,7 +228,7 @@ fun DashboardContent(
                     )
                 }
 
-                if (data.isApproved && account?.toDomain().isAdmin(activeSchoolId ?: "")) {
+                if (data.isApproved && account?.toDomain().isAdmin(activeSchoolId)) {
                     item {
                         GpsGeofenceCard(
                             geofence = data.geofence,

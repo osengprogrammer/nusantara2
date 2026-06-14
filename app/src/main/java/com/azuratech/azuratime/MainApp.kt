@@ -184,9 +184,15 @@ fun LoadingScreen(onRetry: () -> Unit, isLoggingOut: Boolean = false) {
 fun SecurityAlertDialog(message: String, onReLogin: () -> Unit) {
     AlertDialog(
         onDismissRequest = {},
-        title = { Text("Keamanan Sistem", fontWeight = FontWeight.Bold) },
+        title = { Text("Sesi Berakhir", fontWeight = FontWeight.Bold) },
         text = { Text(message) },
-        confirmButton = { TextButton(onClick = onReLogin) { Text("Login Ulang") } },
-        dismissButton = { TextButton(onClick = { android.os.Process.killProcess(android.os.Process.myPid()) }) { Text("Tutup") } },
+        confirmButton = {
+            Button(
+                onClick = onReLogin,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+            ) {
+                Text("Login Ulang")
+            }
+        },
     )
 }

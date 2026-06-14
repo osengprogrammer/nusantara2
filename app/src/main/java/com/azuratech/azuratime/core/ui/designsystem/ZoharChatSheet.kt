@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.MicNone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +16,8 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.features.ai.ui.ZoharAssistantViewModel
 import com.azuratech.azuratime.features.ai.ui.ZoharUiEvent
+import com.azuratech.azuratime.features.ai.ui.ChatMessage
+import com.azuratech.azuratime.features.ai.ui.ChatRole
 
 import androidx.compose.ui.platform.LocalContext
 import com.azuratech.azuratime.core.util.showToast
@@ -28,7 +31,9 @@ fun ZoharChatSheet(
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+    )
     val context = LocalContext.current
 
     // 🔥 AI Native: Collect and Handle UI Effects
@@ -49,8 +54,10 @@ fun ZoharChatSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight(0.9f)
                 .padding(AzuraSpacing.md)
-                .navigationBarsPadding(), // Agar tidak tertutup tombol navigasi HP
+                .navigationBarsPadding()
+                .imePadding(),
         ) {
             // Header Zohar
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -63,16 +70,25 @@ fun ZoharChatSheet(
 
             // Box Respon Zohar (Scrollable)
             Card(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp, max = 300.dp),
+                modifier = Modifier.fillMaxWidth().weight(1f),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)),
             ) {
-                LazyColumn(modifier = Modifier.padding(AzuraSpacing.md)) {
-                    item {
-                        if (uiState.isLoading) {
-                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                            Text("Zohar sedang menganalisis data Azura...", style = MaterialTheme.typography.bodySmall)
-                        } else {
-                            Text(text = uiState.response, style = MaterialTheme.typography.bodyMedium)
+                LazyColumn(
+                    modifier = Modifier.padding(AzuraSpacing.md).fillMaxSize(),
+                    reverseLayout = false, // Latest message at bottom
+                ) {
+                    items(uiState.conversationHistory.size) { index ->
+                        val message = uiState.conversationHistory[index]
+                        ChatBubble(message)
+                        Spacer(Modifier.height(AzuraSpacing.sm))
+                    }
+
+                    if (uiState.isLoading) {
+                        item {
+                            Column {
+                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                Text("Zohar sedang mengetik...", style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
@@ -87,6 +103,11 @@ fun ZoharChatSheet(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Tanya Zohar tentang data...") },
                 shape = AzuraShapes.medium,
+                leadingIcon = {
+                    IconButton(onClick = { /* Voice logic placeholder */ }) {
+                        Icon(Icons.Default.MicNone, contentDescription = "Voice", tint = MaterialTheme.colorScheme.primary)
+                    }
+                },
                 trailingIcon = {
                     IconButton(
                         onClick = {
@@ -103,5 +124,35 @@ fun ZoharChatSheet(
             )
             Spacer(Modifier.height(AzuraSpacing.lg))
         }
+    }
+}
+
+@Composable
+fun ChatBubble(message: ChatMessage) {
+    val isZohar = message.role == ChatRole.ZOHAR
+    val alignment = if (isZohar) Alignment.Start else Alignment.End
+    val containerColor = if (isZohar) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+    val contentColor = if (isZohar) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = alignment,
+    ) {
+        Card(
+            shape = AzuraShapes.medium,
+            colors = CardDefaults.cardColors(containerColor = containerColor, contentColor = contentColor),
+        ) {
+            Text(
+                text = message.content,
+                modifier = Modifier.padding(AzuraSpacing.sm),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        Text(
+            text = if (isZohar) "Zohar" else "Me",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        )
     }
 }

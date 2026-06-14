@@ -122,9 +122,10 @@ fun SessionItem(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (session.className != null) {
+                val className = session.className
+                if (className != null) {
                     Text(
-                        text = stringResource(R.string.class_label, session.className),
+                        text = stringResource(R.string.class_label, className),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                     )

@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Person
 
 @Composable
 fun ClassManagementScreen(
-    onClassSelected: (String, String) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: ClassViewModel = hiltViewModel(),
 ) {
