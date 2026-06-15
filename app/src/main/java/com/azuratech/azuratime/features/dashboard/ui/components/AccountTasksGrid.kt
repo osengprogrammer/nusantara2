@@ -55,7 +55,7 @@ fun AccountTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "Class Mgmt",
+                    stringResource(R.string.dashboard_class_management),
                     Icons.Default.Class,
                     MaterialTheme.colorScheme.primary,
                     {
@@ -67,7 +67,7 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Student Roster",
+                    stringResource(R.string.dashboard_student_roster),
                     Icons.Default.People,
                     MaterialTheme.colorScheme.secondary,
                     { navController.navigate(Screen.StudentRoster.route) },
@@ -103,7 +103,7 @@ fun AccountTasksGrid(
                 )
             }
 
-            // 🔥 Row 2b: Session & Supervisor Management
+            // 🔥 Row 2b: Session Management
             if (BuildConfig.ENABLE_SUBJECT_SESSION) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -117,19 +117,8 @@ fun AccountTasksGrid(
                         modifier = Modifier.weight(1f),
                         enabled = isEnabled,
                     )
-                    if (isAdmin) {
-                        DashboardActionCard(
-                            stringResource(R.string.dashboard_supervisors),
-                            Icons.Default.EditCalendar,
-                            MaterialTheme.colorScheme.secondary,
-                            { navController.navigate(Screen.Supervisors.route) },
-                            modifier = Modifier.weight(1f),
-                            enabled = isEnabled,
-                        )
-                    } else {
-                        // Spacer to keep grid balanced for non-admins
-                        Spacer(Modifier.weight(1f))
-                    }
+                    // Spacer to keep grid balanced
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }
@@ -143,15 +132,15 @@ fun AccountTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "Account Mgmt",
+                    stringResource(R.string.dashboard_staff_management),
                     Icons.Default.ManageAccounts,
                     MaterialTheme.colorScheme.primary,
-                    { navController.navigate(Screen.Profile.route) },
+                    { navController.navigate(Screen.Supervisors.route) },
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Access Requests",
+                    stringResource(R.string.dashboard_access_requests),
                     Icons.Default.NotificationsActive,
                     MaterialTheme.colorScheme.secondary,
                     { navController.navigate(Screen.PendingSchools.route) },
@@ -171,7 +160,7 @@ fun AccountTasksGrid(
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
             ) {
                 DashboardActionCard(
-                    "Register Student",
+                    stringResource(R.string.dashboard_register_student),
                     Icons.Default.PersonAdd,
                     MaterialTheme.colorScheme.primary,
                     onRegisterStudentClick,
@@ -179,7 +168,7 @@ fun AccountTasksGrid(
                     enabled = isEnabled,
                 )
                 DashboardActionCard(
-                    "Bulk Import",
+                    stringResource(R.string.dashboard_bulk_import),
                     Icons.Default.UploadFile,
                     MaterialTheme.colorScheme.secondary,
                     { navController.navigate(Screen.BulkRegister.route) },
@@ -197,7 +186,7 @@ fun AccountTasksGrid(
             horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             DashboardActionCard(
-                "Select School",
+                stringResource(R.string.dashboard_select_school),
                 Icons.Default.School,
                 MaterialTheme.colorScheme.tertiary,
                 {
@@ -209,7 +198,7 @@ fun AccountTasksGrid(
                 enabled = isEnabled,
             )
             DashboardActionCard(
-                "School Network",
+                stringResource(R.string.dashboard_school_network),
                 Icons.Default.Hub,
                 MaterialTheme.colorScheme.secondary,
                 { navController.navigate(Screen.Following.route) },

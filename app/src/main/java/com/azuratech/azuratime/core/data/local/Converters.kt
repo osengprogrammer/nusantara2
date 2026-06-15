@@ -68,6 +68,19 @@ class Converters {
     }
 
     @TypeConverter
+    fun fromStringList(list: List<String>?): String? {
+        if (list == null) return null
+        return gson.toJson(list)
+    }
+
+    @TypeConverter
+    fun toStringList(value: String?): List<String>? {
+        if (value.isNullOrEmpty()) return emptyList()
+        val type = object : TypeToken<List<String>>() {}.type
+        return try { gson.fromJson(value, type) } catch (e: Exception) { emptyList() }
+    }
+
+    @TypeConverter
     fun fromMembershipsMap(map: Map<String, SchoolMembership>?): String? {
         if (map == null) return null
         val type = object : TypeToken<Map<String, SchoolMembership>>() {}.type

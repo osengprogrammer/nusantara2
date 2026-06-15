@@ -23,7 +23,7 @@ class CreateSessionUseCase @Inject constructor(
         startTime: String,
         endTime: String,
         schoolId: String,
-    ): Result<Unit> {
+    ): Result<String> { // 🔥 Return String (sessionId)
         // 🔥 AI Native: Prefix-based lookupKey to prevent cross-tier collisions
         val timeKey = startTime.replace(":", "")
         val lookupKey = when (sessionType) {
@@ -32,8 +32,9 @@ class CreateSessionUseCase @Inject constructor(
             SessionType.GLOBAL -> "GLOBAL_${schoolId}_ALL_${dayOfWeek}_$timeKey"
         }
 
+        val sessionId = UUID.randomUUID().toString()
         val session = ClassSessionEntity(
-            sessionId = UUID.randomUUID().toString(),
+            sessionId = sessionId,
             classId = classId,
             subjectId = subjectId,
             sessionType = sessionType,
@@ -47,6 +48,6 @@ class CreateSessionUseCase @Inject constructor(
             isSynced = false,
         )
 
-        return repository.saveSession(session)
+        return repository.saveSession(session).map { sessionId }
     }
 }

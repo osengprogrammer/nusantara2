@@ -3,7 +3,10 @@
    <string name="my_web_client_id">735604901610-rcknkvu6hj9em6ha5mbj4m0cqtnsbi8o.apps.googleusercontent.com</string>
 
    <!-- 📅 SESSION PICKER -->
-   <string name="select_session">Select Session</string>
+   <string name="select_session">Select Session / Assignment</string>
+   <string name="adhoc_session_title">Start Attendance Now</string>
+   <string name="adhoc_session_subtitle">Based on Matrix Assignment</string>
+   <string name="adhoc_session_label">From Matrix</string>
    <string name="refresh">Refresh</string>
    <string name="no_sessions_available">No sessions available for today.</string>
    <string name="failed_to_load_sessions">Failed to load sessions</string>
@@ -27,8 +30,15 @@
    <!-- 🏠 DASHBOARD -->
    <string name="dashboard_attendance">Attendance</string>
    <string name="dashboard_reports">Reports</string>
-   <string name="dashboard_subjects">Subjects</string>
-   <string name="dashboard_supervisors">Supervisors</string>
+   <string name="dashboard_subjects">Schedules</string>
+   <string name="dashboard_staff_management">Staff Profiles</string>
+   <string name="dashboard_school_network">School Network</string>
+   <string name="dashboard_register_student">Register Student</string>
+   <string name="dashboard_bulk_import">Bulk Import</string>
+   <string name="dashboard_select_school">Select School</string>
+   <string name="dashboard_class_management">Class Mgmt</string>
+   <string name="dashboard_student_roster">Student Roster</string>
+   <string name="dashboard_access_requests">Access Requests</string>
 
    <!-- 📸 ATTENDANCE CAPTURE -->
    <string name="searching_for_face">Searching for Face...</string>

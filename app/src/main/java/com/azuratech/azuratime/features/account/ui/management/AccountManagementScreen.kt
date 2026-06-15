@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +31,8 @@ fun AccountManagementScreen(
     viewModel: AccountManagementViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToWelcome: () -> Unit,
+    title: String = "Account Settings",
+    onNavigateToBulkAssign: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -88,6 +91,8 @@ fun AccountManagementScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
+        title = if (title == "Staff & Supervisors") "Staff Profiles" else title,
+        onNavigateToBulkAssign = onNavigateToBulkAssign,
         onRemoveMemberRequest = { id ->
             targetAccountIdToDelete = id
             showDeleteDialog = true
@@ -101,10 +106,23 @@ fun AccountManagementContent(
     onEvent: (AccountUiEvent) -> Unit,
     onNavigateBack: () -> Unit,
     onRemoveMemberRequest: (String) -> Unit,
+    title: String = "Account Settings",
+    onNavigateToBulkAssign: () -> Unit = {},
 ) {
     AzuraScreen(
-        title = "Account Settings",
+        title = title,
         onBack = onNavigateBack,
+        actions = {
+            if (title == "Staff Profiles") {
+                IconButton(onClick = onNavigateToBulkAssign) {
+                    Icon(
+                        imageVector = Icons.Default.UploadFile,
+                        contentDescription = "Bulk Assign",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        },
     ) {
         if (uiState.isLoggingOut) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -145,29 +163,31 @@ fun AccountManagementContent(
 
                     Spacer(modifier = Modifier.height(AzuraSpacing.lg))
 
-                    // Active Class Selection
-                    AzuraCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(AzuraSpacing.md)) {
-                            Text("Select Active Class", style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+                    // Active Class Selection (Only for personal Profile settings)
+                    if (title != "Staff & Supervisors") {
+                        AzuraCard(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(AzuraSpacing.md)) {
+                                Text("Select Active Class", style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
-                            if (uiState.availableClasses.isEmpty()) {
-                                Text(
-                                    "No classes available in this school.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.outline,
-                                )
-                            } else {
-                                uiState.availableClasses.forEach { classModel ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        RadioButton(
-                                            selected = classModel.id == uiState.activeClassId,
-                                            onClick = { onEvent(AccountUiEvent.SelectActiveClass(classModel.id)) },
-                                        )
-                                        Text(classModel.name)
+                                if (uiState.availableClasses.isEmpty()) {
+                                    Text(
+                                        "No classes available in this school.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.outline,
+                                    )
+                                } else {
+                                    uiState.availableClasses.forEach { classModel ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            RadioButton(
+                                                selected = classModel.id == uiState.activeClassId,
+                                                onClick = { onEvent(AccountUiEvent.SelectActiveClass(classModel.id)) },
+                                            )
+                                            Text(classModel.name)
+                                        }
                                     }
                                 }
                             }
@@ -180,11 +200,9 @@ fun AccountManagementContent(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                         ) {
-                            Text(
-                                text = "Pending Follower Requests",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = AzuraSpacing.md),
+                            SectionHeader(
+                                title = "Pending Access Requests",
+                                subtitle = "Review and approve new members",
                             )
                             uiState.pendingFollowers.forEach { request ->
                                 PendingFollowerItem(
@@ -202,23 +220,22 @@ fun AccountManagementContent(
                     }
 
                     // School Network (Member Role Management)
-                    if (uiState.allAccountsInSameSchool.isNotEmpty()) {
+                    if (uiState.activeSchoolId != null && uiState.allAccountsInSameSchool.isNotEmpty()) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                         ) {
-                            Text(
-                                text = "School Network",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = AzuraSpacing.md),
+                            SectionHeader(
+                                title = "Active Staff Members",
+                                subtitle = "Manage roles and classroom access",
                             )
                             uiState.allAccountsInSameSchool
                                 .filter { it.accountId != uiState.accountProfile?.accountId }
                                 .forEach { account ->
+                                    val memberRoleInThisSchool = account.memberships[uiState.activeSchoolId]?.role ?: account.role
                                     MemberItem(
                                         account = account,
-                                        currentRole = account.memberships[uiState.activeSchoolId]?.role ?: account.role,
+                                        currentRole = memberRoleInThisSchool,
                                         currentUserRole = uiState.currentAccountRole,
                                         onChangeRole = { newRole ->
                                             onEvent(AccountUiEvent.ChangeMemberRole(account.accountId, newRole))
@@ -255,6 +272,34 @@ fun AccountManagementContent(
 }
 
 @Composable
+private fun SectionHeader(title: String, subtitle: String? = null) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = AzuraSpacing.sm),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (subtitle != null) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        HorizontalDivider(
+            modifier = Modifier.padding(top = AzuraSpacing.xs),
+            thickness = 2.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+        )
+    }
+}
+
+@Composable
 fun MemberItem(
     account: AccountEntity,
     currentRole: String,
@@ -271,8 +316,12 @@ fun MemberItem(
                 StudentAvatar(photoPath = account.photoUrl, size = 40.dp)
                 Spacer(modifier = Modifier.width(AzuraSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = account.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                    Text(text = "Current Role: $currentRole", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = account.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(8.dp))
+                        RoleBadge(roleStr = currentRole)
+                    }
+                    Text(text = account.email, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 }
 
                 // 🔥 ADMIN ONLY: Remove Member Button
@@ -298,8 +347,8 @@ fun MemberItem(
                 ) {
                     listOf(AccountRole.ADMIN, AccountRole.SUPERVISOR, AccountRole.USER).forEach { role ->
                         FilterChip(
-                            selected = currentRole == role.name,
-                            onClick = { if (currentRole != role.name) onChangeRole(role) },
+                            selected = currentRole.equals(role.name, ignoreCase = true),
+                            onClick = { if (!currentRole.equals(role.name, ignoreCase = true)) onChangeRole(role) },
                             label = { Text(role.name, style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -310,6 +359,31 @@ fun MemberItem(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun RoleBadge(roleStr: String, modifier: Modifier = Modifier) {
+    val role = try { AccountRole.valueOf(roleStr.uppercase()) } catch (e: Exception) { AccountRole.USER }
+    val (color, label) = when (role) {
+        AccountRole.SUPER_ADMIN -> MaterialTheme.colorScheme.error to "Super Admin"
+        AccountRole.ADMIN -> MaterialTheme.colorScheme.primary to "Admin"
+        AccountRole.SUPERVISOR -> MaterialTheme.colorScheme.secondary to "Supervisor"
+        AccountRole.USER -> MaterialTheme.colorScheme.outline to "Member"
+    }
+    Surface(
+        modifier = modifier,
+        color = color.copy(alpha = 0.1f),
+        shape = androidx.compose.foundation.shape.CircleShape,
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f)),
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 

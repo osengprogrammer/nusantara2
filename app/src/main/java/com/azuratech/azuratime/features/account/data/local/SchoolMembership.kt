@@ -8,12 +8,12 @@ data class SchoolMembership(
     val schoolName: String,
     val role: String, // "SUPER_ADMIN", "ADMIN", "SUPERVISOR", "USER"
     val status: String = "ACTIVE", // "ACTIVE", "PENDING", "REJECTED"
-    val assignedClassIds: List<String> = emptyList(), // 🔥 Daftar kelas yang diamanahi
+    val assignments: List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment> = emptyList(), // 🔥 Matrix Assignment
 )
 
 fun SchoolMembership.toDomain() = com.azuratech.azuratime.features.account.domain.model.SchoolMembership(
     schoolName = schoolName,
     role = role,
     status = status,
-    assignedClassIds = assignedClassIds,
+    assignments = assignments,
 )

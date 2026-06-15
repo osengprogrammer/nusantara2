@@ -115,7 +115,7 @@ class SchoolRepositoryImpl @Inject constructor(
                     schoolName = name,
                     role = "ADMIN",
                     status = "ACTIVE",
-                    assignedClassIds = emptyList(),
+                    assignments = emptyList(),
                 )
                 accountDao.updateAccount(account.copy(memberships = updatedMemberships, activeSchoolId = schoolId))
             }

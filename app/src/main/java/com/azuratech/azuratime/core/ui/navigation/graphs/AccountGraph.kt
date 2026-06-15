@@ -9,6 +9,7 @@ import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementScreen
 import com.azuratech.azuratime.features.account.ui.management.AssignClassScreen
+import com.azuratech.azuratime.features.account.ui.management.BulkAssignMatrixScreen
 import com.azuratech.azuratime.features.account.ui.components.MyAssignedClassScreen
 import com.azuratech.azuratime.features.account.ui.components.FollowingScreen
 
@@ -30,6 +31,24 @@ fun NavGraphBuilder.accountGraph(
                     // No need to navigate local navController to auth routes.
                     android.util.Log.d("LogoutNav", "Logout triggered, awaiting root state transition...")
                 },
+            )
+        }
+        composable(NavigationRoutes.SUPERVISORS) {
+            AccountManagementScreen(
+                viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToWelcome = {
+                    android.util.Log.d("LogoutNav", "Logout triggered, awaiting root state transition...")
+                },
+                title = "Staff & Supervisors",
+                onNavigateToBulkAssign = {
+                    navController.navigate(Screen.BulkAssignMatrix.route)
+                },
+            )
+        }
+        composable(NavigationRoutes.BULK_ASSIGN_MATRIX) {
+            BulkAssignMatrixScreen(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable(

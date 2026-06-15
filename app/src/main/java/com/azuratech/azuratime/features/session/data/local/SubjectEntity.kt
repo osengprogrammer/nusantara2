@@ -10,6 +10,7 @@ data class SubjectEntity(
     val name: String,
     val description: String? = null,
     val schoolId: String,
+    val isActive: Boolean = true, // 🔥 Soft Delete Support
     val isSynced: Boolean = false,
 ) {
     fun toFirestoreMap(): Map<String, Any?> {
@@ -18,6 +19,7 @@ data class SubjectEntity(
             "name" to name,
             "description" to description,
             "schoolId" to schoolId,
+            "isActive" to isActive,
         )
     }
 }
@@ -29,6 +31,7 @@ fun DocumentSnapshot.toSubjectEntity(schoolId: String): SubjectEntity? {
             name = getString("name") ?: "",
             description = getString("description"),
             schoolId = getString("schoolId") ?: schoolId,
+            isActive = getBoolean("isActive") ?: true,
             isSynced = true,
         )
     } catch (e: Exception) {

@@ -44,6 +44,13 @@ class AccountManagementViewModel @Inject constructor(
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private fun observeData() {
+        // 0. Synchronize Active School ID (SSOT)
+        sessionManager.activeSchoolIdFlow
+            .onEach { schoolId ->
+                _uiStateFlow.update { it.copy(activeSchoolId = schoolId) }
+            }
+            .launchIn(viewModelScope)
+
         // 1. Current Account Profile & Active Class (Mapped from Domain Account)
         sessionManager.currentAccountIdFlow
             .filterNotNull()
@@ -74,8 +81,9 @@ class AccountManagementViewModel @Inject constructor(
         sessionManager.activeSchoolIdFlow
             .filterNotNull()
             .combine(sessionManager.currentAccountIdFlow.filterNotNull()) { schoolId, accountId -> schoolId to accountId }
-            .flatMapLatest { (schoolId, accountId) -> database.accountClassAccessDao().getAssignedClassIds(accountId, schoolId) }
-            .onEach { classIds ->
+            .flatMapLatest { (schoolId, accountId) -> database.accountClassAccessDao().getAssignmentsFlow(accountId, schoolId) }
+            .onEach { assignments ->
+                val classIds = assignments.map { it.classId }.distinct()
                 _uiStateFlow.update { it.copy(assignedClassIds = classIds) }
             }
             .launchIn(viewModelScope)
@@ -111,8 +119,9 @@ class AccountManagementViewModel @Inject constructor(
                 if (target != null) target.accountId to schoolId else null
             }
             .filterNotNull()
-            .flatMapLatest { (targetId, schoolId) -> database.accountClassAccessDao().getAssignedClassIds(targetId, schoolId) }
-            .onEach { classIds ->
+            .flatMapLatest { (targetId, schoolId) -> database.accountClassAccessDao().getAssignmentsFlow(targetId, schoolId) }
+            .onEach { assignments ->
+                val classIds = assignments.map { it.classId }.distinct()
                 _uiStateFlow.update { it.copy(targetAssignedClassIds = classIds) }
             }
             .launchIn(viewModelScope)

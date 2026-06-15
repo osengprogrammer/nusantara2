@@ -34,7 +34,7 @@ interface SessionDao {
     @Query("SELECT * FROM class_sessions WHERE sessionId = :sessionId AND isActive = 1")
     suspend fun getSessionById(sessionId: String): ClassSessionEntity?
 
-    @Query("SELECT * FROM subjects WHERE schoolId = :schoolId ORDER BY name ASC")
+    @Query("SELECT * FROM subjects WHERE schoolId = :schoolId AND isActive = 1 ORDER BY name ASC")
     fun observeAllSubjectsFlow(schoolId: String): Flow<List<SubjectEntity>>
 
     @Query(
@@ -66,8 +66,11 @@ interface SessionDao {
     @Query("SELECT * FROM class_sessions WHERE schoolId = :schoolId AND isSynced = 0")
     suspend fun getUnsyncedSessions(schoolId: String): List<ClassSessionEntity>
 
-    @Query("UPDATE class_sessions SET isActive = 0 WHERE sessionId = :sessionId")
+    @Query("UPDATE class_sessions SET isActive = 0, isSynced = 0 WHERE sessionId = :sessionId")
     suspend fun softDeleteSession(sessionId: String)
+
+    @Query("UPDATE subjects SET isActive = 0, isSynced = 0 WHERE subjectId = :subjectId")
+    suspend fun softDeleteSubject(subjectId: String)
 
     @Query("SELECT COUNT(*) FROM class_sessions WHERE subjectId = :subjectId AND isActive = 1")
     suspend fun getSessionCountForSubject(subjectId: String): Int

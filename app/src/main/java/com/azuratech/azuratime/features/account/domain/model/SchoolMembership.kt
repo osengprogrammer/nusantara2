@@ -9,5 +9,5 @@ data class SchoolMembership(
     val schoolName: String,
     val role: String, // 🔥 Role IN THIS SPECIFIC SCHOOL (ADMIN, SUPERVISOR, USER)
     val status: String = "ACTIVE",
-    val assignedClassIds: List<String> = emptyList(),
+    val assignments: List<TeacherAssignment> = emptyList(),
 )

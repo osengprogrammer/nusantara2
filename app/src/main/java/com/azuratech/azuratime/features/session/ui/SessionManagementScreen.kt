@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,6 +50,15 @@ fun SessionManagementScreen(
         onBack = onNavigateBack,
         floatingActionButton = {
             Column(horizontalAlignment = Alignment.End) {
+                if (uiState.assignments.isNotEmpty()) {
+                    SmallFloatingActionButton(
+                        onClick = { viewModel.onEvent(SessionManagementUiEvent.GenerateFromMatrix) },
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = "Auto Generate")
+                    }
+                    Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+                }
                 SmallFloatingActionButton(
                     onClick = { showAddSubjectDialog = true },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -136,7 +146,8 @@ fun SessionManagementScreen(
         AddSessionDialog(
             subjects = uiState.subjects,
             classes = uiState.availableClasses,
-            selectedTier = uiState.selectedTier, // ✅ Tier Selection state
+            assignments = uiState.assignments, // 🔥 Matrix Penugasan
+            selectedTier = uiState.selectedTier,
             onTierSelected = { viewModel.onEvent(SessionManagementUiEvent.SelectTier(it)) },
             onDismiss = { showAddSessionDialog = false },
             onConfirm = { classId, subjectId, tier, day, start, end ->
@@ -194,6 +205,7 @@ fun AddSubjectDialog(
 fun AddSessionDialog(
     subjects: List<com.azuratech.azuratime.features.session.data.local.SubjectEntity>,
     classes: List<com.azuratech.azuraengine.model.ClassModel>,
+    assignments: List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>,
     selectedTier: SessionType,
     onTierSelected: (SessionType) -> Unit,
     onDismiss: () -> Unit,
@@ -232,35 +244,66 @@ fun AddSessionDialog(
                     }
                 }
 
-                // Conditional Subject Picker
-                if (selectedTier == SessionType.ACADEMIC) {
+                // Matrix Picker for ACADEMIC sessions
+                if (selectedTier == SessionType.ACADEMIC && assignments.isNotEmpty()) {
                     item {
                         HorizontalDivider(Modifier.padding(vertical = AzuraSpacing.sm))
-                        Text(stringResource(R.string.select_subject), style = MaterialTheme.typography.titleSmall)
-                        subjects.forEach { subj ->
+                        Text("My Assignments", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        assignments.forEach { assignment ->
+                            val classObj = classes.find { it.id == assignment.classId }
+                            val subjectObj = subjects.find { it.subjectId == assignment.subjectId }
+                            val label = "${classObj?.name ?: "Unknown Class"} - ${subjectObj?.name ?: "Homeroom"}"
+
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth().clickable { selectedSubjectId = subj.subjectId },
+                                modifier = Modifier.fillMaxWidth().clickable {
+                                    selectedClassId = assignment.classId
+                                    selectedSubjectId = assignment.subjectId
+                                },
                             ) {
-                                RadioButton(selected = selectedSubjectId == subj.subjectId, onClick = { selectedSubjectId = subj.subjectId })
-                                Text(subj.name)
+                                RadioButton(
+                                    selected = selectedClassId == assignment.classId && selectedSubjectId == assignment.subjectId,
+                                    onClick = {
+                                        selectedClassId = assignment.classId
+                                        selectedSubjectId = assignment.subjectId
+                                    },
+                                )
+                                Text(label, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
-                }
+                } else {
+                    // Fallback to manual selection if no assignments or different tier
+                    // Conditional Subject Picker
+                    if (selectedTier == SessionType.ACADEMIC) {
+                        item {
+                            HorizontalDivider(Modifier.padding(vertical = AzuraSpacing.sm))
+                            Text(stringResource(R.string.select_subject), style = MaterialTheme.typography.titleSmall)
+                            subjects.forEach { subj ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth().clickable { selectedSubjectId = subj.subjectId },
+                                ) {
+                                    RadioButton(selected = selectedSubjectId == subj.subjectId, onClick = { selectedSubjectId = subj.subjectId })
+                                    Text(subj.name)
+                                }
+                            }
+                        }
+                    }
 
-                // Conditional Class Picker
-                if (selectedTier != SessionType.GLOBAL) {
-                    item {
-                        HorizontalDivider(Modifier.padding(vertical = AzuraSpacing.sm))
-                        Text(stringResource(R.string.select_class), style = MaterialTheme.typography.titleSmall)
-                        classes.forEach { cls ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth().clickable { selectedClassId = cls.id },
-                            ) {
-                                RadioButton(selected = selectedClassId == cls.id, onClick = { selectedClassId = cls.id })
-                                Text(cls.name)
+                    // Conditional Class Picker
+                    if (selectedTier != SessionType.GLOBAL) {
+                        item {
+                            HorizontalDivider(Modifier.padding(vertical = AzuraSpacing.sm))
+                            Text(stringResource(R.string.select_class), style = MaterialTheme.typography.titleSmall)
+                            classes.forEach { cls ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth().clickable { selectedClassId = cls.id },
+                                ) {
+                                    RadioButton(selected = selectedClassId == cls.id, onClick = { selectedClassId = cls.id })
+                                    Text(cls.name)
+                                }
                             }
                         }
                     }

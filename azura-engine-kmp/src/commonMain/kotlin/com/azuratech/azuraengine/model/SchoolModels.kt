@@ -22,5 +22,6 @@ data class ClassModel(
     val accountId: String?,
     val studentCount: Int = 0,
     val studentIds: List<String> = emptyList(), // 🔥 Class-centric assignment support
+    val subjectIds: List<String> = emptyList(), // 🔥 Curriculum Inheritance
     val createdAt: Long,
 )

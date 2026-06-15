@@ -28,6 +28,9 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), OnMapsSdkInitializedCallback {
     @Inject
+    lateinit var syncManager: com.azuratech.azuratime.core.sync.SyncManager
+
+    @Inject
     lateinit var updateEventBus: UpdateEventBus
 
     private var isBootReady = false
@@ -50,6 +53,7 @@ class MainActivity : ComponentActivity(), OnMapsSdkInitializedCallback {
 
         window.decorView.postDelayed({
             setupBackgroundSync()
+            syncManager.enqueueSync() // 🔥 Trigger immediate sync on start
         }, 2000)
 
         setContent {

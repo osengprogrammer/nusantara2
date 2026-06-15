@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -100,16 +101,20 @@ fun SessionItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Default.Schedule,
+                imageVector = if (session.session.sessionId.startsWith("ADHOC_")) Icons.Default.FlashOn else Icons.Default.Schedule,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = if (session.session.sessionId.startsWith("ADHOC_")) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(40.dp),
             )
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = session.subjectName ?: session.session.sessionType.name,
+                        text = if (session.session.sessionId.startsWith("ADHOC_")) {
+                            stringResource(R.string.adhoc_session_title)
+                        } else {
+                            (session.subjectName ?: session.session.sessionType.name)
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f, fill = false),
@@ -118,7 +123,11 @@ fun SessionItem(
                     TierBadge(session.session.sessionType)
                 }
                 Text(
-                    text = "${getDayName(session.session.dayOfWeek)} | ${session.session.startTime} - ${session.session.endTime}",
+                    text = if (session.session.sessionId.startsWith("ADHOC_")) {
+                        stringResource(R.string.adhoc_session_subtitle)
+                    } else {
+                        "${getDayName(session.session.dayOfWeek)} | ${session.session.startTime} - ${session.session.endTime}"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

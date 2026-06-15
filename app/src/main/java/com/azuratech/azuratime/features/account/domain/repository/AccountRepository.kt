@@ -40,7 +40,16 @@ interface AccountRepository {
     /**
      * 🔥 ASSIGNED SCHOOL: Change role of an existing member in the Current Active School.
      */
-    suspend fun assignClassToConnection(targetId: String, schoolId: String, classIds: List<String>): Result<Unit>
+    /**
+     * 🔥 Matrix System: Assign class-subject pairs to a connection.
+     */
+    suspend fun assignClassToConnection(targetId: String, schoolId: String, assignments: List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>): Result<Unit>
+
+    /**
+     * 🔥 Matrix System: Bulk update assignments for multiple accounts.
+     */
+    suspend fun bulkUpdateAssignments(schoolId: String, assignmentMap: Map<String, List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>>): Result<Unit>
+
     suspend fun updateMemberRole(targetAccountId: String, schoolId: String, newRole: AccountRole): Result<Unit>
 
     // 🔒 v3.2.2 Hardened Transactional RBAC methods

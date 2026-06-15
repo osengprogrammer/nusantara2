@@ -143,7 +143,8 @@ class FollowingViewModel @Inject constructor(
         val schoolId = sessionManager.getActiveSchoolId() ?: return
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isProcessing = true) }
-            accountRepository.assignClassToConnection(targetId, schoolId, classIds)
+            val assignments = classIds.map { com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(it) }
+            accountRepository.assignClassToConnection(targetId, schoolId, assignments)
                 .onSuccess { _uiStateFlow.update { it.copy(isProcessing = false, successMessage = "Class access granted!", selectedFriendForAssignment = null) } }
                 .onFailure { error -> _uiStateFlow.update { it.copy(isProcessing = false, error = error.message) } }
         }

@@ -24,6 +24,7 @@ sealed class Screen(val route: String) {
     data object RegistrationMenu : Screen(NavigationRoutes.REGISTRATION_MENU)
     data object AddStudent : Screen(NavigationRoutes.ADD_STUDENT)
     data object BulkRegister : Screen(NavigationRoutes.BULK_REGISTER)
+    data object BulkAssignMatrix : Screen(NavigationRoutes.BULK_ASSIGN_MATRIX)
     data object StudentRoster : Screen(NavigationRoutes.STUDENT_ROSTER)
     data object BiometricManagement : Screen(NavigationRoutes.BIOMETRIC_MANAGEMENT)
     data object StudentRosterBarcode : Screen(NavigationRoutes.STUDENT_ROSTER_BARCODE)
@@ -107,7 +108,7 @@ sealed class Screen(val route: String) {
 
     // --- 🤝 FOLLOWING & CONNECTIONS ---
     data object Following : Screen(NavigationRoutes.FOLLOWING)
-    data object Supervisors : Screen(NavigationRoutes.FOLLOWING)
+    data object Supervisors : Screen(NavigationRoutes.SUPERVISORS)
 
     // --- 👑 ADMIN & MODERATION ---
     data object PendingSchools : Screen(NavigationRoutes.PENDING_SCHOOLS)

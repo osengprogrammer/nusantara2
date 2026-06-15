@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 data class SchoolMembership(
     val schoolName: String,
     val role: String,
-    val assignedClassIds: List<String> = emptyList(),
+    val assignments: List<TeacherAssignment> = emptyList(),
 )
 
 /**

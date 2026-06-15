@@ -18,6 +18,7 @@ data class ClassEntity(
     val grade: String = "",
     val accountId: String? = null,
     val studentCount: Int = 0,
+    val subjectIds: List<String> = emptyList(), // 🔥 Curriculum Inheritance
     val createdAt: Long = System.currentTimeMillis(),
     val displayOrder: Int = 0,
     val isSynced: Boolean = false,
@@ -30,6 +31,7 @@ data class ClassEntity(
         accountId = accountId,
         studentCount = studentCount,
         studentIds = emptyList(),
+        subjectIds = subjectIds,
         createdAt = createdAt,
     )
 }

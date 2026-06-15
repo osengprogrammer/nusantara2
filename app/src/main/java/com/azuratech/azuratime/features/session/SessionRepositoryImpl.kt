@@ -79,7 +79,7 @@ class SessionRepositoryImpl @Inject constructor(
             if (sessionCount > 0) {
                 Result.Failure(AppError.BusinessRule("Cannot delete subject with active sessions."))
             } else {
-                sessionDao.deleteSubject(subject)
+                sessionDao.softDeleteSubject(subject.subjectId)
                 syncManager.enqueueSync()
                 Result.Success(Unit)
             }
@@ -142,7 +142,12 @@ class SessionRepositoryImpl @Inject constructor(
         try {
             val remoteResult = remoteDataSource.getSubjectUpdates(schoolId)
             if (remoteResult is Result.Success) {
-                sessionDao.insertSubjects(remoteResult.data)
+                val remoteSubjects = remoteResult.data
+                val unsyncedIds = sessionDao.getUnsyncedSubjects(schoolId).map { it.subjectId }.toSet()
+
+                // 🔥 AI Native Protection: Do NOT overwrite local unsynced changes
+                val subjectsToInsert = remoteSubjects.filter { it.subjectId !in unsyncedIds }
+                sessionDao.insertSubjects(subjectsToInsert)
                 Result.Success(Unit)
             } else {
                 remoteResult as Result.Failure
@@ -172,7 +177,12 @@ class SessionRepositoryImpl @Inject constructor(
         try {
             val remoteResult = remoteDataSource.getSessionUpdates(schoolId)
             if (remoteResult is Result.Success) {
-                sessionDao.insertSessions(remoteResult.data)
+                val remoteSessions = remoteResult.data
+                val unsyncedIds = sessionDao.getUnsyncedSessions(schoolId).map { it.sessionId }.toSet()
+
+                // 🔥 AI Native Protection: Do NOT overwrite local unsynced changes
+                val sessionsToInsert = remoteSessions.filter { it.sessionId !in unsyncedIds }
+                sessionDao.insertSessions(sessionsToInsert)
                 Result.Success(Unit)
             } else {
                 remoteResult as Result.Failure

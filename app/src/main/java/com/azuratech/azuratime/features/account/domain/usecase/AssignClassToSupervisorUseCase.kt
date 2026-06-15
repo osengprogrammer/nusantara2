@@ -4,9 +4,11 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import javax.inject.Inject
 
+import com.azuratech.azuratime.features.account.domain.model.TeacherAssignment
+
 /**
- * 🚀 ASSIGN CLASS TO SUPERVISOR USE CASE (v3.2.0-ai-native)
- * Encapsulates the logic for assigning/unassigning classes to a supervisor account.
+ * 🚀 ASSIGN CLASS TO SUPERVISOR USE CASE (v3.4.0-matrix)
+ * Encapsulates the logic for assigning/unassigning classes and subjects to a supervisor account.
  */
 class AssignClassToSupervisorUseCase @Inject constructor(
     private val repository: AccountRepository,
@@ -14,8 +16,8 @@ class AssignClassToSupervisorUseCase @Inject constructor(
     suspend operator fun invoke(
         targetAccountId: String,
         schoolId: String,
-        classIds: List<String>,
+        assignments: List<TeacherAssignment>,
     ): Result<Unit> {
-        return repository.assignClassToConnection(targetAccountId, schoolId, classIds)
+        return repository.assignClassToConnection(targetAccountId, schoolId, assignments)
     }
 }

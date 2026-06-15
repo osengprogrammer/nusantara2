@@ -52,7 +52,7 @@ fun FollowingScreen(
     }
 
     AzuraScreen(
-        title = "Following",
+        title = "School Network",
         onBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
     ) {

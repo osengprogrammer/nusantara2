@@ -97,7 +97,7 @@ class DashboardViewModel @Inject constructor(
                     enrichedClasses
                 } else {
                     val membership = account.memberships[schoolId]
-                    val assignedIds = membership?.assignedClassIds ?: emptyList()
+                    val assignedIds = membership?.assignments?.map { it.classId }?.distinct() ?: emptyList()
                     enrichedClasses.filter { it.id in assignedIds }
                 }
             }

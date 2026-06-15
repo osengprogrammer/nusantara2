@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.account.data.repo
 
 import androidx.room.withTransaction
+import android.util.Log
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuraengine.result.AppError
@@ -110,7 +111,13 @@ class AccountRepositoryImpl @Inject constructor(
                         schoolName = v["schoolName"] as? String ?: "",
                         role = v["role"] as? String ?: "USER",
                         status = v["status"] as? String ?: "ACTIVE",
-                        assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                        assignments = (v["assignments"] as? List<*>)?.mapNotNull {
+                            val m = it as? Map<*, *> ?: return@mapNotNull null
+                            com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                classId = m["classId"] as? String ?: "",
+                                subjectId = m["subjectId"] as? String,
+                            )
+                        } ?: emptyList(),
                     )
                 }?.toMap() ?: emptyMap()
 
@@ -342,7 +349,13 @@ class AccountRepositoryImpl @Inject constructor(
                                             schoolName = v["schoolName"] as? String ?: "",
                                             role = v["role"] as? String ?: "USER",
                                             status = v["status"] as? String ?: "ACTIVE",
-                                            assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                                            assignments = (v["assignments"] as? List<*>)?.mapNotNull {
+                                                val m = it as? Map<*, *> ?: return@mapNotNull null
+                                                com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                                    classId = m["classId"] as? String ?: "",
+                                                    subjectId = m["subjectId"] as? String,
+                                                )
+                                            } ?: emptyList(),
                                         )
                                     }?.toMap() ?: emptyMap()
 
@@ -423,7 +436,13 @@ class AccountRepositoryImpl @Inject constructor(
                                             schoolName = v["schoolName"] as? String ?: "",
                                             role = v["role"] as? String ?: "USER",
                                             status = v["status"] as? String ?: "ACTIVE",
-                                            assignedClassIds = (v["assignedClassIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                                            assignments = (v["assignments"] as? List<*>)?.mapNotNull {
+                                                val m = it as? Map<*, *> ?: return@mapNotNull null
+                                                com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                                    classId = m["classId"] as? String ?: "",
+                                                    subjectId = m["subjectId"] as? String,
+                                                )
+                                            } ?: emptyList(),
                                         )
                                     }?.toMap() ?: emptyMap()
 
@@ -445,8 +464,9 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun assignClassToConnection(targetId: String, schoolId: String, classIds: List<String>): Result<Unit> {
+    override suspend fun assignClassToConnection(targetId: String, schoolId: String, assignments: List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>): Result<Unit> {
         return try {
+            // 1. Update Firestore (Cloud)
             val doc = db.collection("whitelisted_accounts").document(targetId).get().await()
             if (!doc.exists()) return Result.Failure(AppError.BusinessRule("Akun tidak ditemukan"))
 
@@ -456,14 +476,56 @@ class AccountRepositoryImpl @Inject constructor(
             @Suppress("UNCHECKED_CAST")
             val schoolMembership = memberships[schoolId] as? MutableMap<String, Any> ?: mutableMapOf()
 
-            schoolMembership["assignedClassIds"] = classIds
+            val existingRole = schoolMembership["role"] as? String ?: "USER"
+            Log.d("AZURA_DEBUG", "Preserving role: $existingRole for assignments")
+
+            // Map domain model to Firestore list of maps
+            val assignmentsData = assignments.map {
+                mapOf("classId" to it.classId, "subjectId" to it.subjectId)
+            }
+
+            schoolMembership["assignments"] = assignmentsData
             schoolMembership["status"] = "ACTIVE"
-            schoolMembership["role"] = "SUPERVISOR"
+            schoolMembership["role"] = existingRole
             memberships[schoolId] = schoolMembership
 
             db.collection("whitelisted_accounts").document(targetId).update("memberships", memberships).await()
             db.collection("accounts").document(targetId).update("memberships", memberships).await()
 
+            // 2. Update Local DB (Matrix)
+            database.withTransaction {
+                // Clear old assignments for this school
+                database.accountClassAccessDao().deleteByAccount(targetId, schoolId)
+
+                // Insert new assignments
+                assignments.forEach { assignment ->
+                    database.accountClassAccessDao().insert(
+                        com.azuratech.azuratime.features.account.data.local.AccountClassAccessEntity(
+                            accountId = targetId,
+                            classId = assignment.classId,
+                            subjectId = assignment.subjectId ?: "",
+                            schoolId = schoolId,
+                        ),
+                    )
+                }
+            }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Log.e("AZURA_DEBUG", "Failed to assign matrix: ${e.message}")
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun bulkUpdateAssignments(
+        schoolId: String,
+        assignmentMap: Map<String, List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>>,
+    ): Result<Unit> {
+        return try {
+            // 🔥 AI Native: Sequential update for reliability, could be parallelized if needed
+            assignmentMap.forEach { (accountId, assignments) ->
+                assignClassToConnection(accountId, schoolId, assignments)
+            }
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.Network(e.message))
@@ -472,9 +534,21 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun updateMemberRole(targetAccountId: String, schoolId: String, newRole: com.azuratech.azuratime.core.domain.model.AccountRole): Result<Unit> {
         return try {
-            val account = accountDao.getAccountById(targetAccountId) ?: return Result.Failure(AppError.LocalDB("Account not found"))
+            // 🔍 AI Native: Try local first, fallback to Cloud if missing
+            var account = accountDao.getAccountById(targetAccountId)
 
-            val updatedMemberships = account.memberships.toMutableMap()
+            if (account == null) {
+                Log.d("AZURA_DEBUG", "Account $targetAccountId not found locally. Fetching from Cloud...")
+                when (val cloudResult = syncAccount(targetAccountId)) {
+                    is Result.Success -> account = cloudResult.data
+                    is Result.Failure -> return Result.Failure(AppError.BusinessRule("Account not found in Cloud or Local DB"))
+                    else -> return Result.Failure(AppError.Network("Sync failed"))
+                }
+            }
+
+            // At this point, account is guaranteed non-null
+            val safeAccount = account!!
+            val updatedMemberships = safeAccount.memberships.toMutableMap()
 
             // 🛡️ AI Native: Auto-Enroll logic if membership doesn't exist
             val existingMembership = updatedMemberships[schoolId]
@@ -491,9 +565,9 @@ class AccountRepositoryImpl @Inject constructor(
             }
 
             // If this is the active school, update the top-level role too
-            val updatedRole = if (account.activeSchoolId == schoolId) newRole.name else account.role
+            val updatedRole = if (safeAccount.activeSchoolId == schoolId) newRole.name else safeAccount.role
 
-            val updatedAccount = account.copy(
+            val updatedAccount = safeAccount.copy(
                 memberships = updatedMemberships,
                 role = updatedRole,
                 syncStatus = "PENDING_UPDATE",

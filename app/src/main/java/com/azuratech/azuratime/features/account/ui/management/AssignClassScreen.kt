@@ -109,7 +109,7 @@ fun AssignClassScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             uiState.availableClasses.forEach { classItem ->
-                                val isSelected = uiState.selectedClassIds.contains(classItem.id)
+                                val isSelected = uiState.selectedAssignments.any { it.classId == classItem.id }
                                 FilterChip(
                                     selected = isSelected,
                                     onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id)) },
@@ -128,19 +128,96 @@ fun AssignClassScreen(
                         }
                     }
 
+                    // Matrix Selection Section (Subjects per Class)
+                    val selectedClasses = uiState.availableClasses.filter { cls ->
+                        uiState.selectedAssignments.any { it.classId == cls.id }
+                    }
+
+                    if (selectedClasses.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Define Subject Matrix",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+                            )
+                            Text(
+                                text = "For each class, select specific subjects or leave empty for Homeroom (Wali Kelas).",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                            )
+                        }
+
+                        items(selectedClasses) { classItem ->
+                            AzuraCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                ),
+                            ) {
+                                Column(modifier = Modifier.padding(AzuraSpacing.md)) {
+                                    Text(
+                                        text = classItem.name,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Homeroom Option
+                                    val isHomeroom = uiState.selectedAssignments.any { it.classId == classItem.id && it.subjectId == null }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Checkbox(
+                                            checked = isHomeroom,
+                                            onCheckedChange = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id, null)) },
+                                        )
+                                        Text("Homeroom / All Subjects (Wali Kelas)", style = MaterialTheme.typography.bodyMedium)
+                                    }
+
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+
+                                    // Subject Chips
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        uiState.availableSubjects.forEach { subject ->
+                                            val isSubjectSelected = uiState.selectedAssignments.any { it.classId == classItem.id && it.subjectId == subject.subjectId }
+                                            FilterChip(
+                                                selected = isSubjectSelected,
+                                                onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id, subject.subjectId)) },
+                                                label = { Text(subject.name, style = MaterialTheme.typography.labelSmall) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                                    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                ),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Selected List Summary
-                    if (uiState.selectedClassIds.isNotEmpty()) {
+                    if (uiState.selectedAssignments.isNotEmpty()) {
                         item {
                             HorizontalDivider(modifier = Modifier.padding(vertical = AzuraSpacing.sm))
                             Text(
-                                text = "Selected List (${uiState.selectedClassIds.size})",
+                                text = "Final Assignment Summary (${uiState.selectedAssignments.size})",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 4.dp),
                             )
                         }
 
-                        items(uiState.availableClasses.filter { it.id in uiState.selectedClassIds }) { classItem ->
+                        items(uiState.selectedAssignments) { assignment ->
+                            val classObj = uiState.availableClasses.find { it.id == assignment.classId }
+                            val subjectObj = uiState.availableSubjects.find { it.subjectId == assignment.subjectId }
+
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -154,7 +231,10 @@ fun AssignClassScreen(
                                     modifier = Modifier.size(20.dp),
                                 )
                                 Spacer(Modifier.width(12.dp))
-                                Text(text = classItem.name, style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    text = "${classObj?.name ?: "Unknown"} -> ${subjectObj?.name ?: "Homeroom"}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
                             }
                         }
                     }

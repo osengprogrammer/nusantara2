@@ -40,7 +40,7 @@ fun Account?.isSupervisorOf(schoolId: String, classId: String): Boolean {
     val roleStr = membership.role
     val parsedRole = roleStr.toSafeAccountRole() ?: return false
     val isSupervisorRole = parsedRole == AccountRole.SUPERVISOR
-    return isSupervisorRole && membership.assignedClassIds.contains(classId)
+    return isSupervisorRole && membership.assignments.any { it.classId == classId }
 }
 
 /**
