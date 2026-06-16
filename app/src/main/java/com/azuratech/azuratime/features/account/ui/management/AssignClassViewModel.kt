@@ -74,6 +74,8 @@ class AssignClassViewModel @Inject constructor(
         _uiStateFlow.update { it.copy(selectedAssignments = emptyList()) }
     }
 
+    private var isInitialDataLoaded = false
+
     private fun loadData(targetAccountId: String) {
         val schoolId = sessionManager.getActiveSchoolId() ?: return
         _uiStateFlow.update { it.copy(isLoading = true, error = null) }
@@ -90,33 +92,42 @@ class AssignClassViewModel @Inject constructor(
                     return@launch
                 }
 
-                // 2. Get Available Classes & Subjects
-                val classesFlow = schoolRepository.observeClassesFlow(schoolId)
-                val subjectsFlow = sessionRepository.observeAllSubjectsFlow(schoolId)
-                val assignmentsFlow = database.accountClassAccessDao().getAssignmentsFlow(targetAccountId, schoolId)
-
-                combine(classesFlow, subjectsFlow, assignmentsFlow) { classesRes, subjectsRes, assignments ->
+                // 2. Reactive Data Stream
+                combine(
+                    schoolRepository.observeClassesFlow(schoolId),
+                    sessionRepository.observeAllSubjectsFlow(schoolId),
+                    database.accountClassAccessDao().getAssignmentsFlow(targetAccountId, schoolId),
+                ) { classesRes, subjectsRes, assignments ->
                     Triple(classesRes, subjectsRes, assignments)
-                }.first().let { (classesRes, subjectsRes, assignments) ->
+                }.collect { (classesRes, subjectsRes, assignments) ->
                     classesRes.onSuccess { classes ->
                         subjectsRes.onSuccess { subjects ->
-                            _uiStateFlow.update {
-                                it.copy(
+                            _uiStateFlow.update { state ->
+                                val updatedAssignments = if (!isInitialDataLoaded) {
+                                    assignments.map { tuple ->
+                                        TeacherAssignment(tuple.classId, tuple.subjectId.takeIf { s -> s != null && s.isNotEmpty() })
+                                    }
+                                } else {
+                                    state.selectedAssignments
+                                }
+
+                                if (!isInitialDataLoaded && updatedAssignments.isNotEmpty()) {
+                                    isInitialDataLoaded = true
+                                } else if (!isInitialDataLoaded && classes.isNotEmpty()) {
+                                    // Even if assignments are empty, if we have classes, we consider initial load done
+                                    isInitialDataLoaded = true
+                                }
+
+                                state.copy(
                                     isLoading = false,
                                     targetAccount = account,
                                     availableClasses = classes,
-                                    filteredClasses = classes, // 🔥 Initial filter state
+                                    filteredClasses = if (state.searchQuery.isBlank()) classes else classes.filter { it.name.contains(state.searchQuery, ignoreCase = true) },
                                     availableSubjects = subjects,
-                                    selectedAssignments = assignments.map { tuple ->
-                                        TeacherAssignment(tuple.classId, tuple.subjectId.takeIf { s -> s != null && s.isNotEmpty() })
-                                    },
+                                    selectedAssignments = updatedAssignments,
                                 )
                             }
-                        }.onFailure { error ->
-                            _uiStateFlow.update { it.copy(isLoading = false, error = "Failed to load subjects: ${error.message}") }
                         }
-                    }.onFailure { error ->
-                        _uiStateFlow.update { it.copy(isLoading = false, error = "Failed to load classes: ${error.message}") }
                     }
                 }
             } catch (e: Exception) {

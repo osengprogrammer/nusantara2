@@ -44,6 +44,9 @@ fun NavGraphBuilder.accountGraph(
                 onNavigateToBulkAssign = {
                     navController.navigate(Screen.BulkAssignMatrix.route)
                 },
+                onNavigateToAssignClass = { targetId, role ->
+                    navController.navigate(Screen.AssignClass.createRoute(targetId, role))
+                },
             )
         }
         composable(NavigationRoutes.BULK_ASSIGN_MATRIX) {
