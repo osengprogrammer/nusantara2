@@ -1,5 +1,6 @@
 package com.azuratech.azuratime.features.account.ui.management
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
@@ -34,6 +35,7 @@ fun AccountManagementScreen(
     onNavigateToWelcome: () -> Unit,
     title: String = "Account Settings",
     onNavigateToBulkAssign: () -> Unit = {},
+    onNavigateToAssignClass: (String, String) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -94,6 +96,7 @@ fun AccountManagementScreen(
         onNavigateBack = onNavigateBack,
         title = if (title == "Staff & Supervisors") "Staff Profiles" else title,
         onNavigateToBulkAssign = onNavigateToBulkAssign,
+        onNavigateToAssignClass = onNavigateToAssignClass,
         onRemoveMemberRequest = { id ->
             targetAccountIdToDelete = id
             showDeleteDialog = true
@@ -101,6 +104,7 @@ fun AccountManagementScreen(
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AccountManagementContent(
     uiState: AccountUiState,
@@ -109,6 +113,7 @@ fun AccountManagementContent(
     onRemoveMemberRequest: (String) -> Unit,
     title: String = "Account Settings",
     onNavigateToBulkAssign: () -> Unit = {},
+    onNavigateToAssignClass: (String, String) -> Unit = { _, _ -> },
 ) {
     AzuraScreen(
         title = title,
@@ -238,6 +243,7 @@ fun AccountManagementContent(
                                         account = account,
                                         currentRole = memberRoleInThisSchool,
                                         currentUserRole = uiState.currentAccountRole,
+                                        onItemClick = { onNavigateToAssignClass(account.accountId, memberRoleInThisSchool) },
                                         onChangeRole = { newRole ->
                                             onEvent(AccountUiEvent.ChangeMemberRole(account.accountId, newRole))
                                         },
@@ -306,10 +312,15 @@ fun MemberItem(
     account: AccountEntity,
     currentRole: String,
     currentUserRole: AccountRole,
+    onItemClick: () -> Unit,
     onChangeRole: (AccountRole) -> Unit,
     onRemoveMember: () -> Unit,
 ) {
-    AzuraCard(modifier = Modifier.fillMaxWidth()) {
+    AzuraCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onItemClick() },
+    ) {
         Column(modifier = Modifier.padding(AzuraSpacing.md)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
