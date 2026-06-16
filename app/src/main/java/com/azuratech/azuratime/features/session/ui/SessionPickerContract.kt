@@ -9,12 +9,15 @@ import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 data class SessionPickerUiState(
     val isLoading: Boolean = false,
     val sessions: List<SessionWithDetails> = emptyList(),
+    val filteredSessions: List<SessionWithDetails> = emptyList(), // 🔥 Search support
+    val searchQuery: String = "", // 🔥 Search support
     val error: String? = null,
 )
 
 sealed class SessionPickerUiEvent {
     data class LoadSessions(val schoolId: String) : SessionPickerUiEvent()
     data class SelectSession(val sessionId: String) : SessionPickerUiEvent()
+    data class UpdateSearchQuery(val query: String) : SessionPickerUiEvent() // 🔥 Enterprise Search
     object Refresh : SessionPickerUiEvent()
 }
 

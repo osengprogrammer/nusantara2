@@ -116,6 +116,14 @@ class SessionPickerViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             sessions = finalSessions,
+                            filteredSessions = if (it.searchQuery.isEmpty()) {
+                                finalSessions
+                            } else {
+                                finalSessions.filter { s ->
+                                    (s.subjectName ?: "").contains(it.searchQuery, ignoreCase = true) ||
+                                        (s.className ?: "").contains(it.searchQuery, ignoreCase = true)
+                                }
+                            },
                             error = if (container.sessionsResult is Result.Failure) container.sessionsResult.error.message else null,
                         )
                     }
@@ -137,7 +145,22 @@ class SessionPickerViewModel @Inject constructor(
         when (event) {
             is SessionPickerUiEvent.LoadSessions -> { /* Handled by observer */ }
             is SessionPickerUiEvent.SelectSession -> selectSession(event.sessionId)
+            is SessionPickerUiEvent.UpdateSearchQuery -> updateSearch(event.query)
             SessionPickerUiEvent.Refresh -> { /* Flows will auto-refresh */ }
+        }
+    }
+
+    private fun updateSearch(query: String) {
+        _uiStateFlow.update { state ->
+            val filtered = if (query.isBlank()) {
+                state.sessions
+            } else {
+                state.sessions.filter {
+                    (it.subjectName ?: "").contains(query, ignoreCase = true) ||
+                        (it.className ?: "").contains(query, ignoreCase = true)
+                }
+            }
+            state.copy(searchQuery = query, filteredSessions = filtered)
         }
     }
 
