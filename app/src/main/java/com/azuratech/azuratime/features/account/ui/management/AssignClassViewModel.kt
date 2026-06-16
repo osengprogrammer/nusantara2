@@ -20,7 +20,7 @@ import javax.inject.Inject
 /**
  * 🚀 ASSIGN CLASS VIEW MODEL (v3.4.0-matrix)
  * ViewModel for assigning classes and subjects to a supervisor.
- * Refactored for robust reactive search and data connectivity.
+ * Refactored for robust reactive search and decoupled class/subject selection.
  */
 @HiltViewModel
 class AssignClassViewModel @Inject constructor(
@@ -40,7 +40,8 @@ class AssignClassViewModel @Inject constructor(
     fun onEvent(event: AssignClassUiEvent) {
         when (event) {
             is AssignClassUiEvent.LoadInitialData -> loadData(event.targetAccountId)
-            is AssignClassUiEvent.ToggleClassSelection -> toggleSelection(event.classId, event.subjectId)
+            is AssignClassUiEvent.ToggleClass -> toggleClass(event.classId)
+            is AssignClassUiEvent.ToggleAssignment -> toggleAssignment(event.classId, event.subjectId)
             is AssignClassUiEvent.UpdateSearchQuery -> updateSearch(event.query)
             AssignClassUiEvent.SelectAllFiltered -> selectAllFiltered()
             AssignClassUiEvent.ClearAllSelections -> clearAll()
@@ -51,6 +52,53 @@ class AssignClassViewModel @Inject constructor(
 
     private val _searchQueryFlow = MutableStateFlow("")
     private var isInitialDataLoaded = false
+
+    private fun toggleClass(classId: String) {
+        _uiStateFlow.update { state ->
+            val currentClasses = state.selectedClassIds.toMutableSet()
+            val currentAssignments = state.selectedAssignments.toMutableList()
+
+            if (currentClasses.contains(classId)) {
+                currentClasses.remove(classId)
+                // 🔥 AI Native Cleanup: Remove all assignments for this class when class is deselected
+                currentAssignments.removeAll { it.classId == classId }
+            } else {
+                currentClasses.add(classId)
+                // Don't auto-assign anything, let user choose in Step 2
+            }
+            state.copy(selectedClassIds = currentClasses, selectedAssignments = currentAssignments)
+        }
+    }
+
+    private fun toggleAssignment(classId: String, subjectId: String?) {
+        _uiStateFlow.update { state ->
+            val currentSelected = state.selectedAssignments.toMutableList()
+            val exists = currentSelected.any { it.classId == classId && it.subjectId == subjectId }
+
+            if (exists) {
+                currentSelected.removeAll { it.classId == classId && it.subjectId == subjectId }
+            } else {
+                currentSelected.add(TeacherAssignment(classId, subjectId))
+            }
+            state.copy(selectedAssignments = currentSelected)
+        }
+    }
+
+    private fun updateSearch(query: String) {
+        _searchQueryFlow.value = query
+    }
+
+    private fun selectAllFiltered() {
+        _uiStateFlow.update { state ->
+            val currentClasses = state.selectedClassIds.toMutableSet()
+            state.filteredClasses.forEach { currentClasses.add(it.id) }
+            state.copy(selectedClassIds = currentClasses)
+        }
+    }
+
+    private fun clearAll() {
+        _uiStateFlow.update { it.copy(selectedClassIds = emptySet(), selectedAssignments = emptyList()) }
+    }
 
     private fun loadData(targetAccountId: String) {
         val schoolId = sessionManager.getActiveSchoolId() ?: return
@@ -92,6 +140,12 @@ class AssignClassViewModel @Inject constructor(
                                 state.selectedAssignments
                             }
 
+                            val currentSelectedClasses = if (!isInitialDataLoaded) {
+                                currentAssignments.map { it.classId }.toSet()
+                            } else {
+                                state.selectedClassIds
+                            }
+
                             if (!isInitialDataLoaded && (classes.isNotEmpty() || assignments.isNotEmpty())) {
                                 isInitialDataLoaded = true
                             }
@@ -102,6 +156,7 @@ class AssignClassViewModel @Inject constructor(
                                 availableClasses = classes,
                                 filteredClasses = if (query.isBlank()) classes else classes.filter { it.name.contains(query, ignoreCase = true) },
                                 availableSubjects = subjects,
+                                selectedClassIds = currentSelectedClasses,
                                 selectedAssignments = currentAssignments,
                                 searchQuery = query,
                             )
@@ -127,40 +182,6 @@ class AssignClassViewModel @Inject constructor(
         val assignments: List<com.azuratech.azuratime.features.account.data.local.TeacherAssignmentTuple>,
         val query: String,
     )
-
-    private fun updateSearch(query: String) {
-        _searchQueryFlow.value = query
-    }
-
-    private fun selectAllFiltered() {
-        _uiStateFlow.update { state ->
-            val currentSelected = state.selectedAssignments.toMutableList()
-            state.filteredClasses.forEach { classModel ->
-                if (currentSelected.none { it.classId == classModel.id }) {
-                    currentSelected.add(TeacherAssignment(classModel.id, null))
-                }
-            }
-            state.copy(selectedAssignments = currentSelected)
-        }
-    }
-
-    private fun clearAll() {
-        _uiStateFlow.update { it.copy(selectedAssignments = emptyList()) }
-    }
-
-    private fun toggleSelection(classId: String, subjectId: String?) {
-        _uiStateFlow.update { state ->
-            val currentSelected = state.selectedAssignments.toMutableList()
-            val assignment = TeacherAssignment(classId, subjectId)
-
-            if (currentSelected.any { it.classId == classId && it.subjectId == subjectId }) {
-                currentSelected.removeAll { it.classId == classId && it.subjectId == subjectId }
-            } else {
-                currentSelected.add(assignment)
-            }
-            state.copy(selectedAssignments = currentSelected)
-        }
-    }
 
     private fun saveAssignments() {
         val state = _uiStateFlow.value

@@ -134,10 +134,10 @@ fun AssignClassScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 uiState.filteredClasses.forEach { classItem ->
-                                    val isSelected = uiState.selectedAssignments.any { it.classId == classItem.id }
+                                    val isSelected = uiState.selectedClassIds.contains(classItem.id)
                                     FilterChip(
                                         selected = isSelected,
-                                        onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id)) },
+                                        onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClass(classItem.id)) },
                                         label = { Text(classItem.name) },
                                         leadingIcon = if (isSelected) {
                                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
@@ -164,7 +164,7 @@ fun AssignClassScreen(
 
                     // --- STEP 2: DEFINE SUBJECT MATRIX ---
                     val selectedClasses = uiState.availableClasses.filter { cls ->
-                        uiState.selectedAssignments.any { it.classId == cls.id }
+                        uiState.selectedClassIds.contains(cls.id)
                     }
 
                     if (selectedClasses.isNotEmpty()) {
@@ -204,7 +204,7 @@ fun AssignClassScreen(
                                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
                                             Checkbox(
                                                 checked = isHomeroom,
-                                                onCheckedChange = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id, null)) },
+                                                onCheckedChange = { viewModel.onEvent(AssignClassUiEvent.ToggleAssignment(classItem.id, null)) },
                                             )
                                             Text("Wali Kelas (Full Access)", style = MaterialTheme.typography.bodyMedium, fontWeight = if (isHomeroom) FontWeight.Bold else FontWeight.Normal)
                                         }
@@ -221,7 +221,7 @@ fun AssignClassScreen(
                                                 val isSubjectSelected = uiState.selectedAssignments.any { it.classId == classItem.id && it.subjectId == subject.subjectId }
                                                 FilterChip(
                                                     selected = isSubjectSelected,
-                                                    onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id, subject.subjectId)) },
+                                                    onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleAssignment(classItem.id, subject.subjectId)) },
                                                     label = { Text(subject.name, style = MaterialTheme.typography.labelSmall) },
                                                     colors = FilterChipDefaults.filterChipColors(
                                                         selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
