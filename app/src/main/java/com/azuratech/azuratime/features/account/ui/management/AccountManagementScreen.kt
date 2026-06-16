@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.account.ui.management
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -299,6 +300,7 @@ private fun SectionHeader(title: String, subtitle: String? = null) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MemberItem(
     account: AccountEntity,
@@ -316,8 +318,18 @@ fun MemberItem(
                 StudentAvatar(photoPath = account.photoUrl, size = 40.dp)
                 Spacer(modifier = Modifier.width(AzuraSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = account.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = account.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
                         Spacer(Modifier.width(8.dp))
                         RoleBadge(roleStr = currentRole)
                     }
@@ -341,9 +353,10 @@ fun MemberItem(
                 Spacer(modifier = Modifier.height(AzuraSpacing.sm))
                 HorizontalDivider(modifier = Modifier.padding(vertical = AzuraSpacing.xs), thickness = 0.5.dp)
                 Text(text = "Change Role:", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                Row(
+                androidx.compose.foundation.layout.FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.xs),
+                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.xs),
                 ) {
                     listOf(AccountRole.ADMIN, AccountRole.SUPERVISOR, AccountRole.USER).forEach { role ->
                         FilterChip(
@@ -387,6 +400,7 @@ fun RoleBadge(roleStr: String, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PendingFollowerItem(
     request: AccessRequestEntity,
@@ -407,9 +421,10 @@ fun PendingFollowerItem(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Row(
+            androidx.compose.foundation.layout.FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.xs),
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.xs),
             ) {
                 listOf(AccountRole.ADMIN, AccountRole.SUPERVISOR, AccountRole.USER).forEach { role ->
                     FilterChip(
