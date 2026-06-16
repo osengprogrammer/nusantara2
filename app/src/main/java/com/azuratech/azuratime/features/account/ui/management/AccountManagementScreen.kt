@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -347,14 +348,23 @@ fun MemberItem(
                     Text(text = account.email, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 }
 
-                // 🔥 ADMIN ONLY: Remove Member Button
+                // 🔥 ADMIN ONLY: Management Actions
                 if (currentUserRole == AccountRole.ADMIN || currentUserRole == AccountRole.SUPER_ADMIN) {
-                    IconButton(onClick = onRemoveMember) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Remove Member",
-                            tint = MaterialTheme.colorScheme.error,
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onItemClick) {
+                            Icon(
+                                imageVector = Icons.Default.AssignmentInd,
+                                contentDescription = "Edit Matrix",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        IconButton(onClick = onRemoveMember) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Remove Member",
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
                     }
                 }
             }
