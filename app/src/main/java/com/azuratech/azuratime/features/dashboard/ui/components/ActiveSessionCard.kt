@@ -61,10 +61,9 @@ fun ActiveSessionCard(
                     )
                 }
 
-                if (activeSession == null && allSessionsToday.isEmpty()) {
-                    TextButton(onClick = onManualPick) {
-                        Text("Pick Manually")
-                    }
+                // 🔥 AI Native: Always allow manual picking for Enterprise flexibility
+                TextButton(onClick = onManualPick) {
+                    Text("Pick Manually")
                 }
             }
 
