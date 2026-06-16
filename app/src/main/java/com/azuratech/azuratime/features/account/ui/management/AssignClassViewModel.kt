@@ -3,6 +3,7 @@ package com.azuratech.azuratime.features.account.ui.management
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.azuratech.azuraengine.result.Result as AzuraResult
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
@@ -19,6 +20,7 @@ import javax.inject.Inject
 /**
  * 🚀 ASSIGN CLASS VIEW MODEL (v3.4.0-matrix)
  * ViewModel for assigning classes and subjects to a supervisor.
+ * Refactored for robust reactive search and data connectivity.
  */
 @HiltViewModel
 class AssignClassViewModel @Inject constructor(
@@ -47,15 +49,87 @@ class AssignClassViewModel @Inject constructor(
         }
     }
 
-    private fun updateSearch(query: String) {
-        _uiStateFlow.update { state ->
-            val filtered = if (query.isBlank()) {
-                state.availableClasses
-            } else {
-                state.availableClasses.filter { it.name.contains(query, ignoreCase = true) }
+    private val _searchQueryFlow = MutableStateFlow("")
+    private var isInitialDataLoaded = false
+
+    private fun loadData(targetAccountId: String) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: return
+        _uiStateFlow.update { it.copy(isLoading = true, error = null) }
+
+        viewModelScope.launch {
+            try {
+                Log.d("AZURA_DEBUG", "🚀 Initializing Matrix Setup for: $targetAccountId")
+                val account = database.accountDao().getAccountById(targetAccountId)
+                if (account == null) {
+                    _uiStateFlow.update { it.copy(isLoading = false, error = "Account not found") }
+                    return@launch
+                }
+
+                // 🔥 AI Native: Reactive Data Pipeline
+                combine(
+                    schoolRepository.observeClassesFlow(schoolId),
+                    sessionRepository.observeAllSubjectsFlow(schoolId),
+                    database.accountClassAccessDao().getAssignmentsFlow(targetAccountId, schoolId),
+                    _searchQueryFlow,
+                ) { classesRes, subjectsRes, assignments, query ->
+                    DataSnapshot(classesRes, subjectsRes, assignments, query)
+                }.collect { snapshot ->
+                    val classesResult = snapshot.classesRes
+                    val subjectsResult = snapshot.subjectsRes
+                    val assignments = snapshot.assignments
+                    val query = snapshot.query
+
+                    if (classesResult is AzuraResult.Success && subjectsResult is AzuraResult.Success) {
+                        val classes = classesResult.data
+                        val subjects = subjectsResult.data
+
+                        _uiStateFlow.update { state ->
+                            val currentAssignments = if (!isInitialDataLoaded) {
+                                assignments.map { tuple ->
+                                    TeacherAssignment(tuple.classId, tuple.subjectId.takeIf { s -> s.isNotEmpty() })
+                                }
+                            } else {
+                                state.selectedAssignments
+                            }
+
+                            if (!isInitialDataLoaded && (classes.isNotEmpty() || assignments.isNotEmpty())) {
+                                isInitialDataLoaded = true
+                            }
+
+                            state.copy(
+                                isLoading = false,
+                                targetAccount = account,
+                                availableClasses = classes,
+                                filteredClasses = if (query.isBlank()) classes else classes.filter { it.name.contains(query, ignoreCase = true) },
+                                availableSubjects = subjects,
+                                selectedAssignments = currentAssignments,
+                                searchQuery = query,
+                            )
+                        }
+                    } else {
+                        val error = (classesResult as? AzuraResult.Failure)?.error?.message
+                            ?: (subjectsResult as? AzuraResult.Failure)?.error?.message
+                        if (error != null) {
+                            _uiStateFlow.update { it.copy(isLoading = false, error = error) }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("AZURA_DEBUG", "❌ Matrix Load Error: ${e.message}")
+                _uiStateFlow.update { it.copy(isLoading = false, error = e.message) }
             }
-            state.copy(searchQuery = query, filteredClasses = filtered)
         }
+    }
+
+    private data class DataSnapshot(
+        val classesRes: AzuraResult<List<com.azuratech.azuraengine.model.ClassModel>>,
+        val subjectsRes: AzuraResult<List<com.azuratech.azuratime.features.session.data.local.SubjectEntity>>,
+        val assignments: List<com.azuratech.azuratime.features.account.data.local.TeacherAssignmentTuple>,
+        val query: String,
+    )
+
+    private fun updateSearch(query: String) {
+        _searchQueryFlow.value = query
     }
 
     private fun selectAllFiltered() {
@@ -72,69 +146,6 @@ class AssignClassViewModel @Inject constructor(
 
     private fun clearAll() {
         _uiStateFlow.update { it.copy(selectedAssignments = emptyList()) }
-    }
-
-    private var isInitialDataLoaded = false
-
-    private fun loadData(targetAccountId: String) {
-        val schoolId = sessionManager.getActiveSchoolId() ?: return
-        _uiStateFlow.update { it.copy(isLoading = true, error = null) }
-
-        viewModelScope.launch {
-            try {
-                Log.d("AZURA_DEBUG", "Loading matrix data for account: $targetAccountId")
-                // 1. Get Target Account
-                val account = database.accountDao().getAccountById(targetAccountId)
-
-                if (account == null) {
-                    Log.e("AZURA_DEBUG", "Account not found: $targetAccountId")
-                    _uiStateFlow.update { it.copy(isLoading = false, error = "Account not found") }
-                    return@launch
-                }
-
-                // 2. Reactive Data Stream
-                combine(
-                    schoolRepository.observeClassesFlow(schoolId),
-                    sessionRepository.observeAllSubjectsFlow(schoolId),
-                    database.accountClassAccessDao().getAssignmentsFlow(targetAccountId, schoolId),
-                ) { classesRes, subjectsRes, assignments ->
-                    Triple(classesRes, subjectsRes, assignments)
-                }.collect { (classesRes, subjectsRes, assignments) ->
-                    classesRes.onSuccess { classes ->
-                        subjectsRes.onSuccess { subjects ->
-                            _uiStateFlow.update { state ->
-                                val updatedAssignments = if (!isInitialDataLoaded) {
-                                    assignments.map { tuple ->
-                                        TeacherAssignment(tuple.classId, tuple.subjectId.takeIf { s -> s != null && s.isNotEmpty() })
-                                    }
-                                } else {
-                                    state.selectedAssignments
-                                }
-
-                                if (!isInitialDataLoaded && updatedAssignments.isNotEmpty()) {
-                                    isInitialDataLoaded = true
-                                } else if (!isInitialDataLoaded && classes.isNotEmpty()) {
-                                    // Even if assignments are empty, if we have classes, we consider initial load done
-                                    isInitialDataLoaded = true
-                                }
-
-                                state.copy(
-                                    isLoading = false,
-                                    targetAccount = account,
-                                    availableClasses = classes,
-                                    filteredClasses = if (state.searchQuery.isBlank()) classes else classes.filter { it.name.contains(state.searchQuery, ignoreCase = true) },
-                                    availableSubjects = subjects,
-                                    selectedAssignments = updatedAssignments,
-                                )
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("AZURA_DEBUG", "Unexpected error in loadData: ${e.message}", e)
-                _uiStateFlow.update { it.copy(isLoading = false, error = "Unexpected error: ${e.message}") }
-            }
-        }
     }
 
     private fun toggleSelection(classId: String, subjectId: String?) {
