@@ -19,44 +19,49 @@ import androidx.core.view.WindowCompat
 // 1. AZURA COLORS (The Brand DNA - Beautified)
 // ==========================================
 
-// Light Mode (Inspirasi: WhatsApp & Material 3)
-val AzuraPrimary = Color(0xFF3B82F6) // Teal WhatsApp yang lebih tajam
-val AzuraSecondary = Color(0xFF435B5B) // Muted Teal (Gemini vibe)
-val AzuraBackgroundLight = Color(0xFFFBFDFA) // Off-white sedikit kehijauan (Fresh)
+// Light Mode (Inspirasi: Premium Enterprise & High-Tech)
+val AzuraPrimary = Color(0xFF1E3A8A) // Deep Navy Azure (Strong & Authoritative)
+val AzuraSecondary = Color(0xFF3B82F6) // Cobalt Blue (Modern Accent)
+val AzuraBackgroundLight = Color(0xFFF8FAFC) // Clean Slate Background
 val AzuraSurfaceLight = Color(0xFFFFFFFF)
 
-// Dark Mode (Inspirasi: Gemini Dark)
-val AzuraPrimaryDark = Color(0xFF4DB6AC) // Minty Teal
-val AzuraSurfaceDark = Color(0xFF1A1C1E) // Deep Charcoal (Bukan hitam pekat, lebih modern)
-val AzuraBackgroundDark = Color(0xFF101214) // Hampir Hitam
+// Dark Mode (Inspirasi: Midnight Modern)
+val AzuraPrimaryDark = Color(0xFF93C5FD) // Light Sky Azure (Better contrast for dark)
+val AzuraSecondaryDark = Color(0xFF60A5FA)
+val AzuraSurfaceDark = Color(0xFF1E293B) // Slate Blue-Gray Surface
+val AzuraBackgroundDark = Color(0xFF0F172A) // Midnight Azure Background
 
 // Warna Status
-val AzuraSuccess = Color(0xFF2E7D32) // Hijau Daun (Natural)
-val AzuraWarning = Color(0xFFF57C00) // Oranye Hangat
-val AzuraError = Color(0xFFB00020) // Deep Red
+val AzuraSuccess = Color(0xFF10B981) // Emerald Green
+val AzuraWarning = Color(0xFFF59E0B) // Amber Warning
+val AzuraError = Color(0xFFEF4444) // Vibrant Red
 
 private val AzuraLightColorScheme = lightColorScheme(
     primary = AzuraPrimary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD1E8E6), // Soft Teal Container
-    onPrimaryContainer = Color(0xFF002020),
+    primaryContainer = Color(0xFFDBEAFE), // Soft Blue Container
+    onPrimaryContainer = Color(0xFF1E3A8A),
     secondary = AzuraSecondary,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFEFF6FF),
     background = AzuraBackgroundLight,
     surface = AzuraSurfaceLight,
-    surfaceVariant = Color(0xFFF0F4F3), // Gemini-style subtle gray-teal
-    outline = Color(0xFF707978),
+    surfaceVariant = Color(0xFFF1F5F9), // Slate Variant
+    outline = Color(0xFF94A3B8),
     error = AzuraError,
 )
 
 private val AzuraDarkColorScheme = darkColorScheme(
     primary = AzuraPrimaryDark,
-    onPrimary = Color(0xFF003736),
-    primaryContainer = Color(0xFF00504E),
-    secondary = AzuraSecondary,
+    onPrimary = Color(0xFF1E3A8A),
+    primaryContainer = Color(0xFF1E3A8A),
+    onPrimaryContainer = Color(0xFFDBEAFE),
+    secondary = AzuraSecondaryDark,
+    onSecondary = Color(0xFF1E3A8A),
     background = AzuraBackgroundDark,
     surface = AzuraSurfaceDark,
-    surfaceVariant = Color(0xFF3F4948), // Dark Mode Greyish Teal
-    onSurface = Color(0xFFE1E3E2),
+    surfaceVariant = Color(0xFF334155),
+    onSurface = Color(0xFFF1F5F9),
     error = AzuraError,
 )
 
