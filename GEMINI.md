@@ -1,5 +1,29 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 35: Midnight Azure Rebranding & Dashboard Intelligence (June 15, 2026)
+- **Visual Identity:** Implemented the **Midnight Azure** premium theme.
+    - **Primary:** Deep Navy Azure (`#1E3A8A`) for authoritative branding.
+    - **Secondary:** Cobalt Blue (`#3B82F6`) for modern accents.
+    - **Backgrounds:** Clean Slate (`#F8FAFC`) for light mode and Midnight (`#0F172A`) for OLED-optimized dark mode.
+- **Dynamic Context:** Refactored Dashboard to automatically resolve class context for Supervisors (Session-Aware logic), eliminating the need for manual "Active Class" selection.
+- **Enterprise Polish:** 
+    - Updated `AssignClassScreen` with **Search functionality**, Step-by-Step UI, and "Select All/Clear All" actions.
+    - Enhanced `SessionPickerScreen` with search and distinct categorization (Scheduled vs. Matrix).
+    - Beautified `Staff Profiles` with **Section Headers** and a responsive **FlowRow** role chip layout.
+- **Verification:** Verified consistent branding across 50+ UI components; `compileDebugKotlin` and `spotlessCheck` passing 100%.
+
+### Phase 34: Enterprise Matrix System & Bulk Import (June 15, 2026)
+- **Bulk CSV Engine:** Implemented the **Matrix Import Engine** for batch teacher-class-subject assignments.
+    - Supports `teacher_email`, `class_name`, and `subject_name` columns.
+    - Intelligent resolution of human-readable names to internal system IDs.
+    - Preview UI for data validation before committing to Firestore.
+- **Interactive Matrix:** Enabled direct Class-Subject management by clicking on Staff Profile cards with a polished, iterative UI.
+- **Data Integrity:** 
+    - Implemented **Soft Delete for Subjects** (`isActive` flag) to prevent data loss.
+    - Hardened Sync Engine with **Unsynced Protection**, ensuring local deletions are pushed to Cloud before being overwritten by remote pulls.
+    - Fixed missing class name population in session picking flows.
+- **Documentation:** Created `ROADMAP.md` for strategic "Enterprise Gold Standard" planning.
+
 ### Phase 33: Session Tiering Foundation (June 12, 2026)
 - **Phase 1: Schema Evolution:** Implemented `SessionType` enum and updated `ClassSessionEntity`. Successfully migrated to Room v23.
 - **Phase 3: UI/UX Implementation:**
