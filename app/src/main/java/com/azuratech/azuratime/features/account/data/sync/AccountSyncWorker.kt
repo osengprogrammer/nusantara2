@@ -54,9 +54,10 @@ class AccountSyncWorker @AssistedInject constructor(
             val schoolIds = account.memberships.keys.toList()
             schoolRepository.syncSchools(schoolIds)
 
-            // 4. 🔥 NEW: Explicitly sync classes for each school membership
+            // 4. 🔥 NEW: Explicitly sync classes and members for each school membership
             schoolIds.forEach { schoolId ->
                 schoolRepository.syncClasses(accountId, schoolId)
+                accountRepository.syncMembers(schoolId)
             }
 
             // 5. Sync Students & Biometrics (Background Auto-Heal)

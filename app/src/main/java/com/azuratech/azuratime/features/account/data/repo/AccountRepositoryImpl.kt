@@ -142,6 +142,51 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun syncMembers(schoolId: String): Result<List<AccountEntity>> {
+        return try {
+            val snapshot = db.collection("accounts")
+                .whereNotEqualTo("memberships.$schoolId", null)
+                .get().await()
+
+            val accounts = snapshot.documents.mapNotNull { doc ->
+                val membershipsRaw = doc.data?.get("memberships") as? Map<*, *>
+                val memberships = membershipsRaw?.mapNotNull { (key, value) ->
+                    val k = key as? String ?: return@mapNotNull null
+                    val v = value as? Map<*, *> ?: return@mapNotNull null
+                    k to SchoolMembership(
+                        schoolName = v["schoolName"] as? String ?: "",
+                        role = v["role"] as? String ?: "USER",
+                        status = v["status"] as? String ?: "ACTIVE",
+                        assignments = (v["assignments"] as? List<*>)?.mapNotNull {
+                            val m = it as? Map<*, *> ?: return@mapNotNull null
+                            com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                classId = m["classId"] as? String ?: "",
+                                subjectId = m["subjectId"] as? String,
+                            )
+                        } ?: emptyList(),
+                    )
+                }?.toMap() ?: emptyMap()
+
+                AccountEntity(
+                    accountId = doc.id,
+                    email = doc.getString("email") ?: "",
+                    name = doc.getString("name") ?: "",
+                    photoUrl = doc.getString("photoUrl"),
+                    status = doc.getString("status") ?: "ACTIVE",
+                    role = doc.getString("role") ?: "USER",
+                    activeSchoolId = doc.getString("activeSchoolId"),
+                    activeClassId = doc.getString("activeClassId"),
+                    memberships = memberships,
+                ).also {
+                    accountDao.upsertAccount(it)
+                }
+            }
+            Result.Success(accounts)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
     override suspend fun pushAccount(accountId: String): Result<Unit> {
         return try {
             val accountResult = getAccountById(accountId)

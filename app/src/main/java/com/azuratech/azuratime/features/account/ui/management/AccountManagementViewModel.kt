@@ -215,6 +215,10 @@ class AccountManagementViewModel @Inject constructor(
             repository.getProfile(uid)
                 .onSuccess { profile ->
                     _uiStateFlow.update { it.copy(isLoading = false, accountProfile = profile) }
+                    // 🔥 AI Native: Also trigger sync for members to populate the list
+                    sessionManager.getActiveSchoolId()?.let { schoolId ->
+                        repository.syncMembers(schoolId)
+                    }
                 }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }

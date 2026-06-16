@@ -19,6 +19,7 @@ interface AccountRepository {
     suspend fun updateDisplayName(accountId: String, newName: String): Result<Unit>
     suspend fun updatePhoto(accountId: String, photoUrl: String): Result<Unit>
     suspend fun syncAccount(accountId: String): Result<AccountEntity>
+    suspend fun syncMembers(schoolId: String): Result<List<AccountEntity>>
     suspend fun pushAccount(accountId: String): Result<Unit>
     suspend fun searchAccounts(email: String): Result<List<AccountEntity>>
 
