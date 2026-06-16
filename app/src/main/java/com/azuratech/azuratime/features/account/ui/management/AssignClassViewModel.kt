@@ -39,9 +39,39 @@ class AssignClassViewModel @Inject constructor(
         when (event) {
             is AssignClassUiEvent.LoadInitialData -> loadData(event.targetAccountId)
             is AssignClassUiEvent.ToggleClassSelection -> toggleSelection(event.classId, event.subjectId)
+            is AssignClassUiEvent.UpdateSearchQuery -> updateSearch(event.query)
+            AssignClassUiEvent.SelectAllFiltered -> selectAllFiltered()
+            AssignClassUiEvent.ClearAllSelections -> clearAll()
             is AssignClassUiEvent.SaveAssignments -> saveAssignments()
             is AssignClassUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
         }
+    }
+
+    private fun updateSearch(query: String) {
+        _uiStateFlow.update { state ->
+            val filtered = if (query.isBlank()) {
+                state.availableClasses
+            } else {
+                state.availableClasses.filter { it.name.contains(query, ignoreCase = true) }
+            }
+            state.copy(searchQuery = query, filteredClasses = filtered)
+        }
+    }
+
+    private fun selectAllFiltered() {
+        _uiStateFlow.update { state ->
+            val currentSelected = state.selectedAssignments.toMutableList()
+            state.filteredClasses.forEach { classModel ->
+                if (currentSelected.none { it.classId == classModel.id }) {
+                    currentSelected.add(TeacherAssignment(classModel.id, null))
+                }
+            }
+            state.copy(selectedAssignments = currentSelected)
+        }
+    }
+
+    private fun clearAll() {
+        _uiStateFlow.update { it.copy(selectedAssignments = emptyList()) }
     }
 
     private fun loadData(targetAccountId: String) {
@@ -75,9 +105,10 @@ class AssignClassViewModel @Inject constructor(
                                     isLoading = false,
                                     targetAccount = account,
                                     availableClasses = classes,
+                                    filteredClasses = classes, // 🔥 Initial filter state
                                     availableSubjects = subjects,
                                     selectedAssignments = assignments.map { tuple ->
-                                        TeacherAssignment(tuple.classId, tuple.subjectId.takeIf { s -> s.isNotEmpty() })
+                                        TeacherAssignment(tuple.classId, tuple.subjectId.takeIf { s -> s != null && s.isNotEmpty() })
                                     },
                                 )
                             }

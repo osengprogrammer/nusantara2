@@ -9,8 +9,10 @@ data class AssignClassUiState(
     val isLoading: Boolean = false,
     val targetAccount: AccountEntity? = null,
     val availableClasses: List<ClassModel> = emptyList(),
-    val availableSubjects: List<SubjectEntity> = emptyList(), // 🔥 Available subjects for matrix pairing
-    val selectedAssignments: List<TeacherAssignment> = emptyList(), // 🔥 Matrix of Class+Subject
+    val filteredClasses: List<ClassModel> = emptyList(), // 🔥 Supporting search
+    val availableSubjects: List<SubjectEntity> = emptyList(),
+    val selectedAssignments: List<TeacherAssignment> = emptyList(),
     val isSaving: Boolean = false,
+    val searchQuery: String = "", // 🔥 Supporting search
     val error: String? = null,
 )

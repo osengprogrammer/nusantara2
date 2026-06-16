@@ -16,7 +16,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.ui.designsystem.*
+import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.filled.Warning
+
+import androidx.compose.material.icons.filled.ClearAll
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SelectAll
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -43,7 +51,7 @@ fun AssignClassScreen(
     }
 
     AzuraScreen(
-        title = "Assign Classes",
+        title = "Class Matrix Setup",
         onBack = onNavigateBack,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) {
@@ -59,142 +67,168 @@ fun AssignClassScreen(
                     // Header: Target Account Info
                     item {
                         AzuraCard(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(AzuraSpacing.md)) {
-                                Text(
-                                    text = "Role: ${accountRole.name}",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                                Text(
-                                    text = uiState.targetAccount?.name ?: "Loading...",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                                Text(
-                                    text = uiState.targetAccount?.email ?: "",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Gray,
-                                )
+                            Row(modifier = Modifier.padding(AzuraSpacing.md), verticalAlignment = Alignment.CenterVertically) {
+                                StudentAvatar(photoPath = uiState.targetAccount?.photoUrl, size = 56.dp)
+                                Spacer(modifier = Modifier.width(AzuraSpacing.md))
+                                Column {
+                                    Text(
+                                        text = uiState.targetAccount?.name ?: "Loading...",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.ExtraBold,
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        RoleBadge(roleStr = accountRole.name)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = uiState.targetAccount?.email ?: "",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color.Gray,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
 
-                    // Selection Section
+                    // --- STEP 1: SELECT CLASSES ---
                     item {
-                        Text(
-                            text = "Select Assigned Classes",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 4.dp),
-                        )
-                        val description = when (accountRole) {
-                            AccountRole.SUPERVISOR -> "Supervisors can only perform attendance for selected classes."
-                            AccountRole.ADMIN, AccountRole.SUPER_ADMIN -> "Admins have full access to all classes in this school."
-                            else -> "Users do not manage classes."
-                        }
-                        Text(
-                            text = description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                        SectionHeader(
+                            title = "Step 1: Select Classes",
+                            subtitle = "Pick the classrooms this supervisor is responsible for.",
                         )
                     }
 
                     item {
-                        FlowRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(AzuraSpacing.xs),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            uiState.availableClasses.forEach { classItem ->
-                                val isSelected = uiState.selectedAssignments.any { it.classId == classItem.id }
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id)) },
-                                    label = { Text(classItem.name) },
-                                    leadingIcon = if (isSelected) {
-                                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                                    } else {
-                                        null
-                                    },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        Column(modifier = Modifier.padding(horizontal = 4.dp)) {
+                            // Search & Bulk Actions
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                OutlinedTextField(
+                                    value = uiState.searchQuery,
+                                    onValueChange = { viewModel.onEvent(AssignClassUiEvent.UpdateSearchQuery(it)) },
+                                    placeholder = { Text("Filter classes...", style = MaterialTheme.typography.bodyMedium) },
+                                    leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
+                                    modifier = Modifier.weight(1f),
+                                    shape = AzuraShapes.medium,
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                                     ),
                                 )
+                                IconButton(onClick = { viewModel.onEvent(AssignClassUiEvent.SelectAllFiltered) }) {
+                                    Icon(Icons.Default.SelectAll, "Select All", tint = MaterialTheme.colorScheme.primary)
+                                }
+                                IconButton(onClick = { viewModel.onEvent(AssignClassUiEvent.ClearAllSelections) }) {
+                                    Icon(Icons.Default.ClearAll, "Clear All", tint = MaterialTheme.colorScheme.error)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                uiState.filteredClasses.forEach { classItem ->
+                                    val isSelected = uiState.selectedAssignments.any { it.classId == classItem.id }
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id)) },
+                                        label = { Text(classItem.name) },
+                                        leadingIcon = if (isSelected) {
+                                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                                        } else {
+                                            null
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        ),
+                                    )
+                                }
+                                if (uiState.filteredClasses.isEmpty()) {
+                                    Text(
+                                        "No classes match your search.",
+                                        modifier = Modifier.padding(AzuraSpacing.md),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray,
+                                    )
+                                }
                             }
                         }
                     }
 
-                    // Matrix Selection Section (Subjects per Class)
+                    // --- STEP 2: DEFINE SUBJECT MATRIX ---
                     val selectedClasses = uiState.availableClasses.filter { cls ->
                         uiState.selectedAssignments.any { it.classId == cls.id }
                     }
 
                     if (selectedClasses.isNotEmpty()) {
                         item {
-                            Text(
-                                text = "Define Subject Matrix",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
-                            )
-                            Text(
-                                text = "For each class, select specific subjects or leave empty for Homeroom (Wali Kelas).",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                            SectionHeader(
+                                title = "Step 2: Assign Subjects",
+                                subtitle = "Assign specific subjects or set as Wali Kelas (Homeroom).",
                             )
                         }
 
                         items(selectedClasses) { classItem ->
-                            AzuraCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                ),
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
                                 Column(modifier = Modifier.padding(AzuraSpacing.md)) {
-                                    Text(
-                                        text = classItem.name,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.School, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = classItem.name,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     // Homeroom Option
                                     val isHomeroom = uiState.selectedAssignments.any { it.classId == classItem.id && it.subjectId == null }
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Checkbox(
-                                            checked = isHomeroom,
-                                            onCheckedChange = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id, null)) },
-                                        )
-                                        Text("Homeroom / All Subjects (Wali Kelas)", style = MaterialTheme.typography.bodyMedium)
+                                    Surface(
+                                        color = if (isHomeroom) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else Color.Transparent,
+                                        shape = AzuraShapes.small,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
+                                            Checkbox(
+                                                checked = isHomeroom,
+                                                onCheckedChange = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id, null)) },
+                                            )
+                                            Text("Wali Kelas (Full Access)", style = MaterialTheme.typography.bodyMedium, fontWeight = if (isHomeroom) FontWeight.Bold else FontWeight.Normal)
+                                        }
                                     }
 
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
-
-                                    // Subject Chips
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                                    ) {
-                                        uiState.availableSubjects.forEach { subject ->
-                                            val isSubjectSelected = uiState.selectedAssignments.any { it.classId == classItem.id && it.subjectId == subject.subjectId }
-                                            FilterChip(
-                                                selected = isSubjectSelected,
-                                                onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id, subject.subjectId)) },
-                                                label = { Text(subject.name, style = MaterialTheme.typography.labelSmall) },
-                                                colors = FilterChipDefaults.filterChipColors(
-                                                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                                    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                                ),
-                                            )
+                                    if (!isHomeroom) {
+                                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+                                        FlowRow(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        ) {
+                                            uiState.availableSubjects.forEach { subject ->
+                                                val isSubjectSelected = uiState.selectedAssignments.any { it.classId == classItem.id && it.subjectId == subject.subjectId }
+                                                FilterChip(
+                                                    selected = isSubjectSelected,
+                                                    onClick = { viewModel.onEvent(AssignClassUiEvent.ToggleClassSelection(classItem.id, subject.subjectId)) },
+                                                    label = { Text(subject.name, style = MaterialTheme.typography.labelSmall) },
+                                                    colors = FilterChipDefaults.filterChipColors(
+                                                        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                                        selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                    ),
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -202,39 +236,56 @@ fun AssignClassScreen(
                         }
                     }
 
-                    // Selected List Summary
+                    // --- STEP 3: FINAL SUMMARY ---
                     if (uiState.selectedAssignments.isNotEmpty()) {
                         item {
-                            HorizontalDivider(modifier = Modifier.padding(vertical = AzuraSpacing.sm))
-                            Text(
-                                text = "Final Assignment Summary (${uiState.selectedAssignments.size})",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 4.dp),
+                            SectionHeader(
+                                title = "Final Assignment Summary",
+                                subtitle = "Review the generated matrix before saving.",
                             )
                         }
 
-                        items(uiState.selectedAssignments) { assignment ->
-                            val classObj = uiState.availableClasses.find { it.id == assignment.classId }
-                            val subjectObj = uiState.availableSubjects.find { it.subjectId == assignment.subjectId }
+                        item {
+                            AzuraCard(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.padding(AzuraSpacing.sm)) {
+                                    uiState.selectedAssignments.forEach { assignment ->
+                                        val classObj = uiState.availableClasses.find { it.id == assignment.classId }
+                                        val subjectObj = uiState.availableSubjects.find { it.subjectId == assignment.subjectId }
 
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    Icons.Default.School,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                                Spacer(Modifier.width(12.dp))
-                                Text(
-                                    text = "${classObj?.name ?: "Unknown"} -> ${subjectObj?.name ?: "Homeroom"}",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Surface(
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                                shape = AzuraShapes.small,
+                                                modifier = Modifier.size(28.dp),
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.School,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.padding(6.dp),
+                                                )
+                                            }
+                                            Spacer(Modifier.width(12.dp))
+                                            Text(
+                                                text = classObj?.name ?: "Unknown",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.width(80.dp),
+                                            )
+                                            Icon(Icons.AutoMirrored.Filled.ArrowRight, null, tint = Color.LightGray)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(
+                                                text = subjectObj?.name ?: "Full Access (Wali Kelas)",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = if (subjectObj == null) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
+                                                fontWeight = if (subjectObj == null) FontWeight.Bold else FontWeight.Normal,
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -245,32 +296,59 @@ fun AssignClassScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                             ) {
-                                Text(
-                                    text = uiState.error!!,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    modifier = Modifier.padding(AzuraSpacing.md),
-                                )
+                                Row(modifier = Modifier.padding(AzuraSpacing.md), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = uiState.error!!,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Bottom Bar Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(AzuraSpacing.md),
+            // Fixed Bottom Action
+            Surface(
+                modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
+                tonalElevation = 8.dp,
+                shadowElevation = 8.dp,
             ) {
-                AzuraButton(
-                    text = if (uiState.isSaving) "Saving..." else "Save Changes",
-                    onClick = { viewModel.onEvent(AssignClassUiEvent.SaveAssignments) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isSaving && !uiState.isLoading,
-                    isLoading = uiState.isSaving,
-                )
+                Box(modifier = Modifier.padding(AzuraSpacing.md)) {
+                    AzuraButton(
+                        text = if (uiState.isSaving) "Applying Matrix..." else "Confirm & Save Matrix",
+                        onClick = { viewModel.onEvent(AssignClassUiEvent.SaveAssignments) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !uiState.isSaving && !uiState.isLoading,
+                        isLoading = uiState.isSaving,
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, subtitle: String? = null) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = AzuraSpacing.md, bottom = AzuraSpacing.xs),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        if (subtitle != null) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        HorizontalDivider(modifier = Modifier.padding(top = AzuraSpacing.xs), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
