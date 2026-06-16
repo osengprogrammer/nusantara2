@@ -108,12 +108,50 @@ class DashboardViewModel @Inject constructor(
 
     private val _assignedClassesFlow = _allClassesFlow
 
-    private val _sessionStudentsFlow = _accountFlow
-        .flatMapLatest { account ->
-            val activeClassId = account?.activeClassId
-            val schoolId = account?.activeSchoolId
-            if (activeClassId != null && schoolId != null) {
-                biometricRepository.getStudentsInClassFlow(activeClassId, schoolId)
+    private val _geofenceFlow = _activeSchoolIdFlow
+        .flatMapLatest { schoolId ->
+            if (schoolId != null) {
+                schoolRepository.observeGeofenceFlow(schoolId)
+            } else {
+                flowOf(null)
+            }
+        }
+
+    private val _activeSessionFlow = _activeSchoolIdFlow
+        .flatMapLatest { schoolId ->
+            if (schoolId != null) {
+                val dayOfWeek = java.time.LocalDate.now().dayOfWeek.value
+                getActiveSessionUseCase(schoolId, dayOfWeek)
+                    .map { it.getOrNull() }
+            } else {
+                flowOf(null)
+            }
+        }
+
+    private val _sessionStudentsFlow = combine(
+        _accountFlow,
+        _activeSessionFlow,
+    ) { account, activeSession -> account to activeSession }
+        .flatMapLatest { (account, activeSession) ->
+            val schoolId = account?.activeSchoolId ?: return@flatMapLatest flowOf(emptyList())
+
+            // 🔥 AI Native: Professional dynamic class resolution
+            val resolvedClassId = when {
+                // 1. Priority: Manually set active class (for Students/Hybrid)
+                account.activeClassId != null -> account.activeClassId
+
+                // 2. Secondary: Currently active session's class
+                activeSession != null -> activeSession.session.classId
+
+                // 3. Fallback: First assigned class from Matrix (for Supervisors)
+                else -> {
+                    val membership = account.memberships[schoolId]
+                    membership?.assignments?.firstOrNull()?.classId
+                }
+            }
+
+            if (resolvedClassId != null) {
+                biometricRepository.getStudentsInClassFlow(resolvedClassId, schoolId)
                     .map { it.getOrNull() ?: emptyList() }
             } else {
                 flowOf(emptyList())
@@ -150,26 +188,6 @@ class DashboardViewModel @Inject constructor(
                     }
             } else {
                 flowOf(0)
-            }
-        }
-
-    private val _geofenceFlow = _activeSchoolIdFlow
-        .flatMapLatest { schoolId ->
-            if (schoolId != null) {
-                schoolRepository.observeGeofenceFlow(schoolId)
-            } else {
-                flowOf(null)
-            }
-        }
-
-    private val _activeSessionFlow = _activeSchoolIdFlow
-        .flatMapLatest { schoolId ->
-            if (schoolId != null) {
-                val dayOfWeek = java.time.LocalDate.now().dayOfWeek.value
-                getActiveSessionUseCase(schoolId, dayOfWeek)
-                    .map { it.getOrNull() }
-            } else {
-                flowOf(null)
             }
         }
 
