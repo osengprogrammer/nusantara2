@@ -12,6 +12,8 @@ import com.google.firebase.firestore.DocumentSnapshot
         Index(value = ["schoolId"]),
         Index(value = ["classId"]),
         Index(value = ["subjectId"]),
+        Index(value = ["supervisorEmail"]), // 🔥 Performance Index
+        Index(value = ["dayOfWeek"]), // 🔥 Performance Index
         Index(value = ["lookupKey"], unique = true),
     ],
 )

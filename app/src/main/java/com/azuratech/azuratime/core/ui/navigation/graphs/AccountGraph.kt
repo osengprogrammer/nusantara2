@@ -62,7 +62,13 @@ fun NavGraphBuilder.accountGraph(
             com.azuratech.azuratime.features.school.ui.list.SchoolListScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onSchoolClick = { schoolId ->
-                    navController.navigate(Screen.ClassList.createRoute(schoolId))
+                    val route = Screen.SchoolExplorer.createRoute(schoolId)
+                    android.util.Log.d("SchoolClick", "Navigating to: $route")
+                    try {
+                        navController.navigate(route)
+                    } catch (e: Exception) {
+                        android.util.Log.e("SchoolClick", "Navigation failed: ${e.message}", e)
+                    }
                 },
             )
         }

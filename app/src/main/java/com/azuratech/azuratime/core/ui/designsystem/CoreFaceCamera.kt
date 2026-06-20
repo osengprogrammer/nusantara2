@@ -49,7 +49,7 @@ fun CoreFaceCamera(
         val previewView = remember {
             PreviewView(context).apply {
                 scaleType = PreviewView.ScaleType.FILL_CENTER
-                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                implementationMode = PreviewView.ImplementationMode.PERFORMANCE // 🔥 Optimized for Performance
             }
         }
 
@@ -82,6 +82,7 @@ fun CoreFaceCamera(
                                 .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
                                 .build(),
                         )
+                        .setTargetRotation(previewView.display?.rotation ?: android.view.Surface.ROTATION_0) // 🔥 Fix Orientation Overhead
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                         .build().also {

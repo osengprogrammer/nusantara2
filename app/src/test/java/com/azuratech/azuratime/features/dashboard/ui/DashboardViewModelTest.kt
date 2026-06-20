@@ -57,9 +57,9 @@ class DashboardViewModelTest {
     private val accountId = "account_1"
 
     private val allClasses = listOf(
-        ClassModel("class_1", "school_1", "Kelas A", "10", "account_1", 10, emptyList(), 0L),
-        ClassModel("class_2", "school_1", "Kelas B", "12", "account_1", 12, emptyList(), 0L),
-        ClassModel("class_3", "school_1", "Kelas C", "8", "account_1", 8, emptyList(), 0L),
+        ClassModel("class_1", "school_1", "Kelas A", "10", "account_1", 10, emptyList(), emptyList(), 0L),
+        ClassModel("class_2", "school_1", "Kelas B", "12", "account_1", 12, emptyList(), emptyList(), 0L),
+        ClassModel("class_3", "school_1", "Kelas C", "8", "account_1", 8, emptyList(), emptyList(), 0L),
     )
 
     @Before
@@ -96,7 +96,7 @@ class DashboardViewModelTest {
 
         // Mock Session Tiering
         every { sessionRepository.getSessionsByDayFlow(any(), any()) } returns flowOf(Result.Success(emptyList()))
-        every { getActiveSessionUseCase(any(), any(), any()) } returns flowOf(Result.Success(null))
+        every { getActiveSessionUseCase(any(), any(), any(), any()) } returns flowOf(Result.Success(null))
     }
 
     @After
@@ -116,7 +116,7 @@ class DashboardViewModelTest {
                 schoolId to SchoolMembership(
                     schoolName = "My School",
                     role = "SUPERVISOR",
-                    assignedClassIds = listOf("class_1"),
+                    assignments = listOf(com.azuratech.azuratime.features.account.domain.model.TeacherAssignment("class_1")),
                 ),
             ),
         )

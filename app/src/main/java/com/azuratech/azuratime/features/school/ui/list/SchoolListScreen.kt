@@ -29,7 +29,7 @@ import com.azuratech.azuratime.core.domain.model.AccountRole
 @Composable
 fun SchoolListScreen(
     viewModel: SchoolViewModel = hiltViewModel(),
-    @Suppress("UNUSED_PARAMETER") onSchoolClick: (String) -> Unit,
+    onSchoolClick: (String) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -100,6 +100,7 @@ fun SchoolListScreen(
 
                             Card(
                                 onClick = {
+                                    android.util.Log.d("SchoolClick", "Clicked school: ${school.id}, name: ${school.name}")
                                     viewModel.onEvent(SchoolUiEvent.SelectSchool(school))
                                     onSchoolClick(school.id)
                                 },

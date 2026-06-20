@@ -15,7 +15,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+import com.azuratech.azuratime.core.data.local.AppDatabase
+import androidx.room.withTransaction
+
 class SessionRepositoryImpl @Inject constructor(
+    private val database: AppDatabase,
     private val sessionDao: SessionDao,
     private val sessionManager: SessionManager,
     private val remoteDataSource: SessionRemoteDataSource,
@@ -24,6 +28,20 @@ class SessionRepositoryImpl @Inject constructor(
 
     override fun getSessionsByDayFlow(schoolId: String, day: Int): Flow<Result<List<SessionWithDetails>>> {
         return sessionDao.getSessionsByDayFlow(schoolId, day).asLocalResult()
+    }
+
+    override suspend fun getActiveSessionOptimized(
+        schoolId: String,
+        email: String,
+        day: Int,
+        currentTime: String,
+    ): Result<SessionWithDetails?> {
+        return try {
+            val session = sessionDao.getActiveSessionOptimized(schoolId, email, day, currentTime)
+            Result.Success(session)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message ?: "Failed to get active session"))
+        }
     }
 
     override suspend fun getSessionById(sessionId: String): Result<ClassSessionEntity> {
@@ -49,11 +67,41 @@ class SessionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveSubject(subject: SubjectEntity): Result<Unit> {
-        return try {
-            sessionDao.insertSubject(subject.copy(isSynced = false))
+    override suspend fun saveSubject(subject: SubjectEntity): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            database.withTransaction {
+                val existingById = sessionDao.getSubjectById(subject.subjectId)
+                val existingByName = if (existingById == null) {
+                    sessionDao.getSubjectByName(subject.schoolId, subject.name)
+                } else {
+                    null
+                }
+
+                val merged = when {
+                    existingById != null -> {
+                        subject.copy(
+                            isFromTemplate = existingById.isFromTemplate,
+                            isSynced = false,
+                        )
+                    }
+                    existingByName != null -> {
+                        subject.copy(
+                            subjectId = existingByName.subjectId,
+                            isFromTemplate = existingByName.isFromTemplate,
+                            isSynced = false,
+                            isActive = true, // Reactivate if it was soft-deleted
+                        )
+                    }
+                    else -> {
+                        subject.copy(isSynced = false)
+                    }
+                }
+                sessionDao.upsertSubject(merged)
+            }
             syncManager.enqueueSync()
             Result.Success(Unit)
+        } catch (e: android.database.sqlite.SQLiteConstraintException) {
+            Result.Failure(AppError.Conflict("Subject name already exists in this school"))
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message ?: "Failed to save subject"))
         }

@@ -3,6 +3,8 @@ package com.azuratech.azuratime.features.session.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.model.Account
@@ -18,6 +20,8 @@ import java.util.*
 import javax.inject.Inject
 
 import com.azuratech.azuratime.features.session.domain.model.SessionType
+import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.features.template.domain.model.SubjectTemplate
 
 @HiltViewModel
 class SessionManagementViewModel @Inject constructor(
@@ -26,6 +30,7 @@ class SessionManagementViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val sessionManager: SessionManager,
     private val createSessionUseCase: CreateSessionUseCase,
+    private val templateRepository: com.azuratech.azuratime.features.template.domain.repository.TemplateRepository,
 ) : ViewModel() {
 
     private val _uiStateFlow = MutableStateFlow(SessionManagementUiState())
@@ -36,6 +41,36 @@ class SessionManagementViewModel @Inject constructor(
 
     init {
         observeData()
+        loadAvailableSubjectsFromTemplate()
+    }
+
+    private fun loadAvailableSubjectsFromTemplate() {
+        viewModelScope.launch {
+            templateRepository.fetchAllGlobalSubjects()
+                .onSuccess { globalSubjects ->
+                    val distinctSubjects = globalSubjects.distinctBy { it.name }.sortedBy { it.name }
+                    _uiStateFlow.update { it.copy(availableSubjects = distinctSubjects) }
+                }
+                .onFailure {
+                    val fallback = listOf(
+                        SubjectTemplate(id = "fb_math", name = "Matematika", category = "MIPA"),
+                        SubjectTemplate(id = "fb_ind", name = "Bahasa Indonesia", category = "Bahasa"),
+                        SubjectTemplate(id = "fb_eng", name = "Bahasa Inggris", category = "Bahasa"),
+                        SubjectTemplate(id = "fb_phy", name = "Fisika", category = "MIPA"),
+                        SubjectTemplate(id = "fb_chem", name = "Kimia", category = "MIPA"),
+                        SubjectTemplate(id = "fb_bio", name = "Biologi", category = "MIPA"),
+                        SubjectTemplate(id = "fb_hist", name = "Sejarah", category = "IPS"),
+                        SubjectTemplate(id = "fb_geo", name = "Geografi", category = "IPS"),
+                        SubjectTemplate(id = "fb_soc", name = "Sosiologi", category = "IPS"),
+                        SubjectTemplate(id = "fb_econ", name = "Ekonomi", category = "IPS"),
+                        SubjectTemplate(id = "fb_civ", name = "PPKn", category = "Umum"),
+                        SubjectTemplate(id = "fb_art", name = "Seni Budaya", category = "Umum"),
+                        SubjectTemplate(id = "fb_pe", name = "PJOK", category = "Umum"),
+                        SubjectTemplate(id = "fb_rel", name = "Pendidikan Agama", category = "Umum"),
+                    )
+                    _uiStateFlow.update { it.copy(availableSubjects = fallback) }
+                }
+        }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -124,11 +159,32 @@ class SessionManagementViewModel @Inject constructor(
     fun onEvent(event: SessionManagementUiEvent) {
         when (event) {
             is SessionManagementUiEvent.AddSubject -> addSubject(event.name, event.description)
+            is SessionManagementUiEvent.UpdateSubject -> updateSubject(event.subject, event.newName, event.newDescription)
             is SessionManagementUiEvent.DeleteSubject -> deleteSubject(event.subject)
             is SessionManagementUiEvent.SelectTier -> _uiStateFlow.update { it.copy(selectedTier = event.tier) }
             is SessionManagementUiEvent.AddSession -> addSession(event)
             is SessionManagementUiEvent.DeleteSession -> deleteSession(event.session)
             SessionManagementUiEvent.GenerateFromMatrix -> generateFromMatrix()
+            SessionManagementUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
+        }
+    }
+
+    private fun updateSubject(subject: SubjectEntity, newName: String, newDescription: String?) {
+        if (subject.isFromTemplate) {
+            viewModelScope.launch {
+                _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Template subjects cannot be edited."))
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            val updated = subject.copy(name = newName, description = newDescription)
+            val result = sessionRepository.saveSubject(updated)
+            if (result is Result.Success) {
+                _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Subject updated"))
+            } else if (result is Result.Failure) {
+                _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast(result.error.message ?: "Failed to update subject"))
+            }
         }
     }
 
@@ -165,21 +221,42 @@ class SessionManagementViewModel @Inject constructor(
     }
 
     private fun addSubject(name: String, description: String?) {
-        val schoolId = sessionManager.getActiveSchoolId() ?: return
+        // Start loading
+        _uiStateFlow.update { it.copy(isLoading = true) }
+        val schoolId = sessionManager.getActiveSchoolId()
+        if (schoolId == null) {
+            _uiStateFlow.update { it.copy(error = "Pilih sekolah terlebih dahulu sebelum menambahkan mata pelajaran", isLoading = false) }
+            return
+        }
+        // Generate a new UUID for the school‑specific subject ID
+        val newSubjectId = UUID.randomUUID().toString()
+        val matchingTemplate = _uiStateFlow.value.availableSubjects
+            .firstOrNull { it.name.equals(name, ignoreCase = true) }
         val subject = SubjectEntity(
-            subjectId = UUID.randomUUID().toString(),
+            subjectId = newSubjectId,
             name = name,
             description = description,
             schoolId = schoolId,
+            isFromTemplate = matchingTemplate != null,
         )
         viewModelScope.launch {
+            // clear previous error before trying
+            _uiStateFlow.update { it.copy(error = null) }
             val result = sessionRepository.saveSubject(subject)
             if (result is Result.Success) {
                 _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Subject added"))
+            } else if (result is Result.Failure) {
+                val errorMsg = if (result.error is AppError.Conflict) {
+                    "Mata pelajaran dengan nama tersebut sudah terdaftar di sekolah ini"
+                } else {
+                    result.error.message ?: "Failed to save subject"
+                }
+                _uiStateFlow.update { it.copy(error = errorMsg) }
             }
+            // loading finished
+            _uiStateFlow.update { it.copy(isLoading = false) }
         }
     }
-
     private fun deleteSubject(subject: SubjectEntity) {
         viewModelScope.launch {
             val result = sessionRepository.deleteSubject(subject)

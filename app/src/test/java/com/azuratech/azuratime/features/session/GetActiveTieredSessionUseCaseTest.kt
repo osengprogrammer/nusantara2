@@ -32,9 +32,9 @@ class GetActiveTieredSessionUseCaseTest {
 
     @Test
     fun `when global session exists, it should take priority over class and academic`() = runTest {
-        val now = LocalTime.now()
-        val startTime = now.minusMinutes(30).format(timeFormatter)
-        val endTime = now.plusMinutes(30).format(timeFormatter)
+        val testTime = LocalTime.of(10, 0)
+        val startTime = testTime.minusMinutes(30).format(timeFormatter)
+        val endTime = testTime.plusMinutes(30).format(timeFormatter)
 
         val globalSession = createSession("s1", SessionType.GLOBAL, null, startTime, endTime)
         val classSession = createSession("s2", SessionType.CLASS_WIDE, classId, startTime, endTime)
@@ -44,7 +44,7 @@ class GetActiveTieredSessionUseCaseTest {
             Result.Success(listOf(academicSession, classSession, globalSession)),
         )
 
-        val result = useCase(schoolId, dayOfWeek, classId).first()
+        val result = useCase(schoolId, dayOfWeek, classId, testTime).first()
 
         assert(result is Result.Success)
         assertEquals("s1", (result as Result.Success).data?.session?.sessionId)
@@ -52,9 +52,9 @@ class GetActiveTieredSessionUseCaseTest {
 
     @Test
     fun `when only class and academic exist, class session should take priority`() = runTest {
-        val now = LocalTime.now()
-        val startTime = now.minusMinutes(30).format(timeFormatter)
-        val endTime = now.plusMinutes(30).format(timeFormatter)
+        val testTime = LocalTime.of(10, 0)
+        val startTime = testTime.minusMinutes(30).format(timeFormatter)
+        val endTime = testTime.plusMinutes(30).format(timeFormatter)
 
         val classSession = createSession("s2", SessionType.CLASS_WIDE, classId, startTime, endTime)
         val academicSession = createSession("s3", SessionType.ACADEMIC, classId, startTime, endTime)
@@ -63,7 +63,7 @@ class GetActiveTieredSessionUseCaseTest {
             Result.Success(listOf(academicSession, classSession)),
         )
 
-        val result = useCase(schoolId, dayOfWeek, classId).first()
+        val result = useCase(schoolId, dayOfWeek, classId, testTime).first()
 
         assert(result is Result.Success)
         assertEquals("s2", (result as Result.Success).data?.session?.sessionId)
@@ -71,9 +71,9 @@ class GetActiveTieredSessionUseCaseTest {
 
     @Test
     fun `should filter by student classId for CLASS_WIDE and ACADEMIC`() = runTest {
-        val now = LocalTime.now()
-        val startTime = now.minusMinutes(30).format(timeFormatter)
-        val endTime = now.plusMinutes(30).format(timeFormatter)
+        val testTime = LocalTime.of(10, 0)
+        val startTime = testTime.minusMinutes(30).format(timeFormatter)
+        val endTime = testTime.plusMinutes(30).format(timeFormatter)
 
         val academicSessionOtherClass = createSession("s3", SessionType.ACADEMIC, "other_class", startTime, endTime)
         val academicSessionMyClass = createSession("s4", SessionType.ACADEMIC, classId, startTime, endTime)
@@ -82,7 +82,7 @@ class GetActiveTieredSessionUseCaseTest {
             Result.Success(listOf(academicSessionOtherClass, academicSessionMyClass)),
         )
 
-        val result = useCase(schoolId, dayOfWeek, classId).first()
+        val result = useCase(schoolId, dayOfWeek, classId, testTime).first()
 
         assert(result is Result.Success)
         assertEquals("s4", (result as Result.Success).data?.session?.sessionId)

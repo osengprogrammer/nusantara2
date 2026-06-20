@@ -31,6 +31,31 @@ interface SessionDao {
     )
     fun getSessionsByDayFlow(schoolId: String, day: Int): Flow<List<SessionWithDetails>>
 
+    /**
+     * 🔥 AI Native Optimization: Database-level session filtering.
+     * Prevents loading multiple sessions into memory.
+     */
+    @Transaction
+    @Query(
+        """
+        SELECT s.*, subj.name as subjectName
+        FROM class_sessions s
+        LEFT JOIN subjects subj ON s.subjectId = subj.subjectId
+        WHERE s.schoolId = :schoolId 
+          AND s.supervisorEmail = :email
+          AND s.dayOfWeek = :day 
+          AND s.isActive = 1
+          AND :currentTime BETWEEN s.startTime AND s.endTime
+        LIMIT 1
+    """,
+    )
+    suspend fun getActiveSessionOptimized(
+        schoolId: String,
+        email: String,
+        day: Int,
+        currentTime: String,
+    ): SessionWithDetails?
+
     @Query("SELECT * FROM class_sessions WHERE sessionId = :sessionId AND isActive = 1")
     suspend fun getSessionById(sessionId: String): ClassSessionEntity?
 
@@ -51,11 +76,23 @@ interface SessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: ClassSessionEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSubject(subject: SubjectEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
+    suspend fun upsertSubject(subject: SubjectEntity)
+
+    @Query("SELECT * FROM subjects WHERE subjectId = :subjectId LIMIT 1")
+    suspend fun getSubjectById(subjectId: String): SubjectEntity?
+
+    @Query("SELECT * FROM subjects WHERE schoolId = :schoolId AND name = :name COLLATE NOCASE LIMIT 1")
+    suspend fun getSubjectByName(schoolId: String, name: String): SubjectEntity?
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSubjects(subjects: List<SubjectEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSubjectsIgnore(subjects: List<SubjectEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSessions(sessions: List<ClassSessionEntity>)

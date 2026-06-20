@@ -20,8 +20,8 @@ class GetActiveTieredSessionUseCase @Inject constructor(
         schoolId: String,
         dayOfWeek: Int,
         studentClassId: String? = null,
+        currentTime: LocalTime = LocalTime.now(),
     ): Flow<Result<SessionWithDetails?>> {
-        val currentTime = LocalTime.now()
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
         return getSessionsByDayUseCase(schoolId, dayOfWeek).map { result ->

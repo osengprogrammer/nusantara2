@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Class
 import androidx.compose.material3.*
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.filled.Person
 @Composable
 fun ClassManagementScreen(
     onNavigateBack: () -> Unit,
+    onClassClick: (ClassModel) -> Unit = {},
     viewModel: ClassViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -87,9 +90,9 @@ fun ClassManagementScreen(
             } else {
                 ClassListSection(
                     uiState = uiState,
-                    onClassClick = { classModel ->
-                        viewModel.onEvent(ClassUiEvent.SelectClass(classModel.id))
-                    },
+                    onClassClick = onClassClick,
+                    onEditClass = { viewModel.onEvent(ClassUiEvent.RequestEditClass(it)) },
+                    onDeleteClass = { viewModel.onEvent(ClassUiEvent.RequestDeleteClass(it)) },
                 )
             }
         }
@@ -122,6 +125,8 @@ fun ClassManagementScreen(
 fun ClassListSection(
     uiState: ClassUiState,
     onClassClick: (ClassModel) -> Unit,
+    onEditClass: (ClassModel) -> Unit = {},
+    onDeleteClass: (ClassModel) -> Unit = {},
 ) {
     if (uiState.isLoading && uiState.classes.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -143,6 +148,8 @@ fun ClassListSection(
                     classModel = classModel,
                     studentCount = studentCount,
                     onClick = { onClassClick(classModel) },
+                    onEdit = { onEditClass(classModel) },
+                    onDelete = { onDeleteClass(classModel) },
                 )
             }
         }
@@ -232,7 +239,13 @@ fun AddStudentToClassDialog(
 }
 
 @Composable
-fun ClassItem(classModel: ClassModel, studentCount: Int, onClick: () -> Unit) {
+fun ClassItem(
+    classModel: ClassModel,
+    studentCount: Int,
+    onClick: () -> Unit,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
+) {
     AzuraCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -244,13 +257,19 @@ fun ClassItem(classModel: ClassModel, studentCount: Int, onClick: () -> Unit) {
         ) {
             Icon(Icons.Default.Class, contentDescription = null, modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.width(AzuraSpacing.md))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(text = classModel.name, style = MaterialTheme.typography.titleMedium)
                 Text(
                     text = "$studentCount Students",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(20.dp))
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
             }
         }
     }

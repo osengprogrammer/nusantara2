@@ -16,6 +16,16 @@ interface SessionRepository {
      */
     fun getSessionsByDayFlow(schoolId: String, day: Int): Flow<Result<List<SessionWithDetails>>>
 
+    /**
+     * 🔥 AI Native Optimization: Resolves the active session using database-level filtering.
+     */
+    suspend fun getActiveSessionOptimized(
+        schoolId: String,
+        email: String,
+        day: Int,
+        currentTime: String,
+    ): Result<SessionWithDetails?>
+
     suspend fun getSessionById(sessionId: String): Result<ClassSessionEntity>
 
     suspend fun saveSession(session: ClassSessionEntity): Result<Unit>

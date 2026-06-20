@@ -39,6 +39,7 @@
    <string name="dashboard_class_management">Class Mgmt</string>
    <string name="dashboard_student_roster">Student Roster</string>
    <string name="dashboard_access_requests">Access Requests</string>
+   <string name="dashboard_school_templates">School Templates</string>
 
    <!-- 📸 ATTENDANCE CAPTURE -->
    <string name="searching_for_face">Searching for Face...</string>

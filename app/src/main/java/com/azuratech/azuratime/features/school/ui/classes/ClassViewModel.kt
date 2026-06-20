@@ -32,8 +32,9 @@ import javax.inject.Inject
 class ClassViewModel @Inject constructor(
     private val schoolRepository: SchoolRepository,
     private val accountRepository: AccountRepository,
-    private val studentRepository: StudentRepository, // ✅ ADDED
+    private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager,
+    private val templateRepository: com.azuratech.azuratime.features.template.domain.repository.TemplateRepository,
 ) : ViewModel() {
 
     private val _uiEffectFlow = MutableSharedFlow<ClassUiEffect>()
@@ -42,19 +43,31 @@ class ClassViewModel @Inject constructor(
     private val _stateFlow = MutableStateFlow(ClassUiState())
     val uiStateFlow: StateFlow<ClassUiState> = _stateFlow.asStateFlow()
 
-    private val _availableClasses = listOf(
-        "10-IPA-1", "10-IPA-2", "10-IPA-3",
-        "10-IPS-1", "10-IPS-2", "10-IPS-3",
-        "11-IPA-1", "11-IPA-2", "11-IPA-3",
-        "11-IPS-1", "11-IPS-2", "11-IPS-3",
-        "12-IPA-1", "12-IPA-2", "12-IPA-3",
-        "12-IPS-1", "12-IPS-2", "12-IPS-3",
-    )
-
     init {
-        _stateFlow.update { it.copy(availableClasses = _availableClasses) }
         loadClasses()
+        loadAvailableClassesFromTemplate()
         observeClassesReactive()
+    }
+
+    private fun loadAvailableClassesFromTemplate() {
+        viewModelScope.launch {
+            templateRepository.fetchAllGlobalClasses()
+                .onSuccess { globalClasses ->
+                    val names = globalClasses.map { it.name }.distinct().sorted()
+                    _stateFlow.update { it.copy(availableClasses = names) }
+                }
+                .onFailure { error ->
+                    val fallback = listOf(
+                        "10-IPA-1", "10-IPA-2", "10-IPA-3",
+                        "10-IPS-1", "10-IPS-2", "10-IPS-3",
+                        "11-IPA-1", "11-IPA-2", "11-IPA-3",
+                        "11-IPS-1", "11-IPS-2", "11-IPS-3",
+                        "12-IPA-1", "12-IPA-2", "12-IPA-3",
+                        "12-IPS-1", "12-IPS-2", "12-IPS-3",
+                    )
+                    _stateFlow.update { it.copy(availableClasses = fallback) }
+                }
+        }
     }
 
     fun onEvent(event: ClassUiEvent) {
@@ -139,17 +152,17 @@ class ClassViewModel @Inject constructor(
 
         combine(
             activeSchoolIdFlow.flatMapLatest { schoolId -> schoolRepository.observeClassesFlow(schoolId) },
-            studentRepository.getStudentProfilesFlow(),
+            studentRepository.getStudentProfilesFlow(), // Fetch all students here
         ) { classResult, studentResult ->
             if (classResult is com.azuratech.azuraengine.result.Result.Success && studentResult is com.azuratech.azuraengine.result.Result.Success) {
                 val classes = classResult.data
-                val students = studentResult.data
+                val allStudents = studentResult.data // Get all students
 
                 val counts = classes.associate { classModel ->
-                    classModel.id to students.count { it.classIds.contains(classModel.id) }
+                    classModel.id to allStudents.count { it.classIds.contains(classModel.id) }
                 }
 
-                _stateFlow.update { it.copy(classes = classes, studentCountsByClassId = counts) }
+                _stateFlow.update { it.copy(classes = classes, studentCountsByClassId = counts, allStudents = allStudents) }
             } else if (classResult is com.azuratech.azuraengine.result.Result.Failure) {
                 _stateFlow.update { it.copy(error = classResult.error.message) }
             }

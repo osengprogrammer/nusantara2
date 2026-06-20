@@ -308,6 +308,27 @@ class SchoolRepositoryImpl @Inject constructor(
     override suspend fun saveClass(_accountId: String, schoolId: String?, classModel: ClassModel): Result<Unit> {
         return try {
             database.withTransaction {
+                val schoolIdVal = schoolId
+                if (schoolIdVal != null) {
+                    // 🔥 AI Native: Ensure school exists locally. Do NOT auto-create "Ghost Schools".
+                    if (dao.getSchoolById(schoolIdVal) == null) {
+                        return@withTransaction Result.Failure(AppError.LocalDB("School $schoolIdVal not found locally. Assignment aborted."))
+                    }
+
+                    // Check if class with same name already exists in this school
+                    val existing = dao.getClassByNameAndSchool(schoolIdVal, classModel.name)
+                    if (existing != null) {
+                        val updated = existing.copy(
+                            grade = classModel.grade,
+                            accountId = classModel.accountId,
+                            studentCount = classModel.studentCount
+                        )
+                        classDao.update(updated)
+                        dao.assignClass(SchoolClassAssignment(schoolIdVal, existing.id))
+                        return@withTransaction Result.Success(Unit)
+                    }
+                }
+
                 val entity = ClassEntity(
                     id = classModel.id,
                     ownerAccountId = _accountId,
@@ -320,12 +341,8 @@ class SchoolRepositoryImpl @Inject constructor(
                 )
                 dao.upsertClass(entity)
 
-                if (schoolId != null) {
-                    // 🔥 AI Native: Ensure school exists locally. Do NOT auto-create "Ghost Schools".
-                    if (dao.getSchoolById(schoolId) == null) {
-                        return@withTransaction Result.Failure(AppError.LocalDB("School $schoolId not found locally. Assignment aborted."))
-                    }
-                    dao.assignClass(SchoolClassAssignment(schoolId, classModel.id))
+                if (schoolIdVal != null) {
+                    dao.assignClass(SchoolClassAssignment(schoolIdVal, classModel.id))
                 }
                 Result.Success(Unit)
             }

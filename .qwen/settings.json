@@ -2,8 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(./gradlew *)",
-      "Bash(rm *)"
+      "Bash(rm *)",
+      "Read(//home/max/azuratime/nusantara/main/**)"
     ]
   },
-  "$version": 3
+  "$version": 4
 }

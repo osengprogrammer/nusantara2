@@ -101,6 +101,9 @@ sealed class Screen(val route: String) {
     data object AssignClass : Screen(NavigationRoutes.ASSIGN_CLASS) {
         fun createRoute(targetAccountId: String, role: String) = "assignClass/$targetAccountId/$role"
     }
+    data object SchoolExplorer : Screen(NavigationRoutes.SCHOOL_EXPLORER) {
+        fun createRoute(schoolId: String) = "schoolExplorer/$schoolId"
+    }
     data object FindSchool : Screen(NavigationRoutes.FIND_SCHOOL)
     data object Onboarding : Screen(NavigationRoutes.ONBOARDING)
     data object CreateSchool : Screen(NavigationRoutes.CREATE_SCHOOL)
@@ -118,4 +121,5 @@ sealed class Screen(val route: String) {
     data object AiMusic : Screen(NavigationRoutes.AI_MUSIC)
     data object GpsManagement : Screen(NavigationRoutes.GPS_MANAGEMENT)
     data object MapPicker : Screen(NavigationRoutes.MAP_PICKER)
+    data object SchoolTemplates : Screen(NavigationRoutes.SCHOOL_TEMPLATES)
 }

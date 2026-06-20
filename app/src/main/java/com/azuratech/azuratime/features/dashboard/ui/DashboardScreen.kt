@@ -1,8 +1,10 @@
 package com.azuratech.azuratime.features.dashboard.ui
 
 import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
@@ -10,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,6 +41,7 @@ fun DashboardScreen(
     val uiEffect by viewModel.uiEffectFlow.collectAsStateWithLifecycle(initialValue = null)
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddSchoolDialog by remember { mutableStateOf(false) }
+    var showHealthSheet by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiEffect) {
@@ -52,6 +57,14 @@ fun DashboardScreen(
         title = "Azura Time",
         snackbarHost = { SnackbarHost(snackbarHostState) },
         actions = {
+            if (uiState.account?.toDomain().isAdmin(uiState.currentSchool?.id ?: "")) {
+                SystemHealthIcon(
+                    isSyncing = uiState.isSyncing,
+                    hasError = uiState.error != null,
+                    onClick = { showHealthSheet = true },
+                )
+            }
+
             IconButton(onClick = { showMenu = true }) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Settings")
             }
@@ -93,6 +106,28 @@ fun DashboardScreen(
                 )
             }
         }
+    }
+
+    if (showHealthSheet) {
+        HealthDashboardBottomSheet(
+            onDismiss = { showHealthSheet = false },
+            uiState = uiState,
+            onRetrySync = {
+                viewModel.onEvent(DashboardUiEvent.Refresh)
+                showHealthSheet = false
+            },
+        )
+    }
+
+    if (showAddSchoolDialog) {
+        AddSchoolDialog(
+            availableClasses = schoolViewModel.uiStateFlow.collectAsStateWithLifecycle().value.availableClasses,
+            onDismissRequest = { showAddSchoolDialog = false },
+            onConfirmClick = { name, timezone, classes ->
+                schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.CreateSchool(name, timezone, classes))
+                showAddSchoolDialog = false
+            },
+        )
     }
 }
 
@@ -260,7 +295,8 @@ fun DashboardContent(
                         currentRole = data.currentRole,
                         onRegisterStudentClick = onRegisterStudentClick,
                         accountId = account?.accountId,
-                        pendingRequests = data.pendingRequests, // 🔥 Added
+                        schoolId = activeSchoolId,
+                        pendingRequests = data.pendingRequests,
                     )
                 }
 
@@ -309,15 +345,99 @@ fun DashboardContent(
             }
         }
     }
+}
 
-    if (showAddSchoolDialog) {
-        AddSchoolDialog(
-            availableClasses = availableClasses,
-            onDismissRequest = onDismissAddSchool,
-            onConfirmClick = { name, timezone, classes ->
-                schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.CreateSchool(name, timezone, classes))
-                onDismissAddSchool()
-            },
+@Composable
+fun SystemHealthIcon(
+    isSyncing: Boolean,
+    hasError: Boolean,
+    onClick: () -> Unit,
+) {
+    val statusColor = when {
+        hasError -> MaterialTheme.colorScheme.error
+        isSyncing -> Color(0xFFFFC107)
+        else -> Color(0xFF4CAF50)
+    }
+
+    Box(
+        modifier = Modifier
+            .padding(8.dp)
+            .size(24.dp)
+            .clip(CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        androidx.compose.foundation.Canvas(modifier = Modifier.size(10.dp)) {
+            drawCircle(color = statusColor)
+        }
+
+        if (isSyncing) {
+            CircularProgressIndicator(
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(20.dp),
+                color = statusColor.copy(alpha = 0.5f),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HealthDashboardBottomSheet(
+    onDismiss: () -> Unit,
+    uiState: DashboardUiState,
+    onRetrySync: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(AzuraSpacing.lg)
+                .navigationBarsPadding(),
+        ) {
+            Text("System Health", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            HorizontalDivider(modifier = Modifier.padding(vertical = AzuraSpacing.md))
+
+            HealthItem(
+                label = "Cloud Sync",
+                status = if (uiState.error == null) "Synced" else "Error",
+                isError = uiState.error != null,
+            )
+            HealthItem(label = "Local DB", status = "Healthy", isError = false)
+            HealthItem(label = "Template Version", status = "v3.4.0", isError = false)
+
+            if (uiState.error != null) {
+                Text(
+                    text = "Last Error: ${uiState.error}",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = AzuraSpacing.md),
+                )
+                Button(
+                    onClick = onRetrySync,
+                    modifier = Modifier.fillMaxWidth().padding(top = AzuraSpacing.lg),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text("Retry All Synchronization")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HealthItem(label: String, status: String, isError: Boolean) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = AzuraSpacing.sm),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = status,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
         )
     }
 }

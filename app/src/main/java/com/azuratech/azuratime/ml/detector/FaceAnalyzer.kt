@@ -122,8 +122,6 @@ class FaceAnalyzer(
                     }
 
                     // --- 🔥 PERBAIKAN KRUSIAL: EKSTRAK BITMAP DI SINI (SINKRON) ---
-                    // Jangan mengekstrak imageProxy di dalam coroutine (background)
-                    // karena sistem bisa menutupnya kapan saja.
                     val safeBitmap = try {
                         ImageConversionUtils.convertImageProxyToBitmap(
                             imageProxy = imageProxy,
@@ -135,7 +133,7 @@ class FaceAnalyzer(
                         null
                     }
 
-                    // 🛑 SEKARANG AMAN UNTUK MENUTUP PROXY (RAM langsung lega)
+                    // 🛑 SEKARANG AMAN UNTUK MENUTUP PROXY
                     imageProxy.close()
 
                     // --- PROCESS EMBEDDING DI BACKGROUND ---
@@ -144,25 +142,20 @@ class FaceAnalyzer(
 
                         analyzerScope.launch {
                             try {
-                                // Potong wajah, convert ke TFLite buffer, dan jalankan AI
                                 val safeCrop = FaceGeometryUtils.cropAndPadFace(safeBitmap, bounds)
                                 val buffer = FacePreprocessor.bitmapToModelInput(safeCrop)
                                 val embedding = FaceRecognizer.recognizeFace(buffer)
 
-                                // Kirim hasil ke Main Thread (UI/ViewModel)
                                 withContext(Dispatchers.Main) {
                                     onFaceEmbedding(bounds, embedding)
                                     onFaceCaptured?.invoke(safeCrop)
                                 }
 
-                                // Bersihkan memori Bitmap secara manual agar tidak memory leak
-                                // SANGAT PENTING: Consumer harus meng-copy bitmap jika ingin menyimpannya!
                                 if (safeCrop != safeBitmap) safeCrop.recycle()
                                 safeBitmap.recycle()
                             } catch (e: Exception) {
                                 Log.e("FaceAnalyzer", "Error di Coroutine: ${e.message}")
                             } finally {
-                                // 🔓 Buka gembok processing agar frame berikutnya bisa masuk
                                 isProcessing.set(false)
                             }
                         }
@@ -175,7 +168,7 @@ class FaceAnalyzer(
                     isEyeClosed = false
                     onLivenessStatus("Cari Wajah...")
                     imageProxy.close()
-                    isProcessing.set(false)
+                    isProcessing.set(false) // 🔓 Release lock immediately
                 }
             }
             .addOnFailureListener {

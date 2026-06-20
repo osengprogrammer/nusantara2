@@ -9,6 +9,7 @@ sealed class AppError {
     data class Network(override val message: String?) : AppError()
     data class LocalDB(override val message: String?) : AppError()
     data class BusinessRule(override val message: String?) : AppError()
+    data class Conflict(override val message: String?) : AppError()
     data class Unknown(override val message: String?) : AppError()
 }
 
@@ -34,6 +35,12 @@ sealed class Result<out T> {
 
     inline fun <R> map(transform: (T) -> R): Result<R> = when (this) {
         is Success -> Success(transform(data))
+        is Failure -> Failure(error)
+        is Loading -> Loading
+    }
+
+    inline fun <R> flatMap(transform: (T) -> Result<R>): Result<R> = when (this) {
+        is Success -> transform(data)
         is Failure -> Failure(error)
         is Loading -> Loading
     }

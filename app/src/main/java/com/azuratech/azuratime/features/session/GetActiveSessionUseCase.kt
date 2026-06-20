@@ -2,36 +2,37 @@ package com.azuratech.azuratime.features.session
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
-import kotlinx.coroutines.flow.*
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 /**
- * 🚀 GET ACTIVE SESSION USE CASE (v3.4.0)
- * Resolves the currently running session based on system time and day.
+ * 🚀 GET ACTIVE SESSION USE CASE (v3.4.0-optimized)
+ * Resolves the currently running session using database-level filtering.
+ * Eliminates in-memory looping for maximum performance during attendance capture.
  */
 class GetActiveSessionUseCase @Inject constructor(
-    private val getSessionsByDayUseCase: GetSessionsByDayUseCase,
+    private val sessionRepository: SessionRepository,
 ) {
-    operator fun invoke(schoolId: String, dayOfWeek: Int): Flow<Result<SessionWithDetails?>> {
-        val currentTime = LocalTime.now()
-        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-        return getSessionsByDayUseCase(schoolId, dayOfWeek).map { result ->
-            when (result) {
-                is Result.Success -> {
-                    val sessions = result.data
-                    val active = sessions.find { session ->
-                        val start = LocalTime.parse(session.session.startTime, timeFormatter)
-                        val end = LocalTime.parse(session.session.endTime, timeFormatter)
-                        !currentTime.isBefore(start) && !currentTime.isAfter(end)
-                    }
-                    Result.Success(active)
-                }
-                is Result.Failure -> Result.Failure(result.error)
-                is Result.Loading -> Result.Loading
-            }
-        }
+    /**
+     * @param schoolId The active workspace ID.
+     * @param email The supervisor's identity.
+     * @param dayOfWeek 1 (Mon) to 7 (Sun).
+     * @param currentTime Format "HH:mm" (e.g., "08:30").
+     */
+    operator fun invoke(
+        schoolId: String,
+        email: String,
+        dayOfWeek: Int,
+        currentTime: String,
+    ): Flow<Result<SessionWithDetails?>> = flow {
+        emit(Result.Loading)
+        val result = sessionRepository.getActiveSessionOptimized(
+            schoolId = schoolId,
+            email = email,
+            day = dayOfWeek,
+            currentTime = currentTime,
+        )
+        emit(result)
     }
 }

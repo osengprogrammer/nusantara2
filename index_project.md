@@ -98,3 +98,21 @@
 | **Update Cloud Logic** | `features.*.data.repo.*RepositoryImpl` |
 | **Adjust UI Layout** | `features.*.ui.*Screen` |
 | **Change Permissions** | `core.util.PermissionUtils` |
+
+## 📁 Project Documentation
+- [GEMINI.md](file:///home/max/azuratime/nusantara-main/GEMINI.md) — Current project status, phase history, and AI instructions (Root)
+- [index_project.md](file:///home/max/azuratime/nusantara-main/index_project.md) — This project file index (Root)
+- [README.md](file:///home/max/azuratime/nusantara-main/docs/README.md) — Core overview, terminology, features, and setup instructions
+- [CHANGELOG.md](file:///home/max/azuratime/nusantara-main/docs/CHANGELOG.md) — Version release logs
+- [CONTRIBUTING.md](file:///home/max/azuratime/nusantara-main/docs/CONTRIBUTING.md) — AI-native contribution guidelines and standards
+- [DEPLOYMENT.md](file:///home/max/azuratime/nusantara-main/docs/DEPLOYMENT.md) — Tag-based CI pipeline and manual deployment guide
+- [RECOVERY_PROTOCOL.md](file:///home/max/azuratime/nusantara-main/docs/RECOVERY_PROTOCOL.md) — Database self-healing and emergency recovery guide
+- [ROADMAP.md](file:///home/max/azuratime/nusantara-main/docs/ROADMAP.md) — Strategic future planning and phases
+- [TROUBLESHOOTING.md](file:///home/max/azuratime/nusantara-main/docs/TROUBLESHOOTING.md) — Quick fixes for common development issues
+- [SESSION_TIERING.md](file:///home/max/azuratime/nusantara-main/docs/SESSION_TIERING.md) — 3-Level hierarchy specification and session selection
+- [MIGRATION_SUBJECT_SESSION.md](file:///home/max/azuratime/nusantara-main/docs/MIGRATION_SUBJECT_SESSION.md) — Database v16 to v17 migration and subject session plans
+- [ARCHITECTURE.md](file:///home/max/azuratime/nusantara-main/docs/ARCHITECTURE.md) — Vertical Slice Architecture and data layer design
+- [AI_NATIVE_TEMPLATE.md](file:///home/max/azuratime/nusantara-main/docs/AI_NATIVE_TEMPLATE.md) — Feature blueprint and Kotlin ViewModel/UI boilerplate
+- [NAMING_CONVENTIONS.md](file:///home/max/azuratime/nusantara-main/docs/NAMING_CONVENTIONS.md) — Naming policies for semantic purity
+- [VOCABULARY.md](file:///home/max/azuratime/nusantara-main/docs/VOCABULARY.md) — Terminology dictionary
+

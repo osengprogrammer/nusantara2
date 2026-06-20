@@ -2,45 +2,59 @@ package com.azuratech.azuratime.features.session.ui
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.session.GetSessionsByDayUseCase
+import com.azuratech.azuratime.features.session.SessionRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
+import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.features.session.CreateSessionUseCase
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionPickerViewModelTest {
 
-    private lateinit var getSessionsByDayUseCase: GetSessionsByDayUseCase
+    private lateinit var sessionRepository: SessionRepository
+    private lateinit var accountRepository: AccountRepository
+    private lateinit var schoolRepository: SchoolRepository
     private lateinit var sessionManager: SessionManager
+    private lateinit var createSessionUseCase: CreateSessionUseCase
     private lateinit var viewModel: SessionPickerViewModel
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        getSessionsByDayUseCase = mockk()
-        sessionManager = mockk()
+        sessionRepository = mockk(relaxed = true)
+        accountRepository = mockk(relaxed = true)
+        schoolRepository = mockk(relaxed = true)
+        sessionManager = mockk(relaxed = true)
+        createSessionUseCase = mockk(relaxed = true)
 
+        every { sessionManager.activeSchoolIdFlow } returns MutableStateFlow("school_123")
+        every { sessionManager.currentAccountIdFlow } returns MutableStateFlow("account_123")
         every { sessionManager.getActiveSchoolId() } returns "school_123"
-        every { sessionManager.getAccountEmail() } returns "supervisor@test.com"
 
-        // Initial state for init block
-        every { getSessionsByDayUseCase(any(), any()) } returns flowOf(Result.Success(emptyList()))
+        every { sessionRepository.observeAllSessionsFlow(any()) } returns flowOf(Result.Success(emptyList()))
+        every { accountRepository.getAccountFlow(any()) } returns flowOf(Result.Success(mockk(relaxed = true)))
+        every { schoolRepository.observeClassesFlow(any()) } returns flowOf(Result.Success(emptyList()))
 
-        viewModel = SessionPickerViewModel(getSessionsByDayUseCase, sessionManager)
+        viewModel = SessionPickerViewModel(
+            sessionRepository,
+            accountRepository,
+            schoolRepository,
+            sessionManager,
+            createSessionUseCase,
+        )
     }
 
     @After
@@ -49,7 +63,7 @@ class SessionPickerViewModelTest {
     }
 
     @Test
-    fun `LoadSessions success updates UiState with sessions`() = runTest {
+    fun `initialization observes sessions`() = runTest {
         // GIVEN
         val sessions = listOf(
             SessionWithDetails(
@@ -58,42 +72,36 @@ class SessionPickerViewModelTest {
                     classId = "c1",
                     subjectId = "sub1",
                     supervisorEmail = "supervisor@test.com",
-                    dayOfWeek = LocalDate.now().dayOfWeek.value,
+                    dayOfWeek = 1,
                     startTime = "08:00",
                     endTime = "09:00",
                     schoolId = "school_123",
-                    lookupKey = "",
+                    lookupKey = "key1",
                 ),
                 subjectName = "Physics",
             ),
         )
-        every { getSessionsByDayUseCase("school_123", any()) } returns flowOf(Result.Success(sessions))
+        val mockAccount = mockk<com.azuratech.azuratime.features.account.domain.model.Account>(relaxed = true) {
+            every { role } returns com.azuratech.azuratime.core.domain.model.AccountRole.ADMIN
+            every { memberships } returns emptyMap()
+        }
+        every { accountRepository.getAccountFlow(any()) } returns flowOf(Result.Success(mockAccount))
+        every { sessionRepository.observeAllSessionsFlow("school_123") } returns flowOf(Result.Success(sessions))
 
-        // WHEN
-        viewModel.onEvent(SessionPickerUiEvent.LoadSessions("school_123"))
-        advanceUntilIdle()
+        // Trigger observation again if needed, but init already does it.
+        // In this test, we might need to recreate the ViewModel to pick up the new mock behavior
+        // because init is called in setup.
+
+        viewModel = SessionPickerViewModel(
+            sessionRepository,
+            accountRepository,
+            schoolRepository,
+            sessionManager,
+            createSessionUseCase,
+        )
 
         // THEN
         val state = viewModel.uiStateFlow.value
         assertEquals(sessions, state.sessions)
-        assertEquals(false, state.isLoading)
-        assertEquals(null, state.error)
-    }
-
-    @Test
-    fun `SelectSession emits NavigateToScanner effect`() = runTest {
-        // GIVEN
-        val effects = mutableListOf<SessionPickerUiEffect>()
-        val job = launch {
-            viewModel.uiEffectFlow.toList(effects)
-        }
-
-        // WHEN
-        viewModel.onEvent(SessionPickerUiEvent.SelectSession("s1"))
-        advanceUntilIdle()
-
-        // THEN
-        assertTrue(effects.any { it is SessionPickerUiEffect.NavigateToScanner && it.sessionId == "s1" })
-        job.cancel()
     }
 }

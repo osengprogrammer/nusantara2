@@ -8,7 +8,10 @@ import java.util.UUID
 
 @Entity(
     tableName = "classes",
-    indices = [Index(value = ["schoolId"])],
+    indices = [
+        Index(value = ["schoolId"]),
+        Index(value = ["schoolId", "name"], unique = true)
+    ],
 )
 data class ClassEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
@@ -22,6 +25,7 @@ data class ClassEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val displayOrder: Int = 0,
     val isSynced: Boolean = false,
+    val isFromTemplate: Boolean = false, // 👈 New Property
 ) {
     fun toDomain(): ClassModel = ClassModel(
         id = id,
@@ -34,4 +38,24 @@ data class ClassEntity(
         subjectIds = subjectIds,
         createdAt = createdAt,
     )
+}
+
+fun com.google.firebase.firestore.DocumentSnapshot.toClassEntity(schoolId: String? = null): ClassEntity? {
+    return try {
+        ClassEntity(
+            id = id,
+            ownerAccountId = getString("ownerAccountId") ?: "",
+            schoolId = getString("schoolId") ?: schoolId,
+            name = getString("name") ?: "",
+            grade = getString("grade") ?: "",
+            accountId = getString("accountId"),
+            studentCount = getLong("studentCount")?.toInt() ?: 0,
+            subjectIds = (get("subjectIds") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+            createdAt = getLong("createdAt") ?: System.currentTimeMillis(),
+            isSynced = true,
+            isFromTemplate = getBoolean("isFromTemplate") ?: false,
+        )
+    } catch (e: Exception) {
+        null
+    }
 }

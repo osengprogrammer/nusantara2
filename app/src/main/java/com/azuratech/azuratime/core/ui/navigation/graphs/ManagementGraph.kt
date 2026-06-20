@@ -28,6 +28,8 @@ import com.azuratech.azuratime.features.school.ui.geofence.GpsManagementScreen
 import com.azuratech.azuratime.features.school.ui.geofence.MapPickerScreen
 import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 
+import com.azuratech.azuratime.features.school.ui.explorer.SchoolExplorerScreen
+
 fun NavGraphBuilder.managementGraph(
     navController: NavController,
 ) {
@@ -126,17 +128,38 @@ fun NavGraphBuilder.managementGraph(
             route = NavigationRoutes.CLASS_LIST,
             arguments = listOf(navArgument("schoolId") { type = NavType.StringType }),
             deepLinks = listOf(navDeepLink { uriPattern = "$uri/classes/{schoolId}" }),
-        ) {
-            ClassManagementScreen(
+        ) { entry ->
+            val schoolId = entry.arguments?.getString("schoolId") ?: ""
+            SchoolExplorerScreen(
+                schoolId = schoolId,
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToAddStudent = { navController.navigate(NavigationRoutes.ADD_STUDENT) },
+                navController = navController,
             )
         }
         composable(
             route = NavigationRoutes.CLASS_MANAGEMENT,
             arguments = listOf(navArgument("accountId") { type = NavType.StringType }),
-        ) {
+        ) { entry ->
+            @Suppress("UNUSED_VARIABLE")
+            val accountId = entry.arguments?.getString("accountId") ?: ""
             ClassManagementScreen(
                 onNavigateBack = { navController.popBackStack() },
+                onClassClick = { classModel ->
+                    navController.navigate(Screen.ClassDetail.createRoute(classModel.id, classModel.name))
+                },
+            )
+        }
+        composable(
+            route = NavigationRoutes.SCHOOL_EXPLORER,
+            arguments = listOf(navArgument("schoolId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val schoolId = backStackEntry.arguments?.getString("schoolId") ?: ""
+            SchoolExplorerScreen(
+                schoolId = schoolId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAddStudent = { navController.navigate(NavigationRoutes.ADD_STUDENT) },
+                navController = navController,
             )
         }
         composable(
@@ -155,6 +178,7 @@ fun NavGraphBuilder.managementGraph(
                     classId = classId,
                     className = className,
                     classViewModel = hiltViewModel<com.azuratech.azuratime.features.school.ui.classes.ClassViewModel>(),
+                    sessionViewModel = hiltViewModel<com.azuratech.azuratime.features.session.ui.SessionManagementViewModel>(),
                     biometricViewModel = hiltViewModel<com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel>(),
                     onNavigateBack = { navController.popBackStack() },
                     onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
@@ -169,6 +193,12 @@ fun NavGraphBuilder.managementGraph(
         composable(NavigationRoutes.PENDING_SCHOOLS) {
             PendingSchoolsScreen(
                 onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(NavigationRoutes.SCHOOL_TEMPLATES) {
+            com.azuratech.azuratime.features.template.ui.TemplateDashboardScreen(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
     }

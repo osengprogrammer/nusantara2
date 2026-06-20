@@ -1,10 +1,16 @@
 package com.azuratech.azuratime.features.session.data.local
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.DocumentSnapshot
 
-@Entity(tableName = "subjects")
+@Entity(
+    tableName = "subjects",
+    indices = [
+        Index(value = ["schoolId", "name"], unique = true)
+    ]
+)
 data class SubjectEntity(
     @PrimaryKey val subjectId: String,
     val name: String,
@@ -12,6 +18,7 @@ data class SubjectEntity(
     val schoolId: String,
     val isActive: Boolean = true, // 🔥 Soft Delete Support
     val isSynced: Boolean = false,
+    val isFromTemplate: Boolean = false, // 👈 New Property
 ) {
     fun toFirestoreMap(): Map<String, Any?> {
         return mapOf(
@@ -20,6 +27,7 @@ data class SubjectEntity(
             "description" to description,
             "schoolId" to schoolId,
             "isActive" to isActive,
+            "isFromTemplate" to isFromTemplate,
         )
     }
 }
@@ -33,6 +41,7 @@ fun DocumentSnapshot.toSubjectEntity(schoolId: String): SubjectEntity? {
             schoolId = getString("schoolId") ?: schoolId,
             isActive = getBoolean("isActive") ?: true,
             isSynced = true,
+            isFromTemplate = getBoolean("isFromTemplate") ?: false,
         )
     } catch (e: Exception) {
         null

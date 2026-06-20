@@ -34,6 +34,7 @@ fun AccountTasksGrid(
     currentRole: String = "GUEST",
     onRegisterStudentClick: () -> Unit,
     accountId: String? = null,
+    schoolId: String? = null,
     pendingRequests: Int = 0,
     isEnabled: Boolean = true,
     modifier: Modifier = Modifier,
@@ -59,7 +60,9 @@ fun AccountTasksGrid(
                     Icons.Default.Class,
                     MaterialTheme.colorScheme.primary,
                     {
-                        if (accountId != null) {
+                        if (schoolId != null) {
+                            navController.navigate(Screen.SchoolExplorer.createRoute(schoolId))
+                        } else if (accountId != null) {
                             navController.navigate(Screen.ClassManagement.createRoute(accountId))
                         }
                     },
@@ -74,6 +77,20 @@ fun AccountTasksGrid(
                     modifier = Modifier.weight(1f),
                     enabled = isEnabled,
                 )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+            ) {
+                DashboardActionCard(
+                    stringResource(R.string.dashboard_school_templates),
+                    Icons.Default.Dashboard,
+                    MaterialTheme.colorScheme.tertiary,
+                    { navController.navigate(Screen.SchoolTemplates.route) },
+                    modifier = Modifier.weight(1f),
+                    enabled = isEnabled,
+                )
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
 

@@ -75,10 +75,10 @@ interface ClassDao {
     // ✏️ WRITE
     // =====================================================
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(classEntity: ClassEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(classes: List<ClassEntity>)
 
     @Update

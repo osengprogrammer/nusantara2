@@ -36,8 +36,9 @@ This codebase is optimized for **deterministic AI generation + human review**. E
 - PRs must include: `@Preview` verification, compile success, and architecture compliance
 
 ## 🔗 Documentation Index
-- `ARCHITECTURE.md` → System design, data flow, layer contracts
-- `AI_NATIVE_TEMPLATE.md` → Feature blueprint + AI prompt structure
-- `NAMING_CONVENTIONS.md` → Variable, route, and file naming standards
-- `GEMINI.md` → AI guardrails & prompt enforcement rules
-- `PROJECT_INDEX.md` → Module map + migration status
+- [ARCHITECTURE.md](file:///home/max/azuratime/nusantara-main/docs/ARCHITECTURE.md) → System design, data flow, layer contracts
+- [AI_NATIVE_TEMPLATE.md](file:///home/max/azuratime/nusantara-main/docs/AI_NATIVE_TEMPLATE.md) → Feature blueprint + AI prompt structure
+- [NAMING_CONVENTIONS.md](file:///home/max/azuratime/nusantara-main/docs/NAMING_CONVENTIONS.md) → Variable, route, and file naming standards
+- [GEMINI.md](file:///home/max/azuratime/nusantara-main/GEMINI.md) → AI guardrails & prompt enforcement rules
+- [index_project.md](file:///home/max/azuratime/nusantara-main/index_project.md) → Project file index
+

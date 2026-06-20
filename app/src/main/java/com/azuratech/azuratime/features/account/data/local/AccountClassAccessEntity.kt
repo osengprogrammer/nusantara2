@@ -7,7 +7,7 @@ import androidx.room.Index
     tableName = "account_class_access",
     primaryKeys = ["accountId", "classId", "subjectId"], // 🔥 Matrix Key: Account + Class + Subject
     indices = [
-        Index(value = ["accountId"]),
+        Index(value = ["accountId", "schoolId", "classId", "subjectId"]), // 🔥 Authorization Index
         Index(value = ["classId"]),
         Index(value = ["subjectId"]),
         Index(value = ["schoolId"]),
@@ -18,5 +18,6 @@ data class AccountClassAccessEntity(
     val classId: String, // ID Kelas
     val subjectId: String = "", // 🔥 Empty string means Homeroom/All Subjects
     val schoolId: String = "",
+    val isActive: Boolean = true, // 🔥 Soft Delete Support for Audit Trail
     val assignedAt: Long = System.currentTimeMillis(), // Kapan akses ini diberikan
 )

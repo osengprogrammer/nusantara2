@@ -144,6 +144,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun provideTemplateRepository(
+        impl: com.azuratech.azuratime.features.template.data.repo.TemplateRepositoryImpl,
+    ): com.azuratech.azuratime.features.template.domain.repository.TemplateRepository
+
+    @Binds
+    @Singleton
     abstract fun provideSessionRepository(
         impl: com.azuratech.azuratime.features.session.SessionRepositoryImpl,
     ): com.azuratech.azuratime.features.session.SessionRepository

@@ -45,19 +45,37 @@ fun AddClassDialog(
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                AzuraTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = "Class Name",
-                    placeholder = "Example: 10-IPA-1",
-                    errorText = if (name.isNotEmpty() && !isNameValid) "Name cannot be empty" else null,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                if (editingClass != null) {
+                    AzuraTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = "Class Name",
+                        placeholder = "Example: 10-IPA-1",
+                        errorText = if (name.isNotEmpty() && !isNameValid) "Name cannot be empty" else null,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    if (name.isNotEmpty()) {
+                        Surface(
+                            shape = AzuraShapes.medium,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = AzuraSpacing.xs),
+                        ) {
+                            Text(
+                                text = "Selected Template Class: $name",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
+                            )
+                        }
+                    }
+                }
 
                 if (editingClass == null) {
                     Spacer(modifier = Modifier.height(AzuraSpacing.xs))
                     Text(
-                        text = "Or Select from Catalog:",
+                        text = "Select Class from Templates:",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,

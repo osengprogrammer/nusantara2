@@ -34,7 +34,7 @@ import androidx.room.migration.Migration
         SubjectEntity::class,
         ClassSessionEntity::class,
     ],
-    version = 24,
+    version = 26,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -61,6 +61,178 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        private val MIGRATION_25_26 = object : Migration(25, 26) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // --- 1. DEDUPLICATE SUBJECTS ---
+                // Step A: Find duplicate groups and assign a masterId (MIN) for each group of (schoolId, name)
+                db.execSQL("""
+                    CREATE TEMP TABLE temp_subject_duplicates AS
+                    SELECT schoolId, name, MIN(subjectId) AS masterId
+                    FROM subjects
+                    GROUP BY schoolId, name
+                """.trimIndent())
+
+                // Step B: Remap class_sessions to use the master subjectId
+                db.execSQL("""
+                    UPDATE class_sessions
+                    SET subjectId = (
+                        SELECT d.masterId
+                        FROM temp_subject_duplicates d
+                        JOIN subjects s ON s.name = d.name AND s.schoolId = d.schoolId
+                        WHERE s.subjectId = class_sessions.subjectId
+                    )
+                    WHERE subjectId IS NOT NULL AND subjectId IN (
+                        SELECT s.subjectId
+                        FROM subjects s
+                        JOIN temp_subject_duplicates d ON s.name = d.name AND s.schoolId = d.schoolId
+                        WHERE s.subjectId != d.masterId
+                    )
+                """.trimIndent())
+
+                // Step C: Remap account_class_access to use the master subjectId
+                db.execSQL("""
+                    UPDATE account_class_access
+                    SET subjectId = (
+                        SELECT d.masterId
+                        FROM temp_subject_duplicates d
+                        JOIN subjects s ON s.name = d.name AND s.schoolId = d.schoolId
+                        WHERE s.subjectId = account_class_access.subjectId
+                    )
+                    WHERE subjectId != '' AND subjectId IN (
+                        SELECT s.subjectId
+                        FROM subjects s
+                        JOIN temp_subject_duplicates d ON s.name = d.name AND s.schoolId = d.schoolId
+                        WHERE s.subjectId != d.masterId
+                    )
+                """.trimIndent())
+
+                // Step D: Delete duplicate subjects (retaining only the masterId)
+                db.execSQL("""
+                    DELETE FROM subjects
+                    WHERE subjectId NOT IN (SELECT masterId FROM temp_subject_duplicates)
+                """.trimIndent())
+
+                // Step E: Drop temp table
+                db.execSQL("DROP TABLE temp_subject_duplicates")
+
+
+                // --- 2. DEDUPLICATE CLASSES ---
+                // Step A: Find duplicate classes and assign a masterId (MIN) for each group of (schoolId, name)
+                db.execSQL("""
+                    CREATE TEMP TABLE temp_class_duplicates AS
+                    SELECT schoolId, name, MIN(id) AS masterId
+                    FROM classes
+                    GROUP BY schoolId, name
+                """.trimIndent())
+
+                // Step B: Remap school_class_assignments
+                db.execSQL("""
+                    UPDATE school_class_assignments
+                    SET classId = (
+                        SELECT d.masterId
+                        FROM temp_class_duplicates d
+                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id = school_class_assignments.classId
+                    )
+                    WHERE classId IN (
+                        SELECT c.id
+                        FROM classes c
+                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id != d.masterId
+                    )
+                """.trimIndent())
+
+                // Step C: Remap student_class_assignments
+                db.execSQL("""
+                    UPDATE student_class_assignments
+                    SET classId = (
+                        SELECT d.masterId
+                        FROM temp_class_duplicates d
+                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id = student_class_assignments.classId
+                    )
+                    WHERE classId IN (
+                        SELECT c.id
+                        FROM classes c
+                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id != d.masterId
+                    )
+                """.trimIndent())
+
+                // Step D: Remap class_sessions
+                db.execSQL("""
+                    UPDATE class_sessions
+                    SET classId = (
+                        SELECT d.masterId
+                        FROM temp_class_duplicates d
+                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id = class_sessions.classId
+                    )
+                    WHERE classId IS NOT NULL AND classId IN (
+                        SELECT c.id
+                        FROM classes c
+                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id != d.masterId
+                    )
+                """.trimIndent())
+
+                // Step E: Remap account_class_access
+                db.execSQL("""
+                    UPDATE account_class_access
+                    SET classId = (
+                        SELECT d.masterId
+                        FROM temp_class_duplicates d
+                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id = account_class_access.classId
+                    )
+                    WHERE classId IN (
+                        SELECT c.id
+                        FROM classes c
+                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id != d.masterId
+                    )
+                """.trimIndent())
+
+                // Step F: Remap accounts (activeClassId)
+                db.execSQL("""
+                    UPDATE accounts
+                    SET activeClassId = (
+                        SELECT d.masterId
+                        FROM temp_class_duplicates d
+                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id = accounts.activeClassId
+                    )
+                    WHERE activeClassId IS NOT NULL AND activeClassId IN (
+                        SELECT c.id
+                        FROM classes c
+                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
+                        WHERE c.id != d.masterId
+                    )
+                """.trimIndent())
+
+                // Step G: Delete duplicate classes
+                db.execSQL("""
+                    DELETE FROM classes
+                    WHERE id NOT IN (SELECT masterId FROM temp_class_duplicates)
+                """.trimIndent())
+
+                // Step H: Drop temp table
+                db.execSQL("DROP TABLE temp_class_duplicates")
+
+
+                // --- 3. CREATE UNIQUE INDEXES ---
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_subjects_schoolId_name` ON `subjects` (`schoolId`, `name`)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_classes_schoolId_name` ON `classes` (`schoolId`, `name`)")
+            }
+        }
+
+        private val MIGRATION_24_25 = object : Migration(24, 25) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `subjects` ADD COLUMN `isFromTemplate` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `classes` ADD COLUMN `isFromTemplate` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         private val MIGRATION_23_24 = object : Migration(23, 24) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -214,7 +386,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "local_db2.sqlite",
                 )
                     .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-                    .addMigrations(MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24)
+                    .addMigrations(MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26)
                     .fallbackToDestructiveMigration()
                     .addCallback(integrityCheckCallback)
                     .build()

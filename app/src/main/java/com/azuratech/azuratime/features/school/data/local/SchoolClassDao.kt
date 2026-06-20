@@ -54,8 +54,21 @@ interface SchoolClassDao {
     @Query("SELECT classId FROM school_class_assignments WHERE schoolId = :schoolId")
     suspend fun getAssignedClassIds(schoolId: String): List<String>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun upsertClass(classEntity: ClassEntity)
+
+    @Query(
+        """
+        SELECT * FROM classes
+        WHERE (schoolId = :schoolId OR id IN (SELECT classId FROM school_class_assignments WHERE schoolId = :schoolId))
+          AND name = :name COLLATE NOCASE
+        LIMIT 1
+    """,
+    )
+    suspend fun getClassByNameAndSchool(schoolId: String, name: String): ClassEntity?
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertClassesIgnore(classes: List<ClassEntity>)
 
     @Query("DELETE FROM schools WHERE id = :id")
     suspend fun deleteSchoolById(id: String)

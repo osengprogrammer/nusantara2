@@ -1,5 +1,49 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 42: Custom Subjects & Soft-Deleted Restore Fixes (June 20, 2026)
+- **Custom Subjects Allowed:** Removed the strict template verification in [SessionManagementViewModel.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/ui/SessionManagementViewModel.kt) to allow user-defined custom subjects to be added successfully while dynamically assigning the `isFromTemplate` flag.
+- **Soft-Deleted Subject Reactivation:** Modified `getSubjectByName` in [SessionDao.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/data/local/SessionDao.kt) to query across all subjects regardless of active status. Hardened `saveSubject` in [SessionRepositoryImpl.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/SessionRepositoryImpl.kt) to automatically reactivate (`isActive = true`) soft-deleted subjects when they are re-added, avoiding composite key `(schoolId, name)` SQLite violations.
+- **Robust Unit Testing:** Added comprehensive unit tests in [SessionManagementViewModelTest.kt](file:///home/max/azuratime/nusantara-main/app/src/test/java/com/azuratech/azuratime/features/session/ui/SessionManagementViewModelTest.kt) to cover dynamic `isFromTemplate` assignment for both template-matching and custom fallback subject creation.
+- **Verification:** Successfully compiled and executed all targeted JVM unit tests.
+
+### Phase 41: School Explorer Deduplication & Unique Constraints (June 19, 2026)
+- **Database Schema Upgraded (v26):** Promoted Room Database version to `26` and created composite unique indexes `(schoolId, name)` on both `classes` and `subjects` tables to prevent name duplications at the SQLite layer.
+- **Enterprise-Grade Coordinated Deduplication:** Authored and integrated `MIGRATION_25_26` containing a multi-step remapping SQL transaction. The migration safely resolves pre-existing duplicate groups to a master record (oldest ID) and updates referencing foreign key IDs in related tables (e.g., `class_sessions`, `student_class_assignments`, `school_class_assignments`, `account_class_access`, `accounts`) to preserve database integrity and prevent constraints violations.
+- **DAO Resolution:** Verified that `ClassDao` and `SessionDao` use of `OnConflictStrategy.IGNORE` now functions flawlessly when resolving name collisions.
+- **Verification:** Successfully executed `./gradlew compileDebugKotlin` confirming perfect compile-time type-safety and code layout.
+
+### Phase 40: Unit Test Compilation Fixes (June 19, 2026)
+- **Room withTransaction Mock Alignment:** Added missing `androidx.room.withTransaction` import and resolved class cast issues in [SessionRepositoryTest.kt](file:///home/max/azuratime/nusantara-main/app/src/test/java/com/azuratech/azuratime/features/session/SessionRepositoryTest.kt) by correctly mocking extension function signature and accessing the second argument (`secondArg`) for the transaction block.
+- **Coroutines & Mocking in UI Tests:** Refactored [SessionManagementViewModelTest.kt](file:///home/max/azuratime/nusantara-main/app/src/test/java/com/azuratech/azuratime/features/session/ui/SessionManagementViewModelTest.kt) to mock the suspend function `fetchAllGlobalSubjects` using `coEvery` and returning custom `Result.Success` directly instead of matching a coroutine flow flowOf.
+- **Verification:** Verified 100% compilation and successful execution of all JVM unit tests.
+
+### Phase 39: Subject Template Selection & Fallback Custom Inputs (June 19, 2026)
+- **Rich Model Integration:** Migrated `availableSubjects` state from simple strings to full domain model `SubjectTemplate` structures, carrying both names and descriptive categories (e.g., MIPA, IPS, Umum, Bahasa).
+- **Flexible UI Dialogs:** Hardened `AddSubjectDialog` to display global template lists featuring search-by-name filters, category badges, and dynamic custom fallback options (`Create custom: "..."`).
+- **ViewModel Syncing:** Configured `SessionManagementViewModel` to fetch global subjects via `TemplateRepository` with comprehensive fallback configurations on failure.
+- **Verification & Formats:** Confirmed spotless format compliance and successful execution of all JVM unit tests.
+
+### Phase 38: Unit Test Hardening & Timezone Determinism (June 19, 2026)
+- **Timezone/Midnight Wrap-around Resilience:** Introduced custom `currentTime` parameter injection in [GetActiveTieredSessionUseCase.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/GetActiveTieredSessionUseCase.kt) to prevent unit tests from failing due to midnight local time wrapping in [GetActiveTieredSessionUseCaseTest.kt](file:///home/max/azuratime/nusantara-main/app/src/test/java/com/azuratech/azuratime/features/session/GetActiveTieredSessionUseCaseTest.kt).
+- **Mock Alignment:** Updated MockK mocks in [DashboardViewModelTest.kt](file:///home/max/azuratime/nusantara-main/app/src/test/java/com/azuratech/azuratime/features/dashboard/ui/DashboardViewModelTest.kt) to match the new 4-parameter `invoke` signature, resolving test timeout and Turbine errors.
+- **Aesthetic Formatting & Quality Control:** Successfully ran Spotless formatting and confirmed 100% of compilation and unit tests pass cleanly.
+
+### Phase 37: School Templates Dashboard Entry Point & Diagnostics (June 19, 2026)
+- **Dashboard Card Integration:** Added a "School Templates" entry card in [AccountTasksGrid.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/dashboard/ui/components/AccountTasksGrid.kt) for Admin users, resolving the issue where the template dashboard was inaccessible.
+- **String Resources:** Registered `dashboard_school_templates` in [strings.xml](file:///home/max/azuratime/nusantara-main/app/src/main/res/values/strings.xml).
+- **Diagnostics & Unit Tests:** Hardened parsing diagnostics in [SchoolTemplate.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/template/domain/model/SchoolTemplate.kt) to log warning statements on type mismatches, and added static log mocking in [TemplateDashboardViewModelTest.kt](file:///home/max/azuratime/nusantara-main/app/src/test/java/com/azuratech/azuratime/features/template/ui/TemplateDashboardViewModelTest.kt) to prevent JVM unit test failures.
+- **Unit Test Alignment:** Mocked Admin role in [SessionPickerViewModelTest.kt](file:///home/max/azuratime/nusantara-main/app/src/test/java/com/azuratech/azuratime/features/session/ui/SessionPickerViewModelTest.kt) to align with supervisor filtering rules.
+- **Class & Subject Detail Previews:** Resolved class and subject IDs to their actual names in [TemplateDashboardViewModel.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/template/ui/TemplateDashboardViewModel.kt) by performing concurrent batch fetches from `global_classes` and `global_subjects`.
+- **FlowRow Chip Previews:** Rendered class and subject names as wrapping, colorful `AssistChip` layouts inside [TemplateDashboardScreen.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/template/ui/TemplateDashboardScreen.kt) to give admins immediate visual feedback before applying templates.
+- **Quality Verification:** Passed 100% of compilation, unit tests, and local build checks.
+
+### Phase 36: School Structure Templates Integration (June 18, 2026)
+- **MVI Architecture Implementation:** Created [TemplateDashboardViewModel.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/template/ui/TemplateDashboardViewModel.kt) adhering to the project's strict State-Event-Effect pattern.
+- **Midnight Azure UI:** Developed [TemplateDashboardScreen.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/template/ui/TemplateDashboardScreen.kt) to list and apply templates using Compose.
+- **Robust Unit Testing:** Added [TemplateDashboardViewModelTest.kt](file:///home/max/azuratime/nusantara-main/app/src/test/java/com/azuratech/azuratime/features/template/ui/TemplateDashboardViewModelTest.kt) to verify states, events, and effects (resolving race conditions using `UnconfinedTestDispatcher` eager collection).
+- **Navigation Integration:** Registered the `SchoolTemplates` route inside [NavigationRoutes.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/navigation/NavigationRoutes.kt), [Screen.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/navigation/Screen.kt), and [ManagementGraph.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/ui/navigation/graphs/ManagementGraph.kt).
+- **Quality Verification:** Passed 100% of compilation, spotless check, and new unit tests.
+
 ### Phase 35: Midnight Azure Rebranding & Dashboard Intelligence (June 15, 2026)
 - **Visual Identity:** Implemented the **Midnight Azure** premium theme.
     - **Primary:** Deep Navy Azure (`#1E3A8A`) for authoritative branding.

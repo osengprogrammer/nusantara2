@@ -43,6 +43,7 @@ object NavigationRoutes {
     const val CLASS_DETAIL = "classDetail/{classId}/{className}"
     const val MY_ASSIGNED_CLASSES = "myAssignedClasses?targetAccountId={targetAccountId}&schoolId={schoolId}"
     const val ASSIGN_CLASS = "assignClass/{targetAccountId}/{role}"
+    const val SCHOOL_EXPLORER = "schoolExplorer/{schoolId}"
 
     // --- 🗄️ DATA & SYSTEM ---
     const val DATA_DASHBOARD = "dataDashboard"
@@ -56,6 +57,7 @@ object NavigationRoutes {
     const val AI_MUSIC = "aiMusic"
     const val GPS_MANAGEMENT = "gpsManagement"
     const val MAP_PICKER = "mapPicker"
+    const val SCHOOL_TEMPLATES = "schoolTemplates"
 
     // --- 🗺️ NAVIGATION GRAPHS ---
     const val DASHBOARD_GRAPH = "dashboardGraph"

@@ -82,6 +82,11 @@ class SyncWorker @AssistedInject constructor(
             is AppError.Network -> Result.retry()
             is AppError.LocalDB -> Result.failure()
             is AppError.BusinessRule -> Result.failure()
+            is AppError.Conflict -> {
+                // Conflict during sync – log and treat as non‑fatal (skip this batch)
+                Log.w("AZURA_SYNC", "Konflik data terdeteksi, skip.")
+                Result.success()
+            }
             is AppError.Unknown -> Result.retry()
         }
     }

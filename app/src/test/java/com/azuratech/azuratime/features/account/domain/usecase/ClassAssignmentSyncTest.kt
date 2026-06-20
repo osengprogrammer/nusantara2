@@ -15,6 +15,7 @@ import com.azuratech.azuratime.features.account.domain.repository.AccountReposit
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
+import com.azuratech.azuratime.features.account.domain.model.TeacherAssignment
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -42,6 +43,7 @@ class ClassAssignmentSyncTest {
     private val schoolId = "school_abc"
     private val targetAccountId = "supervisor_123"
     private val classIds = listOf("class_1", "class_2")
+    private val assignments = classIds.map { TeacherAssignment(it) }
 
     @Before
     fun setup() {
@@ -65,24 +67,24 @@ class ClassAssignmentSyncTest {
     fun `when admin assigns classes, repository is called and sync succeeds`() = runTest {
         // 1. GIVEN: Repository returns success
         coEvery {
-            accountRepository.assignClassToConnection(targetAccountId, schoolId, classIds)
+            accountRepository.assignClassToConnection(targetAccountId, schoolId, assignments)
         } returns Result.Success(Unit)
 
         // 2. WHEN: UseCase invoked
-        val result = assignUseCase(targetAccountId, schoolId, classIds)
+        val result = assignUseCase(targetAccountId, schoolId, assignments)
 
         // 3. THEN: Assert Success and Repository interaction
         assert(result is Result.Success)
-        coVerify { accountRepository.assignClassToConnection(targetAccountId, schoolId, classIds) }
+        coVerify { accountRepository.assignClassToConnection(targetAccountId, schoolId, assignments) }
     }
 
     @Test
     fun `when sync worker runs, it pulls updated memberships from cloud`() = runTest {
-        // 1. GIVEN: Cloud has updated assignedClassIds
+        // 1. GIVEN: Cloud has updated assignments
         val updatedMembership = SchoolMembership(
             schoolName = "Test School",
             role = "SUPERVISOR",
-            assignedClassIds = classIds,
+            assignments = assignments,
         )
         val updatedAccountEntity = AccountEntity(
             accountId = targetAccountId,
@@ -115,7 +117,7 @@ class ClassAssignmentSyncTest {
         } returns Result.Failure(AppError.Network("No Internet"))
 
         // 2. WHEN: UseCase invoked
-        val result = assignUseCase(targetAccountId, schoolId, classIds)
+        val result = assignUseCase(targetAccountId, schoolId, assignments)
 
         // 3. THEN: Assert Failure
         assert(result is Result.Failure)
