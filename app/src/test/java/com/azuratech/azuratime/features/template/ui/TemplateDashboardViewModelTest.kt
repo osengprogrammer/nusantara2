@@ -81,7 +81,7 @@ class TemplateDashboardViewModelTest {
 
         viewModel = TemplateDashboardViewModel(applySchoolTemplateUseCase, repository, sessionManager)
 
-        viewModel.uiState.test {
+        viewModel.uiStateFlow.test {
             // First item emitted during collection setup/loading
             val loadingState = awaitItem()
             assertEquals(true, loadingState.isLoading)
@@ -104,10 +104,10 @@ class TemplateDashboardViewModelTest {
 
         val effects = mutableListOf<TemplateDashboardUiEffect>()
         val effectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.uiEffect.collect { effects.add(it) }
+            viewModel.uiEffectFlow.collect { effects.add(it) }
         }
 
-        viewModel.uiState.test {
+        viewModel.uiStateFlow.test {
             val loadingState = awaitItem()
             assertEquals(true, loadingState.isLoading)
 
@@ -136,14 +136,14 @@ class TemplateDashboardViewModelTest {
         testScheduler.advanceUntilIdle()
 
         val effectJob = launch {
-            viewModel.uiEffect.test {
+            viewModel.uiEffectFlow.test {
                 assertEquals(TemplateDashboardUiEffect.ShowToast("Template applied successfully!"), awaitItem())
                 assertEquals(TemplateDashboardUiEffect.NavigateBack, awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
         }
 
-        viewModel.uiState.test {
+        viewModel.uiStateFlow.test {
             val initialState = awaitItem()
             assertEquals(false, initialState.isApplying)
 
@@ -174,13 +174,13 @@ class TemplateDashboardViewModelTest {
         testScheduler.advanceUntilIdle()
 
         val effectJob = launch {
-            viewModel.uiEffect.test {
+            viewModel.uiEffectFlow.test {
                 assertEquals(TemplateDashboardUiEffect.ShowSnackbar("Failed to apply template: $errorMessage"), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
         }
 
-        viewModel.uiState.test {
+        viewModel.uiStateFlow.test {
             val initialState = awaitItem()
             assertEquals(false, initialState.isApplying)
 
@@ -207,7 +207,7 @@ class TemplateDashboardViewModelTest {
         testScheduler.advanceUntilIdle()
 
         val effectJob = launch {
-            viewModel.uiEffect.test {
+            viewModel.uiEffectFlow.test {
                 assertEquals(TemplateDashboardUiEffect.ShowSnackbar("Active school or account session not found."), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }

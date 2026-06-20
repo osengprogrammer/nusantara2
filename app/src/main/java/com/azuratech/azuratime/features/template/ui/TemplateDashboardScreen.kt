@@ -54,12 +54,12 @@ fun TemplateDashboardScreen(
     onNavigateBack: () -> Unit,
     viewModel: TemplateDashboardViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    LaunchedEffect(viewModel.uiEffect) {
-        viewModel.uiEffect.collect { effect ->
+    LaunchedEffect(viewModel.uiEffectFlow) {
+        viewModel.uiEffectFlow.collect { effect ->
             when (effect) {
                 is TemplateDashboardUiEffect.ShowToast -> {
                     Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()

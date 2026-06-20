@@ -8,8 +8,8 @@ import com.google.firebase.firestore.DocumentSnapshot
 @Entity(
     tableName = "subjects",
     indices = [
-        Index(value = ["schoolId", "name"], unique = true)
-    ]
+        Index(value = ["schoolId", "name"], unique = true),
+    ],
 )
 data class SubjectEntity(
     @PrimaryKey val subjectId: String,

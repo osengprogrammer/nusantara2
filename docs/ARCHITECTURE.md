@@ -74,6 +74,13 @@ To ensure high-performance reporting for tiered sessions:
 1. **Denormalized sessionType**: The `sessionType` is stored directly in the `check_in_records` table.
 2. **JOIN-Free Queries**: Reporting filters by tier use O(1) indexed lookups instead of expensive multi-table JOINs.
 
+### 🔒 Local DB Name Collision & Deduplication Guard
+To maintain SQLite integrity and prevent composite key name conflicts:
+1. **Composite Unique Indexes**: The `classes` and `subjects` tables enforce unique indexes on `(schoolId, name)` to guarantee names are unique per school (Room v26+).
+2. **OnConflict Strategy**: Local DAOs use `OnConflictStrategy.IGNORE` to protect manual user-created entities from being overwritten during template syncs.
+3. **Transaction Remapping**: Enterprise migration routines (e.g., `MIGRATION_25_26`) automatically resolve name duplication groups in local tables and remap referencing foreign keys (`class_sessions`, `student_class_assignments`, etc.) to a master record before applying unique constraints.
+
+
 ### 🔄 Sync Engine Protocols (Atomic Reconciliation)
 To guarantee robust data reconciliation and offline-first durability in extremely low-connectivity environments:
 1. **Sequential 1-2-3 Dependency Chain**: The core background sync worker (`SyncWorker`) executes its synchronization pipeline in a strict, sequential, transaction-style order. If any stage fails due to a network connection drop or network timeout, the worker immediately triggers WorkManager's exponential retry mechanism without executing subsequent steps:

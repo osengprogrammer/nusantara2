@@ -159,9 +159,11 @@ class SessionManagementViewModelTest {
 
         // THEN
         coVerify(exactly = 1) {
-            sessionRepository.saveSubject(match {
-                it.name == "Mathematics" && it.isFromTemplate && it.description == "Study of numbers"
-            })
+            sessionRepository.saveSubject(
+                match {
+                    it.name == "Mathematics" && it.isFromTemplate && it.description == "Study of numbers"
+                },
+            )
         }
     }
 
@@ -187,9 +189,11 @@ class SessionManagementViewModelTest {
 
         // THEN
         coVerify(exactly = 1) {
-            sessionRepository.saveSubject(match {
-                it.name == "Quantum Physics" && !it.isFromTemplate && it.description == "Advanced Physics"
-            })
+            sessionRepository.saveSubject(
+                match {
+                    it.name == "Quantum Physics" && !it.isFromTemplate && it.description == "Advanced Physics"
+                },
+            )
         }
     }
 }

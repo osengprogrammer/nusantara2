@@ -31,11 +31,11 @@ class TemplateDashboardViewModel @Inject constructor(
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TemplateDashboardUiState())
-    val uiState: StateFlow<TemplateDashboardUiState> = _uiState.asStateFlow()
+    private val _uiStateFlow = MutableStateFlow(TemplateDashboardUiState())
+    val uiStateFlow: StateFlow<TemplateDashboardUiState> = _uiStateFlow.asStateFlow()
 
-    private val _uiEffect = MutableSharedFlow<TemplateDashboardUiEffect>()
-    val uiEffect: SharedFlow<TemplateDashboardUiEffect> = _uiEffect.asSharedFlow()
+    private val _uiEffectFlow = MutableSharedFlow<TemplateDashboardUiEffect>()
+    val uiEffectFlow: SharedFlow<TemplateDashboardUiEffect> = _uiEffectFlow.asSharedFlow()
 
     init {
         onEvent(TemplateDashboardUiEvent.LoadTemplates)
@@ -49,7 +49,7 @@ class TemplateDashboardViewModel @Inject constructor(
     }
 
     private fun loadTemplates() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        _uiStateFlow.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             repository.fetchSchoolTemplates()
                 .onSuccess { templates ->
@@ -75,12 +75,12 @@ class TemplateDashboardViewModel @Inject constructor(
                         )
                     }
 
-                    _uiState.update { it.copy(isLoading = false, templates = enriched) }
+                    _uiStateFlow.update { it.copy(isLoading = false, templates = enriched) }
                 }
                 .onFailure { error ->
                     Log.e("TemplateDebug", "Gagal fetch: ${error.message}")
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
-                    _uiEffect.emit(TemplateDashboardUiEffect.ShowSnackbar("Failed to load templates: ${error.message}"))
+                    _uiStateFlow.update { it.copy(isLoading = false, error = error.message) }
+                    _uiEffectFlow.emit(TemplateDashboardUiEffect.ShowSnackbar("Failed to load templates: ${error.message}"))
                 }
         }
     }
@@ -91,24 +91,24 @@ class TemplateDashboardViewModel @Inject constructor(
 
         if (schoolId == null || accountId == null) {
             viewModelScope.launch {
-                _uiEffect.emit(TemplateDashboardUiEffect.ShowSnackbar("Active school or account session not found."))
+                _uiEffectFlow.emit(TemplateDashboardUiEffect.ShowSnackbar("Active school or account session not found."))
             }
             return
         }
 
-        _uiState.update { it.copy(isApplying = true, error = null) }
+        _uiStateFlow.update { it.copy(isApplying = true, error = null) }
         viewModelScope.launch {
             applySchoolTemplateUseCase(
                 schoolId = schoolId,
                 ownerId = accountId,
                 template = template,
             ).onSuccess {
-                _uiState.update { it.copy(isApplying = false) }
-                _uiEffect.emit(TemplateDashboardUiEffect.ShowToast("Template applied successfully!"))
-                _uiEffect.emit(TemplateDashboardUiEffect.NavigateBack)
+                _uiStateFlow.update { it.copy(isApplying = false) }
+                _uiEffectFlow.emit(TemplateDashboardUiEffect.ShowToast("Template applied successfully!"))
+                _uiEffectFlow.emit(TemplateDashboardUiEffect.NavigateBack)
             }.onFailure { error ->
-                _uiState.update { it.copy(isApplying = false, error = error.message) }
-                _uiEffect.emit(TemplateDashboardUiEffect.ShowSnackbar("Failed to apply template: ${error.message}"))
+                _uiStateFlow.update { it.copy(isApplying = false, error = error.message) }
+                _uiEffectFlow.emit(TemplateDashboardUiEffect.ShowSnackbar("Failed to apply template: ${error.message}"))
             }
         }
     }

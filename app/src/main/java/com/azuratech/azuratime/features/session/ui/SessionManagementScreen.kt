@@ -346,7 +346,7 @@ fun AddSubjectDialog(
         confirmButton = {
             Button(
                 onClick = { if (name.isNotBlank()) onConfirm(name, null) },
-                enabled = isNameValid
+                enabled = isNameValid,
             ) {
                 Text(stringResource(R.string.save))
             }

@@ -6,55 +6,110 @@
 |------|---------|---------------|-------------|
 | `AccountEntity.kt` | `features.account.data.local` | Master account identity; includes global role | ✅ Migrated |
 | `AccessRequestEntity.kt` | `features.account.data.local` | Tracks join/leave school requests | ✅ Migrated |
+| `AccountClassAccessEntity.kt` | `features.account.data.local` | Custom class access rights for supervisors | ✅ Migrated |
 | `AttendanceRecordEntity.kt` | `features.attendance.data.local` | Individual attendance logs (scanned/manual) | ✅ Migrated |
 | `AttendanceConflictEntity.kt` | `features.attendance.data.local` | Resolves offline/online sync collisions | ✅ Migrated |
 | `StudentBiometricEntity.kt` | `features.biometric.data.local` | Native face embeddings and matching data | ✅ Migrated |
 | `StudentClassAssignmentEntity.kt` | `features.student.data.local` | Link table between Student and Class (Composite PK) | ✅ Migrated |
 | `ClassEntity.kt` | `features.school.data.local` | School class metadata (Grade, Name) | ✅ Migrated |
 | `SchoolEntity.kt` | `features.school.data.local` | Multi-tenant school workspace identity | ✅ Migrated |
+| `SchoolClassAssignment.kt` | `features.school.data.local` | Links classes to school accounts | ✅ Migrated |
+| `GpsGeofenceEntity.kt` | `features.school.data.local` | GPS boundary mapping for school attendance | ✅ Migrated |
 | `StudentEntity.kt` | `features.student.data.local` | Core student profile (Name, Photo URL) | ✅ Migrated |
 | `AuditLogEntity.kt` | `features.reporting.data.local` | System traceability and action history | ✅ Migrated |
+| `ExportJobEntity.kt` | `features.reporting.data.local` | Tracks background PDF/Excel exports | ✅ Migrated |
+| `ReportEntity.kt` | `features.reporting.data.local` | Pre-calculated daily/weekly school summaries | ✅ Migrated |
+| `AiMusicEntity.kt` | `features.aimusic.data.local` | Local dataset of Nusantara traditional tracks | ✅ Migrated |
 | `SubjectEntity.kt` | `features.session.data.local` | Academic subjects for attendance tracking | ✅ New (v3.3) |
 | `ClassSessionEntity.kt` | `features.session.data.local` | Tiered sessions (Academic/Class/Global) | ✅ Tiered (v3.7) |
 
 ## 🧠 ViewModels (MVI Effect-Driven)
 | File | Package | Responsibility |
 |------|---------|---------------|
-| `DashboardViewModel.kt` | `features.dashboard.ui` | Unified hub for Admin/Supervisor navigation |
+| `BootViewModel.kt` | `core.boot` | Core app initialization and self-healing state |
+| `MainViewModel.kt` | `core.ui` | Root Activity UI state and system alerts |
+| `SyncViewModel.kt` | `core.ui.sync` | Global sync visual feedback coordinator |
+| `FollowingViewModel.kt` | `features.account.ui.components` | Accounts dashboard for supervisor classes |
+| `WorkspaceViewModel.kt` | `features.account.ui.components` | School workspace switcher and metadata UI |
 | `AccountManagementViewModel.kt` | `features.account.ui.management` | User profile and school membership mgmt |
-| `ClassViewModel.kt` | `features.school.ui.classes` | Management of school classes and assignments |
+| `AssignClassViewModel.kt` | `features.account.ui.management` | Supervisor class permissions mapping UI |
+| `BulkAssignMatrixViewModel.kt` | `features.account.ui.management` | Teacher-Class-Subject assignment coordinator |
+| `MembershipViewModel.kt` | `features.account.ui.membership` | School invitations and join workflows |
+| `ZoharAssistantViewModel.kt` | `features.ai.ui` | Local AI tutor assistant interface |
+| `AiMusicViewModel.kt` | `features.aimusic.ui` | Nusantara playlist selection and sound engine |
 | `AttendanceViewModel.kt` | `features.attendance.ui` | Main scanning and manual entry logic |
-| `StudentFormViewModel.kt` | `features.student.ui.form` | Single student profile management |
-| `RegisterViewModel.kt` | `features.student.ui.bulk` | Bulk CSV student import engine |
-| `StudentRosterViewModel.kt` | `features.student.ui.roster` | Roster browsing and filtering |
+| `AttendanceCaptureViewModel.kt` | `features.attendance.ui.capture` | Camera view overlay and biometric extraction |
+| `AttendanceHistoryViewModel.kt` | `features.attendance.ui.history` | List of today's scanning records and overrides |
+| `AuthViewModel.kt` | `features.auth.ui` | Login, Registration, and Google Sign-In state |
+| `StudentAssignmentViewModel.kt` | `features.biometric.ui.assignment` | Links biometric profiles to student entities |
+| `BiometricEnrollmentViewModel.kt` | `features.biometric.ui.enroll` | Face capturing and embedding registration |
+| `DashboardViewModel.kt` | `features.dashboard.ui` | Unified hub for Admin/Supervisor navigation |
+| `ReportViewModel.kt` | `features.reporting.ui` | Attendance analysis and sheet generation UI |
+| `DailyDetailViewModel.kt` | `features.reporting.ui.daily` | Breakdown of single-day attendance status |
+| `DataIntegrityViewModel.kt` | `features.reporting.ui.integrity` | Detects orphaned local files/database corruption |
+| `AttendanceMatrixViewModel.kt` | `features.reporting.ui.matrix` | Multi-day grid tracking of student absences |
 | `PendingSchoolsViewModel.kt` | `features.school.ui.admin` | Super Admin school verification flow |
-| `AppUpdateViewModel.kt` | `features.update.ui` | Custom GitHub-based update engine state |
+| `ClassViewModel.kt` | `features.school.ui.classes` | Management of school classes and assignments |
+| `SchoolViewModel.kt` | `features.school.ui.list` | User's list of joined schools and details |
 | `SessionManagementViewModel.kt` | `features.session.ui` | Tiered session and subject management |
 | `SessionPickerViewModel.kt` | `features.session.ui` | Manual session selection engine |
-
+| `StudentViewModel.kt` | `features.student.ui` | Single student profile details/roster |
+| `RegisterViewModel.kt` | `features.student.ui.bulk` | Bulk CSV student import engine |
+| `StudentFormViewModel.kt` | `features.student.ui.form` | Single student profile management |
+| `StudentRosterBarcodeViewModel.kt` | `features.student.ui.roster` | Batch PDF QR Code/Barcode generator UI |
+| `StudentRosterViewModel.kt` | `features.student.ui.roster` | Roster browsing and filtering |
+| `TemplateDashboardViewModel.kt` | `features.template.ui` | Curricular school structure templates engine |
+| `AppUpdateViewModel.kt` | `features.update.ui` | Custom GitHub-based update engine state |
 
 ## ⚡ UI Effects (Transient Event Stream)
 | File | Package | Responsibility |
 |------|---------|---------------|
 | `DashboardUiEffect.kt` | `features.dashboard.ui` | Snackbars, Logout, and Navigation effects |
 | `AccountUiEffect.kt` | `features.account.ui.management` | Toast/Snackbar feedback for account updates |
+| `AssignClassUiEffect.kt` | `features.account.ui.management` | Permission matrix save notifications |
 | `ClassUiEffect.kt` | `features.school.ui.classes` | Feedback for class creation/deletion |
 | `SchoolUiEffect.kt` | `features.school.ui.list` | Workspace switching notifications |
 | `AttendanceUiEffect.kt` | `features.attendance.ui` | Verification success/failure transient UI |
 | `RegisterUiEffect.kt` | `features.student.ui.bulk` | CSV parsing status and result summary |
 | `PendingSchoolsUiEffect.kt` | `features.school.ui.admin` | Approval/Rejection success messages |
 | `SessionManagementUiEffect.kt` | `features.session.ui` | Session/Subject creation feedback |
+| `DataIntegrityUiEffect.kt` | `features.reporting.ui.integrity` | Corruption resolution popup actions |
+| `DailyDetailUiEffect.kt` | `features.reporting.ui.daily` | Edit/Override feedback for reports |
+| `TemplateDashboardUiEffect.kt` | `features.template.ui` | Applying template success confirmations |
+| `ZoharUiEffect.kt` | `features.ai.ui` | Chat transmission feedback |
+| `BiometricUiEffect.kt` | `features.biometric.ui.enroll` | Enrollment process states (Blink, Turn Face) |
+| `AppUpdateUiEffect.kt` | `features.update.ui` | Download speed, install trigger actions |
+| `StudentFormUiEffect.kt` | `features.student.ui.form` | Single student creation success actions |
+| `StudentRosterUiEffect.kt` | `features.student.ui.roster` | Exporting roster status feedback |
+| `AiMusicUiEffect.kt` | `features.aimusic.ui` | Audio track preview playback actions |
 
 ## 🏰 Repositories (Interface/Impl DRY standard)
 | File | Package | Responsibility | DRY Status |
 |------|---------|---------------|------------|
+| `BootRepository.kt` | `core.domain.repository` | Pre-flight database integrity and auth | ✅ asLocalResult |
+| `MainRepository.kt` | `core.domain.repository` | System activity alerts and runtime params | ✅ asLocalResult |
+| `SecurityRepository.kt` | `core.domain.repository` | Key protection using C++ SecureVault | ✅ asLocalResult |
+| `SyncRepository.kt` | `core.domain.repository` | Orchestrates SyncWorker scheduling | ✅ asLocalResult |
+| `AccessRequestRepository.kt` | `features.account.domain.repository` | Invitation approvals & school admission | ✅ asLocalResult |
 | `AccountRepository.kt` | `features.account.domain.repository` | Account lifecycle and Firebase sync | ✅ asLocalResult |
-| `SchoolRepository.kt` | `features.school.domain.repository` | Multi-tenant workspace and class mgmt | ✅ asLocalResult |
+| `MembershipRepository.kt` | `features.account.domain.repository` | Manages school join requests and lists | ✅ asLocalResult |
+| `SchoolWorkspaceRepository.kt` | `features.account.domain.repository` | Active school metadata settings | ✅ asLocalResult |
+| `ZoharRepository.kt` | `features.ai.domain.repository` | Offline AI engine connector | ✅ asLocalResult |
+| `AiMusicRepository.kt` | `features.aimusic.domain.repository` | Curates Nusantara backing sound tracks | ✅ asLocalResult |
 | `AttendanceRepository.kt` | `features.attendance.domain.repository` | Attendance tracking SSOT | ✅ asLocalResult |
-| `StudentRepository.kt` | `features.student.domain.repository` | Student profile management | ✅ asLocalResult |
+| `BiometricScannerRepository.kt` | `features.attendance.domain.repository` | Camera/Face frame extraction interface | ✅ asLocalResult |
+| `AuthRepository.kt` | `features.auth.domain.repository` | Connects AuthViewModel to Identity providers | ✅ asLocalResult |
 | `BiometricRepository.kt` | `features.biometric.domain.repository` | Native face engine and assignment logic | ✅ asLocalResult |
+| `AuditLogRepository.kt` | `features.reporting.domain.repository` | System audit log generation | ✅ asLocalResult |
+| `DataIntegrityRepository.kt` | `features.reporting.domain.repository` | Database repairs and file checks | ✅ asLocalResult |
+| `ExportRepository.kt` | `features.reporting.domain.repository` | Builds CSV/PDF output from attendance | ✅ asLocalResult |
+| `ReportRepository.kt` | `features.reporting.domain.repository` | Generates summary records from data | ✅ asLocalResult |
+| `SchoolRepository.kt` | `features.school.domain.repository` | Multi-tenant workspace and class mgmt | ✅ asLocalResult |
 | `SessionRepository.kt` | `features.session.domain.repository` | Tiered session SSOT & management | ✅ asLocalResult |
-
+| `StudentRegistrationRepository.kt` | `features.student.domain.repository` | Validates bulk files before insertion | ✅ asLocalResult |
+| `StudentRepository.kt` | `features.student.domain.repository` | Student profile management | ✅ asLocalResult |
+| `TemplateRepository.kt` | `features.template.domain.repository` | School templates sync engine | ✅ asLocalResult |
+| `AppUpdateRepository.kt` | `features.update.domain.repository` | Checks GitHub releases and downloads APKs | ✅ asLocalResult |
 
 ---
 
@@ -115,4 +170,3 @@
 - [AI_NATIVE_TEMPLATE.md](file:///home/max/azuratime/nusantara-main/docs/AI_NATIVE_TEMPLATE.md) — Feature blueprint and Kotlin ViewModel/UI boilerplate
 - [NAMING_CONVENTIONS.md](file:///home/max/azuratime/nusantara-main/docs/NAMING_CONVENTIONS.md) — Naming policies for semantic purity
 - [VOCABULARY.md](file:///home/max/azuratime/nusantara-main/docs/VOCABULARY.md) — Terminology dictionary
-

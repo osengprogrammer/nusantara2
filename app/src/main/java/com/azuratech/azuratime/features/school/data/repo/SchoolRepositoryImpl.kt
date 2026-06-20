@@ -321,7 +321,7 @@ class SchoolRepositoryImpl @Inject constructor(
                         val updated = existing.copy(
                             grade = classModel.grade,
                             accountId = classModel.accountId,
-                            studentCount = classModel.studentCount
+                            studentCount = classModel.studentCount,
                         )
                         classDao.update(updated)
                         dao.assignClass(SchoolClassAssignment(schoolIdVal, existing.id))

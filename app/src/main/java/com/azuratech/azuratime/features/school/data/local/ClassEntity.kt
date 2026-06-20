@@ -10,7 +10,7 @@ import java.util.UUID
     tableName = "classes",
     indices = [
         Index(value = ["schoolId"]),
-        Index(value = ["schoolId", "name"], unique = true)
+        Index(value = ["schoolId", "name"], unique = true),
     ],
 )
 data class ClassEntity(
