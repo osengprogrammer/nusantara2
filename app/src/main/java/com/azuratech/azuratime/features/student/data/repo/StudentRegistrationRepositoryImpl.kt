@@ -94,7 +94,6 @@ class StudentRegistrationRepositoryImpl @Inject constructor(
 
     override fun processCsvFlow(uri: String, schoolId: String): Flow<Result<ProcessResult>> = flow {
         val parseResult = csvImportUtils.parseCsvFile(uri)
-        val accountId = sessionManager.getCurrentAccountId() ?: ""
 
         if (parseResult.students.isEmpty() && parseResult.errors.isNotEmpty()) {
             emit(Result.Failure(AppError.BusinessRule(parseResult.errors.first())))
@@ -102,62 +101,74 @@ class StudentRegistrationRepositoryImpl @Inject constructor(
         }
 
         // Cache for resolved class names to minimize DB hits during import
-        val classCache = mutableMapOf<String, String>()
+        val classCache = mutableMapOf<String, String?>()
+        val warnings = mutableListOf<String>()
 
-        parseResult.students.forEach { data ->
+        parseResult.students.forEachIndexed { index, data ->
             val rawClassName = data.rawMetadata["CLASS"]
+            val lineNumber = index + 2 // +2 karena header di baris 1
 
-            // 🔥 AI Native: Resolve class name to ID (with auto-creation)
+            // 🔥 Name-to-ID Resolution (STRICT - No Auto-Create)
             val resolvedClassId = if (!rawClassName.isNullOrBlank()) {
-                classCache.getOrPut(rawClassName) {
+                if (classCache.containsKey(rawClassName)) {
+                    classCache[rawClassName]
+                } else {
                     val existing = classDao.getClassByName(rawClassName)
-                    if (existing != null) {
-                        // Ensure it is mapped to this school
+                    if (existing != null && existing.schoolId == schoolId) {
+                        // ✅ Valid class
+                        classCache[rawClassName] = existing.id
                         schoolClassDao.assignClass(SchoolClassAssignment(schoolId, existing.id))
                         existing.id
                     } else {
-                        // Auto-create missing class
-                        val newClass = ClassEntity(
-                            ownerAccountId = accountId,
-                            schoolId = schoolId,
-                            name = rawClassName,
-                        )
-                        classDao.insert(newClass)
-
-                        // 🔥 AI Native: Ensure school exists locally. Do NOT auto-create "Ghost Schools".
-                        if (schoolClassDao.getSchoolById(schoolId) == null) {
-                            // If school is missing, we cannot proceed with class assignment due to FK constraints.
-                            // We throw an exception caught by the catch block to fail the flow.
-                            throw Exception("School $schoolId not found locally. Import aborted to prevent data corruption.")
-                        }
-
-                        schoolClassDao.assignClass(SchoolClassAssignment(schoolId, newClass.id))
-                        newClass.id
+                        // ❌ Class not found or invalid - Save warning, DO NOT auto-create
+                        warnings.add("Baris $lineNumber: Class '$rawClassName' tidak ditemukan di template. Siswa '${data.name}' disimpan TANPA rombel.")
+                        classCache[rawClassName] = null
+                        null
                     }
                 }
             } else {
                 null
             }
 
+            // Create student profile (with or without class)
             val profile = StudentProfile(
                 studentId = data.faceId,
                 schoolId = schoolId,
                 name = data.name,
                 studentCode = data.faceId,
-                classIds = listOfNotNull(resolvedClassId),
+                classIds = listOfNotNull(resolvedClassId), // Empty if null
                 photoUrl = data.photoUrl,
                 syncStatus = SyncStatus.PENDING_INSERT,
             )
 
             val saveResult = studentRepository.saveProfile(profile)
 
+            // Create assignment ONLY if class is valid
+            if (resolvedClassId != null && saveResult is Result.Success) {
+                val assignment = StudentClassAssignmentEntity(
+                    studentId = data.faceId,
+                    classId = resolvedClassId,
+                    schoolId = schoolId,
+                )
+                assignmentDao.insertAssignment(assignment)
+            }
+
             val processResult = if (saveResult is Result.Success) {
-                ProcessResult(data.faceId, data.name, "Registered (Local)")
+                if (resolvedClassId != null) {
+                    ProcessResult(data.faceId, data.name, "Registered with class")
+                } else {
+                    ProcessResult(data.faceId, data.name, "Registered without class (class not found)")
+                }
             } else {
                 val error = (saveResult as Result.Failure).error
                 ProcessResult(data.faceId, data.name, "Error: ${error.message}")
             }
             emit(Result.Success(processResult))
+        }
+
+        // Emit warnings at the end (optional - untuk UI feedback)
+        if (warnings.isNotEmpty()) {
+            println("⚠️ Warnings during import:\n${warnings.joinToString("\n")}")
         }
     }.catch { e ->
         emit(Result.Failure(AppError.BusinessRule(e.message)))

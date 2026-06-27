@@ -5,13 +5,25 @@ import android.provider.Settings
 import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
-class SessionManager private constructor(private val context: Context) {
+@Singleton
+class SessionManager @Inject constructor(
+    @ApplicationContext private val context: Context,
+) {
+    init {
+        synchronized(SessionManager::class.java) {
+            INSTANCE = this
+        }
+    }
+
     companion object {
         private const val TAG = "AZURA_SESSION"
         const val STATUS_GUEST = "GUEST"

@@ -11,6 +11,7 @@ import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.session.CreateSessionUseCase
+import com.azuratech.azuratime.features.session.UpdateSessionUseCase
 import com.azuratech.azuratime.features.session.SessionRepository
 import com.azuratech.azuratime.features.session.data.local.SubjectEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,6 +31,7 @@ class SessionManagementViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val sessionManager: SessionManager,
     private val createSessionUseCase: CreateSessionUseCase,
+    private val updateSessionUseCase: UpdateSessionUseCase,
     private val templateRepository: com.azuratech.azuratime.features.template.domain.repository.TemplateRepository,
 ) : ViewModel() {
 
@@ -95,6 +97,11 @@ class SessionManagementViewModel @Inject constructor(
                 val sessions = container.sessionsResult.getOrNull() ?: emptyList()
                 val classes = container.classesResult.getOrNull() ?: emptyList()
                 val account = container.accountResult.getOrNull()
+
+                // Populate class names
+                sessions.forEach { sessionDetails ->
+                    sessionDetails.className = classes.find { it.id == sessionDetails.session.classId }?.name
+                }
 
                 if (account != null) {
                     val membership = account.memberships[container.schoolId]
@@ -163,6 +170,7 @@ class SessionManagementViewModel @Inject constructor(
             is SessionManagementUiEvent.DeleteSubject -> deleteSubject(event.subject)
             is SessionManagementUiEvent.SelectTier -> _uiStateFlow.update { it.copy(selectedTier = event.tier) }
             is SessionManagementUiEvent.AddSession -> addSession(event)
+            is SessionManagementUiEvent.UpdateSession -> updateSession(event)
             is SessionManagementUiEvent.DeleteSession -> deleteSession(event.session)
             SessionManagementUiEvent.GenerateFromMatrix -> generateFromMatrix()
             SessionManagementUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
@@ -287,6 +295,35 @@ class SessionManagementViewModel @Inject constructor(
             when (result) {
                 is Result.Success -> {
                     _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Session added"))
+                }
+                is Result.Failure -> {
+                    _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Conflict: ${result.error.message ?: "Unknown error"}"))
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private fun updateSession(event: SessionManagementUiEvent.UpdateSession) {
+        val schoolId = sessionManager.getActiveSchoolId() ?: return
+        val supervisorEmail = sessionManager.getAccountEmail()
+
+        viewModelScope.launch {
+            val result = updateSessionUseCase(
+                sessionId = event.sessionId,
+                classId = event.classId,
+                subjectId = event.subjectId,
+                sessionType = event.sessionType,
+                supervisorEmail = supervisorEmail,
+                dayOfWeek = event.dayOfWeek,
+                startTime = event.startTime,
+                endTime = event.endTime,
+                schoolId = schoolId,
+            )
+
+            when (result) {
+                is Result.Success -> {
+                    _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Session updated"))
                 }
                 is Result.Failure -> {
                     _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Conflict: ${result.error.message ?: "Unknown error"}"))

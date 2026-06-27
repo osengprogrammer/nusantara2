@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -40,6 +41,7 @@ fun SessionManagementScreen(
     val context = LocalContext.current
     var showAddSubjectDialog by remember { mutableStateOf(false) }
     var showAddSessionDialog by remember { mutableStateOf(false) }
+    var editingSession by remember { mutableStateOf<com.azuratech.azuratime.features.session.data.local.SessionWithDetails?>(null) }
 
     // Collect one‑off UI effects (e.g., toast from actions)
     LaunchedEffect(Unit) {
@@ -137,8 +139,13 @@ fun SessionManagementScreen(
                         }
                     },
                     trailingContent = {
-                        IconButton(onClick = { viewModel.onEvent(SessionManagementUiEvent.DeleteSession(session)) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                        Row {
+                            IconButton(onClick = { editingSession = session }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                            }
+                            IconButton(onClick = { viewModel.onEvent(SessionManagementUiEvent.DeleteSession(session)) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                            }
                         }
                     },
                 )
@@ -168,6 +175,32 @@ fun SessionManagementScreen(
             onConfirm = { classId, subjectId, tier, day, start, end ->
                 viewModel.onEvent(SessionManagementUiEvent.AddSession(classId, subjectId, tier, day, start, end))
                 showAddSessionDialog = false
+            },
+        )
+    }
+
+    if (editingSession != null) {
+        AddSessionDialog(
+            subjects = uiState.subjects,
+            classes = uiState.availableClasses,
+            assignments = uiState.assignments,
+            selectedTier = uiState.selectedTier,
+            onTierSelected = { viewModel.onEvent(SessionManagementUiEvent.SelectTier(it)) },
+            editingSession = editingSession?.session,
+            onDismiss = { editingSession = null },
+            onConfirm = { classId, subjectId, tier, day, start, end ->
+                viewModel.onEvent(
+                    SessionManagementUiEvent.UpdateSession(
+                        sessionId = editingSession!!.session.sessionId,
+                        classId = classId,
+                        subjectId = subjectId,
+                        sessionType = tier,
+                        dayOfWeek = day,
+                        startTime = start,
+                        endTime = end,
+                    ),
+                )
+                editingSession = null
             },
         )
     }
@@ -365,14 +398,25 @@ fun AddSessionDialog(
     assignments: List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>,
     selectedTier: SessionType,
     onTierSelected: (SessionType) -> Unit,
+    editingSession: com.azuratech.azuratime.features.session.data.local.ClassSessionEntity? = null,
     onDismiss: () -> Unit,
     onConfirm: (String?, String?, SessionType, Int, String, String) -> Unit,
 ) {
-    var selectedSubjectId by remember { mutableStateOf<String?>(null) }
-    var selectedClassId by remember { mutableStateOf<String?>(null) }
-    var selectedDay by remember { mutableIntStateOf(1) }
-    var startTime by remember { mutableStateOf(LocalTime.of(8, 0)) }
-    var endTime by remember { mutableStateOf(LocalTime.of(9, 30)) }
+    LaunchedEffect(editingSession) {
+        editingSession?.let {
+            onTierSelected(it.sessionType)
+        }
+    }
+
+    var selectedSubjectId by remember(editingSession) { mutableStateOf(editingSession?.subjectId) }
+    var selectedClassId by remember(editingSession) { mutableStateOf(editingSession?.classId) }
+    var selectedDay by remember(editingSession) { mutableIntStateOf(editingSession?.dayOfWeek ?: 1) }
+    var startTime by remember(editingSession) {
+        mutableStateOf(editingSession?.startTime?.let { LocalTime.parse(it) } ?: LocalTime.of(8, 0))
+    }
+    var endTime by remember(editingSession) {
+        mutableStateOf(editingSession?.endTime?.let { LocalTime.parse(it) } ?: LocalTime.of(9, 30))
+    }
 
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
@@ -381,7 +425,7 @@ fun AddSessionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.add_session)) },
+        title = { Text(if (editingSession != null) "Edit Session" else stringResource(R.string.add_session)) },
         text = {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),

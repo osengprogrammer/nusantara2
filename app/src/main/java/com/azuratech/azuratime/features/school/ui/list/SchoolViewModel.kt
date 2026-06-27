@@ -124,7 +124,9 @@ class SchoolViewModel @Inject constructor(
                 .map { it.getOrNull() }
                 .filterNotNull()
                 .onEach { account ->
-                    _uiStateFlow.update { it.copy(currentAccountRole = AccountRole.fromString(account.role)) }
+                    val activeSchoolId = account.activeSchoolId
+                    val effectiveRole = activeSchoolId?.let { schoolId -> account.memberships[schoolId]?.role } ?: account.role
+                    _uiStateFlow.update { it.copy(currentAccountRole = AccountRole.fromString(effectiveRole)) }
                 }
                 .distinctUntilChangedBy { it.memberships.keys }
                 .flatMapLatest { account ->

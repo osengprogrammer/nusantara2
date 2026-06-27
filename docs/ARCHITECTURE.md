@@ -81,6 +81,11 @@ To maintain SQLite integrity and prevent composite key name conflicts:
 3. **Transaction Remapping**: Enterprise migration routines (e.g., `MIGRATION_25_26`) automatically resolve name duplication groups in local tables and remap referencing foreign keys (`class_sessions`, `student_class_assignments`, etc.) to a master record before applying unique constraints.
 
 
+### 💼 Use Case Centralization (Business Logic Decoupling)
+To prevent ViewModels from bloat and ensure reusable business logic:
+1. **No Direct Repository Calls for Complex Logic**: ViewModels (such as `SessionPickerViewModel` and `SessionManagementViewModel`) must delegate complex business logic—including merging multi-repository data, role-based supervisor filtering, and ad-hoc lookupKey generation—to domain Use Case classes rather than importing repositories directly. ViewModels act strictly as UI Orchestrators (handling state, events, and transient UI effects), while Use Cases act as the absolute Business Logic Gatekeepers.
+2. **Encapsulated Domain Rules**: Core business rules—such as supervisor session assignment filtering (`GetAssignedSessionsUseCase`), session creation (`CreateSessionUseCase`), and session editing/updating (`UpdateSessionUseCase`)—are centralized in domain use cases to guarantee a Single Source of Truth across different UI entry points.
+
 ### 🔄 Sync Engine Protocols (Atomic Reconciliation)
 To guarantee robust data reconciliation and offline-first durability in extremely low-connectivity environments:
 1. **Sequential 1-2-3 Dependency Chain**: The core background sync worker (`SyncWorker`) executes its synchronization pipeline in a strict, sequential, transaction-style order. If any stage fails due to a network connection drop or network timeout, the worker immediately triggers WorkManager's exponential retry mechanism without executing subsequent steps:

@@ -4,28 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.session.SessionRepository
-import com.azuratech.azuratime.core.domain.model.AccountRole
-import com.azuratech.azuratime.features.account.domain.model.Account
-import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 import com.azuratech.azuratime.features.session.CreateSessionUseCase
-import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
-import com.azuratech.azuratime.features.session.domain.model.SessionType
+import com.azuratech.azuratime.features.session.domain.usecase.GetAssignedSessionsUseCase
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 
 @HiltViewModel
 class SessionPickerViewModel @Inject constructor(
-    private val sessionRepository: SessionRepository,
-    private val accountRepository: AccountRepository,
-    private val schoolRepository: com.azuratech.azuratime.features.school.domain.repository.SchoolRepository,
+    private val getAssignedSessionsUseCase: GetAssignedSessionsUseCase,
     private val sessionManager: SessionManager,
     private val createSessionUseCase: CreateSessionUseCase,
 ) : ViewModel() {
@@ -45,73 +36,17 @@ class SessionPickerViewModel @Inject constructor(
         val schoolIdFlow = sessionManager.activeSchoolIdFlow.filterNotNull()
         val accountIdFlow = sessionManager.currentAccountIdFlow.filterNotNull()
 
-        viewModelScope.launch {
-            combine(schoolIdFlow, accountIdFlow) { schoolId, accountId ->
-                schoolId to accountId
-            }.flatMapLatest { (schoolId, accountId) ->
-                combine(
-                    sessionRepository.observeAllSessionsFlow(schoolId),
-                    accountRepository.getAccountFlow(accountId),
-                    schoolRepository.observeClassesFlow(schoolId),
-                ) { sessionsResult, accountResult, classesResult ->
-                    PickerContainer(sessionsResult, accountResult, classesResult, schoolId)
+        combine(schoolIdFlow, accountIdFlow) { schoolId, accountId ->
+            schoolId to accountId
+        }.flatMapLatest { (schoolId, accountId) ->
+            getAssignedSessionsUseCase(schoolId, accountId)
+        }.onEach { result ->
+            when (result) {
+                is Result.Loading -> {
+                    _uiStateFlow.update { it.copy(isLoading = true) }
                 }
-            }.collect { container ->
-                _uiStateFlow.update { it.copy(isLoading = true) }
-
-                val sessions = container.sessionsResult.getOrNull() ?: emptyList()
-                val account = container.accountResult.getOrNull()
-                val classes = container.classesResult.getOrNull() ?: emptyList()
-
-                if (account != null) {
-                    val membership = account.memberships[container.schoolId]
-                    val role = membership?.role?.let { AccountRole.fromString(it) } ?: account.role
-                    val assignments = membership?.assignments ?: emptyList()
-
-                    val filteredSessions = if (role == AccountRole.ADMIN || role == AccountRole.SUPER_ADMIN) {
-                        sessions
-                    } else {
-                        sessions.filter { sessionDetails ->
-                            val session = sessionDetails.session
-                            assignments.any { assignment ->
-                                val classMatches = assignment.classId == session.classId
-                                val subjectMatches = assignment.subjectId == null || assignment.subjectId == session.subjectId
-                                classMatches && subjectMatches
-                            }
-                        }
-                    }
-
-                    // 🔥 AI Native: Populate className for regular sessions
-                    filteredSessions.forEach { sessionDetails ->
-                        sessionDetails.className = classes.find { it.id == sessionDetails.session.classId }?.name
-                    }
-
-                    // 🔥 Point B: If no sessions, provide "Ad-hoc" options from assignments
-                    val finalSessions = if (filteredSessions.isEmpty() && assignments.isNotEmpty()) {
-                        assignments.map { assignment ->
-                            val classObj = classes.find { it.id == assignment.classId }
-                            SessionWithDetails(
-                                session = ClassSessionEntity(
-                                    sessionId = "ADHOC_${assignment.classId}_${assignment.subjectId ?: "ALL"}",
-                                    classId = assignment.classId,
-                                    subjectId = assignment.subjectId,
-                                    sessionType = if (assignment.subjectId != null) SessionType.ACADEMIC else SessionType.CLASS_WIDE,
-                                    supervisorEmail = account.email,
-                                    dayOfWeek = 0, // Ad-hoc
-                                    startTime = "00:00",
-                                    endTime = "23:59",
-                                    schoolId = container.schoolId,
-                                    lookupKey = "ADHOC_${UUID.randomUUID()}",
-                                ),
-                                subjectName = "Matrix Assignment",
-                            ).apply {
-                                className = classObj?.name ?: "Unknown Class"
-                            }
-                        }
-                    } else {
-                        filteredSessions
-                    }
-
+                is Result.Success -> {
+                    val finalSessions = result.data
                     _uiStateFlow.update {
                         it.copy(
                             isLoading = false,
@@ -124,22 +59,21 @@ class SessionPickerViewModel @Inject constructor(
                                         (s.className ?: "").contains(it.searchQuery, ignoreCase = true)
                                 }
                             },
-                            error = if (container.sessionsResult is Result.Failure) container.sessionsResult.error.message else null,
+                            error = null,
                         )
                     }
-                } else {
-                    _uiStateFlow.update { it.copy(isLoading = false, error = "Account not found") }
+                }
+                is Result.Failure -> {
+                    _uiStateFlow.update {
+                        it.copy(
+                            isLoading = false,
+                            error = result.error.message,
+                        )
+                    }
                 }
             }
-        }
+        }.launchIn(viewModelScope)
     }
-
-    private data class PickerContainer(
-        val sessionsResult: Result<List<com.azuratech.azuratime.features.session.data.local.SessionWithDetails>>,
-        val accountResult: Result<Account>,
-        val classesResult: Result<List<com.azuratech.azuraengine.model.ClassModel>>,
-        val schoolId: String,
-    )
 
     fun onEvent(event: SessionPickerUiEvent) {
         when (event) {

@@ -22,6 +22,10 @@ import com.azuratech.azuratime.features.session.ui.SessionManagementViewModel
 import com.azuratech.azuratime.features.session.ui.SessionManagementUiEvent
 import com.azuratech.azuratime.features.session.ui.AddSubjectDialog
 import com.azuratech.azuratime.features.account.ui.management.BulkAssignMatrixViewModel
+import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
+import com.azuratech.azuratime.features.account.ui.management.RoleBadge
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.font.FontWeight
 import com.azuratech.azuratime.features.student.ui.StudentViewModel
 import com.azuratech.azuratime.features.student.ui.StudentUiEvent
 import com.azuratech.azuratime.features.student.ui.StudentUiState
@@ -39,6 +43,7 @@ fun SchoolExplorerScreen(
     classViewModel: ClassViewModel = hiltViewModel(),
     sessionViewModel: SessionManagementViewModel = hiltViewModel(),
     @Suppress("UNUSED_PARAMETER") matrixViewModel: BulkAssignMatrixViewModel = hiltViewModel(),
+    accountViewModel: AccountManagementViewModel = hiltViewModel(),
     studentViewModel: StudentViewModel = hiltViewModel(),
     initialTab: Int = 0,
 ) {
@@ -50,6 +55,7 @@ fun SchoolExplorerScreen(
     val classState by classViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val sessionState by sessionViewModel.uiStateFlow.collectAsStateWithLifecycle()
     val studentState by studentViewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val accountState by accountViewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     AzuraScreen(
         title = "School Explorer",
@@ -94,7 +100,13 @@ fun SchoolExplorerScreen(
                         subjects = sessionState.subjects,
                         onDeleteSubject = { sessionViewModel.onEvent(SessionManagementUiEvent.DeleteSubject(it)) },
                     )
-                    2 -> MatrixTab()
+                    2 -> MatrixTab(
+                        accounts = accountState.allAccountsInSameSchool,
+                        activeSchoolId = accountState.activeSchoolId,
+                        onNavigateToAssignClass = { targetId, role ->
+                            navController?.navigate(Screen.AssignClass.createRoute(targetId, role))
+                        },
+                    )
                     3 -> StudentsTab(
                         state = studentState,
                         onEvent = studentViewModel::onEvent,
@@ -201,13 +213,76 @@ fun SubjectsTab(
 }
 
 @Composable
-fun MatrixTab() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.GridView, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-            Spacer(Modifier.height(AzuraSpacing.md))
-            Text("Matrix Assignment", style = MaterialTheme.typography.titleMedium)
-            Text("Manage teacher-class-subject relations.", style = MaterialTheme.typography.bodySmall)
+fun MatrixTab(
+    accounts: List<com.azuratech.azuratime.features.account.data.local.AccountEntity>,
+    activeSchoolId: String?,
+    onNavigateToAssignClass: (String, String) -> Unit,
+) {
+    if (accounts.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.GridView, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                Spacer(Modifier.height(AzuraSpacing.md))
+                Text("No Staff Members Found", style = MaterialTheme.typography.titleMedium)
+                Text("Add staff members in School Network to assign classes.", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(AzuraSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
+        ) {
+            items(accounts) { account ->
+                val memberRoleInThisSchool = activeSchoolId?.let { account.memberships[it]?.role } ?: account.role
+                AzuraCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToAssignClass(account.accountId, memberRoleInThisSchool) },
+                ) {
+                    Row(
+                        modifier = Modifier.padding(AzuraSpacing.md),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        )
+                        Spacer(Modifier.width(AzuraSpacing.md))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(
+                                    text = account.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                RoleBadge(roleStr = memberRoleInThisSchool)
+                            }
+                            Text(
+                                text = account.email,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        IconButton(onClick = { onNavigateToAssignClass(account.accountId, memberRoleInThisSchool) }) {
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = "Assign Classes",
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

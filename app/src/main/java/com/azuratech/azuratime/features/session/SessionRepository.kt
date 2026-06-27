@@ -29,6 +29,7 @@ interface SessionRepository {
     suspend fun getSessionById(sessionId: String): Result<ClassSessionEntity>
 
     suspend fun saveSession(session: ClassSessionEntity): Result<Unit>
+    suspend fun updateSession(session: ClassSessionEntity): Result<Unit>
     suspend fun saveSubject(subject: SubjectEntity): Result<Unit>
 
     suspend fun deleteSession(session: ClassSessionEntity): Result<Unit>

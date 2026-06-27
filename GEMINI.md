@@ -1,5 +1,33 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 48: Dependency Graph Refactoring & Safe Injection (June 27, 2026)
+- **Hilt-Managed SessionManager:** Refactored [SessionManager.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/session/SessionManager.kt) into a pure Hilt-managed `@Singleton` class utilizing `@Inject constructor` with `@ApplicationContext`.
+- **Dangling Providers Cleanup:** Removed the manual, redundant `provideSessionManager` block in [AppModule.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/di/AppModule.kt) to eliminate multiple binding paths/conflicts.
+- **Backward Compatibility:** Retained the companion `getInstance` fallback initializer inside [SessionManager.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/session/SessionManager.kt) to safely handle non-Hilt access points (e.g., debug screens).
+- **Verification:** Verified both Gradle compilation and JVM unit tests pass successfully.
+
+### Phase 47: Scheduled Session Edit Functionality (June 27, 2026)
+- **Edit Option for Sessions:** Added a new edit button (pencil icon) in the Scheduled Sessions list inside [SessionManagementScreen.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/ui/SessionManagementScreen.kt).
+- **Reusable Dialog:** Hardened [AddSessionDialog](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/ui/SessionManagementScreen.kt) to accept a nullable `editingSession` parameter. If present, it initializes the states to the existing session's values, alters the dialog title to "Edit Session", and dispatches `UpdateSession` instead of `AddSession`.
+- **Database Conflict Guard:** Integrated `getSessionByLookupKeyExcluding` in [SessionDao.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/data/local/SessionDao.kt). Authorized [UpdateSessionUseCase.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/UpdateSessionUseCase.kt) to enforce strict lookupKey resolution, preventing cross-tier overlaps during modifications without silent deletions.
+- **Verification:** Verified both Gradle compilation and JVM unit tests pass successfully.
+
+### Phase 46: Temporary Camera Scanner Bypass for Testing (June 20, 2026)
+- **Scanner Bypass:** Commented out the active `AttendanceScannerView` in [AttendanceCaptureScreen.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/attendance/ui/capture/AttendanceCaptureScreen.kt) to temporarily bypass live face embedding capture during testing.
+- **Placeholder UI:** Rendered a friendly placeholder message (`"🚧 Live Detection Disabled For Bulk Import Testing"`) inside the Camera preview container.
+- **Verification:** Successfully compiled and executed all JVM unit tests.
+
+### Phase 45: Bulk Student Import Strict Class Resolution (June 20, 2026)
+- **Strict Resolution Engine:** Updated `processCsvFlow` in [StudentRegistrationRepositoryImpl.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/student/data/repo/StudentRegistrationRepositoryImpl.kt) to use strict Name-to-ID Resolution with no auto-creation of missing classes, mapping raw CSV values safely.
+- **Unassigned Student Handling:** Configured students with invalid or missing class names to be saved successfully but without class assignments (`classIds` is empty), preventing import aborts or silent class creation.
+- **Diagnostics & Warnings:** Implemented warnings logging to collect line-by-line validation notices without failing the student profile creation process.
+- **Verification:** Verified compilation and all unit tests passed cleanly (`BUILD SUCCESSFUL`).
+
+### Phase 44: School Explorer Class Matrix Integration (June 20, 2026)
+- **Matrix Tab Activation:** Replaced the static placeholder on the **Matrix** tab inside [SchoolExplorerScreen.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/school/ui/explorer/SchoolExplorerScreen.kt) with a dynamic list of active staff members loaded via [AccountManagementViewModel](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/account/ui/management/AccountManagementViewModel.kt).
+- **Modular Navigation:** Configured items in the matrix list to navigate to [AssignClassScreen](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/account/ui/management/AssignClassScreen.kt) (Class Matrix Setup) using `navController`, passing the target account ID and their current school-specific role.
+- **Verification:** Successfully compiled and executed all JVM unit tests (`BUILD SUCCESSFUL`).
+
 ### Phase 43: Documentation Restructuring & Index Refinement (June 20, 2026)
 - **Documentation Migration:** Reorganized the repository's root directory by moving development markdown guides (`README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `DEPLOYMENT.md`, `RECOVERY_PROTOCOL.md`, `ROADMAP.md`, `TROUBLESHOOTING.md`) into the [docs](file:///home/max/azuratime/nusantara-main/docs) folder.
 - **Plan Consolidation:** Merged redundant planning blueprints (`SESSION_TIERING_SYSTEM: 3-Level Hierarchy Plan.md` and `SUBJECT_SESSION_PLAN.md`) into their main respective specifications: [SESSION_TIERING.md](file:///home/max/azuratime/nusantara-main/docs/SESSION_TIERING.md) and [MIGRATION_SUBJECT_SESSION.md](file:///home/max/azuratime/nusantara-main/docs/MIGRATION_SUBJECT_SESSION.md).

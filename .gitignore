@@ -45,3 +45,4 @@ item.*
 temp_recovery/
 .git.backup/
 *.diff
+.qwen/

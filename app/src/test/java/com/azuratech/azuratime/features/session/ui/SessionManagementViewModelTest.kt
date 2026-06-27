@@ -6,6 +6,7 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.session.CreateSessionUseCase
+import com.azuratech.azuratime.features.session.UpdateSessionUseCase
 import com.azuratech.azuratime.features.session.SessionRepository
 import com.azuratech.azuratime.features.session.data.local.SubjectEntity
 import com.azuratech.azuratime.features.template.domain.repository.TemplateRepository
@@ -32,6 +33,7 @@ class SessionManagementViewModelTest {
     private lateinit var accountRepository: AccountRepository
     private lateinit var sessionManager: SessionManager
     private lateinit var createSessionUseCase: CreateSessionUseCase
+    private lateinit var updateSessionUseCase: UpdateSessionUseCase
     private lateinit var templateRepository: TemplateRepository
     private lateinit var viewModel: SessionManagementViewModel
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -44,6 +46,7 @@ class SessionManagementViewModelTest {
         accountRepository = mockk(relaxed = true)
         sessionManager = mockk(relaxed = true)
         createSessionUseCase = mockk(relaxed = true)
+        updateSessionUseCase = mockk(relaxed = true)
         templateRepository = mockk(relaxed = true)
 
         every { sessionManager.activeSchoolIdFlow } returns MutableStateFlow("school_123")
@@ -62,6 +65,7 @@ class SessionManagementViewModelTest {
             accountRepository,
             sessionManager,
             createSessionUseCase,
+            updateSessionUseCase,
             templateRepository,
         )
     }
@@ -149,6 +153,7 @@ class SessionManagementViewModelTest {
             accountRepository,
             sessionManager,
             createSessionUseCase,
+            updateSessionUseCase,
             templateRepository,
         )
 
@@ -179,6 +184,7 @@ class SessionManagementViewModelTest {
             accountRepository,
             sessionManager,
             createSessionUseCase,
+            updateSessionUseCase,
             templateRepository,
         )
 

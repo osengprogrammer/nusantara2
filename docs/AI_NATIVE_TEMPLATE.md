@@ -39,11 +39,13 @@ sealed class FeatureUiEffect {
 - Expose `val uiStateFlow: StateFlow<FeatureUiState>`.
 - Expose `val uiEffectFlow: SharedFlow<FeatureUiEffect>`.
 - Provide a single `fun onEvent(event: FeatureUiEvent)` entry point.
+- **UseCase Prioritization**: Any new feature's business logic **must** be encapsulated in a domain `UseCase` class (e.g. data merging, filtering, validation, ad-hoc entity generation). The ViewModel constructor must prioritize `UseCase` injection over direct `Repository` injection for complex operations, ensuring that the ViewModel acts strictly as a UI Orchestrator while the UseCase serves as the Business Logic Gatekeeper.
 
 ```kotlin
 @HiltViewModel
 class FeatureViewModel @Inject constructor(
-    private val repository: FeatureRepository
+    private val doSomethingUseCase: DoSomethingUseCase, // UseCase preferred over direct Repository for complex operations
+    private val repository: FeatureRepository // Allowed for simple CRUD if no business logic is involved
 ) : ViewModel() {
     private val _uiStateFlow = MutableStateFlow(FeatureUiState())
     val uiStateFlow: StateFlow<FeatureUiState> = _uiStateFlow.asStateFlow()

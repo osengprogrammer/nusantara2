@@ -111,6 +111,18 @@
 | `TemplateRepository.kt` | `features.template.domain.repository` | School templates sync engine | ✅ asLocalResult |
 | `AppUpdateRepository.kt` | `features.update.domain.repository` | Checks GitHub releases and downloads APKs | ✅ asLocalResult |
 
+## 💼 Domain Use Cases (Centralized Business Logic)
+These classes act as the 'Single Source of Truth' (SSOT) for all business rules, ensuring that ViewModels act only as UI Orchestrators while Use Cases serve as the Business Logic Gatekeepers:
+| File | Package | Responsibility |
+|------|---------|---------------|
+| `GetAssignedSessionsUseCase.kt` | `features.session.domain.usecase` | Filters and resolves assigned sessions/ad-hoc matrix classes for supervisors |
+| `CreateSessionUseCase.kt` | `features.session` | Validates, constructs, and creates active class sessions with lookup keys |
+| `UpdateSessionUseCase.kt` | `features.session` | Validates, constructs, and applies edits/updates to active class sessions |
+| `GetActiveTieredSessionUseCase.kt` | `features.session` | Implements session tiering hierarchy resolution rules (Global > Class-Wide > Academic) |
+| `GetActiveSessionUseCase.kt` | `features.session` | Retrieves active sessions for specific class/subjects |
+| `GetSessionsByDayUseCase.kt` | `features.session` | Retrieves sessions for a specific day |
+| `ValidateSessionAccessUseCase.kt` | `features.session` | Validates if a supervisor has access rights to a specific session |
+
 ---
 
 ## 🔗 Critical Data Flows (AI Navigation Map)

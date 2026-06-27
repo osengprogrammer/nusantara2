@@ -32,6 +32,15 @@ sealed class SessionManagementUiEvent {
         val startTime: String,
         val endTime: String,
     ) : SessionManagementUiEvent()
+    data class UpdateSession(
+        val sessionId: String,
+        val classId: String?,
+        val subjectId: String?,
+        val sessionType: SessionType,
+        val dayOfWeek: Int,
+        val startTime: String,
+        val endTime: String,
+    ) : SessionManagementUiEvent()
     data class DeleteSession(val session: SessionWithDetails) : SessionManagementUiEvent()
     object GenerateFromMatrix : SessionManagementUiEvent() // 🔥 Point C: Auto-generate sessions
     object ClearError : SessionManagementUiEvent()

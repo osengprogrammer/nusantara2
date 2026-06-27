@@ -71,15 +71,20 @@ class SchoolRepositoryImpl @Inject constructor(
             val account = accountDao.getAccountById(adminId)
                 ?: return Result.Failure(AppError.LocalDB("Account not found."))
 
-            val role = account.role.toAccountRole()
+            // 🔥 AI Native: Check Membership Role (Owner/Admin in any school) or Global Role
+            val isAdminInAnySchool = account.memberships.values.any { membership ->
+                val mRole = membership.role.toAccountRole()
+                mRole == AccountRole.ADMIN || mRole == AccountRole.SUPER_ADMIN
+            }
+            val globalRole = account.role.toAccountRole()
+            val isGlobalAdmin = globalRole == AccountRole.ADMIN || globalRole == AccountRole.SUPER_ADMIN
 
-            // 🔥 AI Native: Strict Role Enforcement
-            if (role != AccountRole.ADMIN && role != AccountRole.SUPER_ADMIN) {
+            if (!isAdminInAnySchool && !isGlobalAdmin) {
                 return Result.Failure(AppError.BusinessRule("Only Admins can create schools. Access denied."))
             }
 
             // 🔥 AI Native: Admin Multi-School Restriction
-            if (role == AccountRole.ADMIN) {
+            if (globalRole == AccountRole.ADMIN) {
                 val schoolCount = dao.getSchoolCountByAccount(adminId)
                 if (schoolCount >= 1) {
                     return Result.Failure(AppError.BusinessRule("Admin limit reached (1 school max)."))

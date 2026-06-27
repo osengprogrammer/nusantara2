@@ -59,6 +59,9 @@ interface SessionDao {
     @Query("SELECT * FROM class_sessions WHERE sessionId = :sessionId AND isActive = 1")
     suspend fun getSessionById(sessionId: String): ClassSessionEntity?
 
+    @Query("SELECT * FROM class_sessions WHERE lookupKey = :lookupKey AND sessionId != :excludeSessionId AND isActive = 1 LIMIT 1")
+    suspend fun getSessionByLookupKeyExcluding(lookupKey: String, excludeSessionId: String): ClassSessionEntity?
+
     @Query("SELECT * FROM subjects WHERE schoolId = :schoolId AND isActive = 1 ORDER BY name ASC")
     fun observeAllSubjectsFlow(schoolId: String): Flow<List<SubjectEntity>>
 

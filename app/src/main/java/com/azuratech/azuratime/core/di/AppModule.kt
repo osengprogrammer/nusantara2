@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.core.di
 
 import android.content.Context
-import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.student.data.local.StudentDao
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordDao
@@ -39,11 +38,7 @@ object AppModule {
     // =====================================================
     // 🔑 SESSION MANAGER PROVIDER (DataStore/SharedPreferences)
     // =====================================================
-    @Provides
-    @Singleton
-    fun provideSessionManager(@ApplicationContext context: Context): SessionManager {
-        return SessionManager.getInstance(context)
-    }
+    // Provided via @Inject constructor on SessionManager itself
 
     // =====================================================
     // 🗡️ DAO PROVIDERS

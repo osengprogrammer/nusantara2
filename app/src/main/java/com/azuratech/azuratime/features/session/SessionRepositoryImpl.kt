@@ -67,6 +67,20 @@ class SessionRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateSession(session: ClassSessionEntity): Result<Unit> {
+        return try {
+            val existing = sessionDao.getSessionByLookupKeyExcluding(session.lookupKey, session.sessionId)
+            if (existing != null) {
+                return Result.Failure(AppError.Conflict("Sesi dengan jadwal tersebut sudah terdaftar"))
+            }
+            sessionDao.insertSession(session.copy(isSynced = false))
+            syncManager.enqueueSync()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.LocalDB(e.message ?: "Failed to update session"))
+        }
+    }
+
     override suspend fun saveSubject(subject: SubjectEntity): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             database.withTransaction {
