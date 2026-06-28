@@ -14,7 +14,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel
 import com.azuratech.azuratime.features.session.ui.SessionManagementViewModel
 import com.azuratech.azuratime.features.session.ui.SessionManagementUiEvent
 import com.azuratech.azuratime.features.session.ui.AddSessionDialog
@@ -25,9 +24,7 @@ fun ClassDetailScreen(
     className: String,
     classViewModel: ClassViewModel,
     sessionViewModel: SessionManagementViewModel,
-    @Suppress("UNUSED_PARAMETER") biometricViewModel: BiometricEnrollmentViewModel,
     onNavigateBack: () -> Unit,
-    onAddStudent: () -> Unit,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Students", "Schedules")
@@ -75,7 +72,6 @@ fun ClassDetailScreen(
                         isLoading = classState.isLoading,
                     )
                     1 -> ClassScheduleSection(
-                        classId = classId,
                         sessions = sessionState.sessions.filter { it.session.classId == classId },
                         onDeleteSession = { sessionViewModel.onEvent(SessionManagementUiEvent.DeleteSession(it)) },
                     )
@@ -122,7 +118,6 @@ fun ClassDetailScreen(
 
 @Composable
 fun ClassScheduleSection(
-    classId: String,
     sessions: List<com.azuratech.azuratime.features.session.data.local.SessionWithDetails>,
     onDeleteSession: (com.azuratech.azuratime.features.session.data.local.SessionWithDetails) -> Unit,
 ) {

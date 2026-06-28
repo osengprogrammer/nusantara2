@@ -111,8 +111,8 @@ class AccountRepositoryImpl @Inject constructor(
                         schoolName = v["schoolName"] as? String ?: "",
                         role = v["role"] as? String ?: "USER",
                         status = v["status"] as? String ?: "ACTIVE",
-                        assignments = (v["assignments"] as? List<*>)?.mapNotNull {
-                            val m = it as? Map<*, *> ?: return@mapNotNull null
+                        assignments = (v["assignments"] as? List<*>)?.mapNotNull inner@{
+                            val m = it as? Map<*, *> ?: return@inner null
                             com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
                                 classId = m["classId"] as? String ?: "",
                                 subjectId = m["subjectId"] as? String,
@@ -150,15 +150,15 @@ class AccountRepositoryImpl @Inject constructor(
 
             val accounts = snapshot.documents.mapNotNull { doc ->
                 val membershipsRaw = doc.data?.get("memberships") as? Map<*, *>
-                val memberships = membershipsRaw?.mapNotNull { (key, value) ->
-                    val k = key as? String ?: return@mapNotNull null
-                    val v = value as? Map<*, *> ?: return@mapNotNull null
+                val memberships = membershipsRaw?.mapNotNull outer@{ (key, value) ->
+                    val k = key as? String ?: return@outer null
+                    val v = value as? Map<*, *> ?: return@outer null
                     k to SchoolMembership(
                         schoolName = v["schoolName"] as? String ?: "",
                         role = v["role"] as? String ?: "USER",
                         status = v["status"] as? String ?: "ACTIVE",
-                        assignments = (v["assignments"] as? List<*>)?.mapNotNull {
-                            val m = it as? Map<*, *> ?: return@mapNotNull null
+                        assignments = (v["assignments"] as? List<*>)?.mapNotNull inner@{ assignmentsList ->
+                            val m = assignmentsList as? Map<*, *> ?: return@inner null
                             com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
                                 classId = m["classId"] as? String ?: "",
                                 subjectId = m["subjectId"] as? String,
@@ -394,8 +394,8 @@ class AccountRepositoryImpl @Inject constructor(
                                             schoolName = v["schoolName"] as? String ?: "",
                                             role = v["role"] as? String ?: "USER",
                                             status = v["status"] as? String ?: "ACTIVE",
-                                            assignments = (v["assignments"] as? List<*>)?.mapNotNull {
-                                                val m = it as? Map<*, *> ?: return@mapNotNull null
+                                            assignments = (v["assignments"] as? List<*>)?.mapNotNull inner@{ assignmentsList ->
+                                                val m = assignmentsList as? Map<*, *> ?: return@inner null
                                                 com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
                                                     classId = m["classId"] as? String ?: "",
                                                     subjectId = m["subjectId"] as? String,
@@ -481,8 +481,8 @@ class AccountRepositoryImpl @Inject constructor(
                                             schoolName = v["schoolName"] as? String ?: "",
                                             role = v["role"] as? String ?: "USER",
                                             status = v["status"] as? String ?: "ACTIVE",
-                                            assignments = (v["assignments"] as? List<*>)?.mapNotNull {
-                                                val m = it as? Map<*, *> ?: return@mapNotNull null
+                                            assignments = (v["assignments"] as? List<*>)?.mapNotNull inner@{ assignmentsList ->
+                                                val m = assignmentsList as? Map<*, *> ?: return@inner null
                                                 com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
                                                     classId = m["classId"] as? String ?: "",
                                                     subjectId = m["subjectId"] as? String,
@@ -592,7 +592,7 @@ class AccountRepositoryImpl @Inject constructor(
             }
 
             // At this point, account is guaranteed non-null
-            val safeAccount = account!!
+            val safeAccount = account
             val updatedMemberships = safeAccount.memberships.toMutableMap()
 
             // 🛡️ AI Native: Auto-Enroll logic if membership doesn't exist

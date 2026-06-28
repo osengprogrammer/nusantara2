@@ -179,9 +179,7 @@ fun NavGraphBuilder.managementGraph(
                     className = className,
                     classViewModel = hiltViewModel<com.azuratech.azuratime.features.school.ui.classes.ClassViewModel>(),
                     sessionViewModel = hiltViewModel<com.azuratech.azuratime.features.session.ui.SessionManagementViewModel>(),
-                    biometricViewModel = hiltViewModel<com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel>(),
                     onNavigateBack = { navController.popBackStack() },
-                    onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
                 )
             } else {
                 androidx.compose.runtime.LaunchedEffect(Unit) {
