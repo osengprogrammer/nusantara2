@@ -5,6 +5,7 @@ import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEn
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.local.toDomain
 import com.azuratech.azuratime.features.dashboard.ui.DashboardUiState
 import com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixUiState
 import com.azuratech.azuratime.features.reporting.ui.matrix.MatrixCellModel
@@ -71,7 +72,7 @@ object PreviewMocks {
     )
 
     val mockDashboardStateSuccess = DashboardUiState(
-        account = mockAccount,
+        account = mockAccount.toDomain(),
         assignedClasses = mockClasses,
         allClasses = mockClasses,
         recentRecords = mockRecentRecords,

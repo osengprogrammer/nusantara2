@@ -286,6 +286,17 @@
 # Keep all classes in your core packages (adjust if too broad)
 # -keep class com.azuratech.azuratime.core.** { *; }
 
+# ----------------------------------------------------------------------------
+# 16. RETROFIT (REST CLIENT - PREVENTIVE SAFEGUARD)
+# ----------------------------------------------------------------------------
+# Retain Retrofit annotations and method signatures
+-keepattributes Signature, InnerClasses, EnclosingMethod, Deprecated
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
+
 # ============================================================================
 # END OF PROGUARD RULES
 # ============================================================================

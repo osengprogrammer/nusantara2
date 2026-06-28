@@ -26,7 +26,6 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.util.isAdmin
-import com.azuratech.azuratime.features.account.data.local.toDomain
 import com.azuratech.azuratime.features.dashboard.ui.components.*
 import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
 import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
@@ -57,7 +56,7 @@ fun DashboardScreen(
         title = "Azura Time",
         snackbarHost = { SnackbarHost(snackbarHostState) },
         actions = {
-            if (uiState.account?.toDomain().isAdmin(uiState.currentSchool?.id ?: "")) {
+            if (uiState.account.isAdmin(uiState.currentSchool?.id ?: "")) {
                 SystemHealthIcon(
                     isSyncing = uiState.isSyncing,
                     hasError = uiState.error != null,
@@ -170,7 +169,7 @@ fun DashboardContent(
                 viewModel = schoolViewModel,
                 accountId = account?.accountId ?: "",
                 isApproved = data.isApproved,
-                globalRole = account?.role ?: "GUEST",
+                globalRole = account?.role?.name ?: "GUEST",
                 onSchoolClick = { school ->
                     schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
                 },
@@ -263,7 +262,7 @@ fun DashboardContent(
                     )
                 }
 
-                if (data.isApproved && account?.toDomain().isAdmin(activeSchoolId)) {
+                if (data.isApproved && account.isAdmin(activeSchoolId)) {
                     item {
                         GpsGeofenceCard(
                             geofence = data.geofence,
@@ -287,7 +286,7 @@ fun DashboardContent(
             }
 
             if (data.isApproved) {
-                val isAdmin = account?.toDomain().isAdmin(activeSchoolId)
+                val isAdmin = account.isAdmin(activeSchoolId)
                 item {
                     AccountTasksGrid(
                         navController = navController,

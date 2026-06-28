@@ -20,6 +20,9 @@ interface AccountClassAccessDao {
     @Query("SELECT classId, subjectId FROM account_class_access WHERE accountId = :accountId AND schoolId = :schoolId AND isActive = 1")
     fun getAssignmentsFlow(accountId: String, schoolId: String): Flow<List<TeacherAssignmentTuple>>
 
+    @Query("SELECT * FROM account_class_access WHERE accountId = :accountId AND schoolId = :schoolId AND isActive = 1")
+    fun getAssignmentsEntityFlow(accountId: String, schoolId: String): Flow<List<AccountClassAccessEntity>>
+
     @Query("SELECT EXISTS(SELECT 1 FROM account_class_access WHERE accountId = :accountId AND classId = :classId AND (subjectId = :subjectId OR subjectId = '') AND isActive = 1)")
     suspend fun hasAccess(accountId: String, classId: String, subjectId: String): Boolean
 

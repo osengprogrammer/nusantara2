@@ -6,9 +6,8 @@ import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
-import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
@@ -20,7 +19,7 @@ import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRep
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.core.util.isAdmin
-import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.features.dashboard.domain.repository.DashboardRepository
 import com.azuratech.azuratime.features.session.GetActiveTieredSessionUseCase
 import com.azuratech.azuratime.features.session.SessionRepository
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
@@ -46,7 +45,7 @@ class DashboardViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val sessionManager: SessionManager,
     private val getActiveSessionUseCase: GetActiveTieredSessionUseCase,
-    private val database: AppDatabase,
+    private val dashboardRepository: DashboardRepository,
 ) : ViewModel() {
 
     private val _uiEffectFlow = MutableSharedFlow<DashboardUiEffect>()
@@ -54,10 +53,10 @@ class DashboardViewModel @Inject constructor(
 
     private val _refreshTriggerFlow = MutableStateFlow(0)
 
-    private val _accountFlow: StateFlow<AccountEntity?> = sessionManager.currentAccountIdFlow
+    private val _accountFlow: StateFlow<Account?> = sessionManager.currentAccountIdFlow
         .flatMapLatest { accountId ->
             if (accountId != null) {
-                accountRepository.observeAccountEntityFlow(accountId).map { it.getOrNull() }
+                accountRepository.getAccountFlow(accountId).map { it.getOrNull() }
             } else {
                 flowOf(null)
             }
@@ -93,7 +92,7 @@ class DashboardViewModel @Inject constructor(
                     classModel.copy(studentCount = count)
                 }
 
-                if (account.toDomain().isAdmin(schoolId)) {
+                if (account.isAdmin(schoolId)) {
                     enrichedClasses
                 } else {
                     val membership = account.memberships[schoolId]
@@ -217,7 +216,7 @@ class DashboardViewModel @Inject constructor(
         sessionManager.isLoggingOutFlow,
         _refreshTriggerFlow,
     ) { params ->
-        val account = params[0] as AccountEntity?
+        val account = params[0] as Account?
 
         @Suppress("UNCHECKED_CAST")
         val recentRecords = params[1] as List<AttendanceRecordEntity>
@@ -245,7 +244,7 @@ class DashboardViewModel @Inject constructor(
 
         val activeSchoolId = activeSchool?.id
         val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
-        val effectiveRole = membershipRole ?: account?.role ?: "GUEST"
+        val effectiveRole = membershipRole ?: account?.role?.name ?: "GUEST"
         val isReady = account != null
 
         val needsAssignment = effectiveRole == "SUPERVISOR" && assignedClasses.isEmpty()
@@ -352,7 +351,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val account = uiStateFlow.value.account ?: return@launch
             val updated = account.copy(activeClassId = classId)
-            database.accountDao().updateAccount(updated)
+            dashboardRepository.updateAccount(updated)
 
             // 🔥 AI Native: Push session change immediately to prevent sync overwrite
             accountRepository.pushAccount(account.accountId)

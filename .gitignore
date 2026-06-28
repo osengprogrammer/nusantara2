@@ -46,3 +46,4 @@ temp_recovery/
 .git.backup/
 *.diff
 .qwen/
+app/azura-key.jks

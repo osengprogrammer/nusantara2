@@ -42,6 +42,24 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun provideAccountClassAccessRepository(
+        impl: com.azuratech.azuratime.features.account.data.repo.AccountClassAccessRepositoryImpl,
+    ): com.azuratech.azuratime.features.account.domain.repository.AccountClassAccessRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideDashboardRepository(
+        impl: com.azuratech.azuratime.features.dashboard.data.repo.DashboardRepositoryImpl,
+    ): com.azuratech.azuratime.features.dashboard.domain.repository.DashboardRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideAssignClassRepository(
+        impl: com.azuratech.azuratime.features.account.data.repo.AssignClassRepositoryImpl,
+    ): com.azuratech.azuratime.features.account.domain.repository.AssignClassRepository
+
+    @Binds
+    @Singleton
     abstract fun provideMembershipRepository(
         impl: com.azuratech.azuratime.features.account.data.repo.MembershipRepositoryImpl,
     ): com.azuratech.azuratime.features.account.domain.repository.MembershipRepository

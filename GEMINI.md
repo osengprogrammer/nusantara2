@@ -1,5 +1,11 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 49: Database Decoupling & Repository Isolations (June 27, 2026)
+- **DashboardRepository Introduction:** Created [DashboardRepository](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/dashboard/domain/repository/DashboardRepository.kt) (interface and impl) to wrap `AccountDao` accesses, returning fully-mapped domain `Account` models to [DashboardViewModel](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/dashboard/ui/DashboardViewModel.kt).
+- **AssignClassRepository Introduction:** Created [AssignClassRepository](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/account/domain/repository/AssignClassRepository.kt) (interface and impl) to wrap `AccountDao` and `AccountClassAccessDao` calls, decoupling [AssignClassViewModel](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/account/ui/management/AssignClassViewModel.kt) from direct database references.
+- **Vertical Slice Architecture Alignment:** Safe mappings (`toDomain()`) have been integrated so that data flowing to ViewModels are strictly domain objects.
+- **Verification:** Verified both Gradle compilation and JVM unit tests pass successfully.
+
 ### Phase 48: Dependency Graph Refactoring & Safe Injection (June 27, 2026)
 - **Hilt-Managed SessionManager:** Refactored [SessionManager.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/session/SessionManager.kt) into a pure Hilt-managed `@Singleton` class utilizing `@Inject constructor` with `@ApplicationContext`.
 - **Dangling Providers Cleanup:** Removed the manual, redundant `provideSessionManager` block in [AppModule.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/di/AppModule.kt) to eliminate multiple binding paths/conflicts.

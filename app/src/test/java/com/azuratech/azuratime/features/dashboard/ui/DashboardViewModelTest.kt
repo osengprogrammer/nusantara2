@@ -3,12 +3,13 @@ package com.azuratech.azuratime.features.dashboard.ui
 import app.cash.turbine.test
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.data.local.SchoolMembership
+import com.azuratech.azuratime.features.account.data.local.toDomain
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
+import com.azuratech.azuratime.features.dashboard.domain.repository.DashboardRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
@@ -49,7 +50,7 @@ class DashboardViewModelTest {
     private lateinit var sessionRepository: SessionRepository
     private lateinit var sessionManager: SessionManager
     private lateinit var getActiveSessionUseCase: GetActiveTieredSessionUseCase
-    private lateinit var database: AppDatabase
+    private lateinit var dashboardRepository: DashboardRepository
 
     private lateinit var viewModel: DashboardViewModel
 
@@ -76,7 +77,7 @@ class DashboardViewModelTest {
         sessionRepository = mockk<SessionRepository>(relaxed = true)
         sessionManager = mockk<SessionManager>(relaxed = true)
         getActiveSessionUseCase = mockk<GetActiveTieredSessionUseCase>(relaxed = true)
-        database = mockk<AppDatabase>(relaxed = true)
+        dashboardRepository = mockk<DashboardRepository>(relaxed = true)
 
         // Mock Session
         every { sessionManager.currentAccountIdFlow } returns MutableStateFlow(accountId).asStateFlow()
@@ -120,7 +121,7 @@ class DashboardViewModelTest {
                 ),
             ),
         )
-        every { accountRepository.observeAccountEntityFlow(accountId) } returns flowOf(Result.Success(supervisor))
+        every { accountRepository.getAccountFlow(accountId) } returns flowOf(Result.Success(supervisor.toDomain()))
 
         viewModel = createViewModel()
 
@@ -155,7 +156,7 @@ class DashboardViewModelTest {
                 ),
             ),
         )
-        every { accountRepository.observeAccountEntityFlow(accountId) } returns flowOf(Result.Success(admin))
+        every { accountRepository.getAccountFlow(accountId) } returns flowOf(Result.Success(admin.toDomain()))
 
         viewModel = createViewModel()
 
@@ -183,6 +184,6 @@ class DashboardViewModelTest {
         sessionRepository,
         sessionManager,
         getActiveSessionUseCase,
-        database,
+        dashboardRepository,
     )
 }

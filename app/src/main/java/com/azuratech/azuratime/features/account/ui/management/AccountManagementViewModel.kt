@@ -11,6 +11,7 @@ import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.model.toProfileCompat
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
+import com.azuratech.azuratime.features.account.domain.repository.AccountClassAccessRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +28,7 @@ class AccountManagementViewModel @Inject constructor(
     private val repository: AccountRepository,
     private val accessRequestRepository: AccessRequestRepository,
     private val schoolRepository: SchoolRepository,
+    private val accountClassAccessRepository: AccountClassAccessRepository,
     private val sessionManager: SessionManager,
     private val database: AppDatabase,
 ) : ViewModel() {
@@ -81,7 +83,7 @@ class AccountManagementViewModel @Inject constructor(
         sessionManager.activeSchoolIdFlow
             .filterNotNull()
             .combine(sessionManager.currentAccountIdFlow.filterNotNull()) { schoolId, accountId -> schoolId to accountId }
-            .flatMapLatest { (schoolId, accountId) -> database.accountClassAccessDao().getAssignmentsFlow(accountId, schoolId) }
+            .flatMapLatest { (schoolId, accountId) -> accountClassAccessRepository.observeAssignments(accountId, schoolId) }
             .onEach { assignments ->
                 val classIds = assignments.map { it.classId }.distinct()
                 _uiStateFlow.update { it.copy(assignedClassIds = classIds) }
@@ -119,7 +121,7 @@ class AccountManagementViewModel @Inject constructor(
                 if (target != null) target.accountId to schoolId else null
             }
             .filterNotNull()
-            .flatMapLatest { (targetId, schoolId) -> database.accountClassAccessDao().getAssignmentsFlow(targetId, schoolId) }
+            .flatMapLatest { (targetId, schoolId) -> accountClassAccessRepository.observeAssignments(targetId, schoolId) }
             .onEach { assignments ->
                 val classIds = assignments.map { it.classId }.distinct()
                 _uiStateFlow.update { it.copy(targetAssignedClassIds = classIds) }

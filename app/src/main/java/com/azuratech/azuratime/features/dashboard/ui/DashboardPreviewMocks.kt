@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.dashboard.ui
 
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.local.toDomain
 
 object DashboardPreviewMocks {
     fun loading(): DashboardUiState = DashboardUiState(isLoading = true)
@@ -15,7 +16,7 @@ object DashboardPreviewMocks {
             name = "Azura Admin",
             activeSchoolId = "sch_1",
             activeClassId = "cls_1",
-        ),
+        ).toDomain(),
         currentRole = "ADMIN",
         isApproved = true,
         totalStudents = 120,

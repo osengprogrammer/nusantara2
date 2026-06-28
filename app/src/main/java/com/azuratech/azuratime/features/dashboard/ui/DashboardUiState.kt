@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.dashboard.ui
 
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
@@ -10,7 +10,7 @@ import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 
 data class DashboardUiState(
     val isLoading: Boolean = false,
-    val account: AccountEntity? = null,
+    val account: Account? = null,
     val currentSchool: School? = null,
     val activeSession: SessionWithDetails? = null, // 🔥 v3.4.0 Smart Session
     val allSessionsToday: List<SessionWithDetails> = emptyList(), // 🔥 Fallback Picker

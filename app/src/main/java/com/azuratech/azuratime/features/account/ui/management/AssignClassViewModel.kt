@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result as AzuraResult
 import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
-import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.model.TeacherAssignment
+import com.azuratech.azuratime.features.account.domain.repository.AssignClassRepository
 import com.azuratech.azuratime.features.account.domain.usecase.AssignClassToSupervisorUseCase
 import com.azuratech.azuratime.features.session.SessionRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
@@ -28,7 +28,7 @@ class AssignClassViewModel @Inject constructor(
     private val schoolRepository: SchoolRepository,
     private val sessionRepository: SessionRepository,
     private val sessionManager: SessionManager,
-    private val database: AppDatabase,
+    private val assignClassRepository: AssignClassRepository,
 ) : ViewModel() {
 
     private val _uiStateFlow = MutableStateFlow(AssignClassUiState())
@@ -107,7 +107,7 @@ class AssignClassViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 Log.d("AZURA_DEBUG", "🚀 Initializing Matrix Setup for: $targetAccountId")
-                val account = database.accountDao().getAccountById(targetAccountId)
+                val account = assignClassRepository.getAccountById(targetAccountId)
                 if (account == null) {
                     _uiStateFlow.update { it.copy(isLoading = false, error = "Account not found") }
                     return@launch
@@ -117,7 +117,7 @@ class AssignClassViewModel @Inject constructor(
                 combine(
                     schoolRepository.observeClassesFlow(schoolId),
                     sessionRepository.observeAllSubjectsFlow(schoolId),
-                    database.accountClassAccessDao().getAssignmentsFlow(targetAccountId, schoolId),
+                    assignClassRepository.observeAssignments(targetAccountId, schoolId),
                     _searchQueryFlow,
                 ) { classesRes, subjectsRes, assignments, query ->
                     DataSnapshot(classesRes, subjectsRes, assignments, query)
@@ -133,9 +133,7 @@ class AssignClassViewModel @Inject constructor(
 
                         _uiStateFlow.update { state ->
                             val currentAssignments = if (!isInitialDataLoaded) {
-                                assignments.map { tuple ->
-                                    TeacherAssignment(tuple.classId, tuple.subjectId.takeIf { s -> s.isNotEmpty() })
-                                }
+                                assignments
                             } else {
                                 state.selectedAssignments
                             }
@@ -179,7 +177,7 @@ class AssignClassViewModel @Inject constructor(
     private data class DataSnapshot(
         val classesRes: AzuraResult<List<com.azuratech.azuraengine.model.ClassModel>>,
         val subjectsRes: AzuraResult<List<com.azuratech.azuratime.features.session.data.local.SubjectEntity>>,
-        val assignments: List<com.azuratech.azuratime.features.account.data.local.TeacherAssignmentTuple>,
+        val assignments: List<TeacherAssignment>,
         val query: String,
     )
 
