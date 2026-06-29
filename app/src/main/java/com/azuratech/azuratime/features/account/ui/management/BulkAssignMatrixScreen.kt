@@ -80,7 +80,7 @@ fun BulkAssignMatrixScreen(
                 Column(modifier = Modifier.padding(AzuraSpacing.md)) {
                     Text("CSV Import Format", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     Text(
-                        "Columns: teacher_email, class_name, subject_name (optional)",
+                        "Columns: teacher_email (Must end with @gmail.com), class_name, subject_name (optional)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

@@ -19,6 +19,8 @@ class ImportMatrixUseCase @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val database: AppDatabase,
 ) {
+    private val GMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@gmail\\.com$".toRegex()
+
     suspend fun resolveRows(
         schoolId: String,
         rows: List<Map<String, String>>,
@@ -29,17 +31,19 @@ class ImportMatrixUseCase @Inject constructor(
         val accounts = database.accountDao().getAllAccountsOnce().filter { it.memberships.containsKey(schoolId) }
 
         return rows.map { row ->
-            val email = row["teacher_email"] ?: ""
+            val email = row["teacher_email"]?.trim() ?: ""
             val className = row["class_name"] ?: ""
             val subjectName = row["subject_name"] // Nullable
 
-            val account = accounts.find { it.email.equals(email, ignoreCase = true) }
+            val isEmailValid = email.isNotBlank() && GMAIL_REGEX.matches(email)
+            val account = if (isEmailValid) accounts.find { it.email.equals(email, ignoreCase = true) } else null
             val classObj = classes.find { it.name.equals(className, ignoreCase = true) }
             val subjectObj = if (subjectName.isNullOrBlank()) null else subjects.find { it.name.equals(subjectName, ignoreCase = true) }
 
-            val isValid = account != null && classObj != null && (subjectName.isNullOrBlank() || subjectObj != null)
+            val isValid = isEmailValid && account != null && classObj != null && (subjectName.isNullOrBlank() || subjectObj != null)
 
             val status = when {
+                !isEmailValid -> "INVALID_EMAIL"
                 account == null -> "Email not found"
                 classObj == null -> "Class not found"
                 !subjectName.isNullOrBlank() && subjectObj == null -> "Subject not found"
