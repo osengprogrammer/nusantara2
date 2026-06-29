@@ -54,15 +54,17 @@ class AttendanceRepositoryImpl @Inject constructor(
         classId: String?,
         assignedIds: List<String>,
         schoolId: String,
+        subjectId: String?,
     ): Flow<Result<List<AttendanceRecordEntity>>> {
         return localDataSource.getFilteredRecords(
-            name,
-            startDate,
-            endDate,
-            accountId,
-            classId,
-            assignedIds,
-            schoolId,
+            nameFilter = name,
+            startDate = startDate,
+            endDate = endDate,
+            accountId = accountId,
+            classId = classId,
+            assignedIds = assignedIds,
+            schoolId = schoolId,
+            subjectId = subjectId,
         ).asLocalResult()
     }
 

@@ -65,12 +65,14 @@ interface AttendanceRecordDao {
 
     @Query(
         """
-        SELECT * FROM check_in_records
-        WHERE schoolId = :schoolId
-        AND (:nameFilter IS NULL OR name LIKE '%' || :nameFilter || '%')
-        AND (:accountId IS NULL OR accountEmail = :accountId)
-        AND (:classId IS NULL OR classId = :classId)
-        ORDER BY timestamp DESC
+        SELECT r.* FROM check_in_records r
+        LEFT JOIN class_sessions s ON r.sessionId = s.sessionId
+        WHERE r.schoolId = :schoolId
+        AND (:nameFilter IS NULL OR r.name LIKE '%' || :nameFilter || '%')
+        AND (:accountId IS NULL OR r.accountEmail = :accountId)
+        AND (:classId IS NULL OR r.classId = :classId)
+        AND (:subjectId IS NULL OR s.subjectId = :subjectId)
+        ORDER BY r.timestamp DESC
     """,
     )
     fun getFilteredRecords(
@@ -78,5 +80,6 @@ interface AttendanceRecordDao {
         nameFilter: String?,
         accountId: String?,
         classId: String?,
+        subjectId: String?,
     ): Flow<List<AttendanceRecordEntity>>
 }

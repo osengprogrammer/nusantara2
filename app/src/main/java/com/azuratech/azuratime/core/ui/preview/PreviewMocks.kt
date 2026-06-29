@@ -129,11 +129,13 @@ object PreviewMocks {
     val mockMatrixData = com.azuratech.azuratime.features.reporting.ui.matrix.AttendanceMatrixData(
         rows = mockMatrixRows,
         availableClasses = mockClasses,
+        availableSubjects = emptyList(),
         dateRange = listOf(LocalDate.now().minusDays(2), LocalDate.now().minusDays(1), LocalDate.now()),
         searchQuery = "",
         startDate = LocalDate.now().minusDays(2),
         endDate = LocalDate.now(),
         selectedClassId = "cls_1",
+        selectedSubjectId = "",
         policy = "SCHOOL",
     )
 

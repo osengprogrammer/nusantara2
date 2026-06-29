@@ -118,8 +118,10 @@ class MembershipRepositoryImpl @Inject constructor(
 
             sessionManager.saveAccountStatus(SessionManager.STATUS_ACTIVE)
 
+            val role = data?.get("role")?.toString()
+
             if (!isoKey.isNullOrEmpty()) {
-                sessionManager.injectSecurityEnvelope(isoKey, expireDate)
+                sessionManager.injectSecurityEnvelope(isoKey, expireDate, role)
             }
             Result.Success(true)
         } catch (e: Exception) {

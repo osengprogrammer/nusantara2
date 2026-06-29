@@ -126,6 +126,23 @@ private fun AttendanceMatrixFilters(
 
         Spacer(modifier = Modifier.height(AzuraSpacing.sm))
 
+        // 3. Subject Dropdown
+        var isSubjectExpanded by remember { mutableStateOf(false) }
+        val selectedSubjectName = data.availableSubjects.find { it.subjectId == data.selectedSubjectId }?.name ?: "Semua Mapel"
+        AzuraDropdownField(
+            label = "Filter Mata Pelajaran",
+            selectedValue = selectedSubjectName,
+            options = listOf(null) + data.availableSubjects,
+            isExpanded = isSubjectExpanded,
+            onExpandedChange = { isSubjectExpanded = it },
+            onOptionSelected = { subjectModel ->
+                onEvent(AttendanceMatrixUiEvent.FilterBySubject(subjectModel?.subjectId ?: ""))
+            },
+            getOptionLabel = { it?.name ?: "Semua Mapel" },
+        )
+
+        Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+
         // 3. Date Range Picker
         Row(
             modifier = Modifier.fillMaxWidth(),

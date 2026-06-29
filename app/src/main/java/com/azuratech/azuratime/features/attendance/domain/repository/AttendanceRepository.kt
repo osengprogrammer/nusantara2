@@ -33,6 +33,7 @@ interface AttendanceRepository {
         classId: String?,
         assignedIds: List<String>,
         schoolId: String,
+        subjectId: String? = null,
     ): Flow<Result<List<AttendanceRecordEntity>>>
 
     suspend fun saveRecord(record: AttendanceRecord, sessionId: String? = null): Result<Unit>

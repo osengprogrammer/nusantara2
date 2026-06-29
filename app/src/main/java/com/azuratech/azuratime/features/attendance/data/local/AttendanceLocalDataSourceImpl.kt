@@ -22,12 +22,14 @@ class AttendanceLocalDataSourceImpl @Inject constructor(
         classId: String?,
         assignedIds: List<String>,
         schoolId: String,
+        subjectId: String?,
     ): Flow<List<AttendanceRecordEntity>> {
         return attendanceRecordDao.getFilteredRecords(
             schoolId = schoolId,
             nameFilter = nameFilter.ifBlank { null },
             accountId = accountId,
             classId = classId,
+            subjectId = subjectId,
         ).map { records ->
             records.filter { record ->
                 val recordDate = record.attendanceDate

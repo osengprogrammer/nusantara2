@@ -16,11 +16,13 @@ sealed class AttendanceMatrixUiState {
 data class AttendanceMatrixData(
     val rows: List<MatrixRowModel>,
     val availableClasses: List<ClassModel>,
+    val availableSubjects: List<com.azuratech.azuratime.features.session.data.local.SubjectEntity>,
     val dateRange: List<LocalDate>,
     val searchQuery: String,
     val startDate: LocalDate,
     val endDate: LocalDate,
     val selectedClassId: String,
+    val selectedSubjectId: String,
     val policy: String,
 )
 

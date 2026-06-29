@@ -18,6 +18,7 @@ import com.azuratech.azuratime.features.school.domain.repository.SchoolRepositor
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.session.SessionRepository
 import com.azuratech.azuratime.features.session.GetActiveTieredSessionUseCase
+import com.azuratech.azuratime.features.reporting.domain.repository.DataIntegrityRepository
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,7 @@ class DashboardViewModelTest {
     private lateinit var sessionManager: SessionManager
     private lateinit var getActiveSessionUseCase: GetActiveTieredSessionUseCase
     private lateinit var dashboardRepository: DashboardRepository
+    private lateinit var dataIntegrityRepository: DataIntegrityRepository
 
     private lateinit var viewModel: DashboardViewModel
 
@@ -78,6 +80,7 @@ class DashboardViewModelTest {
         sessionManager = mockk<SessionManager>(relaxed = true)
         getActiveSessionUseCase = mockk<GetActiveTieredSessionUseCase>(relaxed = true)
         dashboardRepository = mockk<DashboardRepository>(relaxed = true)
+        dataIntegrityRepository = mockk<DataIntegrityRepository>(relaxed = true)
 
         // Mock Session
         every { sessionManager.currentAccountIdFlow } returns MutableStateFlow(accountId).asStateFlow()
@@ -98,6 +101,9 @@ class DashboardViewModelTest {
         // Mock Session Tiering
         every { sessionRepository.getSessionsByDayFlow(any(), any()) } returns flowOf(Result.Success(emptyList()))
         every { getActiveSessionUseCase(any(), any(), any(), any()) } returns flowOf(Result.Success(null))
+
+        // Mock Data Integrity
+        every { dataIntegrityRepository.globalUnsyncedCountFlow } returns flowOf(Result.Success(0))
     }
 
     @After
@@ -185,5 +191,6 @@ class DashboardViewModelTest {
         sessionManager,
         getActiveSessionUseCase,
         dashboardRepository,
+        dataIntegrityRepository,
     )
 }

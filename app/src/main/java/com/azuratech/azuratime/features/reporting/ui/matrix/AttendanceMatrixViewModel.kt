@@ -25,6 +25,7 @@ class AttendanceMatrixViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
     private val studentRepository: StudentRepository,
     private val schoolRepository: SchoolRepository,
+    private val sessionRepository: com.azuratech.azuratime.features.session.SessionRepository,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
@@ -32,6 +33,7 @@ class AttendanceMatrixViewModel @Inject constructor(
     private val _endDate = MutableStateFlow(LocalDate.now())
     private val _searchQuery = MutableStateFlow("")
     private val _selectedClassId = MutableStateFlow("")
+    private val _selectedSubjectId = MutableStateFlow("")
 
     private val _uiStateFlow = MutableStateFlow<AttendanceMatrixUiState>(AttendanceMatrixUiState.Loading)
     val uiStateFlow: StateFlow<AttendanceMatrixUiState> = _uiStateFlow.asStateFlow()
@@ -49,6 +51,9 @@ class AttendanceMatrixViewModel @Inject constructor(
             }
             is AttendanceMatrixUiEvent.FilterByClass -> {
                 _selectedClassId.value = event.classId
+            }
+            is AttendanceMatrixUiEvent.FilterBySubject -> {
+                _selectedSubjectId.value = event.subjectId
             }
             is AttendanceMatrixUiEvent.Search -> {
                 _searchQuery.value = event.query
@@ -75,22 +80,38 @@ class AttendanceMatrixViewModel @Inject constructor(
                 _endDate,
                 _searchQuery.debounce(300), // ⚡ AI Native: Debounce heavy search
                 _selectedClassId,
-            ) { start, end, query, classId ->
-                FilterInputs(start, end, query, classId)
+                _selectedSubjectId,
+            ) { start, end, query, classId, subjectId ->
+                FilterInputs(start, end, query, classId, subjectId)
             }
 
             combine(
                 studentRepository.getStudentProfilesFlow(),
                 schoolRepository.observeClassesFlow(schoolId),
+                sessionRepository.observeAllSubjectsFlow(schoolId),
+                sessionRepository.observeAllSessionsFlow(schoolId),
                 filtersFlow,
-            ) { studentsResult, classesResult, filters ->
+            ) { studentsResult, classesResult, subjectsResult, sessionsResult, filters ->
                 val students = if (studentsResult is Result.Success) studentsResult.data else emptyList()
                 val classes = if (classesResult is Result.Success) classesResult.data else emptyList()
+                val subjects = if (subjectsResult is Result.Success) subjectsResult.data else emptyList()
+                val sessions = if (sessionsResult is Result.Success) sessionsResult.data else emptyList()
 
-                FilterParams(filters.startDate, filters.endDate, filters.query, filters.classId, students, classes)
+                FilterParams(
+                    startDate = filters.startDate,
+                    endDate = filters.endDate,
+                    query = filters.query,
+                    classId = filters.classId,
+                    subjectId = filters.subjectId,
+                    students = students,
+                    classes = classes,
+                    subjects = subjects,
+                    sessions = sessions,
+                )
             }
                 .flatMapLatest { params ->
                     val classFilter = params.classId.ifEmpty { null }
+                    val subjectFilter = params.subjectId.ifEmpty { null }
 
                     attendanceRepository.getAttendanceRecordsFlow(
                         name = params.query,
@@ -100,6 +121,7 @@ class AttendanceMatrixViewModel @Inject constructor(
                         classId = classFilter,
                         assignedIds = emptyList(), // Admin assumes all access, could be filtered
                         schoolId = schoolId,
+                        subjectId = subjectFilter,
                     ).map { recordsResult ->
                         val records = if (recordsResult is Result.Success) recordsResult.data else emptyList()
                         val filteredStudents = params.students.filter { student ->
@@ -107,17 +129,26 @@ class AttendanceMatrixViewModel @Inject constructor(
                             val matchesQuery = params.query.isEmpty() || student.name.contains(params.query, ignoreCase = true)
                             matchesClass && matchesQuery
                         }
-                        val rows = transformToMatrixRows(records, filteredStudents, params.startDate, params.endDate)
+                        val rows = transformToMatrixRows(
+                            records = records,
+                            students = filteredStudents,
+                            startDate = params.startDate,
+                            endDate = params.endDate,
+                            selectedSubjectId = params.subjectId,
+                            sessions = params.sessions,
+                        )
 
                         val dateRange = generateDateRange(params.startDate, params.endDate)
                         AttendanceMatrixData(
                             rows = rows,
                             availableClasses = params.classes,
+                            availableSubjects = params.subjects,
                             dateRange = dateRange,
                             searchQuery = params.query,
                             startDate = params.startDate,
                             endDate = params.endDate,
                             selectedClassId = params.classId,
+                            selectedSubjectId = params.subjectId,
                             policy = "Standard",
                         )
                     }
@@ -136,6 +167,7 @@ class AttendanceMatrixViewModel @Inject constructor(
         val endDate: LocalDate,
         val query: String,
         val classId: String,
+        val subjectId: String,
     )
 
     private data class FilterParams(
@@ -143,8 +175,11 @@ class AttendanceMatrixViewModel @Inject constructor(
         val endDate: LocalDate,
         val query: String,
         val classId: String,
+        val subjectId: String,
         val students: List<StudentProfile>,
         val classes: List<com.azuratech.azuraengine.model.ClassModel>,
+        val subjects: List<com.azuratech.azuratime.features.session.data.local.SubjectEntity>,
+        val sessions: List<com.azuratech.azuratime.features.session.data.local.SessionWithDetails>,
     )
 
     private fun generateDateRange(startDate: LocalDate, endDate: LocalDate): List<LocalDate> {
@@ -162,16 +197,22 @@ class AttendanceMatrixViewModel @Inject constructor(
         students: List<StudentProfile>,
         startDate: LocalDate,
         endDate: LocalDate,
+        selectedSubjectId: String,
+        sessions: List<com.azuratech.azuratime.features.session.data.local.SessionWithDetails>,
     ): List<MatrixRowModel> {
         val dateRange = generateDateRange(startDate, endDate)
+        val sessionIdToSubjectId = sessions.associate { it.session.sessionId to (it.session.subjectId ?: "") }
 
         // Group by studentId
         val recordsByStudent = records.groupBy { it.studentId }
 
         return students.map { student ->
             val studentRecords = recordsByStudent[student.studentId] ?: emptyList()
-            // Map records by date (assuming one record per day for matrix)
-            val recordsByDate = studentRecords.associateBy { it.attendanceDate }
+            // Map records by composite key to avoid different subjects on the same day overwriting each other
+            val recordsByKey = studentRecords.associateBy { record ->
+                val subjectId = sessionIdToSubjectId[record.sessionId] ?: ""
+                "${record.attendanceDate}_$subjectId"
+            }
 
             var summaryH = 0
             var summaryS = 0
@@ -180,7 +221,12 @@ class AttendanceMatrixViewModel @Inject constructor(
             var summaryT = 0
 
             val cells = dateRange.map { date ->
-                val record = recordsByDate[date]
+                val record = if (selectedSubjectId.isNotEmpty()) {
+                    recordsByKey["${date}_$selectedSubjectId"]
+                } else {
+                    // Fallback to first available record on that date if no specific subject filter is active
+                    studentRecords.firstOrNull { it.attendanceDate == date }
+                }
                 if (record != null) {
                     val status = AttendanceStatus.fromCode(record.status)
                     when (status) {
@@ -239,6 +285,7 @@ sealed class AttendanceMatrixUiEvent {
     data object LoadData : AttendanceMatrixUiEvent()
     data class FilterByDate(val startDate: LocalDate, val endDate: LocalDate) : AttendanceMatrixUiEvent()
     data class FilterByClass(val classId: String) : AttendanceMatrixUiEvent()
+    data class FilterBySubject(val subjectId: String) : AttendanceMatrixUiEvent()
     data class Search(val query: String) : AttendanceMatrixUiEvent()
     data object ExportToCsv : AttendanceMatrixUiEvent()
 }

@@ -164,13 +164,14 @@ class SessionManager @Inject constructor(
 
     fun getHardwareId(): String = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "UNKNOWN"
 
-    fun injectSecurityEnvelope(isoKey: String, expireDateMillis: Long, role: String = "USER") {
+    fun injectSecurityEnvelope(isoKey: String, expireDateMillis: Long, role: String? = null) {
+        val finalRole = role ?: getAccountRole()
         sharedPreferences.edit().apply {
             putString(KEY_DB_CLOUD, isoKey)
             putLong(KEY_EXPIRE_DATE, expireDateMillis)
             putLong(KEY_LAST_SYNC, System.currentTimeMillis())
             putString(KEY_ACCOUNT_STATUS, STATUS_ACTIVE)
-            putString(KEY_ACCOUNT_ROLE, role.trim())
+            putString(KEY_ACCOUNT_ROLE, finalRole.trim())
         }.apply()
         Log.d(TAG, "Security envelope injected successfully.")
     }
