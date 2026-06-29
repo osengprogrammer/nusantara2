@@ -34,7 +34,7 @@ import androidx.room.migration.Migration
         SubjectEntity::class,
         ClassSessionEntity::class,
     ],
-    version = 26,
+    version = 27,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)

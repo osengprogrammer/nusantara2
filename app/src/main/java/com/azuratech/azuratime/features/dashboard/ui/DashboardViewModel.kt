@@ -27,6 +27,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import com.azuratech.azuratime.features.reporting.domain.repository.DataIntegrityRepository
 import javax.inject.Inject
 
 /**
@@ -46,7 +47,11 @@ class DashboardViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val getActiveSessionUseCase: GetActiveTieredSessionUseCase,
     private val dashboardRepository: DashboardRepository,
+    private val dataIntegrityRepository: DataIntegrityRepository,
 ) : ViewModel() {
+
+    private val _unsyncedRecordsFlow = dataIntegrityRepository.globalUnsyncedCountFlow
+        .map { it.getOrNull() ?: 0 }
 
     private val _uiEffectFlow = MutableSharedFlow<DashboardUiEffect>()
     val uiEffectFlow = _uiEffectFlow.asSharedFlow()
@@ -214,6 +219,7 @@ class DashboardViewModel @Inject constructor(
         _activeSessionFlow,
         _allSessionsTodayFlow, // 🔥 Added
         sessionManager.isLoggingOutFlow,
+        _unsyncedRecordsFlow, // 🔥 Dynamic Unsynced Data Tracking
         _refreshTriggerFlow,
     ) { params ->
         val account = params[0] as Account?
@@ -241,6 +247,7 @@ class DashboardViewModel @Inject constructor(
         val allSessionsToday = (params[10] as? List<SessionWithDetails>) ?: emptyList()
 
         val isLoggingOut = params[11] as Boolean
+        val unsyncedCount = params[12] as Int
 
         val activeSchoolId = activeSchool?.id
         val membershipRole = if (account != null && activeSchoolId != null) account.memberships[activeSchoolId]?.role else null
@@ -266,6 +273,7 @@ class DashboardViewModel @Inject constructor(
             totalActiveStudents = totalActiveStudents,
             geofence = geofence,
             isLoggingOut = isLoggingOut,
+            unsyncedRecords = unsyncedCount,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState(isLoading = true))
 

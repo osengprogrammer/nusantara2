@@ -1,7 +1,9 @@
 package com.azuratech.azuratime.features.account.data.local
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
+import com.azuratech.azuratime.features.school.data.local.ClassEntity
 
 @Entity(
     tableName = "account_class_access",
@@ -11,6 +13,14 @@ import androidx.room.Index
         Index(value = ["classId"]),
         Index(value = ["subjectId"]),
         Index(value = ["schoolId"]),
+    ],
+    foreignKeys = [
+        ForeignKey(
+            entity = ClassEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["classId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
 )
 data class AccountClassAccessEntity(

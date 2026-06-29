@@ -1,8 +1,10 @@
 package com.azuratech.azuratime.features.session.data.local
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.azuratech.azuratime.features.school.data.local.ClassEntity
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 import com.google.firebase.firestore.DocumentSnapshot
 
@@ -15,6 +17,20 @@ import com.google.firebase.firestore.DocumentSnapshot
         Index(value = ["supervisorEmail"]), // 🔥 Performance Index
         Index(value = ["dayOfWeek"]), // 🔥 Performance Index
         Index(value = ["lookupKey"], unique = true),
+    ],
+    foreignKeys = [
+        ForeignKey(
+            entity = ClassEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["classId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = SubjectEntity::class,
+            parentColumns = ["subjectId"],
+            childColumns = ["subjectId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
 )
 data class ClassSessionEntity(

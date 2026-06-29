@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.data.local.AppDatabase
+import androidx.room.withTransaction
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
@@ -146,7 +147,17 @@ class AuthRepositoryImpl @Inject constructor(
                 Log.e("AuthRepository", "Firebase SignOut Error: ${e.message}")
             }
 
-            // 3. Clear Local Session (This triggers UI switch via BootViewModel)
+            // 3. Clear Local SQLite Database (Room cache)
+            try {
+                database.withTransaction {
+                    database.clearAllTables()
+                }
+                Log.d("AuthRepository", "SQLite database cleared successfully.")
+            } catch (e: Exception) {
+                Log.e("AuthRepository", "Failed to clear SQLite database: ${e.message}")
+            }
+
+            // 4. Clear Local Session (This triggers UI switch via BootViewModel)
             sessionManager.clearSession()
 
             DomainResult.Success(Unit)

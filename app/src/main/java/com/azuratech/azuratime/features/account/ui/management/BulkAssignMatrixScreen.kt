@@ -56,6 +56,25 @@ fun BulkAssignMatrixScreen(
         }
     }
 
+    val createDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv"),
+        onResult = { uri ->
+            uri?.let {
+                try {
+                    context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                        val templateContent = "teacher_email,class_name,subject_name\n" +
+                            "teacher1@gmail.com,10-A,Mathematics\n" +
+                            "teacher2@gmail.com,11-B,English\n"
+                        outputStream.write(templateContent.toByteArray())
+                    }
+                    context.showToast("Template downloaded successfully!")
+                } catch (e: Exception) {
+                    context.showToast("Failed to save template: ${e.message}")
+                }
+            }
+        },
+    )
+
     AzuraScreen(
         title = "Bulk Matrix Assignment",
         onBack = onNavigateBack,
@@ -90,15 +109,31 @@ fun BulkAssignMatrixScreen(
             Spacer(modifier = Modifier.height(AzuraSpacing.md))
 
             // File Selection
-            OutlinedButton(
-                onClick = { fileLauncher.launch("*/*") },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = AzuraShapes.medium,
-                enabled = !uiState.isLoading && !uiState.isCommitting,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
             ) {
-                Icon(Icons.Default.AttachFile, null)
-                Spacer(Modifier.width(8.dp))
-                Text(fileName ?: "Select CSV File")
+                OutlinedButton(
+                    onClick = { createDocumentLauncher.launch("matrix_import_template.csv") },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = AzuraShapes.medium,
+                    enabled = !uiState.isLoading && !uiState.isCommitting,
+                ) {
+                    Icon(Icons.Default.Download, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Template CSV")
+                }
+
+                Button(
+                    onClick = { fileLauncher.launch("*/*") },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = AzuraShapes.medium,
+                    enabled = !uiState.isLoading && !uiState.isCommitting,
+                ) {
+                    Icon(Icons.Default.AttachFile, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(fileName ?: "Select CSV File")
+                }
             }
 
             if (uiState.isLoading) {

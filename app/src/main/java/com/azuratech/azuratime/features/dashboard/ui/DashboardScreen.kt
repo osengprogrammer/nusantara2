@@ -42,6 +42,7 @@ fun DashboardScreen(
     var showAddSchoolDialog by remember { mutableStateOf(false) }
     var showHealthSheet by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var showLogoutConfirmDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiEffect) {
         when (val effect = uiEffect) {
@@ -75,7 +76,7 @@ fun DashboardScreen(
                     text = { Text("Logout") },
                     onClick = {
                         showMenu = false
-                        viewModel.onEvent(DashboardUiEvent.Logout)
+                        showLogoutConfirmDialog = true
                     },
                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
                 )
@@ -122,6 +123,69 @@ fun DashboardScreen(
             onConfirmClick = { name, timezone, classes ->
                 schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.CreateSchool(name, timezone, classes))
                 showAddSchoolDialog = false
+            },
+        )
+    }
+
+    if (showLogoutConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutConfirmDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (uiState.unsyncedRecords > 0) Icons.Default.Warning else Icons.Default.Info,
+                        contentDescription = null,
+                        tint = if (uiState.unsyncedRecords > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp),
+                    )
+                    Spacer(modifier = Modifier.width(AzuraSpacing.sm))
+                    Text(
+                        text = if (uiState.unsyncedRecords > 0) "Data Belum Sinkron!" else "Konfirmasi Logout",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            },
+            text = {
+                Column {
+                    if (uiState.unsyncedRecords > 0) {
+                        Text(
+                            text = "⚠️ Perhatian, Brother! Ada ${uiState.unsyncedRecords} data lokal (absensi/biometrik/kelas) yang belum disinkronkan ke Cloud Firestore.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        Spacer(modifier = Modifier.height(AzuraSpacing.sm))
+                        Text(
+                            text = "Jika Anda logout sekarang, data ini akan hilang secara permanen dari perangkat ini. Harap batalkan dan lakukan Sinkronisasi di Dashboard terlebih dahulu.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        Text(
+                            text = "Apakah Anda yakin ingin keluar? Semua data Anda saat ini telah tersinkronisasi dengan aman di Cloud Firestore.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutConfirmDialog = false
+                        viewModel.onEvent(DashboardUiEvent.Logout)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (uiState.unsyncedRecords > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
+                    Text("Logout Sekarang")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showLogoutConfirmDialog = false }) {
+                    Text(if (uiState.unsyncedRecords > 0) "Batalkan (Rekomendasi)" else "Batal")
+                }
             },
         )
     }

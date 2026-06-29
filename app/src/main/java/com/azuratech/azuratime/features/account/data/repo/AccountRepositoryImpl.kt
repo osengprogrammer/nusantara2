@@ -132,7 +132,24 @@ class AccountRepositoryImpl @Inject constructor(
                     activeClassId = activeClassId,
                     memberships = memberships,
                 )
-                accountDao.upsertAccount(entity)
+
+                database.withTransaction {
+                    accountDao.upsertAccount(entity)
+                    // Sync memberships' assignments down to granular account_class_access table
+                    memberships.forEach { (schoolId, membership) ->
+                        database.accountClassAccessDao().deleteByAccount(accountId, schoolId)
+                        membership.assignments.forEach { assignment ->
+                            database.accountClassAccessDao().insert(
+                                com.azuratech.azuratime.features.account.data.local.AccountClassAccessEntity(
+                                    accountId = accountId,
+                                    classId = assignment.classId,
+                                    subjectId = assignment.subjectId ?: "",
+                                    schoolId = schoolId,
+                                ),
+                            )
+                        }
+                    }
+                }
                 Result.Success(entity)
             } else {
                 Result.Failure(AppError.BusinessRule("Account not found in Cloud"))
@@ -148,37 +165,55 @@ class AccountRepositoryImpl @Inject constructor(
                 .whereNotEqualTo("memberships.$schoolId", null)
                 .get().await()
 
-            val accounts = snapshot.documents.mapNotNull { doc ->
-                val membershipsRaw = doc.data?.get("memberships") as? Map<*, *>
-                val memberships = membershipsRaw?.mapNotNull outer@{ (key, value) ->
-                    val k = key as? String ?: return@outer null
-                    val v = value as? Map<*, *> ?: return@outer null
-                    k to SchoolMembership(
-                        schoolName = v["schoolName"] as? String ?: "",
-                        role = v["role"] as? String ?: "USER",
-                        status = v["status"] as? String ?: "ACTIVE",
-                        assignments = (v["assignments"] as? List<*>)?.mapNotNull inner@{ assignmentsList ->
-                            val m = assignmentsList as? Map<*, *> ?: return@inner null
-                            com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
-                                classId = m["classId"] as? String ?: "",
-                                subjectId = m["subjectId"] as? String,
-                            )
-                        } ?: emptyList(),
-                    )
-                }?.toMap() ?: emptyMap()
+            val accounts = database.withTransaction {
+                snapshot.documents.mapNotNull { doc ->
+                    val membershipsRaw = doc.data?.get("memberships") as? Map<*, *>
+                    val memberships = membershipsRaw?.mapNotNull outer@{ (key, value) ->
+                        val k = key as? String ?: return@outer null
+                        val v = value as? Map<*, *> ?: return@outer null
+                        k to SchoolMembership(
+                            schoolName = v["schoolName"] as? String ?: "",
+                            role = v["role"] as? String ?: "USER",
+                            status = v["status"] as? String ?: "ACTIVE",
+                            assignments = (v["assignments"] as? List<*>)?.mapNotNull inner@{ assignmentsList ->
+                                val m = assignmentsList as? Map<*, *> ?: return@inner null
+                                com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                    classId = m["classId"] as? String ?: "",
+                                    subjectId = m["subjectId"] as? String,
+                                )
+                            } ?: emptyList(),
+                        )
+                    }?.toMap() ?: emptyMap()
 
-                AccountEntity(
-                    accountId = doc.id,
-                    email = doc.getString("email") ?: "",
-                    name = doc.getString("name") ?: "",
-                    photoUrl = doc.getString("photoUrl"),
-                    status = doc.getString("status") ?: "ACTIVE",
-                    role = doc.getString("role") ?: "USER",
-                    activeSchoolId = doc.getString("activeSchoolId"),
-                    activeClassId = doc.getString("activeClassId"),
-                    memberships = memberships,
-                ).also {
-                    accountDao.upsertAccount(it)
+                    val entity = AccountEntity(
+                        accountId = doc.id,
+                        email = doc.getString("email") ?: "",
+                        name = doc.getString("name") ?: "",
+                        photoUrl = doc.getString("photoUrl"),
+                        status = doc.getString("status") ?: "ACTIVE",
+                        role = doc.getString("role") ?: "USER",
+                        activeSchoolId = doc.getString("activeSchoolId"),
+                        activeClassId = doc.getString("activeClassId"),
+                        memberships = memberships,
+                    )
+
+                    accountDao.upsertAccount(entity)
+
+                    // Sync memberships' assignments down to granular account_class_access table
+                    memberships.forEach { (schId, membership) ->
+                        database.accountClassAccessDao().deleteByAccount(doc.id, schId)
+                        membership.assignments.forEach { assignment ->
+                            database.accountClassAccessDao().insert(
+                                com.azuratech.azuratime.features.account.data.local.AccountClassAccessEntity(
+                                    accountId = doc.id,
+                                    classId = assignment.classId,
+                                    subjectId = assignment.subjectId ?: "",
+                                    schoolId = schId,
+                                ),
+                            )
+                        }
+                    }
+                    entity
                 }
             }
             Result.Success(accounts)

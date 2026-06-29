@@ -1,5 +1,12 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 52: Secure Cache Clean-up, Automatic Assignment Sync & Cascade Integrity (June 29, 2026)
+- **Zero-Cache Leak on Logout:** Memperbarui [AuthRepositoryImpl.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/auth/data/repo/AuthRepositoryImpl.kt) untuk menjalankan `database.clearAllTables()` dalam transaksi database Room yang aman saat proses keluar (`clearAllDataAndSignOut()`), menjamin data cached lokal dihapus bersih tanpa kebocoran data antar-sesi pengguna.
+- **Automatic Class Matrix Sync:** Menambahkan logika sinkronisasi matriks otomatis di `syncAccount` dan `syncMembers` pada [AccountRepositoryImpl.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/account/data/repo/AccountRepositoryImpl.kt) untuk mem-parsing penugasan kelas/mapel (`assignments`) di dalam data `memberships` dari Firestore Cloud dan secara reaktif menyimpannya ke tabel lokal `account_class_access` dalam transaksi yang atomic.
+- **Relational Data Integrity:** Menambahkan batasan `ForeignKey` dengan aturan `onDelete = ForeignKey.CASCADE` pada [ClassSessionEntity.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/session/data/local/ClassSessionEntity.kt) dan [AccountClassAccessEntity.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/account/data/local/AccountClassAccessEntity.kt).
+- **Auto Room Schema Upgrade:** Menaikkan versi database Room ke `27` di [AppDatabase.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/data/local/AppDatabase.kt) untuk memicu pembaruan schema otomatis secara destructively aman bagi testing lokal.
+- **Verification:** Seluruh source code berhasil dikompilasi dengan sukses (`BUILD SUCCESSFUL`).
+
 ### Phase 51: Secure Model Encryption Workflow & Assets Isolation (June 29, 2026)
 - **Safe Assets Placement:** Memindahkan file `.tflite` model mentah keluar dari folder assets (`app/src/main/assets/`) ke folder root yang aman (`model/facenet_azura_512.tflite`), melindunginya agar tidak pernah ikut terbawa ke dalam paket build APK akhir secara tidak sengaja.
 - **Detached Gradle JavaExec Task:** Menambahkan task Gradle `:app:encryptModel` bertipe `JavaExec` dengan konfigurasi `project.configurations.detachedConfiguration` untuk mengisolasi runtime dependensi `kotlin-stdlib` secara bersih tanpa menyebabkan konflik variant matching Android.
