@@ -38,6 +38,7 @@ object FaceEngine {
 
         // 2. Decision Lock: Send numbers back to C++ to make the final secure choice
         val isVerified = NativeSecurityVault.verifyMatchNative(minDistance, currentThreshold)
+        android.util.Log.d("Azura_Match", "Native Match - Best: $bestMatchName, Distance: $minDistance, Threshold: $currentThreshold, Verified: $isVerified")
 
         return when {
             isVerified && isRegistrationMode -> {
@@ -83,6 +84,7 @@ object FaceEngine {
         }
 
         val isVerified = minDistance < currentThreshold
+        android.util.Log.d("Azura_Match", "Kotlin Match - Best: $bestMatchName, Distance: $minDistance, Threshold: $currentThreshold, Verified: $isVerified")
 
         return when {
             isVerified && isRegistrationMode -> MatchResult.DuplicateFound(bestMatchName, minDistance)

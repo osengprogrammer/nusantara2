@@ -47,3 +47,8 @@ temp_recovery/
 *.diff
 .qwen/
 app/azura-key.jks
+
+# 🔐 AI Models & Local Encryptor Jars
+/model/
+*.jar
+

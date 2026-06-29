@@ -6,7 +6,15 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
-val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+
+val keyProperties = Properties()
+val keyPropertiesFile = rootProject.file("key.properties")
+if (keyPropertiesFile.exists()) {
+    keyProperties.load(FileInputStream(keyPropertiesFile))
+}
+
+val geminiApiKey: String = keyProperties.getProperty("GEMINI_API_KEY") ?: localProperties.getProperty("GEMINI_API_KEY") ?: ""
+val mapsApiKey: String = keyProperties.getProperty("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY") ?: ""
 
 plugins {
     alias(libs.plugins.android.application)
@@ -26,14 +34,15 @@ android {
         applicationId = "com.azuratech.azuratime"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3734
-        versionName = "3.7.12"
+        versionCode = 3735
+        versionName = "3.7.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
         buildConfigField("boolean", "ENABLE_SUBJECT_SESSION", "true")
         buildConfigField("boolean", "ENABLE_BIOMETRIC_FALLBACK", "false")
-        manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY") ?: ""
+        manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: keyProperties.getProperty("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY") ?: ""
 
         externalNativeBuild {
             cmake { cppFlags += "-std=c++17" }
@@ -42,10 +51,15 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("azura-key.jks")
-            storePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: localProperties.getProperty("RELEASE_STORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: localProperties.getProperty("RELEASE_KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: localProperties.getProperty("RELEASE_KEY_PASSWORD") ?: ""
+            val storePath = keyProperties.getProperty("storeFile")
+            if (!storePath.isNullOrEmpty()) {
+                storeFile = file(storePath)
+            } else {
+                storeFile = file("azura-key.jks")
+            }
+            storePassword = keyProperties.getProperty("storePassword") ?: System.getenv("RELEASE_STORE_PASSWORD") ?: localProperties.getProperty("RELEASE_STORE_PASSWORD") ?: ""
+            keyAlias = keyProperties.getProperty("keyAlias") ?: System.getenv("RELEASE_KEY_ALIAS") ?: localProperties.getProperty("RELEASE_KEY_ALIAS") ?: ""
+            keyPassword = keyProperties.getProperty("keyPassword") ?: System.getenv("RELEASE_KEY_PASSWORD") ?: localProperties.getProperty("RELEASE_KEY_PASSWORD") ?: ""
         }
     }
 
@@ -204,3 +218,19 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
+tasks.register<JavaExec>("encryptModel") {
+    group = "application"
+    description = "Encrypts the standard .tflite model using ModelEncryptor"
+    mainClass.set("com.azuratech.azuratime.core.security.ModelEncryptorKt")
+    workingDir = project.rootDir
+    
+    val compileKotlin = tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileDebugKotlin")
+    classpath = files(
+        compileKotlin.map { it.destinationDirectory },
+        project.configurations.detachedConfiguration(
+            project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+        )
+    )
+}
+

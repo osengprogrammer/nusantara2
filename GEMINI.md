@@ -1,5 +1,18 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 51: Secure Model Encryption Workflow & Assets Isolation (June 29, 2026)
+- **Safe Assets Placement:** Memindahkan file `.tflite` model mentah keluar dari folder assets (`app/src/main/assets/`) ke folder root yang aman (`model/facenet_azura_512.tflite`), melindunginya agar tidak pernah ikut terbawa ke dalam paket build APK akhir secara tidak sengaja.
+- **Detached Gradle JavaExec Task:** Menambahkan task Gradle `:app:encryptModel` bertipe `JavaExec` dengan konfigurasi `project.configurations.detachedConfiguration` untuk mengisolasi runtime dependensi `kotlin-stdlib` secara bersih tanpa menyebabkan konflik variant matching Android.
+- **Automated Verification:** Melakukan enkripsi otomatis menggunakan AES-GCM 256-bit dan memverifikasi integritas file hasil enkripsi (`facenet_azura_512.azr`) menggunakan pemeriksaan signature FlatBuffer (`TFL3`) serta pencocokan byte 100%.
+
+### Phase 50: StateFlow Protection & Race Condition Fix for AI Brain (June 28, 2026)
+- **StateFlow Kesiapan Engine:** Menambahkan `isReady` StateFlow di [FaceRecognizer.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/ml/recognizer/FaceRecognizer.kt) untuk melacak secara reaktif kesiapan model dan meng-update statusnya hanya ketika `Interpreter` TFLite berhasil dibangun.
+- **Safety Guard di Camera Analyzer:** Mengintegrasikan pengecekan `FaceRecognizer.isReady.value` pada awal fungsi `analyze` di [FaceAnalyzer.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/ml/detector/FaceAnalyzer.kt). Frame langsung dibuang/ditutup tanpa diproses jika engine AI belum siap, menghentikan crash `Interpreter NULL`.
+- **Kondisi Logger Baru:** Menambahkan log penjejakan `Azura_State` untuk monitor perubahan kesiapan di Logcat, serta penjejakan `Azura_Init` pada inisialisasi JNI `ModelGuard`.
+- **JNI Error Handling & Signature Verification:** Menyertakan validasi byte hasil dekripsi model; melemparkan exception jika data kosong/null atau tidak mengandung signature FlatBuffer valid (`FLAT` / `TFL3`) sebelum meload model guna mencegah crash `invalid flatbuffer`.
+- **Memory Alignment & Direct ByteBuffer Loading:** Mengganti alur pembacaan `MappedByteBuffer` (via berkas cache sementara) menjadi `ByteBuffer.allocateDirect` dengan urutan byte `ByteOrder.nativeOrder()` guna memecahkan error *memory alignment* pada interpreter TFLite.
+- **Verification:** Melakukan verifikasi build kompilasi lokal menggunakan `./gradlew compileDebugKotlin` dan berhasil diselesaikan dengan status `BUILD SUCCESSFUL`.
+
 ### Phase 49: Database Decoupling & Repository Isolations (June 27, 2026)
 - **DashboardRepository Introduction:** Created [DashboardRepository](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/dashboard/domain/repository/DashboardRepository.kt) (interface and impl) to wrap `AccountDao` accesses, returning fully-mapped domain `Account` models to [DashboardViewModel](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/dashboard/ui/DashboardViewModel.kt).
 - **AssignClassRepository Introduction:** Created [AssignClassRepository](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/account/domain/repository/AssignClassRepository.kt) (interface and impl) to wrap `AccountDao` and `AccountClassAccessDao` calls, decoupling [AssignClassViewModel](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/features/account/ui/management/AssignClassViewModel.kt) from direct database references.

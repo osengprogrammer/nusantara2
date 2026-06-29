@@ -59,19 +59,37 @@ class FaceAnalyzer(
     private val isProcessing = AtomicBoolean(false)
     private var lastProcessTime = 0L
     private val throttleInterval = 100L // Beri nafas untuk CPU
+    private var lastLogTime = 0L
 
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
+        // --- 🔥 SAFETY GUARD: Pastikan AI Brain sudah siap sebelum memproses frame ---
+        if (!FaceRecognizer.isReady.value) {
+            // Log secara berkala agar tidak membanjiri Logcat (sekali per 2 detik)
+            val now = System.currentTimeMillis()
+            if (now - lastLogTime > 2000L) {
+                Log.w("Azura_Analyzer", "⚠️ Frame DROPPED: FaceRecognizer is NOT ready yet! Check your .azr asset or model initialization logs.")
+                lastLogTime = now
+            }
+            imageProxy.close()
+            return
+        }
+
         val currentTime = System.currentTimeMillis()
 
         // 1. Throttle & Lock Check
-        if (isProcessing.get() || (currentTime - lastProcessTime < throttleInterval)) {
+        if (isProcessing.get()) {
+            imageProxy.close()
+            return
+        }
+        if (currentTime - lastProcessTime < throttleInterval) {
             imageProxy.close()
             return
         }
 
         val mediaImage = imageProxy.image
         if (mediaImage == null) {
+            Log.e("Azura_Analyzer", "❌ Frame DROPPED: mediaImage is NULL")
             imageProxy.close()
             return
         }
@@ -97,18 +115,22 @@ class FaceAnalyzer(
 
                 if (faces.isNotEmpty()) {
                     val face = faces[0]
+                    Log.d("Azura_Analyzer", "👤 Face DETECTED! BoundingBox: ${face.boundingBox}. Checking liveness...")
 
                     // --- LIVENESS LOGIC ---
                     if (!bypassLiveness && !hasBlinked) {
                         val leftEye = face.leftEyeOpenProbability ?: 1.0f
                         val rightEye = face.rightEyeOpenProbability ?: 1.0f
+                        Log.d("Azura_Analyzer", "👁️ Eye Probability - Left: $leftEye, Right: $rightEye (Blink Threshold: $BLINK_THRESHOLD)")
 
                         if (leftEye < BLINK_THRESHOLD && rightEye < BLINK_THRESHOLD) {
                             isEyeClosed = true
+                            Log.i("Azura_Analyzer", "👁️ Eyes closed detected. Waiting for eyes to reopen to complete blink.")
                             onLivenessStatus("Mata Tertutup...")
                         } else if (isEyeClosed && leftEye > 0.6f && rightEye > 0.6f) {
                             hasBlinked = true
                             isEyeClosed = false
+                            Log.i("Azura_Analyzer", "✅ Liveness passed: Blink detected!")
                             onLivenessStatus("Kedipan Terdeteksi!")
                         } else {
                             onLivenessStatus("Silakan Berkedip")
@@ -119,6 +141,8 @@ class FaceAnalyzer(
                             isProcessing.set(false)
                             return@addOnSuccessListener
                         }
+                    } else if (bypassLiveness) {
+                        Log.d("Azura_Analyzer", "⚡ Liveness check bypassed by configuration.")
                     }
 
                     // --- 🔥 PERBAIKAN KRUSIAL: EKSTRAK BITMAP DI SINI (SINKRON) ---
@@ -142,9 +166,11 @@ class FaceAnalyzer(
 
                         analyzerScope.launch {
                             try {
+                                Log.d("Azura_Analyzer", "Wajah terdeteksi: $bounds. Memulai inferensi FaceRecognizer...")
                                 val safeCrop = FaceGeometryUtils.cropAndPadFace(safeBitmap, bounds)
                                 val buffer = FacePreprocessor.bitmapToModelInput(safeCrop)
                                 val embedding = FaceRecognizer.recognizeFace(buffer)
+                                Log.d("Azura_Analyzer", "Inferensi FaceRecognizer selesai. Ukuran embedding: ${embedding.size}")
 
                                 withContext(Dispatchers.Main) {
                                     onFaceEmbedding(bounds, embedding)

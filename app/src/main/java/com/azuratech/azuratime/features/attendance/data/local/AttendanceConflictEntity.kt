@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.attendance.data.local
 
 import androidx.room.*
+import androidx.room.RoomWarnings
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 
 /**
@@ -18,6 +19,11 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConfli
         Index(value = ["local_sessionId"]),
         Index(value = ["cloud_sessionId"]),
     ],
+)
+@SuppressWarnings(
+    RoomWarnings.PRIMARY_KEY_FROM_EMBEDDED_IS_DROPPED,
+    RoomWarnings.INDEX_FROM_EMBEDDED_ENTITY_IS_DROPPED,
+    RoomWarnings.INDEX_FROM_EMBEDDED_FIELD_IS_DROPPED,
 )
 data class AttendanceConflictEntity(
     val conflictId: String,

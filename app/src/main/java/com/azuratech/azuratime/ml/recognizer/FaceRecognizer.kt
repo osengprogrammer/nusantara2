@@ -5,14 +5,14 @@ import android.util.Log
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.gpu.GpuDelegate
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
+import java.nio.ByteOrder
 import kotlin.math.sqrt
 import com.azuratech.azuratime.core.domain.model.ModelGuard
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object FaceRecognizer {
     private var interpreter: Interpreter? = null
@@ -21,6 +21,16 @@ object FaceRecognizer {
 
     // 🔥 Menggunakan AtomicBoolean agar aman diakses dari banyak thread kamera
     private val isInitializing = AtomicBoolean(false)
+
+    private val _isReady = MutableStateFlow(false)
+    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
+
+    private fun setReady(value: Boolean) {
+        if (_isReady.value != value) {
+            _isReady.value = value
+            Log.d("Azura_State", "AI Ready status changed: $value")
+        }
+    }
 
     var isInitialized = false
         private set
@@ -47,28 +57,28 @@ object FaceRecognizer {
             val encryptedBytes = inputStream.readBytes()
             inputStream.close()
 
+            Log.d("Azura_Init", "ModelGuard JNI process started")
+            val decryptedBytesFromCrypto = com.azuratech.azuratime.core.security.CryptoEngine.decryptModel(encryptedBytes)
             val guard = ModelGuard()
-            val decryptedBytes = guard.decryptTfliteModel(encryptedBytes)
+            val decryptedBytes = guard.secureProcessModelWithLogs(decryptedBytesFromCrypto)
+            Log.d("Azura_Init", "ModelGuard JNI process finished")
+
+            if (decryptedBytes.isEmpty()) {
+                throw Exception("Decrypted model bytes are empty!")
+            }
+            if (!guard.verifyFlatBufferSignature(decryptedBytes)) {
+                throw Exception("Decrypted model bytes do not have a valid FlatBuffer signature!")
+            }
             Log.d("AzuraBrain", "🔓 Model decrypted: ${decryptedBytes.size} bytes")
 
-            // 2. Memory-Mapped Loading (Safe for 128MB Heap Limit)
-            // We decrypt into a private temp file and map it. This bypasses the Java heap limit
-            // and satisfies TFLite's preference for MappedByteBuffers on low-RAM devices.
-            val tempFile = File(context.cacheDir, "decrypted_model.tflite")
-            FileOutputStream(tempFile).use { fos ->
-                fos.write(decryptedBytes)
-            }
+            // 2. Direct ByteBuffer Allocation (Avoid file/file-channel alignment issues)
+            val modelBuffer = ByteBuffer.allocateDirect(decryptedBytes.size)
+                .order(ByteOrder.nativeOrder())
+            modelBuffer.put(decryptedBytes)
+            modelBuffer.rewind() // Reset position to 0 so TFLite reads from start
+            tfliteModelBuffer = modelBuffer
 
-            val fileInputStream = FileInputStream(tempFile)
-            val fileChannel = fileInputStream.channel
-            tfliteModelBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size())
-
-            // Cleanup: Close streams and delete temp file (the mapping remains in RAM)
-            fileChannel.close()
-            fileInputStream.close()
-            tempFile.delete()
-
-            Log.d("AzuraBrain", "✅ Model loaded successfully via MappedByteBuffer (Low-RAM safe).")
+            Log.d("AzuraBrain", "✅ Model loaded successfully via DirectByteBuffer (Aligned & RAM-safe).")
 
             // 3. Konfigurasi Interpreter
             val options = Interpreter.Options()
@@ -93,10 +103,12 @@ object FaceRecognizer {
             // 4. Load Model ke Interpreter
             interpreter = Interpreter(tfliteModelBuffer!!, options)
             isInitialized = true
+            setReady(true)
             Log.d("AzuraBrain", "✅✅✅ JOSS! FaceRecognizer Ready & Secured")
         } catch (e: Exception) {
             Log.e("AzuraBrain", "❌ Initialization FAILED: ${e.message}")
             isInitialized = false
+            setReady(false)
             close() // 🔥 Pastikan memori dibersihkan jika gagal agar tidak bocor
         } finally {
             isInitializing.set(false)
@@ -116,6 +128,17 @@ object FaceRecognizer {
 
         return synchronized(this) {
             try {
+                // 🔍 DIAGNOSTIC LOG FOR INPUT BUFFER
+                val dup = input.duplicate().order(input.order())
+                dup.rewind()
+                val samples = FloatArray(5)
+                for (i in 0..4) {
+                    if (dup.remaining() >= 4) {
+                        samples[i] = dup.getFloat()
+                    }
+                }
+                Log.d("Azura_Buffer", "Input buffer capacity: ${input.capacity()}, position: ${input.position()}, limit: ${input.limit()}, samples: [${samples.joinToString(", ")}]")
+
                 // Jalankan AI
                 currentInterpreter.run(input, outputBuffer)
 
@@ -154,6 +177,7 @@ object FaceRecognizer {
             tfliteModelBuffer?.clear()
             tfliteModelBuffer = null
             isInitialized = false
+            setReady(false)
         }
     }
 }
