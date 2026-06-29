@@ -4,6 +4,8 @@
 - **Safe Assets Placement:** Memindahkan file `.tflite` model mentah keluar dari folder assets (`app/src/main/assets/`) ke folder root yang aman (`model/facenet_azura_512.tflite`), melindunginya agar tidak pernah ikut terbawa ke dalam paket build APK akhir secara tidak sengaja.
 - **Detached Gradle JavaExec Task:** Menambahkan task Gradle `:app:encryptModel` bertipe `JavaExec` dengan konfigurasi `project.configurations.detachedConfiguration` untuk mengisolasi runtime dependensi `kotlin-stdlib` secara bersih tanpa menyebabkan konflik variant matching Android.
 - **Automated Verification:** Melakukan enkripsi otomatis menggunakan AES-GCM 256-bit dan memverifikasi integritas file hasil enkripsi (`facenet_azura_512.azr`) menggunakan pemeriksaan signature FlatBuffer (`TFL3`) serta pencocokan byte 100%.
+- **Gmail Format Validation for Bulk CSV Import:** Menambahkan validator Regex kustom di `ImportMatrixUseCase.kt` untuk memastikan alamat email wajib berakhiran `@gmail.com` dan tidak boleh kosong. Email yang tidak valid otomatis ditandai sebagai `INVALID_EMAIL` pada UI pratinjau `BulkAssignMatrixScreen.kt` dengan indikasi peringatan merah yang konsisten dan panduan format proaktif.
+- **Next Roadmap Task:** Sesi berikutnya akan difokuskan untuk melakukan pengujian langsung terhadap fitur Bulk CSV Import menggunakan skema validasi format baru ini.
 
 ### Phase 50: StateFlow Protection & Race Condition Fix for AI Brain (June 28, 2026)
 - **StateFlow Kesiapan Engine:** Menambahkan `isReady` StateFlow di [FaceRecognizer.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/ml/recognizer/FaceRecognizer.kt) untuk melacak secara reaktif kesiapan model dan meng-update statusnya hanya ketika `Interpreter` TFLite berhasil dibangun.
