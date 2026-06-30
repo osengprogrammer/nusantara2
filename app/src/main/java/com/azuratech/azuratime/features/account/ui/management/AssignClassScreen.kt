@@ -11,9 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.ui.designsystem.*
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
@@ -51,7 +53,7 @@ fun AssignClassScreen(
     }
 
     AzuraScreen(
-        title = "Class Matrix Setup",
+        title = stringResource(id = R.string.assign_class_title),
         onBack = onNavigateBack,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) {
@@ -72,7 +74,7 @@ fun AssignClassScreen(
                                 Spacer(modifier = Modifier.width(AzuraSpacing.md))
                                 Column {
                                     Text(
-                                        text = uiState.targetAccount?.name ?: "Loading...",
+                                        text = uiState.targetAccount?.name ?: stringResource(id = R.string.assign_class_loading),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.ExtraBold,
                                     )
@@ -93,8 +95,8 @@ fun AssignClassScreen(
                     // --- STEP 1: SELECT CLASSES ---
                     item {
                         SectionHeader(
-                            title = "Step 1: Select Classes",
-                            subtitle = "Pick the classrooms this supervisor is responsible for.",
+                            title = stringResource(id = R.string.assign_class_step_1_title),
+                            subtitle = stringResource(id = R.string.assign_class_step_1_desc),
                         )
                     }
 
@@ -109,7 +111,7 @@ fun AssignClassScreen(
                                 OutlinedTextField(
                                     value = uiState.searchQuery,
                                     onValueChange = { viewModel.onEvent(AssignClassUiEvent.UpdateSearchQuery(it)) },
-                                    placeholder = { Text("Filter classes...", style = MaterialTheme.typography.bodyMedium) },
+                                    placeholder = { Text(stringResource(id = R.string.assign_class_filter_placeholder), style = MaterialTheme.typography.bodyMedium) },
                                     leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
                                     modifier = Modifier.weight(1f),
                                     shape = AzuraShapes.medium,
@@ -119,10 +121,10 @@ fun AssignClassScreen(
                                     ),
                                 )
                                 IconButton(onClick = { viewModel.onEvent(AssignClassUiEvent.SelectAllFiltered) }) {
-                                    Icon(Icons.Default.SelectAll, "Select All", tint = MaterialTheme.colorScheme.primary)
+                                    Icon(Icons.Default.SelectAll, stringResource(id = R.string.assign_class_select_all_desc), tint = MaterialTheme.colorScheme.primary)
                                 }
                                 IconButton(onClick = { viewModel.onEvent(AssignClassUiEvent.ClearAllSelections) }) {
-                                    Icon(Icons.Default.ClearAll, "Clear All", tint = MaterialTheme.colorScheme.error)
+                                    Icon(Icons.Default.ClearAll, stringResource(id = R.string.assign_class_clear_all_desc), tint = MaterialTheme.colorScheme.error)
                                 }
                             }
 
@@ -152,7 +154,7 @@ fun AssignClassScreen(
                                 }
                                 if (uiState.filteredClasses.isEmpty()) {
                                     Text(
-                                        "No classes match your search.",
+                                        text = stringResource(id = R.string.assign_class_no_matches),
                                         modifier = Modifier.padding(AzuraSpacing.md),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray,
@@ -170,8 +172,8 @@ fun AssignClassScreen(
                     if (selectedClasses.isNotEmpty()) {
                         item {
                             SectionHeader(
-                                title = "Step 2: Assign Subjects",
-                                subtitle = "Assign specific subjects or set as Wali Kelas (Homeroom).",
+                                title = stringResource(id = R.string.assign_class_step_2_title),
+                                subtitle = stringResource(id = R.string.assign_class_step_2_desc),
                             )
                         }
 
@@ -206,7 +208,7 @@ fun AssignClassScreen(
                                                 checked = isHomeroom,
                                                 onCheckedChange = { viewModel.onEvent(AssignClassUiEvent.ToggleAssignment(classItem.id, null)) },
                                             )
-                                            Text("Wali Kelas (Full Access)", style = MaterialTheme.typography.bodyMedium, fontWeight = if (isHomeroom) FontWeight.Bold else FontWeight.Normal)
+                                            Text(stringResource(id = R.string.assign_class_homeroom_option), style = MaterialTheme.typography.bodyMedium, fontWeight = if (isHomeroom) FontWeight.Bold else FontWeight.Normal)
                                         }
                                     }
 
@@ -240,8 +242,8 @@ fun AssignClassScreen(
                     if (uiState.selectedAssignments.isNotEmpty()) {
                         item {
                             SectionHeader(
-                                title = "Final Assignment Summary",
-                                subtitle = "Review the generated matrix before saving.",
+                                title = stringResource(id = R.string.assign_class_step_3_title),
+                                subtitle = stringResource(id = R.string.assign_class_step_3_desc),
                             )
                         }
 
@@ -270,7 +272,7 @@ fun AssignClassScreen(
                                             }
                                             Spacer(Modifier.width(12.dp))
                                             Text(
-                                                text = classObj?.name ?: "Unknown",
+                                                text = classObj?.name ?: stringResource(id = R.string.assign_class_unknown),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.width(80.dp),
@@ -278,7 +280,7 @@ fun AssignClassScreen(
                                             Icon(Icons.AutoMirrored.Filled.ArrowRight, null, tint = Color.LightGray)
                                             Spacer(Modifier.width(8.dp))
                                             Text(
-                                                text = subjectObj?.name ?: "Full Access (Wali Kelas)",
+                                                text = subjectObj?.name ?: stringResource(id = R.string.assign_class_homeroom_summary),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = if (subjectObj == null) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
                                                 fontWeight = if (subjectObj == null) FontWeight.Bold else FontWeight.Normal,
@@ -319,7 +321,7 @@ fun AssignClassScreen(
             ) {
                 Box(modifier = Modifier.padding(AzuraSpacing.md)) {
                     AzuraButton(
-                        text = if (uiState.isSaving) "Applying Matrix..." else "Confirm & Save Matrix",
+                        text = if (uiState.isSaving) stringResource(id = R.string.assign_class_saving_btn) else stringResource(id = R.string.assign_class_save_btn),
                         onClick = { viewModel.onEvent(AssignClassUiEvent.SaveAssignments) },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !uiState.isSaving && !uiState.isLoading,

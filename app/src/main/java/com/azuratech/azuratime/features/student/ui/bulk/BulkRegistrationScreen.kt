@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.io.File
 
 // 🔥 Utils & ViewModels
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuraengine.model.ProcessResult
 
@@ -47,6 +49,10 @@ fun BulkRegistrationScreen(
     var fileName by remember { mutableStateOf<String?>(null) }
     var showCsvFormat by remember { mutableStateOf(false) }
 
+    val csvTemplateExample = stringResource(id = R.string.bulk_csv_template_example_data)
+    val templateChooserTitle = stringResource(id = R.string.bulk_save_template_chooser)
+    val unsupportedFileMsg = stringResource(id = R.string.bulk_error_unsupported_file)
+
     // 🔥 AI Native: Collect and Handle UI Effects
     LaunchedEffect(Unit) {
         bulkViewModel.uiEffectFlow.collect { effect ->
@@ -58,8 +64,7 @@ fun BulkRegistrationScreen(
 
     fun downloadCsvTemplate() {
         val header = "student_id,full_name,class_name,photo_url"
-        val example = "STU-001,Ahmad Sudirman,Kelas-10A,https://azuratech.com/photo.jpg"
-        val csvContent = "$header\n$example\n"
+        val csvContent = "$header\n$csvTemplateExample\n"
         try {
             val file = File(context.cacheDir, "Azura_Bulk_Template.csv")
             file.writeText(csvContent)
@@ -69,9 +74,9 @@ fun BulkRegistrationScreen(
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(intent, "Save Template..."))
+            context.startActivity(Intent.createChooser(intent, templateChooserTitle))
         } catch (e: Exception) {
-            context.showToast("Template error: ${e.message}")
+            context.showToast(context.getString(R.string.bulk_template_error_prefix, e.message ?: ""))
         }
     }
 
@@ -90,12 +95,12 @@ fun BulkRegistrationScreen(
                 fileName = pickedName ?: "data.csv"
                 bulkViewModel.onEvent(RegisterUiEvent.ResetState)
             } else {
-                context.showToast("Only .CSV files are supported")
+                context.showToast(unsupportedFileMsg)
             }
         }
     }
 
-    AzuraScreen(title = "Bulk Student Import", onBack = onNavigateBack) {
+    AzuraScreen(title = stringResource(id = R.string.bulk_screen_title), onBack = onNavigateBack) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 100.dp),
@@ -113,13 +118,13 @@ fun BulkRegistrationScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.AutoMirrored.Filled.Help, null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(8.dp))
-                            Text("Student CSV Format", fontWeight = FontWeight.Bold)
+                            Text(stringResource(id = R.string.bulk_help_format_title), fontWeight = FontWeight.Bold)
                             Spacer(Modifier.weight(1f))
                             Icon(if (showCsvFormat) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
                         }
                         if (showCsvFormat) {
                             Text(
-                                text = "Use columns: student_id, full_name, class_name, photo_url.\nStudents will automatically be added to this workspace.",
+                                text = stringResource(id = R.string.bulk_help_format_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(top = 8.dp),
                             )
@@ -127,7 +132,7 @@ fun BulkRegistrationScreen(
                             Button(onClick = { downloadCsvTemplate() }, modifier = Modifier.fillMaxWidth()) {
                                 Icon(Icons.Default.Description, null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Download Template")
+                                Text(stringResource(id = R.string.bulk_action_download_template))
                             }
                         }
                     }
@@ -145,7 +150,7 @@ fun BulkRegistrationScreen(
                     ) {
                         Icon(Icons.Default.AttachFile, null)
                         Spacer(Modifier.width(8.dp))
-                        Text(fileName ?: "Select .CSV File")
+                        Text(fileName ?: stringResource(id = R.string.bulk_action_select_file))
                     }
 
                     if (fileUri != null) {
@@ -160,7 +165,7 @@ fun BulkRegistrationScreen(
                         ) {
                             Icon(Icons.Default.CloudUpload, null)
                             Spacer(Modifier.width(8.dp))
-                            Text(if (bulkState.isProcessing) "Processing..." else "Process Import")
+                            Text(if (bulkState.isProcessing) stringResource(id = R.string.bulk_processing_state) else stringResource(id = R.string.bulk_action_process_import))
                         }
                     }
                 }

@@ -10,11 +10,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
@@ -110,20 +112,20 @@ fun AttendanceCaptureScreen(
                                 modifier = Modifier.size(80.dp),
                             )
                             Text(
-                                text = "OUT OF LOCATION",
+                                text = stringResource(id = R.string.capture_out_of_location),
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = MaterialTheme.colorScheme.error,
                                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             )
                             Text(
-                                text = "Attendance features are restricted. You must be within the school premises to record attendance.",
+                                text = stringResource(id = R.string.capture_geofence_restricted),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White,
                                 textAlign = TextAlign.Center,
                             )
                             Spacer(modifier = Modifier.height(AzuraSpacing.lg))
                             AzuraButton(
-                                text = "Go Back",
+                                text = stringResource(id = R.string.capture_action_go_back),
                                 onClick = onNavigateBack,
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                             )
@@ -142,7 +144,11 @@ fun AttendanceCaptureScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = if (uiState.activeClassName.isEmpty()) "Scan Bebas" else "Kelas: ${uiState.activeClassName}",
+                            text = if (uiState.activeClassName.isEmpty()) {
+                                stringResource(id = R.string.capture_free_scan)
+                            } else {
+                                stringResource(id = R.string.capture_class_label_prefix, uiState.activeClassName)
+                            },
                             color = Color.White,
                             style = MaterialTheme.typography.titleMedium,
                         )
@@ -150,12 +156,12 @@ fun AttendanceCaptureScreen(
                         if (uiState.isWithinGeofence) {
                             Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
                                 AzuraButton(
-                                    text = "Flip",
+                                    text = stringResource(id = R.string.capture_action_flip),
                                     onClick = { currentCameraIsBack = !currentCameraIsBack },
                                     modifier = Modifier.height(40.dp),
                                 )
                                 AzuraButton(
-                                    text = "Manual",
+                                    text = stringResource(id = R.string.capture_action_manual),
                                     onClick = {
                                         viewModel.onEvent(
                                             AttendanceCheckInUiEvent.StartScan(
@@ -167,7 +173,7 @@ fun AttendanceCaptureScreen(
                                     modifier = Modifier.height(40.dp),
                                 )
                                 AzuraButton(
-                                    text = "Barcode",
+                                    text = stringResource(id = R.string.capture_action_barcode),
                                     onClick = onBarcodeScanClick,
                                     modifier = Modifier.height(40.dp),
                                 )
@@ -188,9 +194,9 @@ fun AttendanceCaptureScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
                                 ) {
-                                    Text("Manual Entry Placeholder", color = Color.White)
+                                    Text(stringResource(id = R.string.capture_manual_placeholder), color = Color.White)
                                     AzuraButton(
-                                        text = "Kembali ke Wajah",
+                                        text = stringResource(id = R.string.capture_action_back_to_face),
                                         onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.StartScan(accountEmail, ScanMode.Face)) },
                                     )
                                 }
@@ -211,11 +217,17 @@ fun AttendanceCaptureScreen(
                             uiState.studentProfile != null -> {
                                 AzuraCard(
                                     modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
-                                    title = "Attendance Success",
+                                    title = stringResource(id = R.string.capture_success_title),
                                     content = {
-                                        Text(text = "Hello, ${uiState.studentProfile?.name}!", style = MaterialTheme.typography.bodyLarge)
+                                        Text(
+                                            text = stringResource(id = R.string.capture_success_greeting, uiState.studentProfile?.name ?: ""),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                        )
                                         if (uiState.isAlreadyCheckedIn) {
-                                            Text(text = "You have already checked-in previously.", style = MaterialTheme.typography.bodySmall)
+                                            Text(
+                                                text = stringResource(id = R.string.capture_already_checked_in),
+                                                style = MaterialTheme.typography.bodySmall,
+                                            )
                                         }
                                     },
                                 )
@@ -223,13 +235,16 @@ fun AttendanceCaptureScreen(
                             uiState.error != null -> {
                                 AzuraCard(
                                     modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
-                                    title = "Attendance Failed",
+                                    title = stringResource(id = R.string.capture_failed_title),
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                                     content = {
                                         Text(text = uiState.error ?: "", style = MaterialTheme.typography.bodyMedium)
                                     },
                                 )
-                                AzuraButton(text = "Try Again", onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.Retry) })
+                                AzuraButton(
+                                    text = stringResource(id = R.string.capture_action_try_again),
+                                    onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.Retry) },
+                                )
                             }
                         }
                     }

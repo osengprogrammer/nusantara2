@@ -10,10 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
@@ -58,9 +60,12 @@ fun MyAssignedClassScreen(
     }
 
     val screenTitle = if (targetAccountId == null) {
-        "Otoritas Kelas Saya"
+        stringResource(id = R.string.title_my_assigned_classes)
     } else {
-        "Otoritas Kelas: ${targetAccount?.name ?: targetAccountId}"
+        stringResource(
+            id = R.string.title_assigned_classes_for,
+            targetAccount?.name ?: targetAccountId,
+        )
     }
 
     LaunchedEffect(account?. activeClassId) {
@@ -105,7 +110,7 @@ fun MyAssignedClassContent(
                 AzuraTextField(
                     value = searchQuery,
                     onValueChange = onSearchQueryChanged,
-                    label = "Cari Kelas...",
+                    label = stringResource(id = R.string.search_classes),
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 )
 
@@ -117,7 +122,7 @@ fun MyAssignedClassContent(
                 ) {
                     item {
                         Text(
-                            text = "Kelas yang Saya Pegang",
+                            text = stringResource(id = R.string.header_held_classes),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -128,7 +133,7 @@ fun MyAssignedClassContent(
                     if (myClasses.isEmpty()) {
                         item {
                             Text(
-                                "Belum ada otoritas kelas.",
+                                text = stringResource(id = R.string.empty_held_classes),
                                 color = Color.Gray,
                                 style = MaterialTheme.typography.bodySmall,
                             )
@@ -155,15 +160,15 @@ fun MyAssignedClassContent(
                                         }
 
                                         IconButton(onClick = { onRemoveClass(classItem.id) }) {
-                                            Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error)
+                                            Icon(Icons.Default.RemoveCircleOutline, contentDescription = stringResource(id = R.string.desc_remove_action), tint = MaterialTheme.colorScheme.error)
                                         }
 
                                         if (account != null) {
                                             if (isActive) {
-                                                Icon(Icons.Default.CheckCircle, contentDescription = "Aktif", tint = Color(0xFF00C853))
+                                                Icon(Icons.Default.CheckCircle, contentDescription = stringResource(id = R.string.desc_active_status), tint = Color(0xFF00C853))
                                             } else {
                                                 AzuraButton(
-                                                    text = "Pilih Sesi",
+                                                    text = stringResource(id = R.string.action_select_session_btn),
                                                     onClick = {
                                                         println("🚨 HARD LOG: Button Clicked for ${classItem.id}")
                                                         onSelectActiveClass(classItem.id)
@@ -184,7 +189,7 @@ fun MyAssignedClassContent(
 
                     item {
                         Text(
-                            text = "Tambah Otoritas Kelas",
+                            text = stringResource(id = R.string.header_add_class_authority),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary,
@@ -195,7 +200,7 @@ fun MyAssignedClassContent(
                     if (availableClasses.isEmpty()) {
                         item {
                             Text(
-                                "Semua kelas sudah Anda pegang.",
+                                text = stringResource(id = R.string.empty_available_classes),
                                 color = Color.Gray,
                                 style = MaterialTheme.typography.bodySmall,
                             )
@@ -219,7 +224,7 @@ fun MyAssignedClassContent(
                                         }
 
                                         IconButton(onClick = { onAssignClass(classItem.id) }) {
-                                            Icon(Icons.Default.AddCircleOutline, contentDescription = "Tambah", tint = MaterialTheme.colorScheme.primary)
+                                            Icon(Icons.Default.AddCircleOutline, contentDescription = stringResource(id = R.string.desc_add_action), tint = MaterialTheme.colorScheme.primary)
                                         }
                                     }
                                 },

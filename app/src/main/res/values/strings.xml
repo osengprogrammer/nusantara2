@@ -52,4 +52,66 @@
    <string name="zohar_no_data">No attendance data available for analysis today. Keep up the spirit and remind supervisors to scan students!</string>
    <string name="zohar_thinking_error">Zohar is currently reflecting on the code. Please try again later.</string>
    <string name="zohar_signal_interference">Zohar detected signal interference: %s</string>
-   </resources>
+
+   <!-- 🏢 MY ASSIGNED CLASS SCREEN (LOCALIZATION & FLAVORS) -->
+   <string name="title_my_assigned_classes">Otoritas Kelas Saya</string>
+   <string name="title_assigned_classes_for">Otoritas Kelas: %1$s</string>
+   <string name="search_classes">Cari Kelas...</string>
+   <string name="header_held_classes">Kelas yang Saya Pegang</string>
+   <string name="empty_held_classes">Belum ada otoritas kelas.</string>
+   <string name="action_select_session_btn">Pilih Sesi</string>
+   <string name="header_add_class_authority">Tambah Otoritas Kelas</string>
+   <string name="empty_available_classes">Semua kelas sudah Anda pegang.</string>
+   <string name="desc_active_status">Aktif</string>
+   <string name="desc_remove_action">Hapus</string>
+   <string name="desc_add_action">Tambah</string>
+
+   <!-- 🏢 ASSIGN CLASS SCREEN (LOCALIZATION & FLAVORS) -->
+   <string name="assign_class_title">Class Matrix Setup</string>
+   <string name="assign_class_loading">Loading...</string>
+   <string name="assign_class_step_1_title">Step 1: Select Classes</string>
+   <string name="assign_class_step_1_desc">Pick the classrooms this supervisor is responsible for.</string>
+   <string name="assign_class_filter_placeholder">Filter classes...</string>
+   <string name="assign_class_select_all_desc">Select All</string>
+   <string name="assign_class_clear_all_desc">Clear All</string>
+   <string name="assign_class_no_matches">No classes match your search.</string>
+   <string name="assign_class_step_2_title">Step 2: Assign Subjects</string>
+   <string name="assign_class_step_2_desc">Assign specific subjects or set as Wali Kelas (Homeroom).</string>
+   <string name="assign_class_homeroom_option">Wali Kelas (Full Access)</string>
+   <string name="assign_class_step_3_title">Final Assignment Summary</string>
+   <string name="assign_class_step_3_desc">Review the generated matrix before saving.</string>
+   <string name="assign_class_unknown">Unknown</string>
+   <string name="assign_class_homeroom_summary">Full Access (Wali Kelas)</string>
+   <string name="assign_class_saving_btn">Applying Matrix...</string>
+   <string name="assign_class_save_btn">Confirm &amp; Save Matrix</string>
+
+   <!-- 📸 ATTENDANCE CAPTURE (LOCALIZATION & FLAVORS) -->
+   <string name="capture_out_of_location">OUT OF LOCATION</string>
+   <string name="capture_geofence_restricted">Attendance features are restricted. You must be within the school premises to record attendance.</string>
+   <string name="capture_action_go_back">Go Back</string>
+   <string name="capture_free_scan">Scan Bebas</string>
+   <string name="capture_class_label_prefix">Kelas: %1$s</string>
+   <string name="capture_action_flip">Flip</string>
+   <string name="capture_action_manual">Manual</string>
+   <string name="capture_action_barcode">Barcode</string>
+   <string name="capture_manual_placeholder">Manual Entry Placeholder</string>
+   <string name="capture_action_back_to_face">Kembali ke Wajah</string>
+   <string name="capture_success_title">Attendance Success</string>
+   <string name="capture_success_greeting">Hello, %1$s!</string>
+   <string name="capture_already_checked_in">You have already checked-in previously.</string>
+   <string name="capture_failed_title">Attendance Failed</string>
+   <string name="capture_action_try_again">Try Again</string>
+
+   <!-- 📄 BULK REGISTRATION (LOCALIZATION & FLAVORS) -->
+   <string name="bulk_csv_template_example_data">STU-001,Ahmad Sudirman,Kelas-10A,https://azuratech.com/photo.jpg</string>
+   <string name="bulk_template_error_prefix">Template error: %1$s</string>
+   <string name="bulk_save_template_chooser">Save Template...</string>
+   <string name="bulk_error_unsupported_file">Only .CSV files are supported</string>
+   <string name="bulk_screen_title">Bulk Student Import</string>
+   <string name="bulk_help_format_title">Student CSV Format</string>
+   <string name="bulk_help_format_desc">Use columns: student_id, full_name, class_name, photo_url.\nStudents will automatically be added to this workspace.</string>
+   <string name="bulk_action_download_template">Download Template</string>
+   <string name="bulk_action_select_file">Select .CSV File</string>
+   <string name="bulk_processing_state">Processing...</string>
+   <string name="bulk_action_process_import">Process Import</string>
+</resources>
