@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 
+      This AndroidManifest.xml is required for library modules.
+      Since :core-designsystem contains only UI composition files,
+      no permissions or components are needed.
+    -->
+</manifest>

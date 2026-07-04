@@ -1,15 +1,3 @@
-// 🔥 Jurus Pamungkas di level Root
-buildscript {
-    repositories {
-        mavenCentral()
-        google()
-    }
-    dependencies {
-        classpath("com.squareup:javapoet:1.13.0")
-        classpath("com.android.tools:r8:8.5.35")
-    }
-}
-
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
@@ -24,13 +12,5 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.48.1" apply false
     alias(libs.plugins.spotless) apply false
 }
-subprojects {
-    apply(plugin = "com.diffplug.spotless")
-    configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-        kotlin {
-            target("**/*.kt")
-            targetExclude("**/build/**/*.kt")
-            ktlint("0.50.0")
-        }
-    }
-}
+// Note: Spotless configuration should be applied in each module or via a convention plugin
+// The plugin is declared above and can be applied where needed
