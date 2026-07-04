@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 💼 OFFICE VOCABULARY TERMS -->
+    
+    <!-- User Terms -->
+    <string name="label_user_singular">Staff</string>
+    <string name="label_user_plural">Staff</string>
+    <string name="label_user_id">Employee ID</string>
+    <string name="label_user_id_message">Employee ID cannot be changed</string>
+    <string name="label_user_roster">Staff Roster</string>
+    <string name="label_user_barcode_list">Staff Barcode List</string>
+    
+    <!-- Supervisor Terms -->
+    <string name="label_supervisor_singular">Manager</string>
+    <string name="label_supervisor_plural">Managers</string>
+    
+    <!-- Session/Group Terms -->
+    <string name="label_session_singular">Shift</string>
+    <string name="label_session_plural">Shifts</string>
+    <string name="label_session_id">Shift ID</string>
+    <string name="label_my_assigned_sessions">My Assigned Shifts</string>
+    <string name="label_assigned_sessions_for">Assigned Shifts for %1$s</string>
+    
+    <!-- Organization Terms -->
+    <string name="label_organization_singular">Company</string>
+    <string name="label_organization_plural">Companies</string>
+    <string name="label_organization_name">Company Name</string>
+    <string name="label_organization_network">Company Network</string>
+    
+    <!-- Task/Project Terms -->
+    <string name="label_task_singular">Task</string>
+    <string name="label_task_plural">Tasks</string>
+    
+    <!-- Level/Department Terms -->
+    <string name="label_level">Department</string>
+    <string name="label_management">Management</string>
+    
+    <!-- Combined Phrases - Actions -->
+    <string name="action_retry">Retry</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_add_org">Add Organization</string>
+    <string name="action_sync">Sync</string>
+    <string name="action_close">Close</string>
+    <string name="action_scan_face">Scan Face for Embedding</string>
+    <string name="action_capture_photo">Capture Live Photo</string>
+    <string name="action_upload_photo">Upload from Gallery</string>
+    <string name="action_upload_photo_alternative">Or Upload from Gallery</string>
+    <string name="action_photo_ready">✅ Photo ready</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="action_success_generic">Success!</string>
+    <string name="action_join_requested">Join request to %1$s has been sent!</string>
+    <string name="action_join_failed">Failed to send request</string>
+    <string name="action_exporting">Exporting...</string>
+    <string name="action_export_csv">Export CSV</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_reset_filter">Reset Filter</string>
+    <string name="ui_filter_by_class">Filter by Shift</string>
+    <string name="ui_all_classes">All Shifts</string>
+    <string name="action_change_status">Change Status:</string>
+    <string name="action_class_correction">Move to Different Shift</string>
+    <string name="status_present">Present</string>
+    <string name="status_late">Late</string>
+    <string name="status_sick">Sick</string>
+    <string name="status_excused">Excused</string>
+    <string name="status_absent">Absent</string>
+    <string name="action_auto_generate">Auto Generate</string>
+    <string name="action_add_subject">Add Task</string>
+    <string name="label_session_tier">Shift Tier</string>
+    <string name="label_my_assignments">My Assignments</string>
+    <string name="label_class_unknown">Unknown Department</string>
+    <string name="label_homeroom">Team Lead</string>
+    <string name="label_time_range">Time Range</string>
+    <string name="label_status_active">Active</string>
+    <string name="label_status_pending">Waiting</string>
+    <string name="label_status">Status: %1$s</string>
+    <string name="action_add_user_singular">Add Staff</string>
+    <string name="action_add_user_to_session">Add Staff to Shift</string>
+    <string name="action_delete_user_singular">Remove Staff</string>
+    <string name="action_select_session">Select Shift</string>
+    <string name="action_select_active_session">Select Active Shift</string>
+    <string name="action_select_session_btn">Select Shift</string>
+    <string name="action_search_organization">Search Company Name or ID...</string>
+    <string name="action_add_session">Add Shift</string>
+    <string name="action_delete_session">Delete Shift</string>
+    <string name="action_move_session">Move to Shift Session</string>
+    
+    <!-- Combined Phrases - Empty States -->
+    <string name="empty_users_in_session">No staff in this shift.</string>
+    <string name="empty_users_already_in_session">All staff are already in this shift.</string>
+    <string name="empty_sessions_available">No shifts available</string>
+    <string name="empty_sessions_yet">No shifts yet.</string>
+    <string name="empty_sessions_registered">No shifts registered.</string>
+    <string name="empty_no_users_in_class">No staff in this shift.</string>
+    <string name="empty_no_schedules">No schedules found for this shift.</string>
+    <string name="empty_assigned">No shifts assigned yet.</string>
+    
+    <!-- Combined Phrases - Dialogs & Confirmations -->
+    <string name="dialog_delete_user_title">Remove Staff?</string>
+    <string name="dialog_delete_user_message">Staff data will be permanently deleted from device and cloud.</string>
+    <string name="dialog_delete_session_title">Delete Shift?</string>
+    <string name="dialog_delete_session_message">Deleting \'%1$s\' will disconnect staff from this shift.</string>
+    <string name="dialog_edit_org_name">Edit Company Name</string>
+    <string name="dialog_add_org_title">Add New Company</string>
+    <string name="dialog_reject_org">Reject Company Registration</string>
+    <string name="dialog_reject_org_reason">Provide a rejection reason for \'%1$s\':</string>
+    <string name="dialog_user_to_session_title">Add Staff to Shift</string>
+    <string name="dialog_session_title">Delete Shift</string>
+    
+    <!-- Combined Phrases - UI Elements -->
+    <string name="ui_search_min_chars">Type at least 3 characters to search for %1$s.</string>
+    <string name="label_organization_unknown">Unknown %1$s</string>
+    <string name="ui_search_user">Search staff name or ID...</string>
+    <string name="ui_search_session">Search shift...</string>
+    <string name="ui_search_org">Search Company Name or ID...</string>
+    <string name="ui_filter_sessions">Filter shifts...</string>
+    <string name="ui_select_user_csv">Select staff to print</string>
+    <string name="ui_session_id_prefix">Shift ID : %1$s</string>
+    <string name="ui_session_prefix">Shift: %1$s</string>
+    <string name="ui_current_session_prefix">Current session: %1$s</string>
+    <string name="ui_wrong_session_class">Wrong Session/Shift?</string>
+    <string name="ui_move_session_title">Move Shift Session</string>
+    <string name="ui_current_session">Current: %1$s</string>
+    <string name="ui_all_sessions">All Shifts</string>
+    <string name="ui_select_session_title">Select Shift Now</string>
+    <string name="ui_create_org">Create New Company</string>
+    <string name="ui_join_org">Join Existing Company</string>
+    <string name="ui_add_org">Add Company</string>
+    <string name="ui_no_staff_found">No Team Members Found</string>
+    <string name="ui_integrity_users_without_session">Staff Without Shift</string>
+    
+    <!-- Manager/Matrix Terms -->
+    <string name="label_primary_group">Team Lead (Primary)</string>
+    <string name="label_primary_access">Full Access (Team Lead)</string>
+    <string name="label_session_matrix">Shift Matrix</string>
+    <string name="assign_class_title">Shift Matrix Setup</string>
+    <string name="assign_class_step_2_desc">Assign specific tasks or set as Team Lead (Primary).</string>
+    
+    <!-- Help/Instructions -->
+    <string name="help_user_csv_format">Use columns: employee_id, full_name, shift_name, photo_url.\nStaff will automatically be added to this workspace.</string>
+</resources>

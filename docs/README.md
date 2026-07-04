@@ -5,6 +5,12 @@ Autonomous attendance & face recognition app optimized for the Indonesian educat
 ## 🏗️ Architecture & Semantic Standard
 Azura Time follows a strict **Vertical Slice Architecture (VSA)** and **Effect-Driven MVI** pattern.
 
+### 🧩 Modularization Strategy
+To ensure long-term scalability and faster build times, the project is migrating from a monolithic structure to a highly decoupled, modular architecture:
+- **`:core-api`**: Pure Kotlin module defining shared interfaces and DTOs.
+- **`:ml-engine`**: Isolated ML and Security logic.
+- **`:feature-*`**: Independent modules for business logic (`store`, `ims`, `payment`, `booking`), using Dependency Injection (Hilt) for flavor-specific implementation swapping.
+
 ### 📐 Terminology Policy
 To ensure codebase consistency and maximize AI development speed:
 - **Account**: Unified identity model (replaces legacy "User/Staff").

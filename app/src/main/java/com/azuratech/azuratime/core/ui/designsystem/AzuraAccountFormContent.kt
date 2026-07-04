@@ -12,7 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 
@@ -44,7 +46,7 @@ fun AzuraAccountFormContent(
         OutlinedTextField(
             value = faceId,
             onValueChange = onfaceIdChange,
-            label = { Text("Student ID") },
+            label = { Text(stringResource(R.string.label_user_id)) },
             modifier = Modifier.fillMaxWidth(),
             readOnly = isfaceIdReadOnly,
             enabled = !isfaceIdReadOnly,
@@ -59,7 +61,7 @@ fun AzuraAccountFormContent(
                 OutlinedTextFieldDefaults.colors()
             },
             supportingText = if (isfaceIdReadOnly) {
-                { Text("Student ID cannot be changed", style = MaterialTheme.typography.bodySmall) }
+                { Text(stringResource(R.string.label_user_id_message), style = MaterialTheme.typography.bodySmall) }
             } else {
                 null
             },
@@ -68,7 +70,7 @@ fun AzuraAccountFormContent(
         OutlinedTextField(
             value = name,
             onValueChange = onNameChange,
-            label = { Text("Name *") },
+            label = { Text(stringResource(R.string.label_user_singular) + " *") },
             modifier = Modifier.fillMaxWidth(),
             isError = nameError != null,
             shape = AzuraShapes.medium,
@@ -135,7 +137,7 @@ fun DualFacePhotoCaptureCard(
                     },
                 ),
             ) {
-                Text(if (embedding == null) "Scan Face for Embedding" else "Embedding Captured! ✅")
+                Text(if (embedding == null) stringResource(R.string.action_scan_face) else "Embedding Captured! ✅")
             }
 
             Button(
@@ -150,7 +152,7 @@ fun DualFacePhotoCaptureCard(
                     },
                 ),
             ) {
-                Text(if (capturedBitmap == null) "Capture Live Photo" else "Live Photo Captured! ✅")
+                Text(if (capturedBitmap == null) stringResource(R.string.action_capture_photo) else "Live Photo Captured! ✅")
             }
 
             OutlinedButton(
@@ -158,9 +160,9 @@ fun DualFacePhotoCaptureCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AzuraShapes.medium,
             ) {
-                Icon(Icons.Default.Upload, contentDescription = "Upload from Gallery")
+                Icon(Icons.Default.Upload, contentDescription = stringResource(R.string.action_upload_photo))
                 Spacer(Modifier.width(AzuraSpacing.sm))
-                Text("Or Upload from Gallery")
+                Text(stringResource(R.string.action_upload_photo_alternative))
             }
 
             if (capturedBitmap != null) {
@@ -174,7 +176,7 @@ fun DualFacePhotoCaptureCard(
                             .clip(AzuraShapes.medium),
                     )
                     Text(
-                        text = "✅ Photo ready",
+                        text = stringResource(R.string.action_photo_ready),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodySmall,
                     )

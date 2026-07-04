@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,35 @@ import kotlinx.coroutines.withContext
 class SessionManager @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
+    // ---------------------------------------------------------------------
+    // Ready‑check flow
+    // ---------------------------------------------------------------------
+    // Starts as false and flips to true once the encrypted SharedPreferences
+    // (or its fallback) have been accessed and any initial data has been read.
+    // This is the "green light" that BootViewModel will observe before it
+    // touches any session‑dependent logic.
+    private val _ready = MutableStateFlow(false)
+    val ready: StateFlow<Boolean> = _ready.asStateFlow()
+
+    init {
+        // Load prefs on a background thread and then mark ready.
+        // Using a dedicated CoroutineScope avoids tying SessionManager to a
+        // ViewModelScope; it lives for the lifetime of the process.
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                // Trigger a read of a known key to force EncryptedSharedPreferences
+                // initialization. Any exception is logged but does not prevent the
+                // ready flag from being set – we still want the app to continue.
+                sharedPreferences.getString(KEY_ACCOUNT_ID, null)
+                Log.d(TAG, "SessionManager: preferences loaded, ready flag set")
+            } catch (e: Exception) {
+                Log.e(TAG, "SessionManager: error loading preferences", e)
+            } finally {
+                _ready.value = true
+            }
+        }
+    }
+
     init {
         synchronized(SessionManager::class.java) {
             INSTANCE = this

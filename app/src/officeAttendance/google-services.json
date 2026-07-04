@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "763563621221",
+    "project_id": "azura-office",
+    "storage_bucket": "azura-office.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:763563621221:android:851dae8b523c2ff1847f8c",
+        "android_client_info": {
+          "package_name": "com.azuratech.azuratime.office"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2pW74GpJa_jDmsRIOo1HXo7BN366ymSQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

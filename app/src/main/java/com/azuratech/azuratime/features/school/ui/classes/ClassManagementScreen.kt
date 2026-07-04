@@ -14,12 +14,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.R
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import androidx.compose.material.icons.filled.Person
@@ -44,9 +46,9 @@ fun ClassManagementScreen(
 
     val title = if (uiState.selectedClassId != null) {
         val selectedClass = uiState.classes.find { it.id == uiState.selectedClassId }
-        "Students: ${selectedClass?.name ?: "Class"}"
+        stringResource(R.string.label_user_plural).split(":").first() + ": ${selectedClass?.name ?: stringResource(R.string.label_session_singular)}"
     } else {
-        "Class Management"
+        stringResource(R.string.label_session_singular).substringBefore(" ") + " " + stringResource(R.string.label_management)
     }
 
     AzuraScreen(
@@ -65,18 +67,18 @@ fun ClassManagementScreen(
                     onClick = { viewModel.onEvent(ClassUiEvent.SyncClasses) },
                     enabled = !uiState.isLoading,
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Sync Classes")
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.action_sync))
                 }
             }
         },
         floatingActionButton = {
             if (uiState.selectedClassId == null) {
                 FloatingActionButton(onClick = { viewModel.onEvent(ClassUiEvent.ShowAddDialog) }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Class")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_add_session))
                 }
             } else {
                 FloatingActionButton(onClick = { viewModel.onEvent(ClassUiEvent.ShowAddStudentDialog) }) {
-                    Icon(Icons.Default.Person, contentDescription = "Add Student")
+                    Icon(Icons.Default.Person, contentDescription = stringResource(R.string.action_add_user_singular))
                 }
             }
         },
@@ -134,7 +136,7 @@ fun ClassListSection(
         }
     } else if (uiState.classes.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No classes registered.")
+            Text(stringResource(R.string.empty_sessions_registered))
         }
     } else {
         LazyColumn(
@@ -167,7 +169,7 @@ fun StudentListSection(
         }
     } else if (students.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No students in this class.")
+            Text(stringResource(R.string.empty_users_in_session))
         }
     } else {
         LazyColumn(
@@ -212,10 +214,10 @@ fun AddStudentToClassDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("Add Student to Class") },
+        title = { Text(stringResource(R.string.dialog_user_to_session_title)) },
         text = {
             if (availableToAdd.isEmpty()) {
-                Text("All students are already in this class.")
+                Text(stringResource(R.string.empty_users_already_in_session))
             } else {
                 LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
                     items(availableToAdd) { student ->
@@ -232,7 +234,7 @@ fun AddStudentToClassDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Close")
+                Text(stringResource(R.string.action_close))
             }
         },
     )
@@ -260,16 +262,16 @@ fun ClassItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = classModel.name, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "$studentCount Students",
+                    text = "$studentCount ${stringResource(R.string.label_user_plural)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, "Edit", modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Edit, stringResource(R.string.action_edit), modifier = Modifier.size(20.dp))
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, stringResource(R.string.action_delete), modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
             }
         }
     }

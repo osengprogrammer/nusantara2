@@ -6,12 +6,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,13 +28,13 @@ fun AddSchoolDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("Add New School") },
+        title = { Text(stringResource(R.string.dialog_add_org_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
                 AzuraTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = "School Name",
+                    label = stringResource(R.string.label_organization_name),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 AzuraTextField(

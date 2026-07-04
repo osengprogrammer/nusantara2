@@ -49,6 +49,22 @@ android {
         }
     }
 
+    flavorDimensions += "appType"
+    productFlavors {
+        create("schoolAttendance") {
+            dimension = "appType"
+            applicationId = "com.azuratech.azuratime.school"
+            versionNameSuffix = "-school"
+            manifestPlaceholders["appName"] = "AzuraTime School"
+        }
+        create("officeAttendance") {
+            dimension = "appType"
+            applicationId = "com.azuratech.azuratime.office"
+            versionNameSuffix = "-office"
+            manifestPlaceholders["appName"] = "AzuraTime Office"
+        }
+    }
+
     signingConfigs {
         create("release") {
             val storePath = keyProperties.getProperty("storeFile")
@@ -160,19 +176,6 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
-    implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-    implementation("org.tensorflow:tensorflow-lite-gpu-api:2.14.0")
-    implementation(libs.camerax.core)
-    implementation(libs.camerax.camera2)
-    implementation(libs.camerax.lifecycle)
-    implementation(libs.camerax.view)
-    implementation("com.google.mlkit:face-detection:16.1.6")
-    implementation("com.google.mlkit:barcode-scanning:17.2.0")
-    implementation("com.google.guava:guava:31.1-android")
-    implementation("androidx.concurrent:concurrent-futures-ktx:1.1.0")
-    implementation("com.google.zxing:core:3.5.3")
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
@@ -192,7 +195,12 @@ dependencies {
     implementation("com.google.firebase:firebase-config-ktx")
     implementation("com.google.firebase:firebase-common-ktx")
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
-    implementation("androidx.security:security-crypto-ktx:1.1.0-alpha06")
+    
+    implementation(project(":ml-engine"))
+    implementation(project(":feature-attendance-core"))
+    implementation(project(":feature-navigation"))
+
+
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("com.google.dagger:hilt-android:2.48.1")
     ksp("com.google.dagger:hilt-android-compiler:2.48.1")
@@ -222,12 +230,19 @@ dependencies {
 tasks.register<JavaExec>("encryptModel") {
     group = "application"
     description = "Encrypts the standard .tflite model using ModelEncryptor"
+    
+    // Ensure the library is compiled before the task runs
+    dependsOn(":ml-engine:compileDebugKotlin")
+
+    // Build the classpath from the library output + runtime classpath
+    val compileLib = project(":ml-engine")
+        .tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileDebugKotlin")
+    
     mainClass.set("com.azuratech.azuratime.core.security.ModelEncryptorKt")
     workingDir = project.rootDir
     
-    val compileKotlin = tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileDebugKotlin")
     classpath = files(
-        compileKotlin.map { it.destinationDirectory },
+        compileLib.map { it.destinationDirectory },
         project.configurations.detachedConfiguration(
             project.dependencies.create("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
         )

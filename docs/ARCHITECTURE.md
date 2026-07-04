@@ -1,6 +1,17 @@
 # 🏗️ AzuraTime Architecture Guide (v3.7.0-base)
 
 ## 🤖 AI Prime Directives
+
+- **Runtime SSOT** – The authoritative in‑memory source of truth is `SessionManager` (ready flag + encrypted prefs) combined with a top‑level `AppState` data class that aggregates `BootUiState` and any feature‑specific UI states. All ViewModels read from `AppState` via `appStateFlow` and never hold duplicate mutable copies.
+- **MVI Reducer** – Every ViewModel now follows the classic **Intent → Reducer → ViewState** pattern. The reducer is a pure function (`private fun reduce(intent: UiEvent, state: UiState): UiState`) that returns a new immutable state; side‑effects are emitted through a dedicated `SharedFlow<UiEffect>`.
+- **AI‑Friendly Checklist** – To keep the codebase maximally understandable for LLMs, we enforce:
+  - All public strings are constants (`private const val ...`).
+  - No function exceeds 30 LOC; larger logic is broken into well‑named private helpers.
+  - Every public class/interface has KDoc.
+  - No `Timber`; use `android.util.Log` or a pluggable logger wrapper.
+  - All reactive streams end with the `Flow` suffix.
+
+The rest of the directives remain unchanged.
 These directives are **absolute mandates** for all AI development within this codebase. They govern system predictability, state integrity, and codebase consistency.
 
 ### 1. Strict MVI Adherence & UI Purity

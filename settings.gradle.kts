@@ -18,3 +18,7 @@ dependencyResolutionManagement {
 rootProject.name = "azuratime"
 include(":app")
 include(":azura-engine-kmp")
+include(":ml-engine")
+include(":core-api")
+include(":feature-attendance-core")
+include(":feature-navigation")

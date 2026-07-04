@@ -16,6 +16,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
+import com.azuratech.azuratime.feature.navigation.ui.AppNavigation
 import com.azuratech.azuratime.core.sync.SyncWorker
 import com.azuratech.azuratime.core.push.AzuraFcmService
 import com.azuratech.azuratime.features.update.ui.UpdateEventBus
@@ -58,9 +59,7 @@ class MainActivity : ComponentActivity(), OnMapsSdkInitializedCallback {
 
         setContent {
             AzuraTheme {
-                MainApp(onBootReady = {
-                    isBootReady = true
-                })
+                AppNavigation()
             }
         }
     }

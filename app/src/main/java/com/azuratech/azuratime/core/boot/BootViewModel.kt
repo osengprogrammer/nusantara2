@@ -3,6 +3,8 @@ package com.azuratech.azuratime.core.boot
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
+import kotlinx.coroutines.flow.filter
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.domain.repository.BootRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,8 +32,12 @@ class BootViewModel @Inject constructor(
     private val sessionManager: SessionManager,
 ) : AndroidViewModel(application) {
 
+    // -----------------------------------------------------------------
+    // Logging / ready‑check integration
+    // -----------------------------------------------------------------
     private val _uiStateFlow = MutableStateFlow<BootUiState>(
-        if (sessionManager.getCurrentAccountId() == null) BootUiState.Auth else BootUiState.Loading,
+        // Default to Loading; the real initial state is set after SessionManager is ready.
+        BootUiState.Loading,
     )
     val uiStateFlow: StateFlow<BootUiState> = _uiStateFlow.asStateFlow()
 
@@ -41,24 +47,51 @@ class BootViewModel @Inject constructor(
     private var authCheckJob: Job? = null
 
     init {
-        observeSession()
+        // ----- Constructor verification -----
+        Log.d("BootViewModel", "constructor – Hilt injection succeeded")
+        // Wrap the whole init logic to capture any unexpected exception.
+        try {
+            waitForSessionReady()
+        } catch (e: Exception) {
+            Log.e("BootViewModel", "uncaught init exception", e)
+        }
     }
 
     /**
-     * 🔐 OBSERVE SESSION
-     * Reactive entry point. Uses StateFlow's native distinctUntilChanged behavior.
+     * Observe the SessionManager.ready flag. Only once it becomes true do we
+     * start listening to the actual session data (accountIdFlow) and decide the
+     * UI state. This eliminates the race where BootViewModel reads prefs before
+     * they are loaded.
+     */
+    private fun waitForSessionReady() {
+        sessionManager.ready
+            .filter { it } // proceed only when ready == true
+            .onEach { ready ->
+                Log.d("BootViewModel", "SessionManager ready=$ready")
+                // Now we can safely decide the initial UI state based on stored id.
+                _uiStateFlow.value = if (sessionManager.getCurrentAccountId() == null) {
+                    BootUiState.Auth
+                } else {
+                    BootUiState.Loading
+                }
+                observeSession() // start the regular session observation
+            }
+            .launchIn(viewModelScope)
+    }
+
+    /**
+     * Existing session observation – now guarded by ready‑check.
      */
     private fun observeSession() {
+        Log.d("BootViewModel", "start observing SessionManager.currentAccountIdFlow")
         sessionManager.currentAccountIdFlow
             .onEach { accountId ->
+                Log.d("BootViewModel", "accountIdFlow emitted=$accountId")
                 if (accountId == null) {
                     authCheckJob?.cancel()
-
-                    // 🔥 AI Native: If logging out, add a small buffer for cleanup
                     if (sessionManager.isLoggingOutFlow.value) {
                         kotlinx.coroutines.delay(500)
                     }
-
                     _uiStateFlow.value = BootUiState.Auth
                 } else {
                     handleCheckAuthStatus()
@@ -67,6 +100,10 @@ class BootViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    /**
+     * 🔐 OBSERVE SESSION
+     * Reactive entry point. Uses StateFlow's native distinctUntilChanged behavior.
+     */
     fun onEvent(event: BootUiEvent) {
         when (event) {
             BootUiEvent.CheckAuthStatus -> handleCheckAuthStatus()

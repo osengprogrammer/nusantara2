@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.azuratech.azuratime.R
 
 // 🔥 DB & ViewModels
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
@@ -73,7 +75,7 @@ fun FindSchoolScreen(
     }
 
     AzuraScreen(
-        title = "Find Workspace",
+        title = "Find ${stringResource(R.string.label_organization_singular)}",
         onBack = { navController.popBackStack() },
     ) {
         // 🔥 FIXED: Removed nested Scaffold. AzuraScreen provides a BoxScope,
@@ -91,7 +93,7 @@ fun FindSchoolScreen(
                     onValueChange = {
                         workspaceViewModel.onEvent(WorkspaceUiEvent.UpdateSearchQuery(it))
                     },
-                    label = { Text("Search School Name or ID...") },
+                    label = { Text(stringResource(R.string.ui_search_org)) },
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = AzuraShapes.medium,
@@ -105,13 +107,13 @@ fun FindSchoolScreen(
                     searchQuery.length < 3 -> {
                         EmptyDiscoveryState(
                             icon = Icons.Default.TravelExplore,
-                            message = "Type at least 3 characters to search for schools.",
+                            message = stringResource(R.string.ui_search_min_chars).format(stringResource(R.string.label_organization_singular).substringAfter(" ")),
                         )
                     }
                     searchResults.isEmpty() -> {
                         EmptyDiscoveryState(
                             icon = Icons.Default.Search,
-                            message = "No schools found.",
+                            message = stringResource(R.string.empty_sessions_yet),
                         )
                     }
                     else -> {
@@ -121,7 +123,7 @@ fun FindSchoolScreen(
                         ) {
                             items(searchResults) { school ->
                                 val schoolId = school["schoolId"] as? String ?: ""
-                                val schoolName = school["schoolName"] as? String ?: "Unknown School"
+                                val schoolName = school["schoolName"] as? String ?: stringResource(R.string.label_organization_unknown)
 
                                 // Cek status membership di semua level (Active/Pending)
                                 val membership = currentAccount?.memberships?.get(schoolId)
@@ -211,7 +213,7 @@ fun SchoolFollowCard(
             if (isFollowing) {
                 AssistChip(
                     onClick = {},
-                    label = { Text(if (status == "PENDING") "Waiting" else "Registered") },
+                    label = { Text(if (status == "PENDING") stringResource(R.string.label_status_pending) else stringResource(R.string.label_user_barcode_list).substringBefore(" ")) },
                     leadingIcon = {
                         if (!isSynced) {
                             Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(14.dp))
@@ -224,7 +226,7 @@ fun SchoolFollowCard(
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             } else {
                 Button(onClick = onFollowClick, shape = AzuraShapes.small, enabled = !isLoading) {
-                    Text("Follow")
+                    Text(stringResource(R.string.ui_join_org))
                 }
             }
         }

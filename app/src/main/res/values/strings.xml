@@ -114,4 +114,142 @@
    <string name="bulk_action_select_file">Select .CSV File</string>
    <string name="bulk_processing_state">Processing...</string>
    <string name="bulk_action_process_import">Process Import</string>
+
+   <!-- 🔥 NEW: FLAVOR-AGNOSTIC STRINGS (Will be overridden by flavors) -->
+   
+   <!-- User Terms -->
+   <string name="label_user_singular">User</string>
+   <string name="label_user_plural">Users</string>
+   <string name="label_user_id">User ID</string>
+   <string name="label_user_id_message">User ID cannot be changed</string>
+   <string name="label_user_roster">User Roster</string>
+   <string name="label_user_barcode_list">User Barcode List</string>
+   
+   <!-- Supervisor Terms -->
+   <string name="label_supervisor_singular">Supervisor</string>
+   <string name="label_supervisor_plural">Supervisors</string>
+   
+   <!-- Session/Group Terms -->
+   <string name="label_session_singular">Session</string>
+   <string name="label_session_plural">Sessions</string>
+   <string name="label_session_id">Session ID</string>
+   <string name="label_my_assigned_sessions">My Assigned Sessions</string>
+   <string name="label_assigned_sessions_for">Assigned Sessions for %1$s</string>
+   
+   <!-- Organization Terms -->
+   <string name="label_organization_singular">Organization</string>
+   <string name="label_organization_plural">Organizations</string>
+   <string name="label_organization_name">Organization Name</string>
+   <string name="label_organization_network">Organization Network</string>
+   <string name="label_organization_unknown">Unknown Organization</string>
+   
+   <!-- Task/Subject Terms -->
+   <string name="label_task_singular">Task</string>
+   <string name="label_task_plural">Tasks</string>
+   
+   <!-- Level/Grade Terms -->
+   <string name="label_level">Level</string>
+   <string name="label_management">Management</string>
+   
+   <!-- Actions -->
+   <string name="action_retry">Retry</string>
+   <string name="action_edit">Edit</string>
+   <string name="action_delete">Delete</string>
+   <string name="action_save">Save</string>
+   <string name="action_cancel">Cancel</string>
+   <string name="action_add_org">Add Organization</string>
+   <string name="action_sync">Sync</string>
+   <string name="action_close">Close</string>
+   <string name="action_scan_face">Scan Face for Embedding</string>
+   <string name="action_capture_photo">Capture Live Photo</string>
+   <string name="action_upload_photo">Upload from Gallery</string>
+   <string name="action_upload_photo_alternative">Or Upload from Gallery</string>
+   <string name="action_photo_ready">✅ Photo ready</string>
+   <string name="error_unknown">Unknown error</string>
+   <string name="action_success_generic">Success!</string>
+   <string name="action_join_requested">Join request to %1$s has been sent!</string>
+   <string name="action_join_failed">Failed to send request</string>
+   <string name="action_exporting">Exporting...</string>
+   <string name="action_export_csv">Export CSV</string>
+   <string name="action_reset">Reset</string>
+   <string name="action_reset_filter">Reset Filter</string>
+   <string name="action_add_user_singular">Add User</string>
+   <string name="action_add_user_to_session">Add User to Session</string>
+   <string name="action_delete_user_singular">Delete User</string>
+   <string name="action_add_session">Add Session</string>
+   <string name="action_delete_session">Delete Session</string>
+   <string name="action_move_session">Move to Session</string>
+   <string name="action_change_status">Change Status:</string>
+   <string name="action_class_correction">Move to Different Session</string>
+   <string name="action_auto_generate">Auto Generate</string>
+   <string name="action_add_subject">Add Subject</string>
+   <string name="action_search_organization">Search Organization...</string>
+   <string name="action_sync_classes">Sync Classes</string>
+   
+   <!-- Status Labels -->
+   <string name="label_status">Status: %1$s</string>
+   <string name="label_status_active">Active</string>
+   <string name="label_status_pending">Pending</string>
+   <string name="status_present">Present</string>
+   <string name="status_late">Late</string>
+   <string name="status_sick">Sick</string>
+   <string name="status_excused">Excused</string>
+   <string name="status_absent">Absent</string>
+   
+   <!-- Empty States -->
+   <string name="empty_users_in_session">No users in this session.</string>
+   <string name="empty_users_already_in_session">All users are already in this session.</string>
+   <string name="empty_sessions_available">No sessions available</string>
+   <string name="empty_sessions_yet">No sessions yet.</string>
+   <string name="empty_sessions_registered">No sessions registered.</string>
+   <string name="empty_no_users_in_class">No users in this session.</string>
+   <string name="empty_no_schedules">No schedules found.</string>
+   <string name="empty_assigned">No sessions assigned yet.</string>
+   
+   <!-- Dialogs -->
+   <string name="dialog_delete_user_title">Delete User?</string>
+   <string name="dialog_delete_user_message">User data will be permanently deleted.</string>
+   <string name="dialog_delete_session_title">Delete Session?</string>
+   <string name="dialog_delete_session_message">Deleting \'%1$s\' will disconnect users from this session.</string>
+   <string name="dialog_edit_org_name">Edit Organization Name</string>
+   <string name="dialog_add_org_title">Add New Organization</string>
+   <string name="dialog_reject_org">Reject Organization Registration</string>
+   <string name="dialog_reject_org_reason">Provide a rejection reason for \'%1$s\':</string>
+   <string name="dialog_user_to_session_title">Add User to Session</string>
+   <string name="dialog_session_title">Delete Session</string>
+   
+   <!-- UI Elements -->
+   <string name="ui_search_min_chars">Type at least 3 characters to search for %1$s.</string>
+   <string name="ui_search_user">Search user...</string>
+   <string name="ui_search_session">Search session...</string>
+   <string name="ui_search_org">Search Organization...</string>
+   <string name="ui_filter_sessions">Filter sessions...</string>
+   <string name="ui_filter_by_session">Filter by Session</string>
+   <string name="ui_select_user_csv">Select users to print</string>
+   <string name="ui_session_id_prefix">Session ID: %1$s</string>
+   <string name="ui_session_prefix">Session: %1$s</string>
+   <string name="ui_current_session_prefix">Current session: %1$s</string>
+   <string name="ui_wrong_session_class">Wrong Session?</string>
+   <string name="ui_move_session_title">Move Session</string>
+   <string name="ui_current_session">Current: %1$s</string>
+   <string name="ui_all_sessions">All Sessions</string>
+   <string name="ui_select_session_title">Select Session</string>
+   <string name="ui_create_org">Create New Organization</string>
+   <string name="ui_join_org">Join Existing Organization</string>
+   <string name="ui_add_org">Add Organization</string>
+   <string name="ui_no_staff_found">No Users Found</string>
+   <string name="ui_integrity_users_without_session">Users Without Session</string>
+   <string name="all_sessions">All Sessions</string>
+   <string name="ui_all_classes">All Sessions</string>
+   <string name="label_session_tier">Session Tier</string>
+   <string name="label_my_assignments">My Assignments</string>
+   <string name="label_class_unknown">Unknown Session</string>
+   <string name="label_homeroom">Primary</string>
+   <string name="label_time_range">Time Range</string>
+   <string name="action_filter_by_class">Filter by Session</string>
+   <string name="action_class_correction_title">Session Correction</string>
+   
+   <!-- Help/Instructions -->
+   <string name="help_user_csv_format">Use columns: user_id, full_name, session_name, photo_url.\nUsers will automatically be added to this workspace.</string>
+   <!-- Flavor-specific strings will override these -->
 </resources>

@@ -19,7 +19,7 @@ import javax.crypto.spec.SecretKeySpec
 fun main() {
     // Modify these paths as necessary for your local setup!
     val inputTfLitePath = "model/facenet_azura_512.tflite" // Your raw .tflite input file
-    val outputAzrPath = "app/src/main/assets/facenet_azura_512.azr" // Secure output asset
+    val outputAzrPath = "ml-engine/src/main/assets/facenet_azura_512.azr" // Secure output asset
 
     println("==================================================")
     println("🔐 Azura Time Model Encryptor")

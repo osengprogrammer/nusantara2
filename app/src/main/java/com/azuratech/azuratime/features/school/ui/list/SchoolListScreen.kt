@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,7 +24,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraLoadingButton
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
-
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.domain.model.AccountRole
 
 @Composable
@@ -48,13 +49,13 @@ fun SchoolListScreen(
     }
 
     AzuraScreen(
-        title = "School Management",
+        title = stringResource(R.string.label_organization_plural),
         onBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
         floatingActionButton = {
             if (uiState.currentAccountRole == AccountRole.ADMIN || uiState.currentAccountRole == AccountRole.SUPER_ADMIN) {
                 FloatingActionButton(onClick = { showAddDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add School")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_add_org))
                 }
             }
         },
@@ -70,13 +71,13 @@ fun SchoolListScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
-                            text = uiState.error ?: "Unknown error",
+                            text = uiState.error ?: stringResource(R.string.error_unknown),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Spacer(modifier = Modifier.height(AzuraSpacing.md))
                         AzuraLoadingButton(
-                            text = "Retry",
+                            text = stringResource(R.string.action_retry),
                             isLoading = false,
                             onClick = { viewModel.onEvent(SchoolUiEvent.Retry) },
                         )
@@ -84,7 +85,7 @@ fun SchoolListScreen(
                 }
                 uiState.schools.isEmpty() -> {
                     Text(
-                        text = "No schools yet.",
+                        text = stringResource(R.string.empty_sessions_registered),
                         modifier = Modifier.align(Alignment.Center),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -150,7 +151,7 @@ fun SchoolListScreen(
                                             fontWeight = FontWeight.Bold,
                                         )
                                         Text(
-                                            text = "Status: ${school.status}",
+                                            text = stringResource(R.string.label_status).format(school.status),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = if (school.status == "ACTIVE") {
                                                 androidx.compose.ui.graphics.Color(0xFF2E7D32)
@@ -166,7 +167,7 @@ fun SchoolListScreen(
                                     }) {
                                         Icon(
                                             Icons.Default.Edit,
-                                            contentDescription = "Edit",
+                                            contentDescription = stringResource(R.string.action_edit),
                                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                                         )
                                     }
@@ -174,7 +175,7 @@ fun SchoolListScreen(
                                     if (isActive) {
                                         Icon(
                                             Icons.Default.CheckCircle,
-                                            contentDescription = "Active",
+                                            contentDescription = stringResource(R.string.label_status_active),
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(24.dp),
                                         )
@@ -182,7 +183,7 @@ fun SchoolListScreen(
                                         IconButton(onClick = { viewModel.onEvent(SchoolUiEvent.DeleteSchool(school.id)) }) {
                                             Icon(
                                                 Icons.Default.Delete,
-                                                contentDescription = "Delete",
+                                                contentDescription = stringResource(R.string.action_delete),
                                                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
                                             )
                                         }
@@ -211,12 +212,12 @@ fun SchoolListScreen(
         var newName by remember { mutableStateOf(initialSchoolName) }
         AlertDialog(
             onDismissRequest = { editingSchoolId = null },
-            title = { Text("Edit School Name") },
+            title = { Text(stringResource(R.string.dialog_edit_org_name)) },
             text = {
                 OutlinedTextField(
                     value = newName,
                     onValueChange = { newName = it },
-                    label = { Text("School Name") },
+                    label = { Text(stringResource(R.string.label_organization_name)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
@@ -230,12 +231,12 @@ fun SchoolListScreen(
                         }
                     },
                 ) {
-                    Text("Save")
+                    Text(stringResource(R.string.action_save))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { editingSchoolId = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -281,7 +282,7 @@ private fun PreviewError() {
                 color = MaterialTheme.colorScheme.error,
             )
             Spacer(modifier = Modifier.height(AzuraSpacing.md))
-            AzuraLoadingButton(text = "Retry", isLoading = false, onClick = {})
+            AzuraLoadingButton(text = stringResource(R.string.action_retry), isLoading = false, onClick = {})
         }
     }
 }

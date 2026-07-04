@@ -15,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.ui.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
@@ -83,7 +85,7 @@ fun AttendanceScreen(
     }
 
     AzuraScreen(
-        title = "History Log",
+        title = "${stringResource(R.string.label_user_plural)} ${stringResource(R.string.label_session_singular)} Logs",
         onBack = onNavigateBack,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -96,7 +98,7 @@ fun AttendanceScreen(
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = { viewModel.onEvent(AttendanceUiEvent.UpdateSearchQuery(it)) },
-                    placeholder = { Text("Cari nama siswa...") },
+                    placeholder = { Text(stringResource(R.string.ui_search_user)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = AzuraShapes.medium,
                     leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary) },
@@ -144,7 +146,7 @@ fun AttendanceScreen(
                         }
                         Spacer(modifier = Modifier.width(AzuraSpacing.sm))
                         Text(
-                            text = "Sync",
+                            text = stringResource(R.string.action_sync),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -173,7 +175,7 @@ fun AttendanceScreen(
                         }
                         Spacer(modifier = Modifier.width(AzuraSpacing.sm))
                         Text(
-                            text = if (uiState.isExporting) "Export..." else "CSV",
+                            text = if (uiState.isExporting) stringResource(R.string.action_exporting) else stringResource(R.string.action_export_csv),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -216,13 +218,13 @@ fun AttendanceScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Menampilkan ${uiState.records.size} log",
+                    text = stringResource(R.string.empty_no_users_in_class).split(".").first() + " ${uiState.records.size}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline,
                 )
                 if (uiState.selectedClassId != null) {
                     Spacer(Modifier.width(AzuraSpacing.sm))
-                    val selectedClassName = availableClasses.find { it.id == uiState.selectedClassId }?.name ?: "Kelas"
+                    val selectedClassName = availableClasses.find { it.id == uiState.selectedClassId }?.name ?: stringResource(R.string.label_session_singular)
                     AssistChip(
                         onClick = { viewModel.onEvent(AttendanceUiEvent.SelectClass(null)) },
                         label = { Text(selectedClassName) },
@@ -305,8 +307,8 @@ fun LocalFilterPanel(
         var isClassExpanded by remember { mutableStateOf(false) }
         Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
             AzuraDropdownField(
-                label = "Filter per Kelas",
-                selectedValue = classes.find { it.id == selectedClassId }?.name ?: "Semua Kelas",
+                label = stringResource(R.string.ui_filter_by_class),
+                selectedValue = classes.find { it.id == selectedClassId }?.name ?: stringResource(R.string.ui_all_classes),
                 options = classes,
                 isExpanded = isClassExpanded,
                 onExpandedChange = { isClassExpanded = it },
@@ -320,9 +322,9 @@ fun LocalFilterPanel(
                     onClick = { onClassSelected(null) },
                     modifier = Modifier.align(Alignment.End),
                 ) {
-                    Icon(Icons.Default.RestartAlt, null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.RestartAlt, contentDescription = stringResource(R.string.action_reset), modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Reset Filter", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.action_reset_filter), style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -348,10 +350,10 @@ fun LocalClassCorrectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Move to Class Session") },
+        title = { Text(stringResource(R.string.ui_wrong_session_class)) },
         text = {
             Column {
-                Text("Current session: $currentClassName", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.ui_current_session).format(currentClassName), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(16.dp))
                 LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
                     items(accountClasses) { classItem ->
@@ -365,6 +367,6 @@ fun LocalClassCorrectionDialog(
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

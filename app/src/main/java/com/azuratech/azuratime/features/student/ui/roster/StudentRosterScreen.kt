@@ -13,10 +13,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -51,7 +53,7 @@ fun StudentRosterScreen(
     }
 
     AzuraScreen(
-        title = "Student Roster",
+        title = stringResource(R.string.label_user_roster),
         onBack = onNavigateBack,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -64,7 +66,7 @@ fun StudentRosterScreen(
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = { viewModel.onEvent(StudentRosterUiEvent.UpdateSearch(it)) },
-                    placeholder = { Text("Search student name or ID...") },
+                    placeholder = { Text(stringResource(R.string.ui_search_user)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = AzuraShapes.medium,
                     leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary) },
@@ -111,7 +113,7 @@ fun StudentRosterScreen(
                             Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Sync Roster", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.action_sync) + " " + stringResource(R.string.label_user_roster).substringAfter(" "), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -123,7 +125,7 @@ fun StudentRosterScreen(
                 ) {
                     Box(modifier = Modifier.padding(horizontal = AzuraSpacing.md), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "${uiState.students.size} Students",
+                            "${uiState.students.size} ${stringResource(R.string.label_user_plural)}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                         )
@@ -143,7 +145,7 @@ fun StudentRosterScreen(
                     FilterChip(
                         selected = uiState.selectedClassId == null,
                         onClick = { viewModel.onEvent(StudentRosterUiEvent.SelectClass(null)) },
-                        label = { Text("All Classes") },
+                        label = { Text(stringResource(R.string.ui_all_sessions)) },
                         shape = AzuraShapes.medium,
                     )
                 }
@@ -183,7 +185,7 @@ fun StudentRosterScreen(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
-                                    "No students found",
+                                    stringResource(R.string.empty_users_in_session),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -202,8 +204,8 @@ fun StudentRosterScreen(
     if (uiState.isDeleteDialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onEvent(StudentRosterUiEvent.CancelDelete) },
-            title = { Text("Delete Student?") },
-            text = { Text("Student data will be permanently deleted from device and cloud.") },
+            title = { Text(stringResource(R.string.dialog_delete_user_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_user_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -213,12 +215,12 @@ fun StudentRosterScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onEvent(StudentRosterUiEvent.CancelDelete) }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )

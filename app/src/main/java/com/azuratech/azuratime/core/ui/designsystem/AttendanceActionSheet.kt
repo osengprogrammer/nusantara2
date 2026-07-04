@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.azuratech.azuratime.R
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
@@ -42,11 +44,11 @@ fun AttendanceActionSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.ManageAccounts, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(AzuraSpacing.sm))
-                Text("Manage Attendance", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.action_add_user_to_session), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
 
             Text(
-                text = "Student: ${record.studentName}",
+                text = "${stringResource(R.string.label_user_singular)}: ${record.studentName}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -54,7 +56,7 @@ fun AttendanceActionSheet(
             Spacer(Modifier.height(AzuraSpacing.lg))
 
             // 1. Quick Status Switch
-            Text("Change Status:", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.action_change_status), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(AzuraSpacing.sm))
 
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
@@ -65,11 +67,11 @@ fun AttendanceActionSheet(
             ) {
                 AttendanceStatus.values().forEach { status ->
                     val label = when (status) {
-                        AttendanceStatus.PRESENT -> "Present"
-                        AttendanceStatus.LATE -> "Late"
-                        AttendanceStatus.SICK -> "Sick"
-                        AttendanceStatus.EXCUSED -> "Excused"
-                        AttendanceStatus.ABSENT -> "Absent"
+                        AttendanceStatus.PRESENT -> stringResource(R.string.status_present)
+                        AttendanceStatus.LATE -> stringResource(R.string.status_late)
+                        AttendanceStatus.SICK -> stringResource(R.string.status_sick)
+                        AttendanceStatus.EXCUSED -> stringResource(R.string.status_excused)
+                        AttendanceStatus.ABSENT -> stringResource(R.string.status_absent)
                     }
                     FilterChip(
                         selected = record.status == status,
@@ -86,7 +88,7 @@ fun AttendanceActionSheet(
             Spacer(Modifier.height(AzuraSpacing.lg))
 
             // 2. 🔥 THE SAVIOR BUTTON: Class Correction
-            Text("Wrong Session/Class?", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.ui_wrong_session_class), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(AzuraSpacing.sm))
 
             OutlinedButton(
@@ -100,8 +102,8 @@ fun AttendanceActionSheet(
                 Icon(Icons.Default.SwapHoriz, null)
                 Spacer(Modifier.width(AzuraSpacing.sm))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Move Class Session", fontWeight = FontWeight.Bold)
-                    Text("Current: ${record.className.ifBlank { "General" }}", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.action_class_correction), fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.ui_current_session_prefix).format(record.className.ifBlank { "General" }), style = MaterialTheme.typography.labelSmall)
                 }
                 Icon(Icons.Default.ChevronRight, null)
             }
@@ -120,7 +122,7 @@ fun AttendanceActionSheet(
             ) {
                 Icon(Icons.Default.DeleteForever, null)
                 Spacer(Modifier.width(AzuraSpacing.sm))
-                Text("Delete Record", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.action_delete_user_singular), fontWeight = FontWeight.Bold)
             }
         }
     }

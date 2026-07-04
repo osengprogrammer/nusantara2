@@ -71,7 +71,7 @@ fun SessionManagementScreen(
                         onClick = { viewModel.onEvent(SessionManagementUiEvent.GenerateFromMatrix) },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     ) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = "Auto Generate")
+                        Icon(Icons.Default.AutoAwesome, contentDescription = stringResource(R.string.action_auto_generate))
                     }
                     Spacer(modifier = Modifier.height(AzuraSpacing.sm))
                 }
@@ -79,7 +79,7 @@ fun SessionManagementScreen(
                     onClick = { showAddSubjectDialog = true },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Subject")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_add_subject))
                 }
                 Spacer(modifier = Modifier.height(AzuraSpacing.sm))
                 ExtendedFloatingActionButton(
@@ -96,7 +96,7 @@ fun SessionManagementScreen(
             verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
         ) {
             item {
-                Text("Subjects", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.label_task_plural), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             items(uiState.subjects) { subject ->
                 ListItem(
@@ -104,7 +104,7 @@ fun SessionManagementScreen(
                     supportingContent = { subject.description?.let { Text(it) } },
                     trailingContent = {
                         IconButton(onClick = { viewModel.onEvent(SessionManagementUiEvent.DeleteSubject(subject)) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error)
                         }
                     },
                 )
@@ -112,7 +112,7 @@ fun SessionManagementScreen(
 
             item {
                 Spacer(modifier = Modifier.height(AzuraSpacing.md))
-                Text("Scheduled Sessions", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.label_session_singular).substringBefore(" ") + "s", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             items(uiState.sessions) { session ->
                 ListItem(
@@ -128,10 +128,10 @@ fun SessionManagementScreen(
                     },
                     supportingContent = {
                         Column(modifier = Modifier.animateContentSize()) {
-                            Text("Day: ${getDayName(session.session.dayOfWeek)} | ${session.session.startTime} - ${session.session.endTime}")
+                            Text(stringResource(R.string.label_level).substringBefore(" ") + ": ${getDayName(session.session.dayOfWeek)} | ${session.session.startTime} - ${session.session.endTime}")
                             if (session.session.sessionType != SessionType.GLOBAL) {
                                 Text(
-                                    text = "Class: ${session.className ?: "Unknown"}",
+                                    text = "${stringResource(R.string.label_session_singular)}: ${session.className ?: stringResource(R.string.empty_sessions_available)}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -141,10 +141,10 @@ fun SessionManagementScreen(
                     trailingContent = {
                         Row {
                             IconButton(onClick = { editingSession = session }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit), tint = MaterialTheme.colorScheme.primary)
                             }
                             IconButton(onClick = { viewModel.onEvent(SessionManagementUiEvent.DeleteSession(session)) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     },
@@ -250,7 +250,7 @@ fun AddSubjectDialog(
 
                 Spacer(modifier = Modifier.height(AzuraSpacing.xs))
                 Text(
-                    text = "Select Subject from Templates:",
+                    text = stringResource(R.string.label_task_singular).substringBefore(" ") + " Selection:",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
@@ -261,7 +261,7 @@ fun AddSubjectDialog(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search subject...", style = MaterialTheme.typography.bodySmall) },
+                    placeholder = { Text("Search " + stringResource(R.string.label_task_singular).split(" ").last() + "...", style = MaterialTheme.typography.bodySmall) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     shape = AzuraShapes.medium,
                     textStyle = MaterialTheme.typography.bodySmall,
@@ -281,7 +281,7 @@ fun AddSubjectDialog(
 
                     if (filteredSubjects.isEmpty() && !showCustomOption) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No subjects available", style = MaterialTheme.typography.bodySmall)
+                            Text("No " + stringResource(R.string.label_task_plural).substringBefore(" ") + " available", style = MaterialTheme.typography.bodySmall)
                         }
                     } else {
                         LazyColumn {
@@ -425,7 +425,7 @@ fun AddSessionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (editingSession != null) "Edit Session" else stringResource(R.string.add_session)) },
+        title = { Text(if (editingSession != null) stringResource(R.string.dialog_delete_session_title) else stringResource(R.string.add_session)) },
         text = {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
@@ -433,7 +433,7 @@ fun AddSessionDialog(
             ) {
                 // Tier Selector
                 item {
-                    Text("Session Tier", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.label_session_tier), style = MaterialTheme.typography.titleSmall)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.xs)) {
                         SessionType.entries.forEach { tier ->
                             FilterChip(
@@ -449,7 +449,7 @@ fun AddSessionDialog(
                 if (selectedTier == SessionType.ACADEMIC && assignments.isNotEmpty()) {
                     item {
                         HorizontalDivider(Modifier.padding(vertical = AzuraSpacing.sm))
-                        Text("My Assignments", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.label_my_assignments), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                         assignments.forEach { assignment ->
                             val classObj = classes.find { it.id == assignment.classId }
                             val subjectObj = subjects.find { it.subjectId == assignment.subjectId }
@@ -525,7 +525,7 @@ fun AddSessionDialog(
                 }
                 item {
                     HorizontalDivider(Modifier.padding(vertical = AzuraSpacing.sm))
-                    Text("Time Range", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.label_time_range), style = MaterialTheme.typography.titleSmall)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
