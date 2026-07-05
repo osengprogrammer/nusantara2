@@ -1,0 +1,43 @@
+plugins {
+    id("com.android.library")
+    kotlin("android")
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+android {
+    namespace = "com.azuratech.azuratime.feature.auth.impl"
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+        }
+    }
+}
+
+dependencies {
+    // Public API contract (copied into this module)
+    implementation(project(":feature-auth-api"))
+
+    // Core utilities (Result, etc.)
+    api(project(":core"))
+
+    // Dagger (for @Module, @Provides, @Singleton)
+    implementation("com.google.dagger:dagger:2.44")
+
+    // Firebase (optional – can be added later)
+    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
+    // Coroutines (for Flow, suspend, etc.)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
+}

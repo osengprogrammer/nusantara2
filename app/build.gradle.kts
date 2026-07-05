@@ -23,7 +23,6 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.48.1"
     id("com.google.gms.google-services")
     kotlin("plugin.serialization")
-    id("com.google.firebase.appdistribution")
 }
 
 android {
@@ -90,9 +89,6 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
-            firebaseAppDistribution {
-                releaseNotes = "Azura Time - Latest Stable Build"
-                testers = "osengprogrammer@gmail.com"
             }
         }
     }
