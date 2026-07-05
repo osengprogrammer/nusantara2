@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import com.azuratech.azuratime.ml.detector.BarcodeAnalyzer
 import com.azuratech.azuratime.core.ui.designsystem.CoreBarcodeCamera
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 
 /**
  * AZURA BARCODE SCANNER

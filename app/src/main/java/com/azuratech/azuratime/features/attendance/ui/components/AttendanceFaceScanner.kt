@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 import com.azuratech.azuratime.core.ui.designsystem.CoreFaceCamera
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 
 /**
  * AZURA FACE SCANNER

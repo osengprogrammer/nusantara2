@@ -9,8 +9,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
-import com.azuratech.azuratime.core.ui.theme.AzuraTheme
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraTheme
 
 @Composable
 fun AzuraButton(

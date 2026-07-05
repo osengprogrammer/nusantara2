@@ -21,8 +21,8 @@ import com.azuratech.azuratime.features.attendance.ui.capture.AttendanceCaptureU
 import com.azuratech.azuratime.features.attendance.ui.capture.ScanMode
 import com.azuratech.azuratime.features.attendance.ui.components.MatchResultLabel
 import com.azuratech.azuratime.features.attendance.ui.components.StatusLabel
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
 import kotlinx.coroutines.flow.collect
 

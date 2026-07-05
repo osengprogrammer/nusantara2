@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.*
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 import com.azuratech.azuratime.features.reporting.ui.components.MatrixTableView
 
 @Composable
@@ -91,7 +91,7 @@ private fun AttendanceMatrixFilters(
                 onValueChange = { onEvent(AttendanceMatrixUiEvent.Search(it)) },
                 placeholder = { Text("Cari nama siswa...") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = com.azuratech.azuratime.core.ui.theme.AzuraShapes.medium,
+                shape = com.azuratech.azuratime.core.designsystem.theme.AzuraShapes.medium,
                 leadingIcon = { Icon(androidx.compose.material.icons.Icons.Default.Search, null, tint = MaterialTheme.colorScheme.primary) },
                 trailingIcon = {
                     if (data.searchQuery.isNotEmpty()) {

@@ -28,7 +28,7 @@ import kotlinx.coroutines.guava.await
 import java.util.concurrent.Executors
 
 // 🔥 Azura Design System Imports
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

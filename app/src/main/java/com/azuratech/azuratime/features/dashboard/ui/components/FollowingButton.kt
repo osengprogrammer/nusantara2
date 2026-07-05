@@ -10,8 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 
 @Composable
 fun FollowingButton(pendingRequests: Int, onClick: () -> Unit) {

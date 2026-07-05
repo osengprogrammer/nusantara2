@@ -1,0 +1,264 @@
+package com.azuratech.azuratime.features.attendance.ui.capture
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.R
+import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
+import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
+import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.util.LocationProvider
+import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
+import com.azuratech.azuratime.features.attendance.ui.components.AttendanceScannerView
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.delay
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun AttendanceCaptureScreen(
+    onBarcodeScanClick: () -> Unit,
+    onNavigateBack: () -> Unit,
+    useBackCamera: Boolean = false,
+    accountEmail: String = "",
+    viewModel: AttendanceCaptureViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val voiceAssistant = rememberVoiceAssistant()
+    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+    val context = LocalContext.current
+    val locationProvider = remember { LocationProvider(context) }
+
+    // 🛡️ AI Native: Periodic Geofence Validation
+    LaunchedEffect(uiState.activeSchoolId) {
+        if (uiState.activeSchoolId == null) return@LaunchedEffect
+        while (true) {
+            locationProvider.getCurrentLocation().onSuccess { location ->
+                viewModel.onEvent(AttendanceCheckInUiEvent.GeofenceValidated(location.latitude, location.longitude))
+            }
+            delay(10000) // 10s Re-check
+        }
+    }
+
+    // UI Effects: Voice Assistant
+    LaunchedEffect(Unit) {
+        viewModel.uiEffectFlow.collect { effect ->
+            when (effect) {
+                is AttendanceCaptureUiEffect.Speak -> voiceAssistant.speak(effect.message)
+                AttendanceCaptureUiEffect.NavigateBack -> onNavigateBack()
+            }
+        }
+    }
+
+    // Session Lifecycle
+    LaunchedEffect(accountEmail) {
+        viewModel.onEvent(AttendanceCheckInUiEvent.StartScan(accountEmail))
+    }
+
+    // Sync Permission State to ViewModel
+    LaunchedEffect(cameraPermissionState.status.isGranted) {
+        viewModel.onEvent(AttendanceCheckInUiEvent.GrantPermission(cameraPermissionState.status.isGranted))
+    }
+
+    var currentCameraIsBack by remember { mutableStateOf(useBackCamera) }
+
+    PermissionsHandler(
+        permissionState = cameraPermissionState,
+        onGranted = {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                // Layer 1: Hardware View
+                AttendanceScannerView(
+                    useBackCamera = currentCameraIsBack,
+                    onFaceEmbeddingReady = { embedding ->
+                        if (uiState.isWithinGeofence) {
+                            viewModel.onEvent(AttendanceCheckInUiEvent.FaceMatched(embedding))
+                        }
+                    },
+                    showLivenessLabel = uiState.isScanning && uiState.isWithinGeofence,
+                )
+
+                // 🛡️ Layer 1.5: Geofence Security Overlay
+                if (!uiState.isWithinGeofence) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.9f))
+                            .padding(AzuraSpacing.xl),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOff,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(80.dp),
+                            )
+                            Text(
+                                text = stringResource(id = R.string.capture_out_of_location),
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            )
+                            Text(
+                                text = stringResource(id = R.string.capture_geofence_restricted),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.height(AzuraSpacing.lg))
+                            AzuraButton(
+                                text = stringResource(id = R.string.capture_action_go_back),
+                                onClick = onNavigateBack,
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                            )
+                        }
+                    }
+                }
+
+                // Layer 2: Overlays
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Top Controls
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(AzuraSpacing.md),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = if (uiState.activeClassName.isEmpty()) {
+                                stringResource(id = R.string.capture_free_scan)
+                            } else {
+                                stringResource(id = R.string.capture_class_label_prefix, uiState.activeClassName)
+                            },
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+
+                        if (uiState.isWithinGeofence) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)) {
+                                AzuraButton(
+                                    text = stringResource(id = R.string.capture_action_flip),
+                                    onClick = { currentCameraIsBack = !currentCameraIsBack },
+                                    modifier = Modifier.height(40.dp),
+                                )
+                                AzuraButton(
+                                    text = stringResource(id = R.string.capture_action_manual),
+                                    onClick = {
+                                        viewModel.onEvent(
+                                            AttendanceCheckInUiEvent.StartScan(
+                                                accountEmail,
+                                                ScanMode.Manual,
+                                            ),
+                                        )
+                                    },
+                                    modifier = Modifier.height(40.dp),
+                                )
+                                AzuraButton(
+                                    text = stringResource(id = R.string.capture_action_barcode),
+                                    onClick = onBarcodeScanClick,
+                                    modifier = Modifier.height(40.dp),
+                                )
+                            }
+                        }
+                    }
+
+                    // Scan Mode Specific Overlays
+                    when (uiState.scanMode) {
+                        ScanMode.Manual -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.8f)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+                                ) {
+                                    Text(stringResource(id = R.string.capture_manual_placeholder), color = Color.White)
+                                    AzuraButton(
+                                        text = stringResource(id = R.string.capture_action_back_to_face),
+                                        onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.StartScan(accountEmail, ScanMode.Face)) },
+                                    )
+                                }
+                            }
+                        }
+                        else -> {}
+                    }
+
+                    // Bottom Messaging
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 100.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
+                    ) {
+                        when {
+                            uiState.studentProfile != null -> {
+                                AzuraCard(
+                                    modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
+                                    title = stringResource(id = R.string.capture_success_title),
+                                    content = {
+                                        Text(
+                                            text = stringResource(id = R.string.capture_success_greeting, uiState.studentProfile?.name ?: ""),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                        )
+                                        if (uiState.isAlreadyCheckedIn) {
+                                            Text(
+                                                text = stringResource(id = R.string.capture_already_checked_in),
+                                                style = MaterialTheme.typography.bodySmall,
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                            uiState.error != null -> {
+                                AzuraCard(
+                                    modifier = Modifier.padding(horizontal = AzuraSpacing.lg),
+                                    title = stringResource(id = R.string.capture_failed_title),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                                    content = {
+                                        Text(text = uiState.error ?: "", style = MaterialTheme.typography.bodyMedium)
+                                    },
+                                )
+                                AzuraButton(
+                                    text = stringResource(id = R.string.capture_action_try_again),
+                                    onClick = { viewModel.onEvent(AttendanceCheckInUiEvent.Retry) },
+                                )
+                            }
+                        }
+                    }
+
+                    if (uiState.isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+            }
+        },
+    )
+}

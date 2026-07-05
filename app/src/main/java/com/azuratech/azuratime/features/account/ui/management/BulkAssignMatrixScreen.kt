@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.*
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuratime.features.account.domain.usecase.MatrixImportPreview
 

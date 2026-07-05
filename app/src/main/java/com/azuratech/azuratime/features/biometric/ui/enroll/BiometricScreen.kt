@@ -42,7 +42,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.StudentAvatar
 import com.azuratech.azuratime.core.ui.designsystem.CoreFaceCamera
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 import com.google.accompanist.permissions.rememberPermissionState
 

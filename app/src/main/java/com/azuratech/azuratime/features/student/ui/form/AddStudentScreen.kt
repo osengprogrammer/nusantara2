@@ -38,7 +38,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraAccountFormContent
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.CoreFaceCamera
 import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuratime.ml.detector.FaceAnalyzer
 import com.google.accompanist.permissions.ExperimentalPermissionsApi

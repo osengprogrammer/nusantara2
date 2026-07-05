@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.IntSize
 import kotlin.math.max
 
 // 🔥 Azura Design System Imports
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 
 /**
  * Overlay untuk menggambar kotak wajah di atas Preview Kamera.

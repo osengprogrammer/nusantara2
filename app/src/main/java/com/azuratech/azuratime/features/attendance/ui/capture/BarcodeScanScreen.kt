@@ -19,7 +19,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.LocationProvider
 import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
 import com.azuratech.azuratime.features.attendance.ui.barcode.BarcodeScanner

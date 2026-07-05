@@ -15,8 +15,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 // 🔥 Azura Design System Imports
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

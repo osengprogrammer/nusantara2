@@ -22,9 +22,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.theme.AzuraTheme
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraTheme
 import com.azuratech.azuratime.core.util.isAdmin
 import com.azuratech.azuratime.features.dashboard.ui.components.*
 import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog

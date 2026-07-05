@@ -15,7 +15,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.azuratech.azuratime.core.ui.theme.AzuraTheme
+import com.azuratech.azuratime.core.designsystem.theme.AzuraTheme
 import com.azuratech.azuratime.feature.navigation.ui.AppNavigation
 import com.azuratech.azuratime.core.sync.SyncWorker
 import com.azuratech.azuratime.core.push.AzuraFcmService

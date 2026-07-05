@@ -33,8 +33,8 @@ import com.azuratech.azuraengine.model.ProcessResult
 
 // 🔥 Azura Design System Imports
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

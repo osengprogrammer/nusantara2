@@ -21,13 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import com.azuratech.azuratime.R
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.Color
 import com.azuratech.azuratime.core.ui.designsystem.*
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

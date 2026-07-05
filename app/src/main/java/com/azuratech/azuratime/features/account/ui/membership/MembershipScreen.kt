@@ -28,8 +28,8 @@ import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfil
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 
 // 🔥 Azura Design System Imports
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 
 @Composable
 fun MembershipScreen(

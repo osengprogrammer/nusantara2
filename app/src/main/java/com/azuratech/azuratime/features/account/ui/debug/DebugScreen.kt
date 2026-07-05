@@ -23,8 +23,8 @@ import com.azuratech.azuratime.core.session.SessionManager
 
 // 🔥 Azura Design System
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
 
 @Composable
 fun DebugScreen(

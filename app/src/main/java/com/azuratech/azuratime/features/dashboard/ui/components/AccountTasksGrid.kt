@@ -20,8 +20,8 @@ import androidx.navigation.NavController
 import com.azuratech.azuratime.BuildConfig
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.navigation.Screen
-import com.azuratech.azuratime.core.ui.theme.AzuraShapes
-import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
+import com.azuratech.azuratime.core.designsystem.theme.AzuraShapes
+import com.azuratech.azuratime.core.designsystem.theme.AzuraSpacing
 
 /**
  * 🛠️ ACCOUNT TASKS GRID (v3.2.1-ai-native)
