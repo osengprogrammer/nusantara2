@@ -13,6 +13,8 @@ import com.azuratech.azuratime.features.session.data.local.*
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.room.migration.Migration
 
+import androidx.room.TypeConverters
+
 @Database(
     entities = [
         SchoolEntity::class,
@@ -33,13 +35,17 @@ import androidx.room.migration.Migration
         GpsGeofenceEntity::class,
         SubjectEntity::class,
         ClassSessionEntity::class,
+        com.azuratech.azuratime.features.payment.data.local.PaymentEntity::class,
+        com.azuratech.azuratime.core.data.local.StudentWalletEntity::class
     ],
     version = 26,
-    exportSchema = false,
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
-@Suppress("RoomProcessor:RoomSchemaMerging")
-abstract class AppDatabase : RoomDatabase() {
+abstract class AppDatabase   : RoomDatabase() {
+
+    abstract fun paymentDao(): com.azuratech.azuratime.features.payment.data.local.PaymentDao
+    abstract fun studentWalletDao(): com.azuratech.azuratime.core.data.local.StudentWalletDao
 
     abstract fun studentDao(): StudentDao
     abstract fun attendanceRecordDao(): AttendanceRecordDao

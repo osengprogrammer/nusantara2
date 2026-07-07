@@ -28,6 +28,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.util.isAdmin
 import com.azuratech.azuratime.features.account.data.local.toDomain
 import com.azuratech.azuratime.features.dashboard.ui.components.*
+import com.azuratech.azuratime.features.payment.presentation.PaymentRoute
 import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
 import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 
@@ -91,10 +92,7 @@ fun DashboardScreen(
                     navController = navController,
                     data = uiState,
                     schoolViewModel = schoolViewModel,
-                    availableClasses = schoolViewModel.uiStateFlow.collectAsStateWithLifecycle().value.availableClasses,
-                    showAddSchoolDialog = showAddSchoolDialog,
                     onAddSchoolClick = { showAddSchoolDialog = true },
-                    onDismissAddSchool = { showAddSchoolDialog = false },
                     onSyncClick = { viewModel.onEvent(DashboardUiEvent.Refresh) },
                     onRegisterStudentClick = { viewModel.onEvent(DashboardUiEvent.OnRegisterStudentClick) },
                     onAttendanceClick = { classId ->
@@ -136,10 +134,7 @@ fun DashboardContent(
     navController: NavController,
     data: DashboardUiState,
     schoolViewModel: SchoolViewModel,
-    availableClasses: List<com.azuratech.azuraengine.model.ClassModel>,
-    showAddSchoolDialog: Boolean,
     onAddSchoolClick: () -> Unit,
-    onDismissAddSchool: () -> Unit,
     onSyncClick: () -> Unit,
     onRegisterStudentClick: () -> Unit,
     onAttendanceClick: (String) -> Unit,
@@ -300,6 +295,13 @@ fun DashboardContent(
                     )
                 }
 
+                // INTEGRATED PAYMENT CARD: Always visible like other feature cards
+                item {
+                    PaymentDashboardCard(
+                        onClick = { navController.navigate(com.azuratech.azuratime.core.navigation.NavigationRoutes.PAYMENT) }
+                    )
+                }
+
                 // AI Native Feature Section
                 item {
                     HorizontalDivider(modifier = Modifier.padding(horizontal = AzuraSpacing.md))
@@ -343,6 +345,58 @@ fun DashboardContent(
                     )
                 }
             }
+        }
+    }
+}
+
+// --- COMPONENT: PAYMENT CARD ---
+
+@Composable
+fun PaymentDashboardCard(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = AzuraSpacing.md)
+            .clickable { onClick() },
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(AzuraSpacing.md)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.AccountBalanceWallet,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(Modifier.width(AzuraSpacing.md))
+                Column {
+                    Text(
+                        text = "Payments",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Manage student fees & records",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     }
 }
@@ -493,7 +547,6 @@ fun SupervisorOnboardingCard(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 private fun PreviewDashboard() {
     AzuraTheme {

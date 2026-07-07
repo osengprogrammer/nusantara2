@@ -56,7 +56,7 @@ class ClassViewModel @Inject constructor(
                     val names = globalClasses.map { it.name }.distinct().sorted()
                     _stateFlow.update { it.copy(availableClasses = names) }
                 }
-                .onFailure { error ->
+                .onFailure {
                     val fallback = listOf(
                         "10-IPA-1", "10-IPA-2", "10-IPA-3",
                         "10-IPS-1", "10-IPS-2", "10-IPS-3",

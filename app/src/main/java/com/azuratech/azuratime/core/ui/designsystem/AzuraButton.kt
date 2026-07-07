@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.azuratech.azuratime.core.ui.preview.AzuraPreviews
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 
@@ -60,7 +59,6 @@ fun AzuraButton(
     }
 }
 
-@AzuraPreviews
 @Composable
 fun PreviewAzuraButton() {
     AzuraTheme {

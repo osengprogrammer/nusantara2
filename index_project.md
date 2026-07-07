@@ -20,10 +20,14 @@
 | `ExportJobEntity.kt` | `features.reporting.data.local` | Tracks background PDF/Excel exports | ✅ Migrated |
 | `ReportEntity.kt` | `features.reporting.data.local` | Pre-calculated daily/weekly school summaries | ✅ Migrated |
 | `AiMusicEntity.kt` | `features.aimusic.data.local` | Local dataset of Nusantara traditional tracks | ✅ Migrated |
+| `PaymentEntity.kt` | `features.payment.data.local` | Stores individual payment records (top‑up) | ✅ New |
+| `StudentWalletEntity.kt` | `core.data.local` | Tracks student wallet balances | ✅ New |
 | `SubjectEntity.kt` | `features.session.data.local` | Academic subjects for attendance tracking | ✅ New (v3.3) |
 | `ClassSessionEntity.kt` | `features.session.data.local` | Tiered sessions (Academic/Class/Global) | ✅ Tiered (v3.7) |
 
 ## 🧠 ViewModels (MVI Effect-Driven)
+| `PaymentViewModel.kt` | `features.payment.ui` | Handles Payment UI state and top‑up flow |
+
 | File | Package | Responsibility |
 |------|---------|---------------|
 | `BootViewModel.kt` | `core.boot` | Core app initialization and self-healing state |
@@ -62,6 +66,8 @@
 | `AppUpdateViewModel.kt` | `features.update.ui` | Custom GitHub-based update engine state |
 
 ## ⚡ UI Effects (Transient Event Stream)
+| `PaymentUiEffect.kt` | `features.payment.ui` | Transient events for payment flows |
+
 | File | Package | Responsibility |
 |------|---------|---------------|
 | `DashboardUiEffect.kt` | `features.dashboard.ui` | Snackbars, Logout, and Navigation effects |
@@ -110,6 +116,8 @@
 | `StudentRepository.kt` | `features.student.domain.repository` | Student profile management | ✅ asLocalResult |
 | `TemplateRepository.kt` | `features.template.domain.repository` | School templates sync engine | ✅ asLocalResult |
 | `AppUpdateRepository.kt` | `features.update.domain.repository` | Checks GitHub releases and downloads APKs | ✅ asLocalResult |
+| `PaymentRepository.kt` | `features.payment.domain.repository` | Interface for payment operations |
+| `PaymentRepositoryImpl.kt` | `features.payment.domain.repository` | Local-first implementation with wallet updates |
 
 ## 💼 Domain Use Cases (Centralized Business Logic)
 These classes act as the 'Single Source of Truth' (SSOT) for all business rules, ensuring that ViewModels act only as UI Orchestrators while Use Cases serve as the Business Logic Gatekeepers:
@@ -122,6 +130,7 @@ These classes act as the 'Single Source of Truth' (SSOT) for all business rules,
 | `GetActiveSessionUseCase.kt` | `features.session` | Retrieves active sessions for specific class/subjects |
 | `GetSessionsByDayUseCase.kt` | `features.session` | Retrieves sessions for a specific day |
 | `ValidateSessionAccessUseCase.kt` | `features.session` | Validates if a supervisor has access rights to a specific session |
+| `TopUpStudentUseCase.kt` | `features.payment.domain.usecase` | Validates amount and delegates to repository |
 
 ---
 

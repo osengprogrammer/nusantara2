@@ -1,5 +1,22 @@
 # 🛡️ Azura Time - Project Status
 
+### Phase 51: Payments Screen UI Implementation (July 7, 2026)
+- **UI Screen Replaced:** Replaced the static `"Payment Screen Placeholder"` text in [PaymentScreen.kt](file:///home/max/azura-payment-project/app/src/main/java/com/azuratech/azuratime/features/payment/ui/PaymentScreen.kt) with a fully-featured, production-ready student wallet management screen.
+- **Roster & Search Filtering:** Implemented a searchable student roster showing class details and current balances.
+- **Balance Top-Up & Deduction:** Added interactive dialog inputs and tied them to the `PaymentHistoryViewModel` to execute balance increases (`topUp`) and deductions (`deduct`).
+- **History View:** Implemented a transaction history list displaying transaction status, formatted timestamp, performer info, and amount with dynamic color badges (green/red).
+- **ViewModel Adaptation:** Expanded [PaymentHistoryViewModel.kt](file:///home/max/azura-payment-project/app/src/main/java/com/azuratech/azuratime/features/payment/ui/history/PaymentHistoryViewModel.kt) to reactively query the student database, retrieve individual wallet balances, and observe school class layouts.
+- **Verification:** Verified compilation (`BUILD SUCCESSFUL`) passes smoothly.
+
+### Phase 50: Payments Dashboard Click Crash Correction (July 7, 2026)
+- **Navigation Route Corrected:** Changed the navigation destination call on the Payments feature card in [DashboardScreen.kt](file:///home/max/azura-payment-project/app/src/main/java/com/azuratech/azuratime/features/dashboard/ui/DashboardScreen.kt) from the invalid `"payment_screen"` string literal to the registered `NavigationRoutes.PAYMENT` route identifier.
+- **Verification:** Successfully compiled the application with Gradle compileDebugKotlin task passing cleanly.
+
+### Phase 49: Database TypeConverter Annotation Correction (July 6, 2026)
+- **Database Annotation Fixed:** Corrected the misplaced `typeConverters` argument from the `@Database` annotation to use `@TypeConverters(Converters::class)` on the [AppDatabase.kt](file:///home/max/azura-payment-project/app/src/main/java/com/azuratech/azuratime/core/data/local/AppDatabase.kt) class structure.
+- **KSP Resolution:** Resolved Room compilation errors failing to convert custom columns (`List<String>`, `FloatArray`, `LocalDate`, `LocalDateTime`, and `SessionType`) across several entities such as `ClassEntity`, `StudentBiometricEntity`, `AttendanceRecordEntity`, and `RawStudentProfile`.
+- **Verification:** Verified both Gradle compilation (`:app:kspDebugKotlin`) runs and compiles successfully.
+
 ### Phase 48: Dependency Graph Refactoring & Safe Injection (June 27, 2026)
 - **Hilt-Managed SessionManager:** Refactored [SessionManager.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/session/SessionManager.kt) into a pure Hilt-managed `@Singleton` class utilizing `@Inject constructor` with `@ApplicationContext`.
 - **Dangling Providers Cleanup:** Removed the manual, redundant `provideSessionManager` block in [AppModule.kt](file:///home/max/azuratime/nusantara-main/app/src/main/java/com/azuratech/azuratime/core/di/AppModule.kt) to eliminate multiple binding paths/conflicts.

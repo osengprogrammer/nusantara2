@@ -93,6 +93,9 @@ fun NavGraphBuilder.managementGraph(
         }
         composable(NavigationRoutes.STUDENT_ROSTER) {
             StudentRosterScreen(
+        onNavigateToWallet = { },
+        onNavigateToHistory = { },
+        onNavigateToDeduct = { },
                 onEditStudentClick = { studentId -> navController.navigate(Screen.EditStudent.createRoute(studentId)) },
                 onNavigateBack = { navController.popBackStack() },
             )

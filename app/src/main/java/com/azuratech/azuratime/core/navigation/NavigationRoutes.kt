@@ -65,4 +65,5 @@ object NavigationRoutes {
     const val MANAGEMENT_GRAPH = "managementGraph"
     const val REPORTING_GRAPH = "reportingGraph"
     const val ACCOUNT_GRAPH = "accountGraph"
+    const val PAYMENT = "payment"
 }

@@ -20,7 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
+import com.azuratech.azuratime.features.student.ui.components.StudentRosterRow
 import androidx.compose.ui.platform.LocalContext
 import com.azuratech.azuratime.core.util.showToast
 
@@ -32,6 +32,9 @@ import com.azuratech.azuratime.core.util.showToast
 fun StudentRosterScreen(
     onEditStudentClick: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToWallet: (String) -> Unit,
+    onNavigateToHistory: (String) -> Unit,
+    onNavigateToDeduct: (String) -> Unit,
     viewModel: StudentRosterViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -166,13 +169,19 @@ fun StudentRosterScreen(
                     contentPadding = PaddingValues(AzuraSpacing.md),
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
                 ) {
-                    items(uiState.students, key = { it.profile.studentId }) { item ->
-                        StudentRosterItem(
-                            item = item,
-                            onEditClick = { viewModel.onEvent(StudentRosterUiEvent.NavigateToDetail(item.profile.studentId)) },
-                            onDeleteClick = { viewModel.onEvent(StudentRosterUiEvent.RequestDelete(item.profile.studentId)) },
-                        )
-                    }
+                    items(uiState.students, key = { it.studentId }) { item ->
+    StudentRosterRow(
+        studentId = item.studentId, // <-- Ensure this is passed!
+        name = item.displayName,
+        code = item.studentCode,
+        classNames = item.assignedClassNames,
+        balance = item.formattedBalance(),
+        isBiometricReady = item.isBiometricReady,
+        onClick = { onNavigateToWallet(item.studentId) }, // Or your existing navigation logic
+        onHistoryClick = onNavigateToHistory,
+        onDeductClick = onNavigateToDeduct
+    )
+}
 
                     if (uiState.students.isEmpty() && !uiState.isLoading) {
                         item {

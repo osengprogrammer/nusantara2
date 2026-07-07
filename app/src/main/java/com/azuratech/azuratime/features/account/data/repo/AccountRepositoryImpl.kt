@@ -107,17 +107,21 @@ class AccountRepositoryImpl @Inject constructor(
                 val memberships = membershipsRaw?.mapNotNull { (key, value) ->
                     val k = key as? String ?: return@mapNotNull null
                     val v = value as? Map<*, *> ?: return@mapNotNull null
-                    k to SchoolMembership(
-                        schoolName = v["schoolName"] as? String ?: "",
-                        role = v["role"] as? String ?: "USER",
-                        status = v["status"] as? String ?: "ACTIVE",
-                        assignments = (v["assignments"] as? List<*>)?.mapNotNull {
-                            val m = it as? Map<*, *> ?: return@mapNotNull null
+                    val assignmentsRaw = v["assignments"] as? List<*>
+                    val assignments = assignmentsRaw?.mapNotNull { item ->
+                        val m = item as? Map<*, *>
+                        if (m != null) {
                             com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
                                 classId = m["classId"] as? String ?: "",
                                 subjectId = m["subjectId"] as? String,
                             )
-                        } ?: emptyList(),
+                        } else null
+                    } ?: emptyList()
+                    k to SchoolMembership(
+                        schoolName = v["schoolName"] as? String ?: "",
+                        role = v["role"] as? String ?: "USER",
+                        status = v["status"] as? String ?: "ACTIVE",
+                        assignments = assignments,
                     )
                 }?.toMap() ?: emptyMap()
 
@@ -151,20 +155,26 @@ class AccountRepositoryImpl @Inject constructor(
             val accounts = snapshot.documents.mapNotNull { doc ->
                 val membershipsRaw = doc.data?.get("memberships") as? Map<*, *>
                 val memberships = membershipsRaw?.mapNotNull { (key, value) ->
-                    val k = key as? String ?: return@mapNotNull null
-                    val v = value as? Map<*, *> ?: return@mapNotNull null
-                    k to SchoolMembership(
-                        schoolName = v["schoolName"] as? String ?: "",
-                        role = v["role"] as? String ?: "USER",
-                        status = v["status"] as? String ?: "ACTIVE",
-                        assignments = (v["assignments"] as? List<*>)?.mapNotNull {
-                            val m = it as? Map<*, *> ?: return@mapNotNull null
-                            com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
-                                classId = m["classId"] as? String ?: "",
-                                subjectId = m["subjectId"] as? String,
-                            )
-                        } ?: emptyList(),
-                    )
+                    val k = key as? String
+                    val v = value as? Map<*, *>
+                    if (k != null && v != null) {
+                        val assignmentsRaw = v["assignments"] as? List<*>
+                        val assignments = assignmentsRaw?.mapNotNull { item ->
+                            val m = item as? Map<*, *>
+                            if (m != null) {
+                                com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                    classId = m["classId"] as? String ?: "",
+                                    subjectId = m["subjectId"] as? String,
+                                )
+                            } else null
+                        } ?: emptyList()
+                        k to SchoolMembership(
+                            schoolName = v["schoolName"] as? String ?: "",
+                            role = v["role"] as? String ?: "USER",
+                            status = v["status"] as? String ?: "ACTIVE",
+                            assignments = assignments,
+                        )
+                    } else null
                 }?.toMap() ?: emptyMap()
 
                 AccountEntity(
@@ -390,17 +400,21 @@ class AccountRepositoryImpl @Inject constructor(
                                     val memberships = membershipsRaw?.mapNotNull { (key, value) ->
                                         val k = key as? String ?: return@mapNotNull null
                                         val v = value as? Map<*, *> ?: return@mapNotNull null
-                                        k to SchoolMembership(
-                                            schoolName = v["schoolName"] as? String ?: "",
-                                            role = v["role"] as? String ?: "USER",
-                                            status = v["status"] as? String ?: "ACTIVE",
-                                            assignments = (v["assignments"] as? List<*>)?.mapNotNull {
-                                                val m = it as? Map<*, *> ?: return@mapNotNull null
+                                        val assignmentsRaw = v["assignments"] as? List<*>
+                                        val assignments = assignmentsRaw?.mapNotNull { item ->
+                                            val m = item as? Map<*, *>
+                                            if (m != null) {
                                                 com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
                                                     classId = m["classId"] as? String ?: "",
                                                     subjectId = m["subjectId"] as? String,
                                                 )
-                                            } ?: emptyList(),
+                                            } else null
+                                        } ?: emptyList()
+                                        k to SchoolMembership(
+                                            schoolName = v["schoolName"] as? String ?: "",
+                                            role = v["role"] as? String ?: "USER",
+                                            status = v["status"] as? String ?: "ACTIVE",
+                                            assignments = assignments,
                                         )
                                     }?.toMap() ?: emptyMap()
 
@@ -477,17 +491,21 @@ class AccountRepositoryImpl @Inject constructor(
                                     val memberships = membershipsRaw?.mapNotNull { (key, value) ->
                                         val k = key as? String ?: return@mapNotNull null
                                         val v = value as? Map<*, *> ?: return@mapNotNull null
-                                        k to SchoolMembership(
-                                            schoolName = v["schoolName"] as? String ?: "",
-                                            role = v["role"] as? String ?: "USER",
-                                            status = v["status"] as? String ?: "ACTIVE",
-                                            assignments = (v["assignments"] as? List<*>)?.mapNotNull {
-                                                val m = it as? Map<*, *> ?: return@mapNotNull null
+                                        val assignmentsRaw = v["assignments"] as? List<*>
+                                        val assignments = assignmentsRaw?.mapNotNull { item ->
+                                            val m = item as? Map<*, *>
+                                            if (m != null) {
                                                 com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
                                                     classId = m["classId"] as? String ?: "",
                                                     subjectId = m["subjectId"] as? String,
                                                 )
-                                            } ?: emptyList(),
+                                            } else null
+                                        } ?: emptyList()
+                                        k to SchoolMembership(
+                                            schoolName = v["schoolName"] as? String ?: "",
+                                            role = v["role"] as? String ?: "USER",
+                                            status = v["status"] as? String ?: "ACTIVE",
+                                            assignments = assignments,
                                         )
                                     }?.toMap() ?: emptyMap()
 
@@ -591,8 +609,7 @@ class AccountRepositoryImpl @Inject constructor(
                 }
             }
 
-            // At this point, account is guaranteed non-null
-            val safeAccount = account!!
+            val safeAccount = account
             val updatedMemberships = safeAccount.memberships.toMutableMap()
 
             // 🛡️ AI Native: Auto-Enroll logic if membership doesn't exist

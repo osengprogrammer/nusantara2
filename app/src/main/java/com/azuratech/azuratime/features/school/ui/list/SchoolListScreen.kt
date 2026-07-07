@@ -242,7 +242,6 @@ fun SchoolListScreen(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 private fun PreviewLoading() {
     AzuraTheme {
@@ -252,7 +251,6 @@ private fun PreviewLoading() {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 private fun PreviewSuccess() {
     AzuraTheme {
@@ -266,7 +264,6 @@ private fun PreviewSuccess() {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 private fun PreviewError() {
     AzuraTheme {

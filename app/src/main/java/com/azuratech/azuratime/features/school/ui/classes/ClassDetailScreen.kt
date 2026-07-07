@@ -27,7 +27,7 @@ fun ClassDetailScreen(
     sessionViewModel: SessionManagementViewModel,
     @Suppress("UNUSED_PARAMETER") biometricViewModel: BiometricEnrollmentViewModel,
     onNavigateBack: () -> Unit,
-    onAddStudent: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onAddStudent: () -> Unit,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Students", "Schedules")
@@ -122,7 +122,7 @@ fun ClassDetailScreen(
 
 @Composable
 fun ClassScheduleSection(
-    classId: String,
+    @Suppress("UNUSED_PARAMETER") classId: String,
     sessions: List<com.azuratech.azuratime.features.session.data.local.SessionWithDetails>,
     onDeleteSession: (com.azuratech.azuratime.features.session.data.local.SessionWithDetails) -> Unit,
 ) {

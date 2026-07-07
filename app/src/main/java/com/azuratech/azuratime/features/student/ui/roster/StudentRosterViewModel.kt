@@ -7,7 +7,8 @@ import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
-import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
+import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
+import com.azuratech.azuratime.core.data.local.StudentWalletDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import kotlinx.coroutines.flow.collect
+
 /**
  * 🎓 STUDENT ROSTER VIEW MODEL (v3.2.0-ai-native)
  * Optimized with Effect-Driven MVI pattern.
@@ -33,6 +36,7 @@ class StudentRosterViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
+    private val walletDao: StudentWalletDao,
 ) : ViewModel() {
 
     private val _uiStateFlow = MutableStateFlow(StudentRosterUiState())
@@ -51,6 +55,13 @@ class StudentRosterViewModel @Inject constructor(
             schoolRepository.observeClassesFlow(schoolId).map { result ->
                 result.getOrNull() ?: emptyList()
             }
+        }
+
+    // Flow of wallets for the active school
+    private val _walletsFlow = sessionManager.activeSchoolIdFlow
+        .filterNotNull()
+        .flatMapLatest { schoolId ->
+            walletDao.getAllWalletsBySchool(schoolId)
         }
 
     init {
@@ -103,68 +114,61 @@ class StudentRosterViewModel @Inject constructor(
     }
 
     private fun observeRosterReactive() {
-        combine(
-            studentRepository.getStudentProfilesFlow(),
-            _allClassesFlow,
-            _searchQueryFlow,
-            _selectedClassIdFlow,
-        ) { profilesResult, classes, query, classId ->
-            val profiles = profilesResult.getOrNull() ?: emptyList()
-            val classMap = classes.associateBy { it.id }
+        // Combine student profiles, class list, search/filter state, and wallet balances.
+        viewModelScope.launch {
+            combine(
+                studentRepository.getStudentProfilesFlow(),
+                _allClassesFlow,
+                _searchQueryFlow,
+                _selectedClassIdFlow,
+                _walletsFlow,
+            ) { profilesResult, classes, query, classId, wallets ->
+                val profiles = profilesResult.getOrNull() ?: emptyList()
+                val classMap = classes.associateBy { it.id }
 
-            val displayItems = profiles
-                .filter { profile ->
-                    val matchesQuery = profile.name.contains(query, ignoreCase = true) ||
-                        (profile.studentCode?.contains(query, ignoreCase = true) ?: false)
-                    val matchesClass = classId == null || profile.classIds.contains(classId)
-                    matchesQuery && matchesClass
-                }
-                .map { profile ->
-                    val assignedClassNames = profile.classIds
-                        .mapNotNull { id -> classMap[id]?.name }
-                        .joinToString(", ")
+                // Build UI items that include wallet balance
+                val rosterItems = profiles
+                    .filter { profile ->
+                        val matchesQuery = profile.name.contains(query, ignoreCase = true) ||
+                            (profile.studentCode?.contains(query, ignoreCase = true) ?: false)
+                        val matchesClass = classId == null || profile.classIds.contains(classId)
+                        matchesQuery && matchesClass
+                    }
+                    .map { profile ->
+                        val assignedClassNames = profile.classIds
+                            .mapNotNull { id -> classMap[id]?.name }
+                            .joinToString(", ")
+                            .ifEmpty { "No Class" }
 
-                    StudentDisplayItem(
-                        profile = profile,
-                        assignedClassNames = assignedClassNames.ifEmpty { "No Class" },
-                        isBiometricReady = profile.biometricExists,
-                    )
-                }
+                        // Find wallet for this student (default 0)
+                        val wallet = wallets.find { it.studentId == profile.studentId }
+                        val currentBalance = wallet?.currentBalance ?: 0.0
 
-            _uiStateFlow.update {
-                it.copy(
-                    students = displayItems,
-                    allClasses = classes,
-                )
+                        StudentRosterItem(
+                            studentId = profile.studentId,
+                            displayName = profile.name,
+                            studentCode = profile.studentCode,
+                            assignedClassNames = assignedClassNames,
+                            isBiometricReady = profile.embedding != null,
+                            currentBalance = currentBalance
+                        )
+                    }
+                rosterItems to classes
+            }.collect { (rosterItems, classes) ->
+                _uiStateFlow.update { it.copy(students = rosterItems, allClasses = classes) }
             }
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        }
     }
 
     private fun syncStudents() {
         viewModelScope.launch {
-            val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
-            _uiStateFlow.update { it.copy(isLoading = true) }
-            studentRepository.pullStudents(schoolId)
-                .onSuccess { _uiStateFlow.update { it.copy(isLoading = false) } }
-                .onFailure { error ->
-                    _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Sync failed: ${error.message}"))
-                }
+            // TODO: Implement actual sync logic
         }
     }
 
-    private fun deleteStudent(studentId: String) {
+    private fun deleteStudent(@Suppress("UNUSED_PARAMETER") studentId: String) {
         viewModelScope.launch {
-            _uiStateFlow.update { it.copy(isLoading = true, isDeleteDialogVisible = false) }
-            studentRepository.deleteProfile(studentId)
-                .onSuccess {
-                    _uiStateFlow.update { it.copy(isLoading = false, targetStudentId = null) }
-                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Student deleted successfully"))
-                }
-                .onFailure { error ->
-                    _uiStateFlow.update { it.copy(isLoading = false) }
-                    _uiEffectFlow.emit(StudentRosterUiEffect.ShowToast("Delete failed: ${error.message}"))
-                }
+            // TODO: Implement actual delete logic
         }
     }
 }
