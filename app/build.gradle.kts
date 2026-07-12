@@ -1,5 +1,7 @@
 import java.util.Properties
 import java.io.FileInputStream
+import java.io.File
+import groovy.json.JsonSlurper
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
@@ -7,6 +9,31 @@ if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
 val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+
+// 🛠️ FUNGSIONALITAS DINAMIS: Ekstraksi Web Client ID dari google-services.json
+fun getWebClientIdFromProperties(): String {
+    val jsonFile = File(projectDir, "google-services.json")
+    if (!jsonFile.exists()) return ""
+    
+    try {
+        val parsedJson = JsonSlurper().parseText(jsonFile.readText()) as Map<*, *>
+        val clientList = parsedJson["client"] as List<*>
+        
+        for (client in clientList) {
+            val clientMap = client as Map<*, *>
+            val oauthClients = clientMap["oauth_client"] as? List<*> ?: continue
+            for (oauth in oauthClients) {
+                val oauthMap = oauth as Map<*, *>
+                if (oauthMap["client_type"] == 3) {
+                    return oauthMap["client_id"].toString()
+                }
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    return ""
+}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -33,6 +60,11 @@ android {
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
         buildConfigField("boolean", "ENABLE_SUBJECT_SESSION", "true")
         buildConfigField("boolean", "ENABLE_BIOMETRIC_FALLBACK", "false")
+        
+        // 🚀 OTOMATISASI WEB CLIENT ID
+        val extractedClientId = getWebClientIdFromProperties()
+        buildConfigField("String", "WEB_CLIENT_ID", "\"$extractedClientId\"")
+        
         manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: localProperties.getProperty("MAPS_API_KEY") ?: ""
 
         externalNativeBuild {
@@ -42,18 +74,28 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("azura-key.jks")
+            // 🔥 Mengambil jalur absolut dari local.properties
+            storeFile = file(localProperties.getProperty("storeFile") ?: "")
+            
             storePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: localProperties.getProperty("RELEASE_STORE_PASSWORD") ?: ""
             keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: localProperties.getProperty("RELEASE_KEY_ALIAS") ?: ""
             keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: localProperties.getProperty("RELEASE_KEY_PASSWORD") ?: ""
         }
+        // Konfigurasi debug menggunakan kunci lokal bawaan sistem
+        getByName("debug") {
+            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
+    // 🧹 PEMBERSIHAN: Blok buildTypes yang terduplikasi telah disatukan
     buildTypes {
         debug {
             isMinifyEnabled = false
             isShrinkResources = false
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("debug") // Menggunakan kunci debug lokal
         }
         release {
             isMinifyEnabled = false
@@ -62,7 +104,8 @@ android {
             signingConfig = signingConfigs.getByName("release")
             firebaseAppDistribution {
                 releaseNotes = "Azura Time - Latest Stable Build"
-                testers = "osengprogrammer@gmail.com"
+                // Menggabungkan tester jika memang keduanya dibutuhkan
+                testers = "sandangmaksum@gmail.com, osengprogrammer@gmail.com" 
             }
         }
     }
@@ -144,6 +187,7 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
@@ -172,7 +216,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-appdistribution:16.0.0-beta19")
-    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.firebase:firebase-messaging-ktx:23.4.0")
     implementation("com.google.firebase:firebase-config-ktx")

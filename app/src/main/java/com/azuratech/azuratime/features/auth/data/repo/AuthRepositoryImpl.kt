@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.auth.data.repo
 
 import android.app.Application
 import android.util.Log
+import com.azuratech.azuratime.BuildConfig // ⚡ IMPORT BUILDCONFIG
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
@@ -25,6 +26,7 @@ import javax.inject.Singleton
 
 /**
  * 🏰 AUTH REPOSITORY IMPLEMENTATION (v3.2.0-ai-native)
+ * Terintegrasi dengan Dynamic Gradle BuildConfig
  */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -130,8 +132,9 @@ class AuthRepositoryImpl @Inject constructor(
 
             // 1. Google Sign Out (Non-blocking)
             try {
+                // ⚡ MENGGUNAKAN ID DINAMIS DARI BUILDCONFIG
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(application.getString(R.string.my_web_client_id))
+                    .requestIdToken(BuildConfig.WEB_CLIENT_ID) 
                     .requestEmail()
                     .build()
                 GoogleSignIn.getClient(application, gso).signOut()

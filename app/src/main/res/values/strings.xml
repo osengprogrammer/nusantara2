@@ -1,6 +1,6 @@
 <resources>
    <string name="app_name">AzuraTime</string>
-   <string name="my_web_client_id">735604901610-rcknkvu6hj9em6ha5mbj4m0cqtnsbi8o.apps.googleusercontent.com</string>
+   <string name="my_web_client_id">476619111430-0a0cufssqdqhv8l8frt1u0oqs6261r6r.apps.googleusercontent.com</string>
 
    <!-- 📅 SESSION PICKER -->
    <string name="select_session">Select Session / Assignment</string>
