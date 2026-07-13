@@ -7,7 +7,7 @@ data class CsvStudentData(
     val faceId: String,
     val name: String = "",
     val photoUrl: String = "",
-    // Metadata mentah (String) dari CSV untuk diproses ke FaceAssignment & FaceSalaryConfig
+    // Raw metadata (String) from CSV to be processed into FaceAssignment & FaceSalaryConfig
     val rawMetadata: Map<String, String> = emptyMap(),
 )
 

@@ -24,4 +24,9 @@ data class ClassModel(
     val studentIds: List<String> = emptyList(), // 🔥 Class-centric assignment support
     val subjectIds: List<String> = emptyList(), // 🔥 Curriculum Inheritance
     val createdAt: Long,
+    // Blueprint fields (aligned with azura-admin ClassTemplate)
+    val level: Int = 0,
+    val category: String = "",
+    val major: String = "",
+    val section: String = "",
 )

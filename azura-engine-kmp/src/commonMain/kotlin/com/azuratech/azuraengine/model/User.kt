@@ -46,6 +46,6 @@ data class User(
     /** The name of the currently active school workspace, or null if no active school. */
     val schoolName: String? get() = memberships[activeSchoolId]?.schoolName
 
-    /** Cek status pertemanan dengan guru lain */
+    /** Check friendship status with other supervisors */
     fun getFriendStatus(targetUserId: String): String? = friends[targetUserId]?.status
 }
