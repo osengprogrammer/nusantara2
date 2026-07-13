@@ -14,7 +14,7 @@ import com.azuratech.azuratime.features.reporting.data.local.ReportEntity
 import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 
-import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentEntity
+import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
 
 /**
  *  PROFILE MAPPERS

@@ -1,9 +1,8 @@
-package com.azuratech.azuratime.features.student.data.local
+package com.azuratech.azuratime.core.data.local
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
-import com.azuratech.azuratime.features.school.data.local.ClassEntity
 
 @Entity(
     tableName = "student_class_assignments",
@@ -24,7 +23,7 @@ import com.azuratech.azuratime.features.school.data.local.ClassEntity
         ),
         // 2. Link to the Class
         ForeignKey(
-            entity = ClassEntity::class,
+            entity = com.azuratech.azuratime.features.school.data.local.ClassEntity::class,
             parentColumns = ["id"],
             childColumns = ["classId"],
             onDelete = ForeignKey.NO_ACTION,

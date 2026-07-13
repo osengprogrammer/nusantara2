@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.biometric.data.remote
 
-import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentEntity
+import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import com.azuratech.azuraengine.result.Result
 

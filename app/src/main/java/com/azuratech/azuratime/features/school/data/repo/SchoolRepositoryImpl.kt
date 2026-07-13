@@ -10,7 +10,7 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentEntity
+import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.account.data.local.SchoolMembership as LocalSchoolMembership
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus

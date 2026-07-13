@@ -5,7 +5,7 @@ import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
-import com.azuratech.azuratime.features.student.data.local.StudentClassAssignmentEntity
+import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
 import javax.inject.Inject
 
