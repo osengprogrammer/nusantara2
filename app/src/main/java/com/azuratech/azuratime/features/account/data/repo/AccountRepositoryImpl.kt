@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.account.data.repo
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 import androidx.room.withTransaction
 import android.util.Log
@@ -111,7 +112,7 @@ class AccountRepositoryImpl @Inject constructor(
                     val assignments = assignmentsRaw?.mapNotNull { item ->
                         val m = item as? Map<*, *>
                         if (m != null) {
-                            com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                            com.azuratech.azuratime.core.domain.model.TeacherAssignment(
                                 classId = m["classId"] as? String ?: "",
                                 subjectId = m["subjectId"] as? String,
                             )
@@ -164,7 +165,7 @@ class AccountRepositoryImpl @Inject constructor(
                         val assignments = assignmentsRaw?.mapNotNull { item ->
                             val m = item as? Map<*, *>
                             if (m != null) {
-                                com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                com.azuratech.azuratime.core.domain.model.TeacherAssignment(
                                     classId = m["classId"] as? String ?: "",
                                     subjectId = m["subjectId"] as? String,
                                 )
@@ -410,7 +411,7 @@ class AccountRepositoryImpl @Inject constructor(
                                         val assignments = assignmentsRaw?.mapNotNull { item ->
                                             val m = item as? Map<*, *>
                                             if (m != null) {
-                                                com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                                com.azuratech.azuratime.core.domain.model.TeacherAssignment(
                                                     classId = m["classId"] as? String ?: "",
                                                     subjectId = m["subjectId"] as? String,
                                                 )
@@ -503,7 +504,7 @@ class AccountRepositoryImpl @Inject constructor(
                                         val assignments = assignmentsRaw?.mapNotNull { item ->
                                             val m = item as? Map<*, *>
                                             if (m != null) {
-                                                com.azuratech.azuratime.features.account.domain.model.TeacherAssignment(
+                                                com.azuratech.azuratime.core.domain.model.TeacherAssignment(
                                                     classId = m["classId"] as? String ?: "",
                                                     subjectId = m["subjectId"] as? String,
                                                 )
@@ -537,7 +538,7 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun assignClassToConnection(targetId: String, schoolId: String, assignments: List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>): Result<Unit> {
+    override suspend fun assignClassToConnection(targetId: String, schoolId: String, assignments: List<com.azuratech.azuratime.core.domain.model.TeacherAssignment>): Result<Unit> {
         return try {
             // 1. Update Firestore (Cloud)
             val doc = db.collection("whitelisted_accounts").document(targetId).get().await()
@@ -592,7 +593,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     override suspend fun bulkUpdateAssignments(
         schoolId: String,
-        assignmentMap: Map<String, List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>>,
+        assignmentMap: Map<String, List<com.azuratech.azuratime.core.domain.model.TeacherAssignment>>,
     ): Result<Unit> {
         return try {
             // 🔥 AI Native: Sequential update for reliability, could be parallelized if needed

@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.account.data.local
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow

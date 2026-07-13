@@ -8,7 +8,7 @@ import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.account.domain.model.TeacherAssignment
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 import com.azuratech.azuratime.features.account.domain.usecase.AssignClassToSupervisorUseCase
 import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository

@@ -1,4 +1,6 @@
 package com.azuratech.azuratime.features.session.ui
+import com.azuratech.azuratime.core.domain.model.toSubjectTemplate
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -27,7 +29,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuratime.features.session.domain.model.SessionType
-import com.azuratech.azuratime.features.template.domain.model.SubjectTemplate
+import com.azuratech.azuratime.core.domain.model.SubjectTemplate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -395,7 +397,7 @@ fun AddSubjectDialog(
 fun AddSessionDialog(
     subjects: List<com.azuratech.azuratime.features.session.data.local.SubjectEntity>,
     classes: List<com.azuratech.azuraengine.model.ClassModel>,
-    assignments: List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>,
+    assignments: List<com.azuratech.azuratime.core.domain.model.TeacherAssignment>,
     selectedTier: SessionType,
     onTierSelected: (SessionType) -> Unit,
     editingSession: com.azuratech.azuratime.features.session.data.local.ClassSessionEntity? = null,

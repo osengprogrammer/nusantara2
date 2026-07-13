@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.account.domain.repository
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
@@ -44,12 +45,12 @@ interface AccountRepository {
     /**
      * 🔥 Matrix System: Assign class-subject pairs to a connection.
      */
-    suspend fun assignClassToConnection(targetId: String, schoolId: String, assignments: List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>): Result<Unit>
+    suspend fun assignClassToConnection(targetId: String, schoolId: String, assignments: List<com.azuratech.azuratime.core.domain.model.TeacherAssignment>): Result<Unit>
 
     /**
      * 🔥 Matrix System: Bulk update assignments for multiple accounts.
      */
-    suspend fun bulkUpdateAssignments(schoolId: String, assignmentMap: Map<String, List<com.azuratech.azuratime.features.account.domain.model.TeacherAssignment>>): Result<Unit>
+    suspend fun bulkUpdateAssignments(schoolId: String, assignmentMap: Map<String, List<com.azuratech.azuratime.core.domain.model.TeacherAssignment>>): Result<Unit>
 
     suspend fun updateMemberRole(targetAccountId: String, schoolId: String, newRole: AccountRole): Result<Unit>
 

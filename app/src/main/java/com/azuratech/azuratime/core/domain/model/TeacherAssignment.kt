@@ -1,4 +1,5 @@
-package com.azuratech.azuratime.features.account.domain.model
+package com.azuratech.azuratime.core.domain.model
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 /**
  * 🎓 TEACHER ASSIGNMENT (v3.4.0-matrix)

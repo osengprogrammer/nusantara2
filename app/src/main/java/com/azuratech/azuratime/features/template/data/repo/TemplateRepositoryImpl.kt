@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.template.data.repo
+import com.azuratech.azuratime.core.domain.model.toSubjectTemplate
 
 import androidx.room.withTransaction
 import com.azuratech.azuraengine.result.AppError
@@ -11,10 +12,9 @@ import com.azuratech.azuratime.features.session.data.local.toSubjectEntity
 import com.azuratech.azuratime.features.template.domain.repository.TemplateRepository
 import com.azuratech.azuratime.features.template.domain.model.SchoolTemplate
 import com.azuratech.azuratime.features.template.domain.model.ClassTemplate
-import com.azuratech.azuratime.features.template.domain.model.SubjectTemplate
+import com.azuratech.azuratime.core.domain.model.SubjectTemplate
 import com.azuratech.azuratime.features.template.domain.model.toSchoolTemplate
 import com.azuratech.azuratime.features.template.domain.model.toClassTemplate
-import com.azuratech.azuratime.features.template.domain.model.toSubjectTemplate
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers

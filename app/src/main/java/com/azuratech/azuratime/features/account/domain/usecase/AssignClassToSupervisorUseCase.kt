@@ -4,7 +4,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import javax.inject.Inject
 
-import com.azuratech.azuratime.features.account.domain.model.TeacherAssignment
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 /**
  * 🚀 ASSIGN CLASS TO SUPERVISOR USE CASE (v3.4.0-matrix)

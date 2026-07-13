@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.template.domain.model
+package com.azuratech.azuratime.core.domain.model
 
 data class SubjectTemplate(
     val id: String = "",

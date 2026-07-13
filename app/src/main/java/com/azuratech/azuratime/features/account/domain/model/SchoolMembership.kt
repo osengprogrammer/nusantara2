@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.account.domain.model
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 /**
  * 🏫 ASSIGNED SCHOOL MEMBERSHIP (v3.2.1-ai-native)

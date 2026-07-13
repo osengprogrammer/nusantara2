@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.session.ui
+import com.azuratech.azuratime.core.domain.model.toSubjectTemplate
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,7 +23,7 @@ import javax.inject.Inject
 
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuratime.features.template.domain.model.SubjectTemplate
+import com.azuratech.azuratime.core.domain.model.SubjectTemplate
 
 @HiltViewModel
 class SessionManagementViewModel @Inject constructor(
