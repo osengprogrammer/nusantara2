@@ -3,7 +3,6 @@ package com.azuratech.azuratime.features.auth.data.repo
 import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.BuildConfig // ⚡ IMPORT BUILDCONFIG
-import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
@@ -134,7 +133,7 @@ class AuthRepositoryImpl @Inject constructor(
             try {
                 // ⚡ MENGGUNAKAN ID DINAMIS DARI BUILDCONFIG
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(BuildConfig.WEB_CLIENT_ID) 
+                    .requestIdToken(BuildConfig.WEB_CLIENT_ID)
                     .requestEmail()
                     .build()
                 GoogleSignIn.getClient(application, gso).signOut()

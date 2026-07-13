@@ -115,7 +115,9 @@ class AccountRepositoryImpl @Inject constructor(
                                 classId = m["classId"] as? String ?: "",
                                 subjectId = m["subjectId"] as? String,
                             )
-                        } else null
+                        } else {
+                            null
+                        }
                     } ?: emptyList()
                     k to SchoolMembership(
                         schoolName = v["schoolName"] as? String ?: "",
@@ -166,7 +168,9 @@ class AccountRepositoryImpl @Inject constructor(
                                     classId = m["classId"] as? String ?: "",
                                     subjectId = m["subjectId"] as? String,
                                 )
-                            } else null
+                            } else {
+                                null
+                            }
                         } ?: emptyList()
                         k to SchoolMembership(
                             schoolName = v["schoolName"] as? String ?: "",
@@ -174,7 +178,9 @@ class AccountRepositoryImpl @Inject constructor(
                             status = v["status"] as? String ?: "ACTIVE",
                             assignments = assignments,
                         )
-                    } else null
+                    } else {
+                        null
+                    }
                 }?.toMap() ?: emptyMap()
 
                 AccountEntity(
@@ -408,7 +414,9 @@ class AccountRepositoryImpl @Inject constructor(
                                                     classId = m["classId"] as? String ?: "",
                                                     subjectId = m["subjectId"] as? String,
                                                 )
-                                            } else null
+                                            } else {
+                                                null
+                                            }
                                         } ?: emptyList()
                                         k to SchoolMembership(
                                             schoolName = v["schoolName"] as? String ?: "",
@@ -499,7 +507,9 @@ class AccountRepositoryImpl @Inject constructor(
                                                     classId = m["classId"] as? String ?: "",
                                                     subjectId = m["subjectId"] as? String,
                                                 )
-                                            } else null
+                                            } else {
+                                                null
+                                            }
                                         } ?: emptyList()
                                         k to SchoolMembership(
                                             schoolName = v["schoolName"] as? String ?: "",

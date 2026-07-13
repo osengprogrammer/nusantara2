@@ -10,7 +10,7 @@ import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.model.TeacherAssignment
 import com.azuratech.azuratime.features.account.domain.usecase.AssignClassToSupervisorUseCase
-import com.azuratech.azuratime.features.session.SessionRepository
+import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
