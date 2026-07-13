@@ -1,5 +1,5 @@
 package com.azuratech.azuratime.features.student.ui.roster
-import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
+import com.azuratech.azuratime.core.ui.components.StudentRosterItem
 
 import com.azuratech.azuraengine.model.ClassModel
 

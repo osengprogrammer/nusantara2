@@ -21,8 +21,8 @@ import com.azuratech.azuratime.features.school.domain.repository.SchoolRepositor
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.core.util.isAdmin
 import com.azuratech.azuratime.features.account.data.local.toDomain
-import com.azuratech.azuratime.features.session.GetActiveTieredSessionUseCase
-import com.azuratech.azuratime.features.session.SessionRepository
+import com.azuratech.azuratime.features.session.domain.usecase.GetActiveTieredSessionUseCase
+import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

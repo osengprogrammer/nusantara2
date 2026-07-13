@@ -122,13 +122,11 @@ class Converters {
     @TypeConverter
     fun toAccountRole(value: String): com.azuratech.azuratime.core.domain.model.AccountRole? = try { com.azuratech.azuratime.core.domain.model.AccountRole.valueOf(value) } catch (e: Exception) { null }
 
-
     @TypeConverter
     fun fromAuthStatus(value: com.azuratech.azuratime.features.auth.ui.AuthStatus): String = value.name
 
     @TypeConverter
     fun toAuthStatus(value: String): com.azuratech.azuratime.features.auth.ui.AuthStatus? = try { com.azuratech.azuratime.features.auth.ui.AuthStatus.valueOf(value) } catch (e: Exception) { null }
-
 
     @TypeConverter
     fun fromMembershipStatus(value: com.azuratech.azuratime.features.account.domain.model.MembershipStatus): String = value.name
@@ -136,13 +134,11 @@ class Converters {
     @TypeConverter
     fun toMembershipStatus(value: String): com.azuratech.azuratime.features.account.domain.model.MembershipStatus? = try { com.azuratech.azuratime.features.account.domain.model.MembershipStatus.valueOf(value) } catch (e: Exception) { null }
 
-
     @TypeConverter
     fun fromReportTab(value: com.azuratech.azuratime.features.reporting.ui.ReportTab): String = value.name
 
     @TypeConverter
     fun toReportTab(value: String): com.azuratech.azuratime.features.reporting.ui.ReportTab? = try { com.azuratech.azuratime.features.reporting.ui.ReportTab.valueOf(value) } catch (e: Exception) { null }
-
 
     @TypeConverter
     fun fromChatRole(value: com.azuratech.azuratime.features.ai.ui.ChatRole): String = value.name
@@ -150,13 +146,11 @@ class Converters {
     @TypeConverter
     fun toChatRole(value: String): com.azuratech.azuratime.features.ai.ui.ChatRole? = try { com.azuratech.azuratime.features.ai.ui.ChatRole.valueOf(value) } catch (e: Exception) { null }
 
-
     @TypeConverter
     fun fromEnrollmentStatus(value: com.azuratech.azuratime.features.biometric.ui.enroll.EnrollmentStatus): String = value.name
 
     @TypeConverter
     fun toEnrollmentStatus(value: String): com.azuratech.azuratime.features.biometric.ui.enroll.EnrollmentStatus? = try { com.azuratech.azuratime.features.biometric.ui.enroll.EnrollmentStatus.valueOf(value) } catch (e: Exception) { null }
-
 
     @TypeConverter
     fun fromBiometricStatus(value: com.azuratech.azuratime.features.student.ui.form.BiometricStatus): String = value.name
@@ -164,13 +158,11 @@ class Converters {
     @TypeConverter
     fun toBiometricStatus(value: String): com.azuratech.azuratime.features.student.ui.form.BiometricStatus? = try { com.azuratech.azuratime.features.student.ui.form.BiometricStatus.valueOf(value) } catch (e: Exception) { null }
 
-
     @TypeConverter
     fun fromAttendanceStatus(value: com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus): String = value.name
 
     @TypeConverter
     fun toAttendanceStatus(value: String): com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus? = try { com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus.valueOf(value) } catch (e: Exception) { null }
-
 
     @TypeConverter
     fun fromScanMode(value: com.azuratech.azuratime.features.attendance.ui.capture.ScanMode): String = value.name
@@ -178,11 +170,9 @@ class Converters {
     @TypeConverter
     fun toScanMode(value: String): com.azuratech.azuratime.features.attendance.ui.capture.ScanMode? = try { com.azuratech.azuratime.features.attendance.ui.capture.ScanMode.valueOf(value) } catch (e: Exception) { null }
 
-
     @TypeConverter
     fun fromMLDelegateType(value: com.azuratech.azuratime.features.edge.domain.model.MLDelegateType): String = value.name
 
     @TypeConverter
     fun toMLDelegateType(value: String): com.azuratech.azuratime.features.edge.domain.model.MLDelegateType? = try { com.azuratech.azuratime.features.edge.domain.model.MLDelegateType.valueOf(value) } catch (e: Exception) { null }
-
 }

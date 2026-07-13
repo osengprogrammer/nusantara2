@@ -19,4 +19,13 @@ data class ClassUiState(
     val studentCountsByClassId: Map<String, Int> = emptyMap(),
     val classToEdit: ClassModel? = null,
     val classToDelete: ClassModel? = null,
+    // Structured mode master data
+    val availableCategories: List<String> = emptyList(),
+    val availableMajors: List<String> = emptyList(),
+    val isStructuredMode: Boolean = false,
+    // Structured mode selections (passed to dialog)
+    val selectedLevel: Int = 0,
+    val selectedCategory: String = "",
+    val selectedMajor: String = "",
+    val selectedSection: String = "1",
 )

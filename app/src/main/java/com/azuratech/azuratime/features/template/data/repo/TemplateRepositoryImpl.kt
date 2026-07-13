@@ -172,4 +172,56 @@ class TemplateRepositoryImpl @Inject constructor(
             Result.Failure(AppError.Network(e.message))
         }
     }
+
+    override suspend fun applyTemplate(
+        schoolId: String,
+        ownerId: String,
+        template: SchoolTemplate,
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // 1. Fetch Class Templates in Batch
+            val classesResult = fetchGlobalClassesByIds(template.defaultClassIds)
+            if (classesResult is Result.Failure) return@withContext classesResult
+
+            // 2. Fetch Subject Templates in Batch
+            val subjectsResult = fetchGlobalSubjectsByIds(template.defaultSubjectIds)
+            if (subjectsResult is Result.Failure) return@withContext subjectsResult
+
+            val classTemplates = (classesResult as Result.Success).data
+            val subjectTemplates = (subjectsResult as Result.Success).data
+
+            // 3. Map Templates to local Class and Subject Entities (with isSynced = false)
+            val classEntities = classTemplates.map { classTemplate ->
+                ClassEntity(
+                    id = java.util.UUID.randomUUID().toString(),
+                    ownerAccountId = ownerId,
+                    schoolId = schoolId,
+                    name = classTemplate.name,
+                    grade = classTemplate.level.toString(),
+                    accountId = null,
+                    studentCount = 0,
+                    createdAt = System.currentTimeMillis(),
+                    isSynced = false,
+                    isFromTemplate = true,
+                )
+            }
+
+            val subjectEntities = subjectTemplates.map { subjectTemplate ->
+                SubjectEntity(
+                    subjectId = java.util.UUID.randomUUID().toString(),
+                    name = subjectTemplate.name,
+                    description = null,
+                    schoolId = schoolId,
+                    isActive = true,
+                    isSynced = false,
+                    isFromTemplate = true,
+                )
+            }
+
+            // 4. Atomic persist to Room database
+            persistTemplateData(classEntities, subjectEntities)
+        } catch (e: Exception) {
+            Result.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))
+        }
+    }
 }

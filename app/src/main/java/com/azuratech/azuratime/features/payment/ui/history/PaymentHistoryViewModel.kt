@@ -5,15 +5,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.data.local.StudentWalletDao
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.payment.domain.repository.PaymentRepository
+import com.azuratech.azuratime.features.account.domain.model.Account
+import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
-import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
+import com.azuratech.azuratime.core.ui.components.StudentRosterItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,7 +28,7 @@ class PaymentHistoryViewModel @Inject constructor(
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
     private val walletDao: StudentWalletDao,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
 ) : ViewModel() {
 
     private val initialStudentId: String = savedStateHandle.get<String>("studentId") ?: ""
@@ -61,15 +64,15 @@ class PaymentHistoryViewModel @Inject constructor(
         }
 
     // Current logged in account to retrieve performedBy credentials
-    private val _currentAccountFlow: StateFlow<AccountEntity?> = sessionManager.currentAccountIdFlow
+    private val _currentAccountFlow: StateFlow<Account?> = sessionManager.currentAccountIdFlow
         .flatMapLatest { accountId ->
             if (accountId != null) {
-                accountRepository.observeAccountEntityFlow(accountId).map { it.getOrNull() }
+                accountRepository.observeAccountEntityFlow(accountId).map { result -> result.getOrNull()?.toDomain() }
             } else {
                 flowOf(null)
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     init {
         // Automatically select the student if studentId is passed in SavedStateHandle
         if (initialStudentId.isNotBlank()) {
@@ -95,7 +98,7 @@ class PaymentHistoryViewModel @Inject constructor(
                     selectedStudentName = null,
                     selectedStudentCode = null,
                     selectedStudentBalance = 0.0,
-                    payments = emptyList()
+                    payments = emptyList(),
                 )
             }
             observeStudentRoster()
@@ -130,7 +133,7 @@ class PaymentHistoryViewModel @Inject constructor(
                         selectedStudentName = profile?.name ?: "Unknown Student",
                         selectedStudentCode = profile?.studentCode,
                         selectedStudentBalance = balance ?: 0.0,
-                        payments = payments
+                        payments = payments,
                     )
                 }
             }
@@ -144,7 +147,7 @@ class PaymentHistoryViewModel @Inject constructor(
                 studentRepository.getStudentProfilesFlow(),
                 _allClassesFlow,
                 _searchQueryFlow,
-                _walletsFlow
+                _walletsFlow,
             ) { profilesResult, classes, query, wallets ->
                 val profiles = profilesResult.getOrNull() ?: emptyList()
                 val classMap = classes.associateBy { it.id }
@@ -152,7 +155,7 @@ class PaymentHistoryViewModel @Inject constructor(
                 profiles
                     .filter { profile ->
                         profile.name.contains(query, ignoreCase = true) ||
-                                (profile.studentCode?.contains(query, ignoreCase = true) ?: false)
+                            (profile.studentCode?.contains(query, ignoreCase = true) ?: false)
                     }
                     .map { profile ->
                         val assignedClassNames = profile.classIds
@@ -167,7 +170,7 @@ class PaymentHistoryViewModel @Inject constructor(
                             studentCode = profile.studentCode,
                             assignedClassNames = assignedClassNames,
                             isBiometricReady = profile.embedding != null,
-                            currentBalance = wallet?.currentBalance ?: 0.0
+                            currentBalance = wallet?.currentBalance ?: 0.0,
                         )
                     }
             }.catch { e ->
@@ -177,7 +180,7 @@ class PaymentHistoryViewModel @Inject constructor(
                 _uiStateFlow.update {
                     it.copy(
                         isLoading = false,
-                        students = rosterItems
+                        students = rosterItems,
                     )
                 }
             }
@@ -198,7 +201,7 @@ class PaymentHistoryViewModel @Inject constructor(
                     schoolId = schoolId,
                     amount = amount,
                     performedByAccountId = performerId,
-                    performedByAccountName = performerName
+                    performedByAccountName = performerName,
                 )
                 _uiEffectFlow.emit(PaymentHistoryUiEffect.ShowToast("Successfully topped up Rp %.0f".format(amount)))
             } catch (e: Exception) {
@@ -223,7 +226,7 @@ class PaymentHistoryViewModel @Inject constructor(
                     schoolId = schoolId,
                     amount = amount,
                     performedByAccountId = performerId,
-                    performedByAccountName = performerName
+                    performedByAccountName = performerName,
                 )
                 _uiEffectFlow.emit(PaymentHistoryUiEffect.ShowToast("Successfully deducted Rp %.0f".format(amount)))
             } catch (e: Exception) {

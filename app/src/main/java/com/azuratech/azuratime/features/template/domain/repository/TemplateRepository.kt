@@ -52,4 +52,10 @@ interface TemplateRepository {
      * 🔥 Firestore Fetch: Get all global subjects templates.
      */
     suspend fun fetchAllGlobalSubjects(): Result<List<SubjectTemplate>>
+
+    /**
+     * 🔥 Atomic Apply: Fetch templates, map to entities, and persist atomically.
+     * Keeps UseCase clean from data layer entities.
+     */
+    suspend fun applyTemplate(schoolId: String, ownerId: String, template: SchoolTemplate): Result<Unit>
 }

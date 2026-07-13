@@ -24,7 +24,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.features.payment.data.local.PaymentEntity
 import com.azuratech.azuratime.features.payment.ui.history.PaymentHistoryUiEffect
 import com.azuratech.azuratime.features.payment.ui.history.PaymentHistoryViewModel
-import com.azuratech.azuratime.features.student.ui.components.StudentRosterItem
+import com.azuratech.azuratime.core.ui.components.StudentRosterItem
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,7 +33,7 @@ import java.util.Locale
 @Composable
 fun PaymentScreen(
     onNavigateBack: () -> Unit,
-    viewModel: PaymentHistoryViewModel = hiltViewModel()
+    viewModel: PaymentHistoryViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -61,7 +61,7 @@ fun PaymentScreen(
             } else {
                 onNavigateBack()
             }
-        }
+        },
     ) {
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -74,14 +74,14 @@ fun PaymentScreen(
                 balance = uiState.selectedStudentBalance,
                 payments = uiState.payments,
                 onTopUpClick = { showActionDialog = PaymentAction.TOP_UP },
-                onDeductClick = { showActionDialog = PaymentAction.DEDUCT }
+                onDeductClick = { showActionDialog = PaymentAction.DEDUCT },
             )
         } else {
             StudentRosterContent(
                 students = uiState.students,
                 searchQuery = uiState.searchQuery,
                 onSearchQueryChange = viewModel::onSearchQueryChanged,
-                onStudentClick = { student -> viewModel.selectStudent(student.studentId) }
+                onStudentClick = { student -> viewModel.selectStudent(student.studentId) },
             )
         }
     }
@@ -101,7 +101,7 @@ fun PaymentScreen(
                     Text(
                         text = "Enter amount to proceed for ${uiState.selectedStudentName ?: "Student"}",
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 12.dp)
+                        modifier = Modifier.padding(bottom = 12.dp),
                     )
                     OutlinedTextField(
                         value = amountText,
@@ -113,14 +113,14 @@ fun PaymentScreen(
                         singleLine = true,
                         isError = isError,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     if (isError) {
                         Text(
                             text = "Please enter a valid positive number",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(top = 4.dp)
+                            modifier = Modifier.padding(top = 4.dp),
                         )
                     }
                 }
@@ -141,7 +141,7 @@ fun PaymentScreen(
                             isError = true
                         }
                     },
-                    enabled = !uiState.isPerformingAction
+                    enabled = !uiState.isPerformingAction,
                 ) {
                     Text(buttonText)
                 }
@@ -150,7 +150,7 @@ fun PaymentScreen(
                 TextButton(onClick = { showActionDialog = null }) {
                     Text("Cancel")
                 }
-            }
+            },
         )
     }
 }
@@ -164,7 +164,7 @@ fun StudentRosterContent(
     students: List<StudentRosterItem>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
-    onStudentClick: (StudentRosterItem) -> Unit
+    onStudentClick: (StudentRosterItem) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
@@ -175,7 +175,7 @@ fun StudentRosterContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = AzuraSpacing.sm),
-            singleLine = true
+            singleLine = true,
         )
 
         if (students.isEmpty()) {
@@ -183,20 +183,20 @@ fun StudentRosterContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.Default.AccountBalanceWallet,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(64.dp)
+                        modifier = Modifier.size(64.dp),
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "No students found",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -204,7 +204,7 @@ fun StudentRosterContent(
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(vertical = AzuraSpacing.sm),
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
             ) {
                 items(students, key = { it.studentId }) { student ->
                     Card(
@@ -212,31 +212,31 @@ fun StudentRosterContent(
                             .fillMaxWidth()
                             .clickable { onStudentClick(student) },
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                        )
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                        ),
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(AzuraSpacing.md),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = student.displayName,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
                                 )
                                 Text(
                                     text = "Class: ${student.assignedClassNames}",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 if (!student.studentCode.isNullOrBlank()) {
                                     Text(
                                         text = "Code: ${student.studentCode}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
@@ -247,7 +247,7 @@ fun StudentRosterContent(
                                 text = student.formattedBalance(),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
@@ -264,7 +264,7 @@ fun StudentWalletDetailsContent(
     balance: Double,
     payments: List<PaymentEntity>,
     onTopUpClick: () -> Unit,
-    onDeductClick: () -> Unit
+    onDeductClick: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Card(
@@ -272,26 +272,26 @@ fun StudentWalletDetailsContent(
                 .fillMaxWidth()
                 .padding(vertical = AzuraSpacing.sm),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            ),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(AzuraSpacing.md),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = studentName,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
                 if (!studentCode.isNullOrBlank()) {
                     Text(
                         text = "Student Code: $studentCode",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                     )
                 }
 
@@ -300,27 +300,27 @@ fun StudentWalletDetailsContent(
                 Text(
                     text = "Current Balance",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                 )
                 Text(
                     text = "Rp %.0f".format(balance),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm)
+                    horizontalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                 ) {
                     Button(
                         onClick = onTopUpClick,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
+                            containerColor = MaterialTheme.colorScheme.primary,
                         ),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
@@ -330,9 +330,9 @@ fun StudentWalletDetailsContent(
                     Button(
                         onClick = onDeductClick,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
+                            containerColor = MaterialTheme.colorScheme.error,
                         ),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     ) {
                         Icon(Icons.Default.Remove, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
@@ -346,7 +346,7 @@ fun StudentWalletDetailsContent(
             text = "Transaction History",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = AzuraSpacing.sm)
+            modifier = Modifier.padding(vertical = AzuraSpacing.sm),
         )
 
         if (payments.isEmpty()) {
@@ -354,27 +354,27 @@ fun StudentWalletDetailsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.Default.History,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp),
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "No transactions recorded",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.xs)
+                verticalArrangement = Arrangement.spacedBy(AzuraSpacing.xs),
             ) {
                 items(payments, key = { it.id }) { payment ->
                     TransactionItem(payment = payment)
@@ -396,31 +396,31 @@ fun TransactionItem(payment: PaymentEntity) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AzuraSpacing.md, vertical = AzuraSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = if (isTopUp) "Top Up" else "Deduction",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
                 Text(
                     text = dateString,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (payment.performedByAccountName.isNotBlank()) {
                     Text(
                         text = "By: ${payment.performedByAccountName}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -429,7 +429,7 @@ fun TransactionItem(payment: PaymentEntity) {
                 text = "$prefix Rp %.0f".format(payment.amount),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = color
+                color = color,
             )
         }
     }

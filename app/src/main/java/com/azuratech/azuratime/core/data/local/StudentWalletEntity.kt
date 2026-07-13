@@ -8,5 +8,5 @@ data class StudentWalletEntity(
     @PrimaryKey val studentId: String,
     val schoolId: String,
     val currentBalance: Double = 0.0,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

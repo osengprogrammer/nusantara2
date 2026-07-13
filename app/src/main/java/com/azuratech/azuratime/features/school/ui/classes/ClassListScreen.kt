@@ -114,9 +114,13 @@ fun ClassListScreen(
         if (uiState.isAddDialogVisible) {
             AddClassDialog(
                 availableClasses = uiState.availableClasses,
+                availableCategories = uiState.availableCategories,
+                availableMajors = uiState.availableMajors,
+                isStructuredMode = uiState.isStructuredMode,
+                onToggleMode = { viewModel.onEvent(ClassUiEvent.ToggleInputMode) },
                 onDismissRequest = { viewModel.onEvent(ClassUiEvent.DismissAddDialog) },
-                onConfirmClick = { newName ->
-                    viewModel.onEvent(ClassUiEvent.CreateClass(newName))
+                onConfirmClick = { name, level, category, major, section ->
+                    viewModel.onEvent(ClassUiEvent.CreateClass(name, level, category, major, section))
                 },
             )
         }
@@ -125,9 +129,8 @@ fun ClassListScreen(
         uiState.classToEdit?.let { item ->
             AddClassDialog(
                 editingClass = item,
-                availableClasses = uiState.availableClasses,
                 onDismissRequest = { viewModel.onEvent(ClassUiEvent.CancelEditClass) },
-                onConfirmClick = { newName ->
+                onConfirmClick = { newName, _, _, _, _ ->
                     viewModel.onEvent(ClassUiEvent.UpdateClass(item.id, newName))
                 },
             )

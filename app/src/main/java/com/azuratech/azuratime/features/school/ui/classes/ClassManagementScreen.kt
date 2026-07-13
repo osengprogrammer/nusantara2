@@ -101,9 +101,13 @@ fun ClassManagementScreen(
     if (uiState.isAddDialogVisible) {
         AddClassDialog(
             availableClasses = uiState.availableClasses,
+            availableCategories = uiState.availableCategories,
+            availableMajors = uiState.availableMajors,
+            isStructuredMode = uiState.isStructuredMode,
+            onToggleMode = { viewModel.onEvent(ClassUiEvent.ToggleInputMode) },
             onDismissRequest = { viewModel.onEvent(ClassUiEvent.DismissAddDialog) },
-            onConfirmClick = { name ->
-                viewModel.onEvent(ClassUiEvent.CreateClass(name))
+            onConfirmClick = { name, level, category, major, section ->
+                viewModel.onEvent(ClassUiEvent.CreateClass(name, level, category, major, section))
             },
         )
     }

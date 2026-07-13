@@ -121,9 +121,13 @@ fun SchoolExplorerScreen(
     if (classState.isAddDialogVisible) {
         AddClassDialog(
             availableClasses = classState.availableClasses,
+            availableCategories = classState.availableCategories,
+            availableMajors = classState.availableMajors,
+            isStructuredMode = classState.isStructuredMode,
+            onToggleMode = { classViewModel.onEvent(ClassUiEvent.ToggleInputMode) },
             onDismissRequest = { classViewModel.onEvent(ClassUiEvent.DismissAddDialog) },
-            onConfirmClick = { name ->
-                classViewModel.onEvent(ClassUiEvent.CreateClass(name))
+            onConfirmClick = { name, level, category, major, section ->
+                classViewModel.onEvent(ClassUiEvent.CreateClass(name, level, category, major, section))
             },
         )
     }
@@ -133,7 +137,7 @@ fun SchoolExplorerScreen(
         AddClassDialog(
             editingClass = classState.classToEdit,
             onDismissRequest = { classViewModel.onEvent(ClassUiEvent.CancelEditClass) },
-            onConfirmClick = { newName ->
+            onConfirmClick = { newName, _, _, _, _ ->
                 classViewModel.onEvent(ClassUiEvent.UpdateClass(classState.classToEdit!!.id, newName))
             },
         )

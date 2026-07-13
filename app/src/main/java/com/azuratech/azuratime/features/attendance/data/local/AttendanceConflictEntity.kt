@@ -21,8 +21,8 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConfli
 )
 data class AttendanceConflictEntity(
     val conflictId: String,
-    @Embedded(prefix ="local_") val local: AttendanceRecordEntity,
-    @Embedded(prefix ="cloud_") val cloud: AttendanceRecordEntity,
+    @Embedded(prefix = "local_") val local: AttendanceRecordEntity,
+    @Embedded(prefix = "cloud_") val cloud: AttendanceRecordEntity,
 ) {
     fun toDomain(): AttendanceConflict {
         return AttendanceConflict(

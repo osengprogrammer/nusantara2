@@ -13,5 +13,5 @@ data class PaymentEntity(
     val timestamp: Long,
     val performedByAccountId: String = "",
     val performedByAccountName: String = "",
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.student.ui.components
+package com.azuratech.azuratime.core.ui.components
 
 data class StudentRosterItem(
     val studentId: String,
@@ -6,7 +6,7 @@ data class StudentRosterItem(
     val studentCode: String?,
     val assignedClassNames: String,
     val isBiometricReady: Boolean,
-    val currentBalance: Double = 0.0
+    val currentBalance: Double = 0.0,
 ) {
     fun formattedBalance(): String = "Rp %.0f".format(currentBalance)
 }

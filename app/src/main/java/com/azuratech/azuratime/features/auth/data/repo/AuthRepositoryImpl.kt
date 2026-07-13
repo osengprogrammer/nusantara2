@@ -4,7 +4,9 @@ import android.app.Application
 import android.util.Log
 import com.azuratech.azuratime.BuildConfig // ⚡ IMPORT BUILDCONFIG
 import com.azuratech.azuratime.core.data.local.AppDatabase
+import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.features.account.data.local.toDomain
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
@@ -40,7 +42,7 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository {
     private val accountDao = database.accountDao()
 
-    override suspend fun signInWithGoogle(idToken: String): DomainResult<Pair<AccountEntity, Boolean>> = withContext(Dispatchers.IO) {
+    override suspend fun signInWithGoogle(idToken: String): DomainResult<Pair<Account, Boolean>> = withContext(Dispatchers.IO) {
         try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
@@ -80,7 +82,7 @@ class AuthRepositoryImpl @Inject constructor(
                 sessionManager.saveAccountEmail(email)
                 sessionManager.saveAccountStatus(newAccount.status)
 
-                return@withContext DomainResult.Success(Pair(newAccount, true))
+                return@withContext DomainResult.Success(Pair(newAccount.toDomain(), true))
             }
 
             // Existing account: Save to session and Room (already saved if pulled via UseCase)
@@ -93,7 +95,7 @@ class AuthRepositoryImpl @Inject constructor(
                 securityRepository.refreshIsoKeyFromServer()
             }
 
-            return@withContext DomainResult.Success(Pair(accountEntity, false))
+            return@withContext DomainResult.Success(Pair(accountEntity.toDomain(), false))
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error: ${e.message}")
             DomainResult.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))

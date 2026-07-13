@@ -36,13 +36,13 @@ import androidx.room.TypeConverters
         SubjectEntity::class,
         ClassSessionEntity::class,
         com.azuratech.azuratime.features.payment.data.local.PaymentEntity::class,
-        com.azuratech.azuratime.core.data.local.StudentWalletEntity::class
+        com.azuratech.azuratime.core.data.local.StudentWalletEntity::class,
     ],
-    version = 26,
-    exportSchema = false
+    version = 27,
+    exportSchema = false,
 )
 @TypeConverters(Converters::class)
-abstract class AppDatabase   : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
 
     abstract fun paymentDao(): com.azuratech.azuratime.features.payment.data.local.PaymentDao
     abstract fun studentWalletDao(): com.azuratech.azuratime.core.data.local.StudentWalletDao
@@ -67,6 +67,20 @@ abstract class AppDatabase   : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        private val MIGRATION_26_27 = object : Migration(26, 27) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // --- Blueprint fields for ClassEntity ---
+                db.execSQL("ALTER TABLE `classes` ADD COLUMN `level` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `classes` ADD COLUMN `category` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `classes` ADD COLUMN `major` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `classes` ADD COLUMN `section` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `classes` ADD COLUMN `active` INTEGER NOT NULL DEFAULT 1")
+
+                // --- Blueprint fields for SubjectEntity ---
+                db.execSQL("ALTER TABLE `subjects` ADD COLUMN `category` TEXT NOT NULL DEFAULT ''")
+            }
+        }
 
         private val MIGRATION_25_26 = object : Migration(25, 26) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -412,7 +426,7 @@ abstract class AppDatabase   : RoomDatabase() {
                     "local_db2.sqlite",
                 )
                     .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
-                    .addMigrations(MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26)
+                    .addMigrations(MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27)
                     .fallbackToDestructiveMigration()
                     .addCallback(integrityCheckCallback)
                     .build()

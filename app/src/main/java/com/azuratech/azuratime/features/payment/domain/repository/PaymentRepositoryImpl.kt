@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 class PaymentRepositoryImpl @Inject constructor(
     private val paymentDao: PaymentDao,
-    private val walletDao: StudentWalletDao
+    private val walletDao: StudentWalletDao,
 ) : PaymentRepository {
 
     override fun getPaymentsByStudentFlow(studentId: String): Flow<List<PaymentEntity>> {
@@ -19,11 +19,11 @@ class PaymentRepositoryImpl @Inject constructor(
     }
 
     override suspend fun topUpBalance(
-        studentId: String, 
-        schoolId: String, 
-        amount: Double, 
-        performedByAccountId: String, 
-        performedByAccountName: String
+        studentId: String,
+        schoolId: String,
+        amount: Double,
+        performedByAccountId: String,
+        performedByAccountName: String,
     ) {
         val payment = PaymentEntity(
             id = UUID.randomUUID().toString(),
@@ -34,7 +34,7 @@ class PaymentRepositoryImpl @Inject constructor(
             timestamp = System.currentTimeMillis(),
             performedByAccountId = performedByAccountId,
             performedByAccountName = performedByAccountName,
-            isSynced = false
+            isSynced = false,
         )
         paymentDao.insertPayment(payment)
 
@@ -44,17 +44,17 @@ class PaymentRepositoryImpl @Inject constructor(
                 studentId = studentId,
                 schoolId = schoolId,
                 currentBalance = currentBalance + amount,
-                isSynced = false
-            )
+                isSynced = false,
+            ),
         )
     }
 
     override suspend fun deductBalance(
-        studentId: String, 
-        schoolId: String, 
-        amount: Double, 
-        performedByAccountId: String, 
-        performedByAccountName: String
+        studentId: String,
+        schoolId: String,
+        amount: Double,
+        performedByAccountId: String,
+        performedByAccountName: String,
     ) {
         val payment = PaymentEntity(
             id = UUID.randomUUID().toString(),
@@ -65,7 +65,7 @@ class PaymentRepositoryImpl @Inject constructor(
             timestamp = System.currentTimeMillis(),
             performedByAccountId = performedByAccountId,
             performedByAccountName = performedByAccountName,
-            isSynced = false
+            isSynced = false,
         )
         paymentDao.insertPayment(payment)
 
@@ -75,8 +75,8 @@ class PaymentRepositoryImpl @Inject constructor(
                 studentId = studentId,
                 schoolId = schoolId,
                 currentBalance = currentBalance - amount,
-                isSynced = false
-            )
+                isSynced = false,
+            ),
         )
     }
 }

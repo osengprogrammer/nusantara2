@@ -20,7 +20,7 @@ fun NavGraphBuilder.dashboardGraph(navController: NavController) {
     // Payment feature navigation
     composable(NavigationRoutes.PAYMENT) {
         com.azuratech.azuratime.features.payment.ui.PaymentScreen(
-            onNavigateBack = { navController.popBackStack() }
+            onNavigateBack = { navController.popBackStack() },
         )
     }
 }

@@ -7,7 +7,13 @@ import com.azuratech.azuraengine.model.ClassModel
  */
 sealed class ClassUiEvent {
     data object LoadClasses : ClassUiEvent()
-    data class CreateClass(val name: String) : ClassUiEvent()
+    data class CreateClass(
+        val name: String,
+        val level: Int = 0,
+        val category: String = "",
+        val major: String = "",
+        val section: String = "",
+    ) : ClassUiEvent()
     data class UpdateClass(val id: String, val newName: String) : ClassUiEvent()
     data class RequestDeleteClass(val classModel: ClassModel) : ClassUiEvent()
     data object ConfirmDeleteClass : ClassUiEvent()
@@ -22,4 +28,11 @@ sealed class ClassUiEvent {
     data object ShowAddStudentDialog : ClassUiEvent()
     data object DismissAddStudentDialog : ClassUiEvent()
     data class AddStudentToClass(val classId: String, val studentId: String) : ClassUiEvent()
+
+    // Structured mode events
+    data object ToggleInputMode : ClassUiEvent()
+    data class SetSelectedLevel(val level: Int) : ClassUiEvent()
+    data class SetSelectedCategory(val category: String) : ClassUiEvent()
+    data class SetSelectedMajor(val major: String) : ClassUiEvent()
+    data class SetSelectedSection(val section: String) : ClassUiEvent()
 }

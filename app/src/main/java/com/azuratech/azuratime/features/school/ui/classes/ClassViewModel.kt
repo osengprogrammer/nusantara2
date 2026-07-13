@@ -54,7 +54,15 @@ class ClassViewModel @Inject constructor(
             templateRepository.fetchAllGlobalClasses()
                 .onSuccess { globalClasses ->
                     val names = globalClasses.map { it.name }.distinct().sorted()
-                    _stateFlow.update { it.copy(availableClasses = names) }
+                    val categories = globalClasses.map { it.category }.filter { it.isNotBlank() }.distinct().sorted()
+                    val majors = globalClasses.map { it.major }.filter { it.isNotBlank() }.distinct().sorted()
+                    _stateFlow.update {
+                        it.copy(
+                            availableClasses = names,
+                            availableCategories = categories,
+                            availableMajors = majors,
+                        )
+                    }
                 }
                 .onFailure {
                     val fallback = listOf(
@@ -65,7 +73,13 @@ class ClassViewModel @Inject constructor(
                         "12-IPA-1", "12-IPA-2", "12-IPA-3",
                         "12-IPS-1", "12-IPS-2", "12-IPS-3",
                     )
-                    _stateFlow.update { it.copy(availableClasses = fallback) }
+                    _stateFlow.update {
+                        it.copy(
+                            availableClasses = fallback,
+                            availableCategories = listOf("SD", "SMP", "SMA", "SMK"),
+                            availableMajors = listOf("UMUM", "IPA", "IPS", "BAHASA"),
+                        )
+                    }
                 }
         }
     }
@@ -73,7 +87,7 @@ class ClassViewModel @Inject constructor(
     fun onEvent(event: ClassUiEvent) {
         when (event) {
             is ClassUiEvent.LoadClasses -> loadClasses()
-            is ClassUiEvent.CreateClass -> createClass(event.name)
+            is ClassUiEvent.CreateClass -> createClass(event.name, event.level, event.category, event.major, event.section)
             is ClassUiEvent.UpdateClass -> updateClass(event.id, event.newName)
             is ClassUiEvent.RequestDeleteClass -> {
                 _stateFlow.update { it.copy(classToDelete = event.classModel) }
@@ -111,6 +125,11 @@ class ClassViewModel @Inject constructor(
                 _stateFlow.update { it.copy(isAddStudentDialogVisible = false) }
             }
             is ClassUiEvent.AddStudentToClass -> addStudentToClass(event.classId, event.studentId)
+            ClassUiEvent.ToggleInputMode -> _stateFlow.update { it.copy(isStructuredMode = !it.isStructuredMode) }
+            is ClassUiEvent.SetSelectedLevel -> _stateFlow.update { it.copy(selectedLevel = event.level) }
+            is ClassUiEvent.SetSelectedCategory -> _stateFlow.update { it.copy(selectedCategory = event.category) }
+            is ClassUiEvent.SetSelectedMajor -> _stateFlow.update { it.copy(selectedMajor = event.major) }
+            is ClassUiEvent.SetSelectedSection -> _stateFlow.update { it.copy(selectedSection = event.section) }
         }
     }
 
@@ -169,7 +188,7 @@ class ClassViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    private fun createClass(name: String) {
+    private fun createClass(name: String, level: Int, category: String, major: String, section: String) {
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             val accountId = sessionManager.getCurrentAccountId() ?: return@launch
@@ -180,10 +199,15 @@ class ClassViewModel @Inject constructor(
                 id = "cls_${System.currentTimeMillis()}",
                 name = name,
                 schoolId = schoolId,
-                grade = "",
+                grade = level.toString(), // Use level as grade for backward compatibility
                 accountId = null,
                 studentCount = 0,
                 createdAt = System.currentTimeMillis(),
+                // Blueprint fields
+                level = level,
+                category = category,
+                major = major,
+                section = section,
             )
 
             schoolRepository.saveClass(accountId, schoolId, classModel)

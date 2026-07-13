@@ -26,6 +26,12 @@ data class ClassEntity(
     val displayOrder: Int = 0,
     val isSynced: Boolean = false,
     val isFromTemplate: Boolean = false, // 👈 New Property
+    // Blueprint fields (aligned with azura-admin ClassTemplate)
+    val level: Int = 0,
+    val category: String = "",
+    val major: String = "",
+    val section: String = "",
+    val active: Boolean = true,
 ) {
     fun toDomain(): ClassModel = ClassModel(
         id = id,
@@ -37,6 +43,11 @@ data class ClassEntity(
         studentIds = emptyList(),
         subjectIds = subjectIds,
         createdAt = createdAt,
+        // Blueprint fields
+        level = level,
+        category = category,
+        major = major,
+        section = section,
     )
 }
 
@@ -54,6 +65,12 @@ fun com.google.firebase.firestore.DocumentSnapshot.toClassEntity(schoolId: Strin
             createdAt = getLong("createdAt") ?: System.currentTimeMillis(),
             isSynced = true,
             isFromTemplate = getBoolean("isFromTemplate") ?: false,
+            // Blueprint fields
+            level = getLong("level")?.toInt() ?: 0,
+            category = getString("category") ?: "",
+            major = getString("major") ?: "",
+            section = getString("section") ?: "",
+            active = getBoolean("active") ?: true,
         )
     } catch (e: Exception) {
         null

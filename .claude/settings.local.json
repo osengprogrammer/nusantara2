@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew compileDebugKotlin *)"
+      "Bash(./gradlew compileDebugKotlin *)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(./gradlew clean *)"
     ]
   }
 }

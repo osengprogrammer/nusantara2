@@ -14,6 +14,6 @@ abstract class PaymentModule {
     @Binds
     @Singleton
     abstract fun bindPaymentRepository(
-        impl: PaymentRepositoryImpl
+        impl: PaymentRepositoryImpl,
     ): PaymentRepository
 }

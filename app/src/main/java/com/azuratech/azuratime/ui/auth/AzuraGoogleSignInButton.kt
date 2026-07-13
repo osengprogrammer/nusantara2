@@ -70,7 +70,7 @@ fun AzuraGoogleSignInButton(
                     onAuthError(e.localizedMessage ?: "Unexpected error")
                 }
             }
-        }
+        },
     ) {
         Text("Masuk dengan Google")
     }

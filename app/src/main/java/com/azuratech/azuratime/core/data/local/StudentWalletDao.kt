@@ -12,7 +12,7 @@ interface StudentWalletDao {
 
     @Query("SELECT currentBalance FROM student_wallets WHERE studentId = :studentId")
     fun getBalanceFlow(studentId: String): Flow<Double?>
-    
+
     @Query("SELECT * FROM student_wallets WHERE schoolId = :schoolId")
     fun getAllWalletsBySchool(schoolId: String): Flow<List<StudentWalletEntity>>
 }

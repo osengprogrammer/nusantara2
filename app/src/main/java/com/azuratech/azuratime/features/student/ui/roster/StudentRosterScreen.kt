@@ -170,18 +170,18 @@ fun StudentRosterScreen(
                     verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md),
                 ) {
                     items(uiState.students, key = { it.studentId }) { item ->
-    StudentRosterRow(
-        studentId = item.studentId, // <-- Ensure this is passed!
-        name = item.displayName,
-        code = item.studentCode,
-        classNames = item.assignedClassNames,
-        balance = item.formattedBalance(),
-        isBiometricReady = item.isBiometricReady,
-        onClick = { onNavigateToWallet(item.studentId) }, // Or your existing navigation logic
-        onHistoryClick = onNavigateToHistory,
-        onDeductClick = onNavigateToDeduct
-    )
-}
+                        StudentRosterRow(
+                            studentId = item.studentId, // <-- Ensure this is passed!
+                            name = item.displayName,
+                            code = item.studentCode,
+                            classNames = item.assignedClassNames,
+                            balance = item.formattedBalance(),
+                            isBiometricReady = item.isBiometricReady,
+                            onClick = { onNavigateToWallet(item.studentId) }, // Or your existing navigation logic
+                            onHistoryClick = onNavigateToHistory,
+                            onDeductClick = onNavigateToDeduct,
+                        )
+                    }
 
                     if (uiState.students.isEmpty() && !uiState.isLoading) {
                         item {

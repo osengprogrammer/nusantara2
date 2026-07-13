@@ -42,14 +42,14 @@ fun StudentRosterRow(
             .padding(horizontal = AzuraSpacing.md, vertical = 4.dp)
             .clickable { onClick() },
         shape = AzuraShapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Row(
             modifier = Modifier
                 .padding(AzuraSpacing.md)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             // Left Side: Student Info
             Column(modifier = Modifier.weight(1f)) {
@@ -58,7 +58,7 @@ fun StudentRosterRow(
                 Text(
                     text = classNames,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -67,7 +67,7 @@ fun StudentRosterRow(
                 Text(
                     text = balance,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -76,7 +76,7 @@ fun StudentRosterRow(
                     Icon(
                         imageVector = Icons.Default.History,
                         contentDescription = "View History",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -84,7 +84,7 @@ fun StudentRosterRow(
                     Icon(
                         imageVector = Icons.Default.RemoveCircle,
                         contentDescription = "Deduct Balance",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
                     )
                 }
             }

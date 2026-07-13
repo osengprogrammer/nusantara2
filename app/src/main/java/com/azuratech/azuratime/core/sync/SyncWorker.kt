@@ -15,7 +15,7 @@ import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRep
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
-import com.azuratech.azuratime.features.session.SessionRepository
+import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 
 /**
  * 🛡️ THE INVISIBLE GUARDRAIL: Persistent Background Sync
