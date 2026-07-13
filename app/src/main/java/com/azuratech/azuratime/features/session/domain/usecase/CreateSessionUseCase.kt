@@ -1,19 +1,22 @@
-package com.azuratech.azuratime.features.session
+package com.azuratech.azuratime.features.session.domain.usecase
+
+import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
+import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 import com.azuratech.azuratime.features.session.domain.model.SessionType
+import java.util.UUID
 import javax.inject.Inject
 
 /**
- * 🚀 UPDATE SESSION USE CASE
- * Centralizes lookupKey generation and session updates for consistency.
+ * 🚀 CREATE SESSION USE CASE (v3.7.0-base)
+ * Centralizes sessionId and lookupKey generation for production consistency.
+ * Supports Academic, Class-Wide, and Global tiers.
  */
-class UpdateSessionUseCase @Inject constructor(
+class CreateSessionUseCase @Inject constructor(
     private val repository: SessionRepository,
 ) {
     suspend operator fun invoke(
-        sessionId: String,
         classId: String?,
         subjectId: String?,
         sessionType: SessionType = SessionType.ACADEMIC,
@@ -22,7 +25,8 @@ class UpdateSessionUseCase @Inject constructor(
         startTime: String,
         endTime: String,
         schoolId: String,
-    ): Result<Unit> {
+    ): Result<String> { // 🔥 Return String (sessionId)
+        // 🔥 AI Native: Prefix-based lookupKey to prevent cross-tier collisions
         val timeKey = startTime.replace(":", "")
         val lookupKey = when (sessionType) {
             SessionType.ACADEMIC -> "ACADEMIC_${classId}_${subjectId}_${dayOfWeek}_$timeKey"
@@ -30,6 +34,7 @@ class UpdateSessionUseCase @Inject constructor(
             SessionType.GLOBAL -> "GLOBAL_${schoolId}_ALL_${dayOfWeek}_$timeKey"
         }
 
+        val sessionId = UUID.randomUUID().toString()
         val session = ClassSessionEntity(
             sessionId = sessionId,
             classId = classId,
@@ -45,6 +50,6 @@ class UpdateSessionUseCase @Inject constructor(
             isSynced = false,
         )
 
-        return repository.updateSession(session)
+        return repository.saveSession(session).map { sessionId }
     }
 }

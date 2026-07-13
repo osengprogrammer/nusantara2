@@ -10,9 +10,9 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
-import com.azuratech.azuratime.features.session.CreateSessionUseCase
-import com.azuratech.azuratime.features.session.UpdateSessionUseCase
-import com.azuratech.azuratime.features.session.SessionRepository
+import com.azuratech.azuratime.features.session.domain.usecase.CreateSessionUseCase
+import com.azuratech.azuratime.features.session.domain.usecase.UpdateSessionUseCase
+import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 import com.azuratech.azuratime.features.session.data.local.SubjectEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

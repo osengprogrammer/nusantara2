@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.session
+package com.azuratech.azuratime.features.session.domain.repository
 
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result

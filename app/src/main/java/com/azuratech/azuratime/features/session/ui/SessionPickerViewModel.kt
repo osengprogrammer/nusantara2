@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-import com.azuratech.azuratime.features.session.CreateSessionUseCase
+import com.azuratech.azuratime.features.session.domain.usecase.CreateSessionUseCase
 import com.azuratech.azuratime.features.session.domain.usecase.GetAssignedSessionsUseCase
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter

@@ -1,20 +1,21 @@
-package com.azuratech.azuratime.features.session
+package com.azuratech.azuratime.features.session.domain.usecase
+
+import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 import com.azuratech.azuratime.features.session.domain.model.SessionType
-import java.util.UUID
 import javax.inject.Inject
 
 /**
- * 🚀 CREATE SESSION USE CASE (v3.7.0-base)
- * Centralizes sessionId and lookupKey generation for production consistency.
- * Supports Academic, Class-Wide, and Global tiers.
+ * 🚀 UPDATE SESSION USE CASE
+ * Centralizes lookupKey generation and session updates for consistency.
  */
-class CreateSessionUseCase @Inject constructor(
+class UpdateSessionUseCase @Inject constructor(
     private val repository: SessionRepository,
 ) {
     suspend operator fun invoke(
+        sessionId: String,
         classId: String?,
         subjectId: String?,
         sessionType: SessionType = SessionType.ACADEMIC,
@@ -23,8 +24,7 @@ class CreateSessionUseCase @Inject constructor(
         startTime: String,
         endTime: String,
         schoolId: String,
-    ): Result<String> { // 🔥 Return String (sessionId)
-        // 🔥 AI Native: Prefix-based lookupKey to prevent cross-tier collisions
+    ): Result<Unit> {
         val timeKey = startTime.replace(":", "")
         val lookupKey = when (sessionType) {
             SessionType.ACADEMIC -> "ACADEMIC_${classId}_${subjectId}_${dayOfWeek}_$timeKey"
@@ -32,7 +32,6 @@ class CreateSessionUseCase @Inject constructor(
             SessionType.GLOBAL -> "GLOBAL_${schoolId}_ALL_${dayOfWeek}_$timeKey"
         }
 
-        val sessionId = UUID.randomUUID().toString()
         val session = ClassSessionEntity(
             sessionId = sessionId,
             classId = classId,
@@ -48,6 +47,6 @@ class CreateSessionUseCase @Inject constructor(
             isSynced = false,
         )
 
-        return repository.saveSession(session).map { sessionId }
+        return repository.updateSession(session)
     }
 }

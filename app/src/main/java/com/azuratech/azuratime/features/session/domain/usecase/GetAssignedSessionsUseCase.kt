@@ -4,7 +4,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
-import com.azuratech.azuratime.features.session.SessionRepository
+import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 import com.azuratech.azuratime.features.session.domain.model.SessionType
