@@ -57,10 +57,10 @@ class BiometricEnrollmentViewModel @Inject constructor(
         )
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val enrolledStudentFlow: StateFlow<List<com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity>> = sessionManager.activeSchoolIdFlow
+    val enrolledStudentFlow: StateFlow<List<com.azuratech.azuratime.core.data.local.StudentBiometricEntity>> = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId -> biometricRepository.getEnrolledStudentsFlow(schoolId) }
-        .map { result: com.azuratech.azuraengine.result.Result<List<com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity>> ->
+        .map { result: com.azuratech.azuraengine.result.Result<List<com.azuratech.azuratime.core.data.local.StudentBiometricEntity>> ->
             result.getOrNull() ?: emptyList()
         }
         .stateIn(
@@ -145,9 +145,9 @@ class BiometricEnrollmentViewModel @Inject constructor(
         }
     }
 
-    fun getStudentsInClassFlow(classId: String): kotlinx.coroutines.flow.Flow<List<com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity>> =
+    fun getStudentsInClassFlow(classId: String): kotlinx.coroutines.flow.Flow<List<com.azuratech.azuratime.core.data.local.StudentBiometricEntity>> =
         biometricRepository.getStudentsInClassFlow(classId, sessionManager.getActiveSchoolId() ?: "")
-            .map { result: com.azuratech.azuraengine.result.Result<List<com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity>> ->
+            .map { result: com.azuratech.azuraengine.result.Result<List<com.azuratech.azuratime.core.data.local.StudentBiometricEntity>> ->
                 result.getOrNull() ?: emptyList()
             }
 

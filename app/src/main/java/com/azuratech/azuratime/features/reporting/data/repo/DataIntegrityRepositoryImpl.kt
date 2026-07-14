@@ -5,7 +5,7 @@ import com.azuratech.azuraengine.result.asLocalResult
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.reporting.domain.repository.DataIntegrityRepository
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject

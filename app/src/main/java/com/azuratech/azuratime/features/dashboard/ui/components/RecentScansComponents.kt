@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.dashboard.ui.components
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import java.time.format.DateTimeFormatter
@@ -28,7 +28,7 @@ fun RecentScansHeader(navController: NavController) {
 }
 
 @Composable
-fun DashboardAttendanceItem(record: AttendanceRecordEntity) {
+fun DashboardAttendanceItem(record: AttendanceRecord) {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val dateTime = java.time.LocalDateTime.ofInstant(
         java.time.Instant.ofEpochMilli(record.timestamp),
@@ -39,7 +39,7 @@ fun DashboardAttendanceItem(record: AttendanceRecordEntity) {
         content = {
             Row(Modifier.padding(0.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(record.name, fontWeight = FontWeight.Bold)
+                    Text(record.studentName, fontWeight = FontWeight.Bold)
                     Text("ID: ${record.studentId}", style = MaterialTheme.typography.bodySmall)
                 }
                 Text(

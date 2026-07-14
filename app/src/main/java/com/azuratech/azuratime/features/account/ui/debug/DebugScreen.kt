@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 // 🔥 DB, ML, & Utils
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.data.local.BiometricCache
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.ml.matcher.NativeSecurityVault
 import com.azuratech.azuratime.ml.recognizer.FaceNetConstants
 import com.azuratech.azuratime.core.session.SessionManager

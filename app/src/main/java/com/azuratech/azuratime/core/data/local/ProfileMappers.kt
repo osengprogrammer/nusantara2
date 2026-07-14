@@ -7,7 +7,7 @@ import com.azuratech.azuratime.features.reporting.domain.model.SchoolAnalyticsSu
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.reporting.data.local.AuditLogEntity
 import com.azuratech.azuratime.features.reporting.data.local.ExportJobEntity
 import com.azuratech.azuratime.features.reporting.data.local.ReportEntity

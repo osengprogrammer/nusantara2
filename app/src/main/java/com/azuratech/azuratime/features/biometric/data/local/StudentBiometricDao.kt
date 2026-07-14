@@ -2,6 +2,7 @@ package com.azuratech.azuratime.features.biometric.data.local
 
 import androidx.room.*
 import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

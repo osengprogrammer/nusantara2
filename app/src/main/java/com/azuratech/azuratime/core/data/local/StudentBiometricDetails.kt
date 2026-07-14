@@ -3,7 +3,7 @@ package com.azuratech.azuratime.core.data.local
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Ignore
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 
 /**
  * Data Class gabungan untuk menampilkan profil siswa lengkap dengan

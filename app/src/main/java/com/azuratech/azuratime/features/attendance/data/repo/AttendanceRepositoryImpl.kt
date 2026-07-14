@@ -16,7 +16,7 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.attendance.domain.repository.ProcessAttendanceParams
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.reporting.domain.repository.AuditLogRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

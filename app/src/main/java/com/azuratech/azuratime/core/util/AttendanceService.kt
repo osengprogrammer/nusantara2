@@ -2,7 +2,7 @@ package com.azuratech.azuratime.core.util
 
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime

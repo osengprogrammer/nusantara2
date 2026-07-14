@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 

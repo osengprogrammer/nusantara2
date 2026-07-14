@@ -4,7 +4,7 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.session.domain.model.SessionType
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 

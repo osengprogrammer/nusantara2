@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.biometric.domain.repository
 
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.features.biometric.domain.model.BiometricEnrollmentProfile
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile

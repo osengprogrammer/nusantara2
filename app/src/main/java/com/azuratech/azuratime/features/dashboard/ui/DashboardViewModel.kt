@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.dashboard.ui
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,10 +13,9 @@ import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
@@ -220,7 +220,7 @@ class DashboardViewModel @Inject constructor(
         val account = params[0] as AccountEntity?
 
         @Suppress("UNCHECKED_CAST")
-        val recentRecords = params[1] as List<AttendanceRecordEntity>
+        val recentRecords = params[1] as List<AttendanceRecord>
 
         @Suppress("UNCHECKED_CAST")
         val sessionStudents = params[2] as List<StudentBiometricEntity>

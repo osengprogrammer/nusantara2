@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.biometric.ui.assignment
 
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 
 /**
  * 🧬 ASSIGNMENT PREVIEW MOCKS (v3.2.0-ai-native)

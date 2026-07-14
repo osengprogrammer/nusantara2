@@ -3,7 +3,9 @@
     "allow": [
       "Bash(./gradlew compileDebugKotlin *)",
       "Bash(./gradlew assembleDebug)",
-      "Bash(./gradlew clean *)"
+      "Bash(./gradlew clean *)",
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(./gradlew :app:kspDebugKotlin)"
     ]
   }
 }

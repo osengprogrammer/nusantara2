@@ -1,11 +1,11 @@
 package com.azuratech.azuratime.features.dashboard.ui
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
-import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEntity
+import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
 
 data class DashboardUiState(
@@ -16,7 +16,7 @@ data class DashboardUiState(
     val allSessionsToday: List<SessionWithDetails> = emptyList(), // 🔥 Fallback Picker
     val assignedClasses: List<ClassModel> = emptyList(),
     val allClasses: List<ClassModel> = emptyList(),
-    val recentRecords: List<AttendanceRecordEntity> = emptyList(),
+    val recentRecords: List<AttendanceRecord> = emptyList(),
     val sessionStudents: List<StudentBiometricEntity> = emptyList(),
     val isSyncing: Boolean = false,
     val isReady: Boolean = false,
