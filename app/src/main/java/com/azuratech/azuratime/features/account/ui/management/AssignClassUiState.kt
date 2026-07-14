@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.account.ui.management
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.core.domain.model.TeacherAssignment
-import com.azuratech.azuratime.features.session.data.local.SubjectEntity
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 
 data class AssignClassUiState(
     val isLoading: Boolean = false,

@@ -3,9 +3,9 @@ package com.azuratech.azuratime.features.session.data.remote
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
-import com.azuratech.azuratime.features.session.data.local.SubjectEntity
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 import com.azuratech.azuratime.features.session.data.local.toClassSessionEntity
-import com.azuratech.azuratime.features.session.data.local.toSubjectEntity
+import com.azuratech.azuratime.core.data.local.toSubjectEntity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await

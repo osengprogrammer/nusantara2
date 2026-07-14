@@ -41,6 +41,7 @@ class StudentFormViewModel @Inject constructor(
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
     private val photoStorageUtils: PhotoStorageUtils,
+    private val syncUseCase: com.azuratech.azuratime.features.student.domain.usecase.SyncPendingStudentDataUseCase,
 ) : ViewModel() {
 
     private val _uiStateFlow = MutableStateFlow(StudentFormUiState())
@@ -153,7 +154,7 @@ class StudentFormViewModel @Inject constructor(
             when (val result = studentRepository.saveProfile(profile)) {
                 is Result.Success -> {
                     // ✅ FIX: TRIGGER PUSH TO FIRESTORE IMMEDIATELY
-                    studentRepository.pushPendingProfiles()
+                    syncUseCase.pushAll(schoolId)
                         .onSuccess { android.util.Log.d("STUDENT_FORM", "✅ Student & Classes pushed to Firestore") }
                         .onFailure { err: AppError -> android.util.Log.e("STUDENT_FORM", "❌ Push failed: ${err.message}") }
 

@@ -7,8 +7,8 @@ import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 import com.azuratech.azuratime.features.session.data.local.SessionDao
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
-import com.azuratech.azuratime.features.session.data.local.SubjectEntity
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 import com.azuratech.azuratime.features.session.data.remote.SessionRemoteDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

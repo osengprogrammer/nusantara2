@@ -11,6 +11,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.azuratech.azuratime.core.data.local.SubjectEntity
+import com.azuratech.azuratime.core.domain.model.SubjectTemplate
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -18,21 +20,17 @@ import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.school.ui.classes.ClassUiEvent
 import com.azuratech.azuratime.features.school.ui.classes.ClassListSection
 import com.azuratech.azuratime.features.school.ui.classes.AddClassDialog
-import com.azuratech.azuratime.features.session.ui.SessionManagementViewModel
-import com.azuratech.azuratime.features.session.ui.SessionManagementUiEvent
-import com.azuratech.azuratime.features.session.ui.AddSubjectDialog
-import com.azuratech.azuratime.features.account.ui.management.BulkAssignMatrixViewModel
-import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
-import com.azuratech.azuratime.features.account.ui.management.RoleBadge
+import com.azuratech.azuratime.core.ui.components.AddSubjectDialog
+import com.azuratech.azuratime.core.ui.components.RoleBadge
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.font.FontWeight
-import com.azuratech.azuratime.features.student.ui.StudentViewModel
 import com.azuratech.azuratime.features.student.ui.StudentUiEvent
 import com.azuratech.azuratime.features.student.ui.StudentUiState
 import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
+import com.azuratech.azuratime.features.account.data.local.AccountEntity
 
 @Composable
 fun SchoolExplorerScreen(
@@ -41,10 +39,17 @@ fun SchoolExplorerScreen(
     onNavigateToAddStudent: () -> Unit = {},
     navController: NavController? = null,
     classViewModel: ClassViewModel = hiltViewModel(),
-    sessionViewModel: SessionManagementViewModel = hiltViewModel(),
-    @Suppress("UNUSED_PARAMETER") matrixViewModel: BulkAssignMatrixViewModel = hiltViewModel(),
-    accountViewModel: AccountManagementViewModel = hiltViewModel(),
-    studentViewModel: StudentViewModel = hiltViewModel(),
+    // Session data (from SessionManagementViewModel)
+    subjects: List<SubjectEntity> = emptyList(),
+    availableSubjects: List<SubjectTemplate> = emptyList(),
+    onDeleteSubject: (SubjectEntity) -> Unit = {},
+    onAddSubject: (String, String?) -> Unit = { _, _ -> },
+    // Account data (from AccountManagementViewModel)
+    allAccountsInSameSchool: List<AccountEntity> = emptyList(),
+    activeSchoolId: String? = null,
+    // Student data (from StudentViewModel)
+    studentState: StudentUiState = StudentUiState(),
+    onStudentEvent: (StudentUiEvent) -> Unit = {},
     initialTab: Int = 0,
 ) {
     var selectedTab by remember { mutableIntStateOf(initialTab) }
@@ -53,9 +58,6 @@ fun SchoolExplorerScreen(
     var showAddSubjectDialog by remember { mutableStateOf(false) }
 
     val classState by classViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val sessionState by sessionViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val studentState by studentViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val accountState by accountViewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     AzuraScreen(
         title = "School Explorer",
@@ -97,26 +99,26 @@ fun SchoolExplorerScreen(
                         onDeleteClass = { classViewModel.onEvent(ClassUiEvent.RequestDeleteClass(it)) },
                     )
                     1 -> SubjectsTab(
-                        subjects = sessionState.subjects,
-                        onDeleteSubject = { sessionViewModel.onEvent(SessionManagementUiEvent.DeleteSubject(it)) },
+                        subjects = subjects,
+                        onDeleteSubject = onDeleteSubject,
                     )
                     2 -> MatrixTab(
-                        accounts = accountState.allAccountsInSameSchool,
-                        activeSchoolId = accountState.activeSchoolId,
+                        accounts = allAccountsInSameSchool,
+                        activeSchoolId = activeSchoolId,
                         onNavigateToAssignClass = { targetId, role ->
                             navController?.navigate(Screen.AssignClass.createRoute(targetId, role))
                         },
                     )
                     3 -> StudentsTab(
                         state = studentState,
-                        onEvent = studentViewModel::onEvent,
+                        onEvent = onStudentEvent,
                     )
                 }
             }
         }
     }
 
-    // --- 🛠️ DIALOGS ---
+    // --- DIALOGS ---
     // Add Class
     if (classState.isAddDialogVisible) {
         AddClassDialog(
@@ -168,10 +170,10 @@ fun SchoolExplorerScreen(
     // Add Subject
     if (showAddSubjectDialog) {
         AddSubjectDialog(
-            availableSubjects = sessionState.availableSubjects,
+            availableSubjects = availableSubjects,
             onDismiss = { showAddSubjectDialog = false },
             onConfirm = { name, desc ->
-                sessionViewModel.onEvent(SessionManagementUiEvent.AddSubject(name, desc))
+                onAddSubject(name, desc)
                 showAddSubjectDialog = false
             },
         )
@@ -194,8 +196,8 @@ private fun ExplorerFab(
 
 @Composable
 fun SubjectsTab(
-    subjects: List<com.azuratech.azuratime.features.session.data.local.SubjectEntity>,
-    onDeleteSubject: (com.azuratech.azuratime.features.session.data.local.SubjectEntity) -> Unit,
+    subjects: List<com.azuratech.azuratime.core.data.local.SubjectEntity>,
+    onDeleteSubject: (com.azuratech.azuratime.core.data.local.SubjectEntity) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),

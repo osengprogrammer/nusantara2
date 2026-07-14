@@ -14,7 +14,7 @@ import com.azuratech.azuratime.features.school.domain.repository.SchoolRepositor
 import com.azuratech.azuratime.features.session.domain.usecase.CreateSessionUseCase
 import com.azuratech.azuratime.features.session.domain.usecase.UpdateSessionUseCase
 import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
-import com.azuratech.azuratime.features.session.data.local.SubjectEntity
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -22,6 +22,7 @@ import java.util.*
 import javax.inject.Inject
 
 import com.azuratech.azuratime.features.session.domain.model.SessionType
+import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuratime.core.domain.model.SubjectTemplate
 
@@ -101,7 +102,7 @@ class SessionManagementViewModel @Inject constructor(
 
                 // Populate class names
                 sessions.forEach { sessionDetails ->
-                    sessionDetails.className = classes.find { it.id == sessionDetails.session.classId }?.name
+                    sessionDetails.className = classes.find { it.id == sessionDetails.classId }?.name
                 }
 
                 if (account != null) {
@@ -126,8 +127,8 @@ class SessionManagementViewModel @Inject constructor(
 
                         val filteredSessions = sessions.filter { sessionDetails ->
                             assignments.any { assignment ->
-                                val classMatches = assignment.classId == sessionDetails.session.classId
-                                val subjectMatches = assignment.subjectId == null || assignment.subjectId == sessionDetails.session.subjectId
+                                val classMatches = assignment.classId == sessionDetails.classId
+                                val subjectMatches = assignment.subjectId == null || assignment.subjectId == sessionDetails.subjectId
                                 classMatches && subjectMatches
                             }
                         }
@@ -158,7 +159,7 @@ class SessionManagementViewModel @Inject constructor(
 
     private data class DataContainer(
         val subjectsResult: Result<List<SubjectEntity>>,
-        val sessionsResult: Result<List<com.azuratech.azuratime.features.session.data.local.SessionWithDetails>>,
+        val sessionsResult: Result<List<com.azuratech.azuratime.core.data.local.SessionWithDetails>>,
         val classesResult: Result<List<com.azuratech.azuraengine.model.ClassModel>>,
         val accountResult: Result<Account>,
         val schoolId: String,
@@ -334,9 +335,23 @@ class SessionManagementViewModel @Inject constructor(
         }
     }
 
-    private fun deleteSession(session: com.azuratech.azuratime.features.session.data.local.SessionWithDetails) {
+    private fun deleteSession(session: com.azuratech.azuratime.core.data.local.SessionWithDetails) {
         viewModelScope.launch {
-            val result = sessionRepository.deleteSession(session.session)
+            val entity = ClassSessionEntity(
+                sessionId = session.sessionId,
+                classId = session.classId,
+                subjectId = session.subjectId,
+                sessionType = session.sessionType,
+                supervisorEmail = session.supervisorEmail,
+                dayOfWeek = session.dayOfWeek,
+                startTime = session.startTime,
+                endTime = session.endTime,
+                schoolId = session.schoolId,
+                lookupKey = session.lookupKey,
+                isActive = session.isActive,
+                isSynced = session.isSynced,
+            )
+            val result = sessionRepository.deleteSession(entity)
             if (result is Result.Success) {
                 _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Session removed"))
             }

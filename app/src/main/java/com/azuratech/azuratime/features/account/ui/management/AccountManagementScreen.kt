@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.ui.designsystem.*
+import com.azuratech.azuratime.core.ui.components.RoleBadge
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
 import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
@@ -393,31 +394,6 @@ fun MemberItem(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun RoleBadge(roleStr: String, modifier: Modifier = Modifier) {
-    val role = try { AccountRole.valueOf(roleStr.uppercase()) } catch (e: Exception) { AccountRole.USER }
-    val (color, label) = when (role) {
-        AccountRole.SUPER_ADMIN -> MaterialTheme.colorScheme.error to "Super Admin"
-        AccountRole.ADMIN -> MaterialTheme.colorScheme.primary to "Admin"
-        AccountRole.SUPERVISOR -> MaterialTheme.colorScheme.secondary to "Supervisor"
-        AccountRole.USER -> MaterialTheme.colorScheme.outline to "Member"
-    }
-    Surface(
-        modifier = modifier,
-        color = color.copy(alpha = 0.1f),
-        shape = androidx.compose.foundation.shape.CircleShape,
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.5f)),
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            fontWeight = FontWeight.Bold,
-        )
     }
 }
 

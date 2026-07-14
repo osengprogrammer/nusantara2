@@ -6,7 +6,7 @@ import com.azuratech.azuratime.features.account.domain.repository.AccountReposit
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -57,10 +57,9 @@ class GetAssignedSessionsUseCase @Inject constructor(
                 sessions
             } else {
                 sessions.filter { sessionDetails ->
-                    val session = sessionDetails.session
                     assignments.any { assignment ->
-                        val classMatches = assignment.classId == session.classId
-                        val subjectMatches = assignment.subjectId == null || assignment.subjectId == session.subjectId
+                        val classMatches = assignment.classId == sessionDetails.classId
+                        val subjectMatches = assignment.subjectId == null || assignment.subjectId == sessionDetails.subjectId
                         classMatches && subjectMatches
                     }
                 }
@@ -68,7 +67,7 @@ class GetAssignedSessionsUseCase @Inject constructor(
 
             // 2. Populate Class Name for regular sessions
             filteredSessions.forEach { sessionDetails ->
-                sessionDetails.className = classes.find { it.id == sessionDetails.session.classId }?.name
+                sessionDetails.className = classes.find { it.id == sessionDetails.classId }?.name
             }
 
             // 3. Fallback to generating Ad-hoc sessions from assignments if scheduled sessions are empty
@@ -76,18 +75,17 @@ class GetAssignedSessionsUseCase @Inject constructor(
                 assignments.map { assignment ->
                     val classObj = classes.find { it.id == assignment.classId }
                     SessionWithDetails(
-                        session = ClassSessionEntity(
-                            sessionId = "ADHOC_${assignment.classId}_${assignment.subjectId ?: "ALL"}",
-                            classId = assignment.classId,
-                            subjectId = assignment.subjectId,
-                            sessionType = if (assignment.subjectId != null) SessionType.ACADEMIC else SessionType.CLASS_WIDE,
-                            supervisorEmail = account.email,
-                            dayOfWeek = 0,
-                            startTime = "00:00",
-                            endTime = "23:59",
-                            schoolId = schoolId,
-                            lookupKey = "ADHOC_${UUID.randomUUID()}",
-                        ),
+                        sessionId = "ADHOC_${assignment.classId}_${assignment.subjectId ?: "ALL"}",
+                        classId = assignment.classId,
+                        subjectId = assignment.subjectId,
+                        sessionType = if (assignment.subjectId != null) SessionType.ACADEMIC else SessionType.CLASS_WIDE,
+                        supervisorEmail = account.email,
+                        dayOfWeek = 0,
+                        startTime = "00:00",
+                        endTime = "23:59",
+                        schoolId = schoolId,
+                        lookupKey = "ADHOC_${UUID.randomUUID()}",
+                        isActive = true,
                         subjectName = "Matrix Assignment",
                     ).apply {
                         className = classObj?.name ?: "Unknown Class"

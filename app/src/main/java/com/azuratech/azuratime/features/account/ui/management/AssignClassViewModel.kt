@@ -178,7 +178,7 @@ class AssignClassViewModel @Inject constructor(
 
     private data class DataSnapshot(
         val classesRes: AzuraResult<List<com.azuratech.azuraengine.model.ClassModel>>,
-        val subjectsRes: AzuraResult<List<com.azuratech.azuratime.features.session.data.local.SubjectEntity>>,
+        val subjectsRes: AzuraResult<List<com.azuratech.azuratime.core.data.local.SubjectEntity>>,
         val assignments: List<com.azuratech.azuratime.features.account.data.local.TeacherAssignmentTuple>,
         val query: String,
     )

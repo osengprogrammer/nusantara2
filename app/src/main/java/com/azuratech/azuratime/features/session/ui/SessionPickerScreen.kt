@@ -1,5 +1,6 @@
 package com.azuratech.azuratime.features.session.ui
 
+import com.azuratech.azuratime.core.ui.components.TierBadge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,7 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
 
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.Color
@@ -92,8 +93,8 @@ fun SessionPickerScreen(
                         contentPadding = PaddingValues(bottom = AzuraSpacing.xl),
                         verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
                     ) {
-                        val adhocSessions = uiState.filteredSessions.filter { it.session.sessionId.startsWith("ADHOC_") }
-                        val regularSessions = uiState.filteredSessions.filter { !it.session.sessionId.startsWith("ADHOC_") }
+                        val adhocSessions = uiState.filteredSessions.filter { it.sessionId.startsWith("ADHOC_") }
+                        val regularSessions = uiState.filteredSessions.filter { !it.sessionId.startsWith("ADHOC_") }
 
                         if (regularSessions.isNotEmpty()) {
                             item {
@@ -102,7 +103,7 @@ fun SessionPickerScreen(
                             items(regularSessions) { sessionWithDetails ->
                                 SessionItem(
                                     session = sessionWithDetails,
-                                    onClick = { viewModel.onEvent(SessionPickerUiEvent.SelectSession(sessionWithDetails.session.sessionId)) },
+                                    onClick = { viewModel.onEvent(SessionPickerUiEvent.SelectSession(sessionWithDetails.sessionId)) },
                                 )
                             }
                         }
@@ -114,7 +115,7 @@ fun SessionPickerScreen(
                             items(adhocSessions) { sessionWithDetails ->
                                 SessionItem(
                                     session = sessionWithDetails,
-                                    onClick = { viewModel.onEvent(SessionPickerUiEvent.SelectSession(sessionWithDetails.session.sessionId)) },
+                                    onClick = { viewModel.onEvent(SessionPickerUiEvent.SelectSession(sessionWithDetails.sessionId)) },
                                 )
                             }
                         }
@@ -152,7 +153,7 @@ fun SessionItem(
     session: SessionWithDetails,
     onClick: () -> Unit,
 ) {
-    val isAdhoc = session.session.sessionId.startsWith("ADHOC_")
+    val isAdhoc = session.sessionId.startsWith("ADHOC_")
 
     Card(
         modifier = Modifier
@@ -189,7 +190,7 @@ fun SessionItem(
                         text = if (isAdhoc) {
                             stringResource(R.string.adhoc_session_title)
                         } else {
-                            (session.subjectName ?: session.session.sessionType.name)
+                            (session.subjectName ?: session.sessionType.name)
                         },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -198,14 +199,14 @@ fun SessionItem(
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.width(AzuraSpacing.sm))
-                    TierBadge(session.session.sessionType)
+                    TierBadge(session.sessionType)
                 }
 
                 Text(
                     text = if (isAdhoc) {
                         stringResource(R.string.adhoc_session_subtitle)
                     } else {
-                        "${getDayName(session.session.dayOfWeek)} | ${session.session.startTime} - ${session.session.endTime}"
+                        "${getDayName(session.dayOfWeek)} | ${session.startTime} - ${session.endTime}"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

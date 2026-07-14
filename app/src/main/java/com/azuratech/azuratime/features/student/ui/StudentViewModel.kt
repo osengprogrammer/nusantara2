@@ -33,6 +33,7 @@ class StudentViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
     private val schoolRepository: SchoolRepository,
     private val sessionManager: SessionManager,
+    private val syncUseCase: com.azuratech.azuratime.features.student.domain.usecase.SyncPendingStudentDataUseCase,
 ) : ViewModel() {
 
     private val _uiStateFlow = MutableStateFlow(StudentUiState())
@@ -139,7 +140,7 @@ class StudentViewModel @Inject constructor(
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: return@launch
             _uiStateFlow.update { it.copy(isLoading = true) }
-            studentRepository.pullStudents(schoolId)
+            syncUseCase.pullAll(schoolId)
                 .onSuccess { _uiStateFlow.update { it.copy(isLoading = false) } }
                 .onFailure { error ->
                     _uiStateFlow.update { it.copy(isLoading = false) }

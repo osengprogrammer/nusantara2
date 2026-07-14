@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.ui.designsystem.*
+import com.azuratech.azuratime.core.ui.components.RoleBadge
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import androidx.compose.foundation.BorderStroke

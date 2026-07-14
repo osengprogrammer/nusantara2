@@ -3,8 +3,8 @@ import com.azuratech.azuratime.core.domain.model.toSubjectTemplate
 
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuratime.core.domain.model.TeacherAssignment
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
-import com.azuratech.azuratime.features.session.data.local.SubjectEntity
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 
 import com.azuratech.azuratime.core.domain.model.SubjectTemplate

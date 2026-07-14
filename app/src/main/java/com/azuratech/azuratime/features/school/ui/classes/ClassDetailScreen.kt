@@ -11,21 +11,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.azuratech.azuratime.core.data.local.SubjectEntity
+import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel
-import com.azuratech.azuratime.features.session.ui.SessionManagementViewModel
-import com.azuratech.azuratime.features.session.ui.SessionManagementUiEvent
-import com.azuratech.azuratime.features.session.ui.AddSessionDialog
+import com.azuratech.azuratime.core.ui.components.AddSessionDialog
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
+import com.azuratech.azuratime.features.session.domain.model.SessionType
 
 @Composable
 fun ClassDetailScreen(
     classId: String,
     className: String,
     classViewModel: ClassViewModel,
-    sessionViewModel: SessionManagementViewModel,
-    @Suppress("UNUSED_PARAMETER") biometricViewModel: BiometricEnrollmentViewModel,
+    sessions: List<SessionWithDetails>,
+    subjects: List<SubjectEntity>,
+    classes: List<com.azuratech.azuraengine.model.ClassModel>,
+    assignments: List<TeacherAssignment>,
+    selectedTier: SessionType,
+    onDeleteSession: (SessionWithDetails) -> Unit,
+    onSelectTier: (SessionType) -> Unit,
+    onAddSession: (String?, String?, SessionType, Int, String, String) -> Unit,
     onNavigateBack: () -> Unit,
     @Suppress("UNUSED_PARAMETER") onAddStudent: () -> Unit,
 ) {
@@ -33,7 +40,6 @@ fun ClassDetailScreen(
     val tabs = listOf("Students", "Schedules")
 
     val classState by classViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val sessionState by sessionViewModel.uiStateFlow.collectAsStateWithLifecycle()
 
     var showAddSessionDialog by remember { mutableStateOf(false) }
 
@@ -76,8 +82,8 @@ fun ClassDetailScreen(
                     )
                     1 -> ClassScheduleSection(
                         classId = classId,
-                        sessions = sessionState.sessions.filter { it.session.classId == classId },
-                        onDeleteSession = { sessionViewModel.onEvent(SessionManagementUiEvent.DeleteSession(it)) },
+                        sessions = sessions.filter { it.classId == classId },
+                        onDeleteSession = onDeleteSession,
                     )
                 }
             }
@@ -97,23 +103,14 @@ fun ClassDetailScreen(
 
     if (showAddSessionDialog) {
         AddSessionDialog(
-            subjects = sessionState.subjects,
-            classes = sessionState.availableClasses,
-            assignments = sessionState.assignments,
-            selectedTier = sessionState.selectedTier,
-            onTierSelected = { sessionViewModel.onEvent(SessionManagementUiEvent.SelectTier(it)) },
+            subjects = subjects,
+            classes = classes,
+            assignments = assignments,
+            selectedTier = selectedTier,
+            onTierSelected = onSelectTier,
             onDismiss = { showAddSessionDialog = false },
             onConfirm = { clsId, subjId, tier, day, start, end ->
-                sessionViewModel.onEvent(
-                    SessionManagementUiEvent.AddSession(
-                        classId = clsId ?: classId,
-                        subjectId = subjId,
-                        sessionType = tier,
-                        dayOfWeek = day,
-                        startTime = start,
-                        endTime = end,
-                    ),
-                )
+                onAddSession(clsId ?: classId, subjId, tier, day, start, end)
                 showAddSessionDialog = false
             },
         )
@@ -123,8 +120,8 @@ fun ClassDetailScreen(
 @Composable
 fun ClassScheduleSection(
     @Suppress("UNUSED_PARAMETER") classId: String,
-    sessions: List<com.azuratech.azuratime.features.session.data.local.SessionWithDetails>,
-    onDeleteSession: (com.azuratech.azuratime.features.session.data.local.SessionWithDetails) -> Unit,
+    sessions: List<com.azuratech.azuratime.core.data.local.SessionWithDetails>,
+    onDeleteSession: (com.azuratech.azuratime.core.data.local.SessionWithDetails) -> Unit,
 ) {
     if (sessions.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -149,11 +146,11 @@ fun ClassScheduleSection(
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = "${getDayName(sessionWithDetails.session.dayOfWeek)} | ${sessionWithDetails.session.startTime} - ${sessionWithDetails.session.endTime}",
+                                text = "${getDayName(sessionWithDetails.dayOfWeek)} | ${sessionWithDetails.startTime} - ${sessionWithDetails.endTime}",
                                 style = MaterialTheme.typography.bodySmall,
                             )
                             Text(
-                                text = "Type: ${sessionWithDetails.session.sessionType}",
+                                text = "Type: ${sessionWithDetails.sessionType}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )

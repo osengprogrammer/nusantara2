@@ -53,4 +53,19 @@ interface BiometricRepository {
     fun getStudentsWithDetailsFlow(schoolId: String): Flow<Result<List<com.azuratech.azuratime.core.data.local.StudentBiometricDetails>>>
     fun getAllAssignmentsFlow(schoolId: String): Flow<Result<List<StudentClassAssignmentEntity>>>
     suspend fun upsertStudentBiometric(studentBiometric: StudentBiometricEntity): Result<Unit>
+
+    // 🔄 Cross-feature sync methods (used by SyncPendingStudentDataUseCase)
+    suspend fun bulkSyncBiometrics(schoolId: String, students: List<StudentBiometricEntity>): Result<Unit>
+    suspend fun syncStudentAssignment(assignment: StudentClassAssignmentEntity): Result<Unit>
+    suspend fun getStudentAssignments(schoolId: String): Result<List<StudentClassAssignmentEntity>>
+
+    /**
+     * Find all unsynced biometrics in the local DB and push them to cloud.
+     */
+    suspend fun syncPendingBiometricsToCloud(schoolId: String): Result<Unit>
+
+    /**
+     * Pull assignments from cloud and save them locally.
+     */
+    suspend fun pullAssignmentsFromCloud(schoolId: String): Result<Unit>
 }

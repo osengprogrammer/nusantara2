@@ -3,7 +3,7 @@ import com.azuratech.azuratime.core.domain.model.toSubjectTemplate
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.school.data.local.ClassEntity
-import com.azuratech.azuratime.features.session.data.local.SubjectEntity
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 import com.azuratech.azuratime.features.template.domain.model.SchoolTemplate
 import com.azuratech.azuratime.features.template.domain.model.ClassTemplate
 import com.azuratech.azuratime.core.domain.model.SubjectTemplate

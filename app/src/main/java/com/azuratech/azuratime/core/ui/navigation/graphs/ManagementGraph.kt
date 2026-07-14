@@ -8,6 +8,8 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +29,10 @@ import com.azuratech.azuratime.features.reporting.ui.integrity.DataManagementScr
 import com.azuratech.azuratime.features.school.ui.geofence.GpsManagementScreen
 import com.azuratech.azuratime.features.school.ui.geofence.MapPickerScreen
 import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
+import com.azuratech.azuratime.features.session.ui.SessionManagementViewModel
+import com.azuratech.azuratime.features.session.ui.SessionManagementUiEvent
+import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
+import com.azuratech.azuratime.features.student.ui.StudentViewModel
 
 import com.azuratech.azuratime.features.school.ui.explorer.SchoolExplorerScreen
 
@@ -132,11 +138,25 @@ fun NavGraphBuilder.managementGraph(
             deepLinks = listOf(navDeepLink { uriPattern = "$uri/classes/{schoolId}" }),
         ) { entry ->
             val schoolId = entry.arguments?.getString("schoolId") ?: ""
+            val sessionVm: SessionManagementViewModel = hiltViewModel()
+            val accountVm: AccountManagementViewModel = hiltViewModel()
+            val studentVm: StudentViewModel = hiltViewModel()
+            val sessionState by sessionVm.uiStateFlow.collectAsState()
+            val accountState by accountVm.uiStateFlow.collectAsState()
+            val studentState by studentVm.uiStateFlow.collectAsState()
             SchoolExplorerScreen(
                 schoolId = schoolId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToAddStudent = { navController.navigate(NavigationRoutes.ADD_STUDENT) },
                 navController = navController,
+                subjects = sessionState.subjects,
+                availableSubjects = sessionState.availableSubjects,
+                onDeleteSubject = { sessionVm.onEvent(SessionManagementUiEvent.DeleteSubject(it)) },
+                onAddSubject = { name, desc -> sessionVm.onEvent(SessionManagementUiEvent.AddSubject(name, desc)) },
+                allAccountsInSameSchool = accountState.allAccountsInSameSchool,
+                activeSchoolId = accountState.activeSchoolId,
+                studentState = studentState,
+                onStudentEvent = studentVm::onEvent,
             )
         }
         composable(
@@ -157,11 +177,25 @@ fun NavGraphBuilder.managementGraph(
             arguments = listOf(navArgument("schoolId") { type = NavType.StringType }),
         ) { backStackEntry ->
             val schoolId = backStackEntry.arguments?.getString("schoolId") ?: ""
+            val sessionVm: SessionManagementViewModel = hiltViewModel()
+            val accountVm: AccountManagementViewModel = hiltViewModel()
+            val studentVm: StudentViewModel = hiltViewModel()
+            val sessionState by sessionVm.uiStateFlow.collectAsState()
+            val accountState by accountVm.uiStateFlow.collectAsState()
+            val studentState by studentVm.uiStateFlow.collectAsState()
             SchoolExplorerScreen(
                 schoolId = schoolId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToAddStudent = { navController.navigate(NavigationRoutes.ADD_STUDENT) },
                 navController = navController,
+                subjects = sessionState.subjects,
+                availableSubjects = sessionState.availableSubjects,
+                onDeleteSubject = { sessionVm.onEvent(SessionManagementUiEvent.DeleteSubject(it)) },
+                onAddSubject = { name, desc -> sessionVm.onEvent(SessionManagementUiEvent.AddSubject(name, desc)) },
+                allAccountsInSameSchool = accountState.allAccountsInSameSchool,
+                activeSchoolId = accountState.activeSchoolId,
+                studentState = studentState,
+                onStudentEvent = studentVm::onEvent,
             )
         }
         composable(
@@ -176,12 +210,31 @@ fun NavGraphBuilder.managementGraph(
             val className = entry.arguments?.getString("className")
 
             if (classId != null && className != null) {
+                val sessionVm: SessionManagementViewModel = hiltViewModel()
+                val sessionState by sessionVm.uiStateFlow.collectAsState()
                 ClassDetailScreen(
                     classId = classId,
                     className = className,
                     classViewModel = hiltViewModel<com.azuratech.azuratime.features.school.ui.classes.ClassViewModel>(),
-                    sessionViewModel = hiltViewModel<com.azuratech.azuratime.features.session.ui.SessionManagementViewModel>(),
-                    biometricViewModel = hiltViewModel<com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel>(),
+                    sessions = sessionState.sessions,
+                    subjects = sessionState.subjects,
+                    classes = sessionState.availableClasses,
+                    assignments = sessionState.assignments,
+                    selectedTier = sessionState.selectedTier,
+                    onDeleteSession = { sessionVm.onEvent(SessionManagementUiEvent.DeleteSession(it)) },
+                    onSelectTier = { sessionVm.onEvent(SessionManagementUiEvent.SelectTier(it)) },
+                    onAddSession = { clsId, subjectId, tier, day, start, end ->
+                        sessionVm.onEvent(
+                            SessionManagementUiEvent.AddSession(
+                                classId = clsId ?: "",
+                                subjectId = subjectId,
+                                sessionType = tier,
+                                dayOfWeek = day,
+                                startTime = start,
+                                endTime = end,
+                            ),
+                        )
+                    },
                     onNavigateBack = { navController.popBackStack() },
                     onAddStudent = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
                 )

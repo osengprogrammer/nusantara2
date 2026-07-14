@@ -6,7 +6,7 @@ import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.features.account.data.local.AccountEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
 
 data class DashboardUiState(
     val isLoading: Boolean = false,

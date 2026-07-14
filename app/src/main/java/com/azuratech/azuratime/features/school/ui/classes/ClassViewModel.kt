@@ -35,6 +35,7 @@ class ClassViewModel @Inject constructor(
     private val studentRepository: StudentRepository,
     private val sessionManager: SessionManager,
     private val templateRepository: com.azuratech.azuratime.features.template.domain.repository.TemplateRepository,
+    private val syncUseCase: com.azuratech.azuratime.features.student.domain.usecase.SyncPendingStudentDataUseCase,
 ) : ViewModel() {
 
     private val _uiEffectFlow = MutableSharedFlow<ClassUiEffect>()
@@ -291,7 +292,7 @@ class ClassViewModel @Inject constructor(
 
                     // ✅ TRIGGER PUSH TO UPDATE 'classIds' IN STUDENT DOCUMENT
                     viewModelScope.launch {
-                        studentRepository.pushPendingProfiles()
+                        syncUseCase.pushAll(schoolId)
                             .onSuccess { android.util.Log.d("CLASS_SYNC", "✅ Profile pushed with full class list") }
                             .onFailure { err -> android.util.Log.e("CLASS_SYNC", "❌ Push failed: ${err.message}") }
                     }

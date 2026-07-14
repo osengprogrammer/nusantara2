@@ -15,7 +15,7 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.session.ui.TierBadge
+import com.azuratech.azuratime.core.ui.components.TierBadge
 import java.time.format.DateTimeFormatter
 
 /**

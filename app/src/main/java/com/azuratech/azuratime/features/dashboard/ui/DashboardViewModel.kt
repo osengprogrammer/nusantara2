@@ -23,7 +23,7 @@ import com.azuratech.azuratime.core.util.isAdmin
 import com.azuratech.azuratime.features.account.data.local.toDomain
 import com.azuratech.azuratime.features.session.domain.usecase.GetActiveTieredSessionUseCase
 import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -141,7 +141,7 @@ class DashboardViewModel @Inject constructor(
                 account.activeClassId != null -> account.activeClassId
 
                 // 2. Secondary: Currently active session's class
-                activeSession != null -> activeSession.session.classId
+                activeSession != null -> activeSession.classId
 
                 // 3. Fallback: First assigned class from Matrix (for Supervisors)
                 else -> {
@@ -324,6 +324,7 @@ class DashboardViewModel @Inject constructor(
 
                         // 5. 🔥 Sync core data for the active workspace
                         studentRepository.pullStudents(activeSchoolId)
+                        biometricRepository.pullAssignmentsFromCloud(activeSchoolId)
                         biometricRepository.syncBiometrics()
                         studentRepository.autoHealStudentIdentities(activeSchoolId)
                         biometricRepository.syncAssignments()

@@ -2,8 +2,8 @@ package com.azuratech.azuratime.features.session.domain.repository
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
-import com.azuratech.azuratime.features.session.data.local.SubjectEntity
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 import kotlinx.coroutines.flow.Flow
 
 /**

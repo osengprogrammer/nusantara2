@@ -7,8 +7,8 @@ import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.school.data.local.ClassEntity
 import com.azuratech.azuratime.features.school.data.local.toClassEntity
-import com.azuratech.azuratime.features.session.data.local.SubjectEntity
-import com.azuratech.azuratime.features.session.data.local.toSubjectEntity
+import com.azuratech.azuratime.core.data.local.SubjectEntity
+import com.azuratech.azuratime.core.data.local.toSubjectEntity
 import com.azuratech.azuratime.features.template.domain.repository.TemplateRepository
 import com.azuratech.azuratime.features.template.domain.model.SchoolTemplate
 import com.azuratech.azuratime.features.template.domain.model.ClassTemplate

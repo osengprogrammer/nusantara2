@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.session.ui
 
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
 
 /**
  * 📅 SESSION PICKER MVI CONTRACT (v3.3.0-ai-native)

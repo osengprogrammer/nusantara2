@@ -63,6 +63,7 @@ class AccountSyncWorker @AssistedInject constructor(
             // 5. Sync Students & Biometrics (Background Auto-Heal)
             account.activeSchoolId?.let { schoolId ->
                 studentRepository.pullStudents(schoolId)
+                biometricRepository.pullAssignmentsFromCloud(schoolId)
                 biometricRepository.syncBiometrics()
                 studentRepository.autoHealStudentIdentities(schoolId)
             }

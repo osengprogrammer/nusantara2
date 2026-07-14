@@ -23,7 +23,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDataSource
 
 /**
  * 🏛️ STUDENT REPOSITORY IMPLEMENTATION
@@ -36,7 +35,6 @@ class StudentRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager,
     private val syncManager: SyncManager,
     private val firestore: com.google.firebase.firestore.FirebaseFirestore,
-    private val remoteDataSource: BiometricRemoteDataSource,
     private val schoolRepository: SchoolRepository,
 ) : StudentRepository {
 
@@ -205,23 +203,6 @@ class StudentRepositoryImpl @Inject constructor(
                 studentDao.upsert(student.copy(isSynced = true))
             }
 
-            val unsyncedBiometrics = biometricDao.getUnsyncedBiometrics(schoolId)
-            if (unsyncedBiometrics.isNotEmpty()) {
-                val syncResult = remoteDataSource.bulkSyncBiometrics(schoolId, unsyncedBiometrics)
-                if (syncResult is Result.Success) {
-                    unsyncedBiometrics.forEach { biometric ->
-                        biometricDao.upsertStudentBiometric(biometric.copy(isSynced = true))
-                    }
-                }
-            }
-
-            val unsyncedAssignments = assignmentDao.getUnsyncedAssignments(schoolId)
-            for (assignment in unsyncedAssignments) {
-                val syncResult = remoteDataSource.syncStudentAssignment(assignment)
-                if (syncResult is Result.Success) {
-                    assignmentDao.updateSyncStatus(assignment.studentId, assignment.classId, schoolId, true)
-                }
-            }
             Result.Success(Unit)
         } catch (e: Exception) {
             android.util.Log.e("DEBUG_PUSH", "❌ Error: ${e.message}")
@@ -300,19 +281,14 @@ class StudentRepositoryImpl @Inject constructor(
                 )
             }
 
-            // 2. Pull Legacy Assignments from 'student_class_assignments' collection (Cross-Ref Sync)
-            val remoteAssignments = remoteDataSource.getStudentAssignments(schoolId).let {
-                if (it is Result.Success) it.data else emptyList()
-            }
-
-            if (studentData.isNotEmpty() || remoteAssignments.isNotEmpty()) {
+            if (studentData.isNotEmpty()) {
                 database.withTransaction {
-                    // 3. Save Identities
+                    // 2. Save Identities
                     for ((entity, _, _) in studentData) {
                         studentDao.upsert(entity)
                     }
 
-                    // 4. Save Assignments with Healing Logic
+                    // 3. Save Assignments with Healing Logic
                     for ((_, studentId, classIds) in studentData) {
                         for (cId in classIds) {
                             try {
@@ -340,40 +316,6 @@ class StudentRepositoryImpl @Inject constructor(
                             } catch (e: Exception) {
                                 println("⚠️ SYNC HEAL: Failed to assign student $studentId to class $cId. Error: ${e.message}")
                             }
-                        }
-                    }
-
-                    // 5. Save Remote Legacy Assignments (Dedicated Collection)
-                    for (remoteAssignment in remoteAssignments) {
-                        try {
-                            // Ensure student exists
-                            if (studentDao.getById(remoteAssignment.studentId, schoolId) == null) {
-                                studentDao.upsert(
-                                    StudentEntity(
-                                        studentId = remoteAssignment.studentId,
-                                        schoolId = schoolId,
-                                        name = "Unknown Student",
-                                        isSynced = true,
-                                    ),
-                                )
-                            }
-
-                            // Ensure class exists
-                            if (schoolRepository.getClassById(remoteAssignment.classId).let { it is Result.Success && it.data == null }) {
-                                schoolRepository.saveClassLocally(
-                                    ClassEntity(
-                                        id = remoteAssignment.classId,
-                                        ownerAccountId = accountId,
-                                        schoolId = schoolId,
-                                        name = "Auto-Healed Class",
-                                        isSynced = true,
-                                    ),
-                                )
-                            }
-
-                            assignmentDao.insertAssignment(remoteAssignment)
-                        } catch (e: Exception) {
-                            println("⚠️ SYNC HEAL: Failed to insert remote assignment. Error: ${e.message}")
                         }
                     }
                 }

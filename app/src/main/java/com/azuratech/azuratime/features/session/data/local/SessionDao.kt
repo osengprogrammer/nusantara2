@@ -1,24 +1,15 @@
 package com.azuratech.azuratime.features.session.data.local
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
 
 import androidx.room.*
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 import kotlinx.coroutines.flow.Flow
-
-/**
- * POJO for JOIN results between [ClassSessionEntity] and [SubjectEntity].
- */
-data class SessionWithDetails(
-    @Embedded val session: ClassSessionEntity,
-    val subjectName: String? = null, // ✅ Nullable for non-academic sessions
-) {
-    @Ignore var className: String? = null // Optional: Can be filled if we join with ClassEntity too
-}
 
 @Dao
 interface SessionDao {
+
     /**
-     * Returns sessions for a specific day with their subject details.
-     * Uses lookupKey-style logic (dayOfWeek) for fast daily schedule queries.
-     * 🔥 AI Native: Uses LEFT JOIN to ensure GLOBAL/CLASS_WIDE sessions are visible.
+     * POJO for JOIN results between [ClassSessionEntity] and [SubjectEntity].
      */
     @Query(
         """
@@ -27,7 +18,7 @@ interface SessionDao {
         LEFT JOIN subjects subj ON s.subjectId = subj.subjectId
         WHERE s.schoolId = :schoolId AND s.dayOfWeek = :day AND s.isActive = 1
         ORDER BY s.startTime ASC
-    """,
+        """,
     )
     fun getSessionsByDayFlow(schoolId: String, day: Int): Flow<List<SessionWithDetails>>
 

@@ -103,7 +103,7 @@ class SessionPickerViewModel @Inject constructor(
             if (sessionId.startsWith("ADHOC_")) {
                 // Create the actual session record before navigating
                 val state = _uiStateFlow.value
-                val adhocSession = state.sessions.find { it.session.sessionId == sessionId }?.session
+                val adhocSession = state.sessions.find { it.sessionId == sessionId }
                 if (adhocSession != null) {
                     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
                     val now = LocalTime.now()

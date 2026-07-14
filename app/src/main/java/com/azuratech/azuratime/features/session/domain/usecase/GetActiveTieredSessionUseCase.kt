@@ -5,7 +5,7 @@ import com.azuratech.azuratime.features.session.domain.repository.SessionReposit
 import com.azuratech.azuratime.features.session.domain.usecase.GetSessionsByDayUseCase
 
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 import kotlinx.coroutines.flow.*
 import java.time.LocalTime
@@ -36,8 +36,8 @@ class GetActiveTieredSessionUseCase @Inject constructor(
                     // 1. Filter sessions running right now
                     val activeSessions = sessions.filter { session ->
                         try {
-                            val start = LocalTime.parse(session.session.startTime, timeFormatter)
-                            val end = LocalTime.parse(session.session.endTime, timeFormatter)
+                            val start = LocalTime.parse(session.startTime, timeFormatter)
+                            val end = LocalTime.parse(session.endTime, timeFormatter)
                             !currentTime.isBefore(start) && !currentTime.isAfter(end)
                         } catch (e: Exception) {
                             false
@@ -47,16 +47,16 @@ class GetActiveTieredSessionUseCase @Inject constructor(
                     // 2. Resolve Hierarchy: GLOBAL > CLASS_WIDE > ACADEMIC
                     val resolved = activeSessions
                         .filter { session ->
-                            when (session.session.sessionType) {
+                            when (session.sessionType) {
                                 SessionType.GLOBAL -> true
-                                SessionType.CLASS_WIDE -> session.session.classId == studentClassId
-                                SessionType.ACADEMIC -> session.session.classId == studentClassId
+                                SessionType.CLASS_WIDE -> session.classId == studentClassId
+                                SessionType.ACADEMIC -> session.classId == studentClassId
                             }
                         }
                         .sortedWith(
-                            compareBy<SessionWithDetails> { it.session.sessionType.priority } // Custom priority
-                                .thenBy { it.session.startTime } // Earliest start first
-                                .thenBy { it.session.sessionId }, // Final tie-breaker
+                            compareBy<SessionWithDetails> { it.sessionType.priority } // Custom priority
+                                .thenBy { it.startTime } // Earliest start first
+                                .thenBy { it.sessionId }, // Final tie-breaker
                         )
                         .firstOrNull()
 

@@ -18,6 +18,7 @@ interface BiometricLocalDataSource {
     suspend fun getAllStudentsForScanningList(schoolId: String): List<StudentBiometricEntity>
     suspend fun getStudentFaceById(studentId: String, schoolId: String): StudentBiometricEntity?
     suspend fun getStudentFaceByIdentity(studentId: String, schoolId: String): StudentBiometricEntity?
+    suspend fun getUnsyncedBiometrics(schoolId: String): List<StudentBiometricEntity>
     suspend fun upsertStudentFace(studentFace: StudentBiometricEntity)
     suspend fun upsertAllStudentFaces(studentFaces: List<StudentBiometricEntity>)
     suspend fun deleteStudentFaceById(studentId: String, schoolId: String)

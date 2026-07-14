@@ -206,4 +206,44 @@ class StudentBiometricRepositoryImpl @Inject constructor(
     override suspend fun syncAssignments(): Result<Unit> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         Result.Success(Unit)
     }
+
+    override suspend fun bulkSyncBiometrics(schoolId: String, students: List<StudentBiometricEntity>): Result<Unit> =
+        remoteDataSource.bulkSyncBiometrics(schoolId, students)
+
+    override suspend fun syncStudentAssignment(assignment: StudentClassAssignmentEntity): Result<Unit> =
+        remoteDataSource.syncStudentAssignment(assignment)
+
+    override suspend fun getStudentAssignments(schoolId: String): Result<List<StudentClassAssignmentEntity>> =
+        remoteDataSource.getStudentAssignments(schoolId)
+
+    override suspend fun syncPendingBiometricsToCloud(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val unsyncedBiometrics = localDataSource.getUnsyncedBiometrics(schoolId)
+            if (unsyncedBiometrics.isNotEmpty()) {
+                val syncResult = remoteDataSource.bulkSyncBiometrics(schoolId, unsyncedBiometrics)
+                if (syncResult is Result.Success) {
+                    unsyncedBiometrics.forEach { biometric ->
+                        localDataSource.upsertStudentFace(biometric.copy(isSynced = true))
+                    }
+                }
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
+
+    override suspend fun pullAssignmentsFromCloud(schoolId: String): Result<Unit> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val remoteAssignments = remoteDataSource.getStudentAssignments(schoolId)
+            if (remoteAssignments is Result.Success) {
+                remoteAssignments.data.forEach { assignment ->
+                    localDataSource.insertAssignment(assignment)
+                }
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(AppError.Network(e.message))
+        }
+    }
 }

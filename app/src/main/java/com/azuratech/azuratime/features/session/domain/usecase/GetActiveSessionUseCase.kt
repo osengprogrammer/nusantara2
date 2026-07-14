@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.session.domain.usecase
 import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject

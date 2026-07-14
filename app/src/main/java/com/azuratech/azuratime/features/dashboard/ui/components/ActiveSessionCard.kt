@@ -14,8 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.session.data.local.SessionWithDetails
-import com.azuratech.azuratime.features.session.ui.TierBadge
+import com.azuratech.azuratime.core.data.local.SessionWithDetails
+import com.azuratech.azuratime.core.ui.components.TierBadge
 
 /**
  * 🚀 SMART SESSION CARD (v3.7.0)
@@ -83,7 +83,7 @@ fun ActiveSessionCard(
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                     Text(
-                        text = "Time: ${activeSession.session.startTime} - ${activeSession.session.endTime}",
+                        text = "Time: ${activeSession.startTime} - ${activeSession.endTime}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                     )
@@ -92,7 +92,7 @@ fun ActiveSessionCard(
                 Spacer(modifier = Modifier.height(AzuraSpacing.md))
 
                 Button(
-                    onClick = { onStartAttendance(activeSession.session.sessionId) },
+                    onClick = { onStartAttendance(activeSession.sessionId) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = AzuraShapes.medium,
                     contentPadding = PaddingValues(AzuraSpacing.md),
@@ -109,11 +109,11 @@ fun ActiveSessionCard(
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
                 // 🔥 AI Native: Sort by Priority (GLOBAL first) for manual selection
-                val sortedSessions = allSessionsToday.sortedBy { it.session.sessionType.ordinal }
+                val sortedSessions = allSessionsToday.sortedBy { it.sessionType.ordinal }
 
                 sortedSessions.take(3).forEach { session ->
                     OutlinedCard(
-                        onClick = { onStartAttendance(session.session.sessionId) },
+                        onClick = { onStartAttendance(session.sessionId) },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         shape = AzuraShapes.medium,
                     ) {
@@ -125,14 +125,14 @@ fun ActiveSessionCard(
                             Column(modifier = Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = session.subjectName ?: session.session.sessionType.name,
+                                        text = session.subjectName ?: session.sessionType.name,
                                         style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Bold,
                                     )
                                     Spacer(Modifier.width(AzuraSpacing.sm))
-                                    TierBadge(session.session.sessionType)
+                                    TierBadge(session.sessionType)
                                 }
-                                Text("${session.session.startTime} - ${session.session.endTime}", style = MaterialTheme.typography.labelSmall)
+                                Text("${session.startTime} - ${session.endTime}", style = MaterialTheme.typography.labelSmall)
                             }
                             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         }

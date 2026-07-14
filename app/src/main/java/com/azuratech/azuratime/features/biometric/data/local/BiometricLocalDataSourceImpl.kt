@@ -50,6 +50,9 @@ class BiometricLocalDataSourceImpl @Inject constructor(
     override suspend fun getStudentFaceByIdentity(studentId: String, schoolId: String): StudentBiometricEntity? =
         biometricDao.getStudentBiometricByIdentity(studentId, schoolId)
 
+    override suspend fun getUnsyncedBiometrics(schoolId: String): List<StudentBiometricEntity> =
+        biometricDao.getUnsyncedBiometrics(schoolId)
+
     override suspend fun upsertStudentFace(studentFace: StudentBiometricEntity) =
         biometricDao.upsertStudentBiometric(studentFace)
 
