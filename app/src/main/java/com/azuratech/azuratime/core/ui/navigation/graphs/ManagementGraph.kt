@@ -115,7 +115,6 @@ fun NavGraphBuilder.managementGraph(
                 initialDataType = it.arguments?.getString("dataType") ?: "FACES",
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToClassList = { navController.navigate(NavigationRoutes.STUDENT_ROSTER) },
-                registerViewModel = hiltViewModel(),
             )
         }
         composable(

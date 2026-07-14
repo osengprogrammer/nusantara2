@@ -20,6 +20,7 @@ import com.azuratech.azuratime.features.biometric.data.local.StudentBiometricEnt
 import com.azuratech.azuratime.features.reporting.domain.repository.AuditLogRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
@@ -54,7 +55,7 @@ class AttendanceRepositoryImpl @Inject constructor(
         classId: String?,
         assignedIds: List<String>,
         schoolId: String,
-    ): Flow<Result<List<AttendanceRecordEntity>>> {
+    ): Flow<Result<List<AttendanceRecord>>> {
         return localDataSource.getFilteredRecords(
             name,
             startDate,
@@ -63,7 +64,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             classId,
             assignedIds,
             schoolId,
-        ).asLocalResult()
+        ).map { list -> list.map { it.toDomain() } }.asLocalResult()
     }
 
     override suspend fun saveRecord(record: AttendanceRecord, sessionId: String?): Result<Unit> {
@@ -346,8 +347,8 @@ class AttendanceRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAttendanceByTierFlow(schoolId: String, sessionType: SessionType): Flow<Result<List<AttendanceRecordEntity>>> {
-        return attendanceRecordDao.getRecordsByTier(schoolId, sessionType.name).asLocalResult()
+    override fun getAttendanceByTierFlow(schoolId: String, sessionType: SessionType): Flow<Result<List<AttendanceRecord>>> {
+        return attendanceRecordDao.getRecordsByTier(schoolId, sessionType.name).map { list -> list.map { it.toDomain() } }.asLocalResult()
     }
 
     override fun getTierSummaryCountFlow(schoolId: String, sessionType: SessionType, date: LocalDate): Flow<Result<Int>> {

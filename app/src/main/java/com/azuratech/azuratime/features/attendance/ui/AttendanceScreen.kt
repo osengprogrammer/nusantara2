@@ -25,7 +25,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.*
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuratime.features.attendance.ui.history.AttendanceHistoryCard
+import com.azuratech.azuratime.core.ui.components.AttendanceHistoryCard
 import com.azuratech.azuratime.core.util.showToast
 
 import com.azuratech.azuratime.core.util.isAdmin

@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.attendance.ui.history
+import com.azuratech.azuratime.core.ui.components.AttendanceHistoryCard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

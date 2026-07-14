@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
@@ -14,7 +14,9 @@ import com.azuratech.azuratime.features.student.domain.repository.StudentReposit
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 /**
@@ -158,7 +160,7 @@ class AttendanceMatrixViewModel @Inject constructor(
     }
 
     private fun transformToMatrixRows(
-        records: List<AttendanceRecordEntity>,
+        records: List<AttendanceRecord>,
         students: List<StudentProfile>,
         startDate: LocalDate,
         endDate: LocalDate,
@@ -171,7 +173,9 @@ class AttendanceMatrixViewModel @Inject constructor(
         return students.map { student ->
             val studentRecords = recordsByStudent[student.studentId] ?: emptyList()
             // Map records by date (assuming one record per day for matrix)
-            val recordsByDate = studentRecords.associateBy { it.attendanceDate }
+            val recordsByDate = studentRecords.associateBy {
+                Instant.ofEpochMilli(it.timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+            }
 
             var summaryH = 0
             var summaryS = 0
@@ -182,7 +186,7 @@ class AttendanceMatrixViewModel @Inject constructor(
             val cells = dateRange.map { date ->
                 val record = recordsByDate[date]
                 if (record != null) {
-                    val status = AttendanceStatus.fromCode(record.status)
+                    val status = record.status
                     when (status) {
                         AttendanceStatus.PRESENT -> summaryH++
                         AttendanceStatus.LATE -> summaryT++

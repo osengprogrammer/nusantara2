@@ -78,9 +78,7 @@ class AttendanceViewModel @Inject constructor(
                 classId = classId,
                 assignedIds = emptyList(),
                 schoolId = schoolId,
-            ).map { result ->
-                result.map { entities -> entities.map { it.toDomain() } }
-            }
+            )
         }.onEach { result ->
             result.onSuccess { records ->
                 _uiStateFlow.update { it.copy(isLoading = false, records = records) }

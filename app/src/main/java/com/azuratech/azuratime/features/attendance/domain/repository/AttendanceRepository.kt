@@ -1,7 +1,6 @@
 package com.azuratech.azuratime.features.attendance.domain.repository
 
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.features.session.domain.model.SessionType
@@ -33,7 +32,7 @@ interface AttendanceRepository {
         classId: String?,
         assignedIds: List<String>,
         schoolId: String,
-    ): Flow<Result<List<AttendanceRecordEntity>>>
+    ): Flow<Result<List<AttendanceRecord>>>
 
     suspend fun saveRecord(record: AttendanceRecord, sessionId: String? = null): Result<Unit>
     suspend fun updateRecord(recordId: String, classId: String, className: String): Result<Unit>
@@ -55,7 +54,7 @@ interface AttendanceRepository {
     suspend fun resolveConflict(conflictId: String, useCloud: Boolean): Result<Unit>
     suspend fun processAttendance(params: ProcessAttendanceParams): Result<com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult>
 
-    fun getAttendanceByTierFlow(schoolId: String, sessionType: SessionType): Flow<Result<List<AttendanceRecordEntity>>>
+    fun getAttendanceByTierFlow(schoolId: String, sessionType: SessionType): Flow<Result<List<AttendanceRecord>>>
     fun getTierSummaryCountFlow(schoolId: String, sessionType: SessionType, date: LocalDate): Flow<Result<Int>>
 
     /**

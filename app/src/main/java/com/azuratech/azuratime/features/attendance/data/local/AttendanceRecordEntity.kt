@@ -181,3 +181,4 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
         null
     }
 }
+

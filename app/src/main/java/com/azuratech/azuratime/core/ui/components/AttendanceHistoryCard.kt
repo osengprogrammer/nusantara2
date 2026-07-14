@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.attendance.ui.history
+package com.azuratech.azuratime.core.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
