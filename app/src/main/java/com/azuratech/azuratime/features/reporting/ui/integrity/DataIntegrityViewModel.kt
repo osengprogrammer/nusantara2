@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.reporting.ui.integrity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
+import com.azuratech.azuratime.core.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.reporting.domain.repository.DataIntegrityRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

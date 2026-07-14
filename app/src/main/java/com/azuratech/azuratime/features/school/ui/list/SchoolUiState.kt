@@ -1,8 +1,10 @@
 package com.azuratech.azuratime.features.school.ui.list
-
+import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.core.domain.model.AccountRole
+
+
 
 data class SchoolUiState(
     val isLoading: Boolean = false,
@@ -12,6 +14,6 @@ data class SchoolUiState(
     val error: String? = null,
     val accountId: String = "",
     val currentAccountRole: AccountRole = AccountRole.USER,
-    val geofence: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity? = null,
+    val geofence: com.azuratech.azuratime.core.data.local.GpsGeofenceEntity? = null,
     val pickedLocation: com.google.android.gms.maps.model.LatLng? = null,
 )

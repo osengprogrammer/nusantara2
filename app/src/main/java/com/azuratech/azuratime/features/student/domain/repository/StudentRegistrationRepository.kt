@@ -4,7 +4,7 @@ import com.azuratech.azuraengine.model.ProcessResult
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
-import com.azuratech.azuratime.features.school.data.local.ClassEntity
+import com.azuratech.azuratime.core.data.local.ClassEntity
 import kotlinx.coroutines.flow.Flow
 
 /**

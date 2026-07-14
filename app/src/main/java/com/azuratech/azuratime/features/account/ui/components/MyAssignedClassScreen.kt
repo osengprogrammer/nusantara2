@@ -18,7 +18,6 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
-import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.account.ui.management.AccountUiEvent
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -27,7 +26,7 @@ import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 fun MyAssignedClassScreen(
     onNavigateBack: () -> Unit,
     accountViewModel: AccountManagementViewModel,
-    classViewModel: ClassViewModel,
+    allClasses: List<ClassModel> = emptyList(),
     targetAccountId: String? = null,
 ) {
     val assignedIds by (
@@ -38,8 +37,6 @@ fun MyAssignedClassScreen(
         }
         )
         .collectAsStateWithLifecycle()
-    val classUiState by classViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val allClasses = classUiState.classes
     val account by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
     val targetAccount by accountViewModel.selectedTargetAccountFlow.collectAsStateWithLifecycle()
 

@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.account.domain.model
+import com.azuratech.azuratime.core.data.local.SchoolMembership
 
 /**
  * 👤 ACCOUNT PROFILE (v3.2.0-ai-native)
@@ -14,3 +15,4 @@ data class AccountProfile(
     val activeClassId: String? = null,
     val memberships: Map<String, SchoolMembership> = emptyMap(),
 )
+

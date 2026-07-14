@@ -7,9 +7,9 @@ import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.domain.sync.ExportUtils
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
+import com.azuratech.azuratime.core.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.features.attendance.data.local.AttendanceLocalDataSource
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.core.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.features.attendance.data.remote.AttendanceRemoteDataSource
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus

@@ -1,7 +1,9 @@
 package com.azuratech.azuratime.features.attendance.data.local
-
+import com.azuratech.azuratime.core.data.local.AttendanceRecordEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
+
+
 
 interface AttendanceLocalDataSource {
     fun getFilteredRecords(

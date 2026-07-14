@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.attendance.data.local
 
 import androidx.room.*
+import com.azuratech.azuratime.core.data.local.AttendanceRecordEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 

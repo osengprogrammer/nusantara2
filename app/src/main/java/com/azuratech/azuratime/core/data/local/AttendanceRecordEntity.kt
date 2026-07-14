@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.attendance.data.local
+package com.azuratech.azuratime.core.data.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -181,4 +181,3 @@ fun com.google.firebase.firestore.DocumentSnapshot.toAttendanceRecordEntity(scho
         null
     }
 }
-

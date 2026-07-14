@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.account.data.local
+package com.azuratech.azuratime.core.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -23,21 +23,6 @@ data class AccessRequestEntity(
     val syncStatus: SyncStatus,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-)
-
-/**
- * Domain projection for Access Request
- */
-fun AccessRequestEntity.toProfile() = AccessRequestProfile(
-    requestId = requestId,
-    accountId = accountId,
-    schoolId = schoolId,
-    schoolName = schoolName,
-    status = status,
-    assignedRole = assignedRole,
-    syncStatus = syncStatus,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
 )
 
 fun AccessRequestProfile.toEntity() = AccessRequestEntity(

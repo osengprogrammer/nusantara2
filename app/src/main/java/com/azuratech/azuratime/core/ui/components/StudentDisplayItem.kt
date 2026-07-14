@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.student.ui.components
+package com.azuratech.azuratime.core.ui.components
 
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 

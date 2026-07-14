@@ -5,6 +5,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import com.azuratech.azuratime.features.session.ui.SessionPickerScreen
 
@@ -61,8 +63,25 @@ fun NavGraphBuilder.attendanceGraph(
             )
         }
 
-        composable(NavigationRoutes.MANUAL_ATTENDANCE) {
-            TextPlaceholder("Manual Attendance")
+        composable(NavigationRoutes.MANUAL_ATTENDANCE) { backStackEntry ->
+            val biometricVm: com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            val accountVm: com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            val classVm: com.azuratech.azuratime.features.school.ui.classes.ClassViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            val attendanceVm: com.azuratech.azuratime.features.attendance.ui.AttendanceViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            val faces by biometricVm.studentRosterFlow.collectAsState()
+            val currentAccount by accountVm.currentAccountFlow.collectAsState()
+            val assignedIds by accountVm.assignedClassIdsFlow.collectAsState()
+            val classState by classVm.uiStateFlow.collectAsState()
+            com.azuratech.azuratime.features.attendance.ui.manual.ManualAttendanceScreen(
+                faces = faces,
+                currentAccount = currentAccount,
+                assignedClassIds = assignedIds,
+                globalClasses = classState.classes,
+                attendanceViewModel = attendanceVm,
+                initialFaceId = backStackEntry.arguments?.getString("studentId") ?: "",
+                initialDate = backStackEntry.arguments?.getString("date") ?: "",
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
     }
 }

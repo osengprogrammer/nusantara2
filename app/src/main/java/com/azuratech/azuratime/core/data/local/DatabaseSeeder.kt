@@ -1,10 +1,10 @@
 package com.azuratech.azuratime.core.data.local
 
 import android.content.Context
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.local.SchoolMembership
+import com.azuratech.azuratime.core.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.SchoolMembership
 import com.azuratech.azuratime.features.school.data.local.ClassDao
-import com.azuratech.azuratime.features.school.data.local.ClassEntity
+import com.azuratech.azuratime.core.data.local.ClassEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -32,7 +32,7 @@ object DatabaseSeeder {
 
                 // Check if this school already exists (e.g., if accounts were cleared but schools weren't)
                 if (schoolDao.getSchoolById(defaultSchoolId) == null) {
-                    val defaultSchool = com.azuratech.azuratime.features.school.data.local.SchoolEntity(
+                    val defaultSchool = SchoolEntity(
                         id = defaultSchoolId,
                         accountId = "SYSTEM",
                         name = schoolName,

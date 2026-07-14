@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.account.domain.repository
 import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 import com.azuratech.azuratime.core.domain.model.AccountRole

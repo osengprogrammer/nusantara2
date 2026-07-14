@@ -21,7 +21,7 @@ import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.LocationProvider
-import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
+import com.azuratech.azuratime.core.ui.components.rememberVoiceAssistant
 import com.azuratech.azuratime.features.attendance.ui.barcode.BarcodeScanner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted

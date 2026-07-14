@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.dashboard.ui
 
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 
 object DashboardPreviewMocks {
     fun loading(): DashboardUiState = DashboardUiState(isLoading = true)

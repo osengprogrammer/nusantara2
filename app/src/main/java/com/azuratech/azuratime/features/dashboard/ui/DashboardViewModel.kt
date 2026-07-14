@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.dashboard.ui
+import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.model.ClassModel
@@ -9,7 +9,7 @@ import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
@@ -20,7 +20,7 @@ import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRep
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.core.util.isAdmin
-import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.core.data.local.toDomain
 import com.azuratech.azuratime.features.session.domain.usecase.GetActiveTieredSessionUseCase
 import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 import com.azuratech.azuratime.core.data.local.SessionWithDetails
@@ -29,6 +29,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+
 
 /**
  * 🏠 DASHBOARD VIEW MODEL (v3.2.0-ai-native)
@@ -235,7 +237,7 @@ class DashboardViewModel @Inject constructor(
         val activeSchool = params[5] as School?
         val pendingCount = params[6] as Int
         val totalActiveStudents = params[7] as Int
-        val geofence = params[8] as com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity?
+        val geofence = params[8] as com.azuratech.azuratime.core.data.local.GpsGeofenceEntity?
         val activeSession = params[9] as SessionWithDetails?
 
         @Suppress("UNCHECKED_CAST")

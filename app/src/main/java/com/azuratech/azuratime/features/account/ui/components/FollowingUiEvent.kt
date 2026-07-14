@@ -1,4 +1,5 @@
 package com.azuratech.azuratime.features.account.ui.components
+import com.azuratech.azuratime.core.data.local.AccountEntity
 
 /**
  * 🚥 FOLLOWING UI EVENT (v3.2.0-ai-native)
@@ -8,7 +9,7 @@ sealed class FollowingUiEvent {
     data class SendConnectionRequest(val targetAccountId: String) : FollowingUiEvent()
     data class AcceptRequest(val senderId: String) : FollowingUiEvent()
     data class DeclineRequest(val senderId: String) : FollowingUiEvent()
-    data class SelectFriendForAssignment(val friend: com.azuratech.azuratime.features.account.data.local.AccountEntity?) : FollowingUiEvent()
+    data class SelectFriendForAssignment(val friend: AccountEntity?) : FollowingUiEvent()
     data class AssignClasses(val targetId: String, val classIds: List<String>) : FollowingUiEvent()
     data class ChangeMemberRole(val targetAccountId: String, val newRole: com.azuratech.azuratime.core.domain.model.AccountRole) : FollowingUiEvent()
     data class UnfollowFriend(val targetAccountId: String) : FollowingUiEvent()
@@ -17,3 +18,4 @@ sealed class FollowingUiEvent {
     object ClearSuccessMessage : FollowingUiEvent()
     object NavigateBack : FollowingUiEvent()
 }
+

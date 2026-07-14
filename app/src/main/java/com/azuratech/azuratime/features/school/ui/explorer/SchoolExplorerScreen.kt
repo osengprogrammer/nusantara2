@@ -24,13 +24,12 @@ import com.azuratech.azuratime.core.ui.components.AddSubjectDialog
 import com.azuratech.azuratime.core.ui.components.RoleBadge
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.font.FontWeight
-import com.azuratech.azuratime.features.student.ui.StudentUiEvent
-import com.azuratech.azuratime.features.student.ui.StudentUiState
-import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
+import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+import com.azuratech.azuratime.core.ui.components.StudentDisplayItem
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 
 @Composable
 fun SchoolExplorerScreen(
@@ -48,8 +47,10 @@ fun SchoolExplorerScreen(
     allAccountsInSameSchool: List<AccountEntity> = emptyList(),
     activeSchoolId: String? = null,
     // Student data (from StudentViewModel)
-    studentState: StudentUiState = StudentUiState(),
-    onStudentEvent: (StudentUiEvent) -> Unit = {},
+    students: List<StudentDisplayItem> = emptyList(),
+    isLoadingStudents: Boolean = false,
+    onEditStudent: (StudentProfile) -> Unit = {},
+    onDeleteStudent: (String) -> Unit = {},
     initialTab: Int = 0,
 ) {
     var selectedTab by remember { mutableIntStateOf(initialTab) }
@@ -110,8 +111,10 @@ fun SchoolExplorerScreen(
                         },
                     )
                     3 -> StudentsTab(
-                        state = studentState,
-                        onEvent = onStudentEvent,
+                        students = students,
+                        isLoading = isLoadingStudents,
+                        onEditStudent = onEditStudent,
+                        onDeleteStudent = onDeleteStudent,
                     )
                 }
             }
@@ -220,7 +223,7 @@ fun SubjectsTab(
 
 @Composable
 fun MatrixTab(
-    accounts: List<com.azuratech.azuratime.features.account.data.local.AccountEntity>,
+    accounts: List<com.azuratech.azuratime.core.data.local.AccountEntity>,
     activeSchoolId: String?,
     onNavigateToAssignClass: (String, String) -> Unit,
 ) {
@@ -295,10 +298,12 @@ fun MatrixTab(
 
 @Composable
 fun StudentsTab(
-    state: StudentUiState,
-    onEvent: (StudentUiEvent) -> Unit,
+    students: List<StudentDisplayItem>,
+    isLoading: Boolean,
+    onEditStudent: (StudentProfile) -> Unit,
+    onDeleteStudent: (String) -> Unit,
 ) {
-    if (state.isLoading && state.students.isEmpty()) {
+    if (isLoading && students.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -308,11 +313,11 @@ fun StudentsTab(
             contentPadding = PaddingValues(AzuraSpacing.md),
             verticalArrangement = Arrangement.spacedBy(AzuraSpacing.sm),
         ) {
-            items(state.students) { item ->
+            items(students) { item ->
                 StudentListItem(
                     item = item,
-                    onEdit = { onEvent(StudentUiEvent.OpenEditDialog(item.profile)) },
-                    onDelete = { onEvent(StudentUiEvent.DeleteStudent(item.profile.studentId)) },
+                    onEdit = { onEditStudent(item.profile) },
+                    onDelete = { onDeleteStudent(item.profile.studentId) },
                 )
             }
         }

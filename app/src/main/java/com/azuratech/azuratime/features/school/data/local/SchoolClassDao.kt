@@ -1,6 +1,10 @@
 package com.azuratech.azuratime.features.school.data.local
 
 import androidx.room.*
+import com.azuratech.azuratime.core.data.local.ClassEntity
+import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
+import com.azuratech.azuratime.core.data.local.SchoolEntity
+import com.azuratech.azuratime.core.data.local.SchoolClassAssignment
 import kotlinx.coroutines.flow.Flow
 
 @Dao

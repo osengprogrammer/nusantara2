@@ -155,8 +155,10 @@ fun NavGraphBuilder.managementGraph(
                 onAddSubject = { name, desc -> sessionVm.onEvent(SessionManagementUiEvent.AddSubject(name, desc)) },
                 allAccountsInSameSchool = accountState.allAccountsInSameSchool,
                 activeSchoolId = accountState.activeSchoolId,
-                studentState = studentState,
-                onStudentEvent = studentVm::onEvent,
+                students = studentState.students,
+                isLoadingStudents = studentState.isLoading,
+                onEditStudent = { profile -> studentVm.onEvent(com.azuratech.azuratime.features.student.ui.StudentUiEvent.OpenEditDialog(profile)) },
+                onDeleteStudent = { studentId -> studentVm.onEvent(com.azuratech.azuratime.features.student.ui.StudentUiEvent.DeleteStudent(studentId)) },
             )
         }
         composable(
@@ -194,8 +196,10 @@ fun NavGraphBuilder.managementGraph(
                 onAddSubject = { name, desc -> sessionVm.onEvent(SessionManagementUiEvent.AddSubject(name, desc)) },
                 allAccountsInSameSchool = accountState.allAccountsInSameSchool,
                 activeSchoolId = accountState.activeSchoolId,
-                studentState = studentState,
-                onStudentEvent = studentVm::onEvent,
+                students = studentState.students,
+                isLoadingStudents = studentState.isLoading,
+                onEditStudent = { profile -> studentVm.onEvent(com.azuratech.azuratime.features.student.ui.StudentUiEvent.OpenEditDialog(profile)) },
+                onDeleteStudent = { studentId -> studentVm.onEvent(com.azuratech.azuratime.features.student.ui.StudentUiEvent.DeleteStudent(studentId)) },
             )
         }
         composable(

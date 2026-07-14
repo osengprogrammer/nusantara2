@@ -1,5 +1,5 @@
 package com.azuratech.azuratime.features.school.data.remote
-
+import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.result.AppError
@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+
+
 
 @Singleton
 class SchoolRemoteDataSourceImpl @Inject constructor(
@@ -273,7 +275,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
     // 📍 GPS GEOFENCE
     override suspend fun saveGeofence(
         schoolId: String,
-        geofence: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity,
+        geofence: com.azuratech.azuratime.core.data.local.GpsGeofenceEntity,
     ): Result<Unit> {
         return try {
             val data = hashMapOf(
@@ -292,7 +294,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override fun observeGeofenceFlow(schoolId: String): Flow<Result<com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity?>> = callbackFlow {
+    override fun observeGeofenceFlow(schoolId: String): Flow<Result<com.azuratech.azuratime.core.data.local.GpsGeofenceEntity?>> = callbackFlow {
         val subscription = db.collection("gps_geofences").document(schoolId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -300,7 +302,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                     return@addSnapshotListener
                 }
                 if (snapshot != null && snapshot.exists()) {
-                    val geofence = com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity(
+                    val geofence = com.azuratech.azuratime.core.data.local.GpsGeofenceEntity(
                         id = snapshot.getString("id") ?: snapshot.id,
                         schoolId = snapshot.getString("schoolId") ?: schoolId,
                         latitude = snapshot.getDouble("latitude") ?: 0.0,

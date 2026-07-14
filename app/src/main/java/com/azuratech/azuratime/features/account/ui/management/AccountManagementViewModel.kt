@@ -7,7 +7,7 @@ import com.azuratech.azuraengine.result.onFailure
 import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.model.toProfileCompat
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository

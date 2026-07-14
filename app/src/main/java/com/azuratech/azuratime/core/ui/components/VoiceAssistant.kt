@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.ai.ui
+package com.azuratech.azuratime.core.ui.components
 
 import android.content.Context
 import android.media.AudioManager

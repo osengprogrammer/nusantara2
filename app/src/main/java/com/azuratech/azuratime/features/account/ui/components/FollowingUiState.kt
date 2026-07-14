@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.account.ui.components
 
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 
 /**
  * 🚥 FOLLOWING UI STATE (v3.2.0-ai-native)

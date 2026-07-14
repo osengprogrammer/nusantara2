@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.reporting.domain.repository
 
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceConflictEntity
+import com.azuratech.azuratime.core.data.local.AttendanceConflictEntity
 import kotlinx.coroutines.flow.Flow
 
 interface DataIntegrityRepository {

@@ -23,8 +23,8 @@ import com.azuratech.azuratime.core.ui.designsystem.*
 import com.azuratech.azuratime.core.ui.components.RoleBadge
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.util.showToast
-import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccessRequestEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 
 /**
  * 👤 ACCOUNT MANAGEMENT SCREEN (v3.2.1-ai-native)

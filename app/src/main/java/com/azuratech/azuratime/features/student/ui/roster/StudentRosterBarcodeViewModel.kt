@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
-import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
+import com.azuratech.azuratime.core.ui.components.StudentDisplayItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

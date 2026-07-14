@@ -4,6 +4,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 
+
+
 @Entity(
     tableName = "student_class_assignments",
     primaryKeys = ["studentId", "classId"],
@@ -23,7 +25,7 @@ import androidx.room.Index
         ),
         // 2. Link to the Class
         ForeignKey(
-            entity = com.azuratech.azuratime.features.school.data.local.ClassEntity::class,
+            entity = com.azuratech.azuratime.core.data.local.ClassEntity::class,
             parentColumns = ["id"],
             childColumns = ["classId"],
             onDelete = ForeignKey.NO_ACTION,

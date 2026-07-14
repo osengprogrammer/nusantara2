@@ -5,8 +5,8 @@ import androidx.room.withTransaction
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuratime.features.school.data.local.ClassEntity
-import com.azuratech.azuratime.features.school.data.local.toClassEntity
+import com.azuratech.azuratime.core.data.local.ClassEntity
+import com.azuratech.azuratime.core.data.local.toClassEntity
 import com.azuratech.azuratime.core.data.local.SubjectEntity
 import com.azuratech.azuratime.core.data.local.toSubjectEntity
 import com.azuratech.azuratime.features.template.domain.repository.TemplateRepository

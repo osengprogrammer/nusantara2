@@ -7,7 +7,7 @@ import com.azuratech.azuratime.core.data.local.StudentWalletDao
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.payment.domain.repository.PaymentRepository
 import com.azuratech.azuratime.features.account.domain.model.Account
-import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.core.data.local.toDomain
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository

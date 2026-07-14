@@ -7,8 +7,8 @@ import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.domain.sync.CsvImportUtils
-import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.account.data.local.*
+import com.azuratech.azuratime.core.data.local.SchoolClassAssignment
+import com.azuratech.azuratime.core.data.local.ClassEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
 

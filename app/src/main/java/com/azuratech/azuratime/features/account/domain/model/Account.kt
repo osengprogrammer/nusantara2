@@ -1,6 +1,8 @@
 package com.azuratech.azuratime.features.account.domain.model
-
+import com.azuratech.azuratime.core.data.local.SchoolMembership
 import com.azuratech.azuratime.core.domain.model.AccountRole
+
+
 
 /**
  * 👤 ACCOUNT DOMAIN MODEL (v3.2.0-ai-native)

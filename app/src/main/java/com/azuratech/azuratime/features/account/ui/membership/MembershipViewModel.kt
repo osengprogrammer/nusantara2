@@ -1,5 +1,5 @@
 package com.azuratech.azuratime.features.account.ui.membership
-
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuraengine.result.onFailure
@@ -16,8 +16,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.azuratech.azuratime.core.data.local.toDomain
 
-import com.azuratech.azuratime.features.account.data.local.toDomain
+
+
 
 /**
  * 🛠️ MEMBERSHIP VIEW MODEL (v3.2.1-ai-native)

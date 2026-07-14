@@ -1,5 +1,6 @@
 package com.azuratech.azuratime.features.school.data.repo
-
+import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
+import com.azuratech.azuratime.core.data.local.ClassEntity
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuraengine.result.AppError
@@ -11,13 +12,13 @@ import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.features.school.data.local.*
 import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
-import com.azuratech.azuratime.features.account.data.local.SchoolMembership as LocalSchoolMembership
+import com.azuratech.azuratime.core.data.local.SchoolMembership as LocalSchoolMembership
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.domain.model.toAccountRole
-import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
+import com.azuratech.azuratime.core.data.local.AccessRequestEntity
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import kotlinx.coroutines.tasks.await
 import androidx.room.withTransaction
@@ -29,6 +30,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+
+
 
 @Singleton
 class SchoolRepositoryImpl @Inject constructor(

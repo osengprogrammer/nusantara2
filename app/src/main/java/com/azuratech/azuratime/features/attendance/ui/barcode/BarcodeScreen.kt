@@ -23,7 +23,7 @@ import com.azuratech.azuratime.features.attendance.ui.components.MatchResultLabe
 import com.azuratech.azuratime.features.attendance.ui.components.StatusLabel
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
-import com.azuratech.azuratime.features.ai.ui.rememberVoiceAssistant
+import com.azuratech.azuratime.core.ui.components.rememberVoiceAssistant
 import kotlinx.coroutines.flow.collect
 
 @Composable

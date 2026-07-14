@@ -1,6 +1,8 @@
 package com.azuratech.azuratime.features.attendance.ui.capture
-
+import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
+
+
 
 /**
  * 📸 ATTENDANCE CHECK-IN UI STATE
@@ -19,7 +21,7 @@ data class AttendanceCheckInUiState(
     val activeSchoolId: String? = null,
     val isAlreadyCheckedIn: Boolean = false,
     val isWithinGeofence: Boolean = true, // 🔥 AI Native: Geofence security flag
-    val geofenceEntity: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity? = null,
+    val geofenceEntity: GpsGeofenceEntity? = null,
 
     // v3.2.2 Hardened MVI States
     val currentAccountEmail: String = "",

@@ -11,7 +11,7 @@ import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.features.reporting.data.local.AuditLogEntity
 import com.azuratech.azuratime.features.reporting.data.local.ExportJobEntity
 import com.azuratech.azuratime.features.reporting.data.local.ReportEntity
-import com.azuratech.azuratime.features.account.data.local.AccessRequestEntity
+import com.azuratech.azuratime.core.data.local.AccessRequestEntity
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 
 import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity

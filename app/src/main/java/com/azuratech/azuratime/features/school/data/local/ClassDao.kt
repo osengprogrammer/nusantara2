@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.school.data.local
 
 import androidx.room.*
+import com.azuratech.azuratime.core.data.local.ClassEntity
 import kotlinx.coroutines.flow.Flow
 
 /**

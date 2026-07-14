@@ -5,8 +5,8 @@ import android.util.Log
 import com.azuratech.azuratime.BuildConfig // ⚡ IMPORT BUILDCONFIG
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.account.domain.model.Account
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
-import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.core.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.toDomain
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager

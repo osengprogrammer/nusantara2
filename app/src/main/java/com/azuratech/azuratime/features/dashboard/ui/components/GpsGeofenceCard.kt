@@ -12,7 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity
+import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
 
 /**
  * 📍 GPS GEOFENCE CARD (v3.2.1-ai-native)

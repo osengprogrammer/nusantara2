@@ -19,22 +19,29 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.util.isAdmin
-import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.core.data.local.toDomain
 import com.azuratech.azuratime.features.dashboard.ui.components.*
-import com.azuratech.azuratime.features.school.ui.list.AddSchoolDialog
-import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
+import com.azuratech.azuratime.core.ui.components.AddSchoolDialog
 
 @Composable
 fun DashboardScreen(
     navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel(),
-    schoolViewModel: SchoolViewModel = hiltViewModel(),
+    schools: List<School> = emptyList(),
+    isLoadingSchools: Boolean = false,
+    activeSchoolId: String? = null,
+    availableClasses: List<ClassModel> = emptyList(),
+    onRefreshSchools: () -> Unit = {},
+    onSelectSchool: (School) -> Unit = {},
+    onCreateSchool: (String, String, List<String>) -> Unit = { _, _, _ -> },
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val uiEffect by viewModel.uiEffectFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -89,7 +96,12 @@ fun DashboardScreen(
                 DashboardContent(
                     navController = navController,
                     data = uiState,
-                    schoolViewModel = schoolViewModel,
+                    schools = schools,
+                    isLoadingSchools = isLoadingSchools,
+                    activeSchoolId = activeSchoolId,
+                    availableClasses = availableClasses,
+                    onRefreshSchools = onRefreshSchools,
+                    onSelectSchool = onSelectSchool,
                     onAddSchoolClick = { showAddSchoolDialog = true },
                     onSyncClick = { viewModel.onEvent(DashboardUiEvent.Refresh) },
                     onRegisterStudentClick = { viewModel.onEvent(DashboardUiEvent.OnRegisterStudentClick) },
@@ -117,10 +129,10 @@ fun DashboardScreen(
 
     if (showAddSchoolDialog) {
         AddSchoolDialog(
-            availableClasses = schoolViewModel.uiStateFlow.collectAsStateWithLifecycle().value.availableClasses,
+            availableClasses = availableClasses,
             onDismissRequest = { showAddSchoolDialog = false },
             onConfirmClick = { name, timezone, classes ->
-                schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.CreateSchool(name, timezone, classes))
+                onCreateSchool(name, timezone, classes)
                 showAddSchoolDialog = false
             },
         )
@@ -131,15 +143,18 @@ fun DashboardScreen(
 fun DashboardContent(
     navController: NavController,
     data: DashboardUiState,
-    schoolViewModel: SchoolViewModel,
+    schools: List<School>,
+    isLoadingSchools: Boolean,
+    activeSchoolId: String?,
+    availableClasses: List<ClassModel>,
+    onRefreshSchools: () -> Unit,
+    onSelectSchool: (School) -> Unit,
     onAddSchoolClick: () -> Unit,
     onSyncClick: () -> Unit,
     onRegisterStudentClick: () -> Unit,
     onAttendanceClick: (String) -> Unit,
     onRosterClick: (String) -> Unit,
 ) {
-    val schoolUiState by schoolViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val activeSchoolId = schoolUiState.activeSchoolId
     val account = data.account
 
     LazyColumn(
@@ -160,13 +175,13 @@ fun DashboardContent(
 
         item {
             MySchoolsCard(
-                viewModel = schoolViewModel,
+                schools = schools,
+                isLoadingSchools = isLoadingSchools,
+                onRefreshSchools = onRefreshSchools,
                 accountId = account?.accountId ?: "",
                 isApproved = data.isApproved,
                 globalRole = account?.role ?: "GUEST",
-                onSchoolClick = { school ->
-                    schoolViewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.SelectSchool(school))
-                },
+                onSchoolClick = onSelectSchool,
                 onAddSchoolClick = onAddSchoolClick,
                 onJoinSchoolClick = { navController.navigate(Screen.FindSchool.route) },
             )

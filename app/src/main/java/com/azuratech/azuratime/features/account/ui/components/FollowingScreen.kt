@@ -20,7 +20,7 @@ import coil.compose.AsyncImage
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.core.domain.model.AccountRole
 
 import androidx.hilt.navigation.compose.hiltViewModel

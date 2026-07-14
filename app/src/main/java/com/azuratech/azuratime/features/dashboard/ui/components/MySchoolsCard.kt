@@ -10,22 +10,21 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.School
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
-import com.azuratech.azuratime.features.school.ui.list.SchoolViewModel
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 
 @Composable
 fun MySchoolsCard(
-    viewModel: SchoolViewModel,
+    schools: List<School>,
+    isLoadingSchools: Boolean,
+    onRefreshSchools: () -> Unit,
     accountId: String,
     @Suppress("UNUSED_PARAMETER") isApproved: Boolean,
     @Suppress("UNUSED_PARAMETER") globalRole: String,
@@ -33,15 +32,11 @@ fun MySchoolsCard(
     onAddSchoolClick: () -> Unit,
     onJoinSchoolClick: () -> Unit,
 ) {
-    val schoolUiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val schools = schoolUiState.schools
-    val isLoading = schoolUiState.isLoading
-
     AzuraCard(
         title = "My Schools",
         modifier = Modifier.fillMaxWidth(),
         actions = {
-            IconButton(onClick = { viewModel.onEvent(com.azuratech.azuratime.features.school.ui.list.SchoolUiEvent.LoadSchools(accountId)) }) {
+            IconButton(onClick = onRefreshSchools) {
                 Icon(
                     imageVector = androidx.compose.material.icons.Icons.Default.Refresh,
                     contentDescription = "Refresh Schools",
@@ -51,7 +46,7 @@ fun MySchoolsCard(
         },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AzuraSpacing.md)) {
-            if (isLoading && schools.isEmpty()) {
+            if (isLoadingSchools && schools.isEmpty()) {
                 Box(modifier = Modifier.fillMaxWidth().padding(AzuraSpacing.lg), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(modifier = Modifier.size(32.dp))
                 }

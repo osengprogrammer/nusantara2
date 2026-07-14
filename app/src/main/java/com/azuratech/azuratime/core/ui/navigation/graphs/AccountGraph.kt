@@ -5,6 +5,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import com.azuratech.azuratime.features.account.ui.management.AccountManagementScreen
@@ -86,11 +89,13 @@ fun NavGraphBuilder.accountGraph(
             ),
         ) { backStackEntry ->
             val targetAccountId = backStackEntry.arguments?.getString("targetAccountId")
+            val classVm: com.azuratech.azuratime.features.school.ui.classes.ClassViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            val classState by classVm.uiStateFlow.collectAsState()
             com.azuratech.azuratime.features.account.ui.components.MyAssignedClassScreen(
                 targetAccountId = targetAccountId,
                 onNavigateBack = { navController.popBackStack() },
                 accountViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                classViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                allClasses = classState.classes,
             )
         }
         composable(

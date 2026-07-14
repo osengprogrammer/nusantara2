@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.account.data.local
 
 import androidx.room.*
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

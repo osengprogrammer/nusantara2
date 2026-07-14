@@ -1,43 +1,35 @@
 package com.azuratech.azuratime.features.attendance.ui.manual
 
 import androidx.compose.runtime.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuratime.features.biometric.ui.enroll.BiometricEnrollmentViewModel
-import com.azuratech.azuratime.features.school.ui.classes.ClassViewModel
-import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.ui.AttendanceViewModel
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
+import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
+import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.domain.model.toAccountRole
 
 @Composable
 fun ManualAttendanceScreen(
-    biometricViewModel: BiometricEnrollmentViewModel,
+    faces: List<StudentBiometricDetails>,
+    currentAccount: AccountProfile?,
+    assignedClassIds: List<String>,
+    globalClasses: List<ClassModel>,
     attendanceViewModel: AttendanceViewModel,
-    accountViewModel: AccountManagementViewModel,
-    classViewModel: ClassViewModel,
     initialFaceId: String = "",
     initialDate: String = "",
     onNavigateBack: () -> Unit,
 ) {
-    val faces by biometricViewModel.studentRosterFlow.collectAsStateWithLifecycle()
-    val currentAccount by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
-    val assignedIds by accountViewModel.assignedClassIdsFlow.collectAsStateWithLifecycle()
-    val classUiState by classViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val globalClasses = classUiState.classes
-
     // Role-Based Class Access
     val isAdmin = currentAccount?.memberships?.get(currentAccount?.activeSchoolId)?.role.toAccountRole() == AccountRole.ADMIN
-    val availableClasses = remember(globalClasses, assignedIds, isAdmin) {
-        if (isAdmin) globalClasses else globalClasses.filter { classItem: ClassModel -> classItem.id in assignedIds }
+    val availableClasses = remember(globalClasses, assignedClassIds, isAdmin) {
+        if (isAdmin) globalClasses else globalClasses.filter { classItem: ClassModel -> classItem.id in assignedClassIds }
     }
 
     val classOptions = remember(availableClasses) {
-        listOf(null) + availableClasses
+        listOf<ClassModel?>(null) + availableClasses
     }
 
     var selectedFace by remember(faces) {

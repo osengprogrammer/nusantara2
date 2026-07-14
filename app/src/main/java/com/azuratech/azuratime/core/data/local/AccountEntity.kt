@@ -1,11 +1,10 @@
-package com.azuratech.azuratime.features.account.data.local
+package com.azuratech.azuratime.core.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.azuratech.azuratime.core.data.local.Converters
-import com.azuratech.azuratime.core.domain.model.toAccountRole
 import com.azuratech.azuratime.features.account.domain.model.Account
+import com.azuratech.azuratime.core.domain.model.toAccountRole
 
 @Entity(tableName = "accounts")
 @TypeConverters(Converters::class)
@@ -33,7 +32,7 @@ fun AccountEntity.toDomain() = Account(
     status = status,
     activeSchoolId = activeSchoolId,
     activeClassId = activeClassId,
-    memberships = memberships.mapValues { it.value.toDomain() },
+    memberships = memberships,
     syncStatus = syncStatus,
 )
 
@@ -45,5 +44,5 @@ fun AccountEntity.toProfile() = com.azuratech.azuratime.features.account.domain.
     role = role,
     activeSchoolId = activeSchoolId,
     activeClassId = activeClassId,
-    memberships = memberships.mapValues { it.value.toDomain() },
+    memberships = memberships,
 )

@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.school.data.local
+package com.azuratech.azuratime.core.data.local
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -20,7 +20,6 @@ interface SchoolDao {
     @Query("SELECT * FROM schools WHERE id = :schoolId LIMIT 1")
     fun observeSchoolByIdFlow(schoolId: String): Flow<SchoolEntity?>
 
-    // Useful if an account is an admin of multiple schools
     @Query("SELECT * FROM schools ORDER BY name ASC")
     fun observeAllSchoolsFlow(): Flow<List<SchoolEntity>>
 

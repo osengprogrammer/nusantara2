@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.school.data.local
+package com.azuratech.azuratime.core.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -14,7 +14,7 @@ data class SchoolEntity(
     val status: String = "ACTIVE",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val syncStatus: String = "SYNCED", // com.azuratech.azuratime.core.domain.model.SyncStatus.name
+    val syncStatus: String = "SYNCED",
 ) {
     fun toDomain(): School = School(
         id = id,

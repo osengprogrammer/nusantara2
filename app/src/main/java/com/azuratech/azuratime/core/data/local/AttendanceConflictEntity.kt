@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.features.attendance.data.local
+package com.azuratech.azuratime.core.data.local
 
 import androidx.room.*
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict

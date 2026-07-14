@@ -1,12 +1,14 @@
 package com.azuratech.azuratime.features.dashboard.ui
+import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-
 import com.azuratech.azuraengine.model.ClassModel
 import com.azuratech.azuraengine.model.School
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
 import com.azuratech.azuratime.core.data.local.SessionWithDetails
+
+
 
 data class DashboardUiState(
     val isLoading: Boolean = false,
@@ -30,7 +32,7 @@ data class DashboardUiState(
     val brokenAssignments: Int = 0,
     val unsyncedRecords: Int = 0,
     val conflicts: List<AttendanceConflict> = emptyList(),
-    val geofence: com.azuratech.azuratime.features.school.data.local.GpsGeofenceEntity? = null,
+    val geofence: com.azuratech.azuratime.core.data.local.GpsGeofenceEntity? = null,
     val error: String? = null,
     val isLoggingOut: Boolean = false,
 )

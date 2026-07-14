@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
-import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
+import com.azuratech.azuratime.core.ui.components.StudentDisplayItem
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix

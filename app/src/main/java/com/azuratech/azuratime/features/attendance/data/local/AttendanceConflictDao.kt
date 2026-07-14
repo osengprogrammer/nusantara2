@@ -1,6 +1,7 @@
 package com.azuratech.azuratime.features.attendance.data.local
 
 import androidx.room.*
+import com.azuratech.azuratime.core.data.local.AttendanceConflictEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

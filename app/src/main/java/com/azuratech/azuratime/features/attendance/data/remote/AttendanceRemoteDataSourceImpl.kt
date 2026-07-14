@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.attendance.data.remote
 
-import com.azuratech.azuratime.features.attendance.data.local.AttendanceRecordEntity
-import com.azuratech.azuratime.features.attendance.data.local.toAttendanceRecordEntity
+import com.azuratech.azuratime.core.data.local.AttendanceRecordEntity
+import com.azuratech.azuratime.core.data.local.toAttendanceRecordEntity
 import com.azuratech.azuraengine.result.AppError
 import com.azuratech.azuraengine.result.Result
 import com.google.firebase.firestore.FirebaseFirestore

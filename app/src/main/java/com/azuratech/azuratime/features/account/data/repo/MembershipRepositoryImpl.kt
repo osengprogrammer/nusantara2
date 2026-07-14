@@ -1,9 +1,10 @@
 package com.azuratech.azuratime.features.account.data.repo
-
+import com.azuratech.azuratime.core.data.local.SchoolMembership
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.account.data.local.AccountDao
-import com.azuratech.azuratime.features.account.data.local.toDomain
+import com.azuratech.azuratime.core.data.local.toDomain
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.features.account.domain.model.SchoolMembership as DomainSchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.MembershipRepository
@@ -20,6 +21,8 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+
+
 
 @Singleton
 class MembershipRepositoryImpl @Inject constructor(
@@ -66,7 +69,7 @@ class MembershipRepositoryImpl @Inject constructor(
 
     override suspend fun createPendingAccount(uid: String, email: String, displayName: String?): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val account = com.azuratech.azuratime.features.account.data.local.AccountEntity(
+            val account = AccountEntity(
                 accountId = uid,
                 email = email,
                 name = displayName ?: "Account",
@@ -161,7 +164,7 @@ class MembershipRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun accountToMap(account: com.azuratech.azuratime.features.account.data.local.AccountEntity): Map<String, Any> {
+    private fun accountToMap(account: AccountEntity): Map<String, Any> {
         return mapOf(
             "accountId" to account.accountId,
             "email" to account.email,

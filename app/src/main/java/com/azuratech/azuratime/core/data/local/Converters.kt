@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.core.data.local
 
 import androidx.room.TypeConverter
-import com.azuratech.azuratime.features.account.data.local.SchoolMembership
+import com.azuratech.azuratime.core.data.local.SchoolMembership
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestStatus
 import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.features.session.domain.model.SessionType

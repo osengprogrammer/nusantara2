@@ -1,8 +1,10 @@
 package com.azuratech.azuratime.features.account.ui.membership
 
-import com.azuratech.azuratime.features.account.data.local.AccountEntity
+import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.features.account.domain.model.SchoolMembership
+
+
 
 /**
  * 🛠️ MEMBERSHIP UI STATE (v3.2.1-ai-native)

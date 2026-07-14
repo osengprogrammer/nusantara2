@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.student.ui.roster
 
-import com.azuratech.azuratime.features.student.ui.components.StudentDisplayItem
+import com.azuratech.azuratime.core.ui.components.StudentDisplayItem
 
 /**
  * 🎓 STUDENT ROSTER BARCODE UI STATE

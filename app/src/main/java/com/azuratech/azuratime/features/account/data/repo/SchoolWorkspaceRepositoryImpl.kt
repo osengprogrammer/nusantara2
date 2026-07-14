@@ -3,11 +3,10 @@ package com.azuratech.azuratime.features.account.data.repo
 import android.app.Application
 import androidx.room.withTransaction
 import com.azuratech.azuratime.core.data.local.*
-import com.azuratech.azuratime.features.school.data.local.*
-import com.azuratech.azuratime.features.account.data.local.*
+import com.azuratech.azuratime.core.data.local.SchoolEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 
-import com.azuratech.azuratime.features.account.data.local.SchoolMembership as LocalSchoolMembership
+import com.azuratech.azuratime.core.data.local.SchoolMembership as LocalSchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
 import com.azuratech.azuraengine.result.Result

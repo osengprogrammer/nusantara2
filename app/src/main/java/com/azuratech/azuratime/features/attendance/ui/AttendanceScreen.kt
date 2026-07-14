@@ -23,14 +23,9 @@ import com.azuratech.azuratime.core.ui.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.*
-import com.azuratech.azuratime.features.account.ui.management.AccountManagementViewModel
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.core.ui.components.AttendanceHistoryCard
 import com.azuratech.azuratime.core.util.showToast
-
-import com.azuratech.azuratime.core.util.isAdmin
-import com.azuratech.azuratime.features.account.data.local.toDomain
-import com.azuratech.azuratime.features.account.domain.model.toDomain
 
 /**
  * 📝 ATTENDANCE SCREEN (v3.2.1-ai-native)
@@ -42,11 +37,11 @@ import com.azuratech.azuratime.features.account.domain.model.toDomain
 fun AttendanceScreen(
     onNavigateBack: () -> Unit = {},
     viewModel: AttendanceViewModel,
-    accountViewModel: AccountManagementViewModel,
+    activeSchoolId: String = "",
+    isAdmin: Boolean = false,
+    assignedClassIds: List<String> = emptyList(),
 ) {
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-    val account by accountViewModel.currentAccountFlow.collectAsStateWithLifecycle()
-    val assignedIds by accountViewModel.assignedClassIdsFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     var editingRecord by remember { mutableStateOf<AttendanceRecord?>(null) }
@@ -74,12 +69,8 @@ fun AttendanceScreen(
         }
     }
 
-    // Role helper
-    val activeSchoolId = account?.activeSchoolId ?: ""
-    val isAdmin = account?.toDomain().isAdmin(activeSchoolId)
-
-    val availableClasses = remember(uiState.classes, assignedIds, isAdmin) {
-        if (isAdmin) uiState.classes else uiState.classes.filter { it.id in assignedIds }
+    val availableClasses = remember(uiState.classes, assignedClassIds, isAdmin) {
+        if (isAdmin) uiState.classes else uiState.classes.filter { it.id in assignedClassIds }
     }
 
     AzuraScreen(
