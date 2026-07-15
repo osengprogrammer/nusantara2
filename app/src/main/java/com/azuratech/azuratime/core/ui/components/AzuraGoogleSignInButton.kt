@@ -1,4 +1,4 @@
-package com.azuratech.azuratime.ui.auth
+package com.azuratech.azuratime.core.ui.components
 
 import android.util.Log
 import androidx.compose.material3.Button
