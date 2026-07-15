@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.session.domain.repository
 
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.asLocalResult
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.asLocalResult
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity

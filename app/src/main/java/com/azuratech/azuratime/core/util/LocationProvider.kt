@@ -3,8 +3,8 @@ package com.azuratech.azuratime.core.util
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -47,16 +47,16 @@ class LocationProvider @Inject constructor(
                             continuation.resume(Result.Success(lastLocation))
                         } else {
                             continuation.resume(
-                                Result.Failure(AppError.Unknown("Unable to determine current location. GPS might be disabled.")),
+                                Result.Failure(AppError.LocalDB("Unable to determine current location. GPS might be disabled.")),
                             )
                         }
                     }.addOnFailureListener { e ->
-                        continuation.resume(Result.Failure(AppError.Unknown(e.message)))
+                        continuation.resume(Result.Failure(AppError.LocalDB(e.message)))
                     }
                 }
             }
             .addOnFailureListener { e ->
-                continuation.resume(Result.Failure(AppError.Unknown(e.message)))
+                continuation.resume(Result.Failure(AppError.LocalDB(e.message)))
             }
     }
 }

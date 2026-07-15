@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.core.domain.model.ClassModel
+import com.azuratech.azuratime.features.school.domain.model.School
 import com.azuratech.azuratime.core.navigation.Screen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes

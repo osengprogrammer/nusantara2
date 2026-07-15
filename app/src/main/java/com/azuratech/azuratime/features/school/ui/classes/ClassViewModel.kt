@@ -2,9 +2,9 @@ package com.azuratech.azuratime.features.school.ui.classes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.domain.model.ClassModel
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
@@ -149,7 +149,7 @@ class ClassViewModel @Inject constructor(
     fun observeStudentsInClassFlow(classId: String): Flow<List<StudentProfile>> {
         return studentRepository.getStudentProfilesFlow()
             .map { result ->
-                if (result is com.azuratech.azuraengine.result.Result.Success) {
+                if (result is com.azuratech.azuratime.core.result.Result.Success) {
                     result.data.filter { it.classIds.contains(classId) }
                 } else {
                     emptyList()
@@ -174,7 +174,7 @@ class ClassViewModel @Inject constructor(
             activeSchoolIdFlow.flatMapLatest { schoolId -> schoolRepository.observeClassesFlow(schoolId) },
             studentRepository.getStudentProfilesFlow(), // Fetch all students here
         ) { classResult, studentResult ->
-            if (classResult is com.azuratech.azuraengine.result.Result.Success && studentResult is com.azuratech.azuraengine.result.Result.Success) {
+            if (classResult is com.azuratech.azuratime.core.result.Result.Success && studentResult is com.azuratech.azuratime.core.result.Result.Success) {
                 val classes = classResult.data
                 val allStudents = studentResult.data // Get all students
 
@@ -183,7 +183,7 @@ class ClassViewModel @Inject constructor(
                 }
 
                 _stateFlow.update { it.copy(classes = classes, studentCountsByClassId = counts, allStudents = allStudents) }
-            } else if (classResult is com.azuratech.azuraengine.result.Result.Failure) {
+            } else if (classResult is com.azuratech.azuratime.core.result.Result.Failure) {
                 _stateFlow.update { it.copy(error = classResult.error.message) }
             }
         }.launchIn(viewModelScope)
@@ -201,7 +201,7 @@ class ClassViewModel @Inject constructor(
                 name = name,
                 schoolId = schoolId,
                 grade = level.toString(), // Use level as grade for backward compatibility
-                accountId = null,
+                accountId = "",
                 studentCount = 0,
                 createdAt = System.currentTimeMillis(),
                 // Blueprint fields

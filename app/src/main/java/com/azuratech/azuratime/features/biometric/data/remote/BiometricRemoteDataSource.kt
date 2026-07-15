@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.biometric.data.remote
 
 import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 
 interface BiometricRemoteDataSource {
     suspend fun getBiometricUpdates(schoolId: String, lastSync: Long): Result<List<Pair<StudentBiometricEntity, Boolean>>>

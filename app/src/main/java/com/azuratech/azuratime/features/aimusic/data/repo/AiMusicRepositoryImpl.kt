@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.aimusic.data.repo
 
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.AppError
 import com.azuratech.azuratime.features.aimusic.data.local.AiMusicDao
 import com.azuratech.azuratime.features.aimusic.data.local.AiMusicEntity
 import com.azuratech.azuratime.features.aimusic.data.remote.AiMusicApi

@@ -3,12 +3,12 @@ package com.azuratech.azuratime.features.account.ui.management
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.usecase.ImportMatrixUseCase
 import com.azuratech.azuratime.features.account.domain.usecase.MatrixImportPreview
-import com.azuratech.azuraengine.core.StorageProvider
+import com.azuratech.azuratime.core.domain.media.StorageProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

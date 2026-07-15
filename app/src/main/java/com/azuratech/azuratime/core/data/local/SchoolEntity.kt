@@ -2,7 +2,7 @@ package com.azuratech.azuratime.core.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.features.school.domain.model.School
 import java.util.UUID
 
 @Entity(tableName = "schools")

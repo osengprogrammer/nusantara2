@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.core.domain.repository
 
 import android.content.Context
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import kotlinx.coroutines.flow.Flow
 
 interface MainRepository {

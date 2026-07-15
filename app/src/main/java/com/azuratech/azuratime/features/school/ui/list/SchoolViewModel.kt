@@ -3,9 +3,9 @@ package com.azuratech.azuratime.features.school.ui.list
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.model.School
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.features.school.domain.model.School
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository

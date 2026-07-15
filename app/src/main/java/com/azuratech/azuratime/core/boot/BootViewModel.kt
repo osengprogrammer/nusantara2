@@ -3,7 +3,7 @@ package com.azuratech.azuratime.core.boot
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.domain.repository.BootRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

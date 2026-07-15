@@ -8,7 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes

@@ -17,4 +17,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "azuratime"
 include(":app")
-include(":azura-engine-kmp")

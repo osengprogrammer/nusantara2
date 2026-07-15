@@ -2,8 +2,8 @@ package com.azuratech.azuratime.features.account.ui.membership
 import com.azuratech.azuratime.core.data.local.AccountEntity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.data.local.toProfile
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
@@ -91,7 +91,7 @@ class MembershipViewModel @Inject constructor(
             val syncResult = accountRepository.syncAccount(uid)
             syncManager.enqueueAccessSync(uid)
 
-            if (syncResult is com.azuratech.azuraengine.result.Result.Success) {
+            if (syncResult is com.azuratech.azuratime.core.result.Result.Success) {
                 if (syncResult.data.status == "PENDING") {
                     startPollingStatus(uid)
                 }
@@ -115,7 +115,7 @@ class MembershipViewModel @Inject constructor(
             while (retries < 12) {
                 delay(10000)
                 val result = accountRepository.syncAccount(uid)
-                if (result is com.azuratech.azuraengine.result.Result.Success && result.data.status == SessionManager.STATUS_ACTIVE) {
+                if (result is com.azuratech.azuratime.core.result.Result.Success && result.data.status == SessionManager.STATUS_ACTIVE) {
                     break
                 }
                 retries++

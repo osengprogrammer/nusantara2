@@ -7,7 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.ListenableWorker.Result
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.AppError
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
@@ -41,31 +41,31 @@ class SyncWorker @AssistedInject constructor(
 
         // 1. Sync Biometrics (Cloud <-> Local)
         val biometricsResult = biometricRepository.syncBiometrics()
-        if (biometricsResult is com.azuratech.azuraengine.result.Result.Failure) {
+        if (biometricsResult is com.azuratech.azuratime.core.result.Result.Failure) {
             return handleSyncError(biometricsResult.error, "Biometrics")
         }
 
         // 2. Sync Assignments (Cloud <-> Local)
         val assignmentsResult = biometricRepository.syncAssignments()
-        if (assignmentsResult is com.azuratech.azuraengine.result.Result.Failure) {
+        if (assignmentsResult is com.azuratech.azuratime.core.result.Result.Failure) {
             return handleSyncError(assignmentsResult.error, "Assignments")
         }
 
         // 3. Sync Subjects (Cloud <-> Local)
         val subjectsResult = sessionRepository.syncSubjects()
-        if (subjectsResult is com.azuratech.azuraengine.result.Result.Failure) {
+        if (subjectsResult is com.azuratech.azuratime.core.result.Result.Failure) {
             return handleSyncError(subjectsResult.error, "Subjects")
         }
 
         // 4. Sync Sessions (Cloud <-> Local)
         val sessionsResult = sessionRepository.syncSessions()
-        if (sessionsResult is com.azuratech.azuraengine.result.Result.Failure) {
+        if (sessionsResult is com.azuratech.azuratime.core.result.Result.Failure) {
             return handleSyncError(sessionsResult.error, "Sessions")
         }
 
         // 5. Sync Attendance Records (Cloud <-> Local)
         val recordsResult = attendanceRepository.syncRecords()
-        if (recordsResult is com.azuratech.azuraengine.result.Result.Failure) {
+        if (recordsResult is com.azuratech.azuratime.core.result.Result.Failure) {
             return handleSyncError(recordsResult.error, "Records")
         }
 
@@ -80,13 +80,17 @@ class SyncWorker @AssistedInject constructor(
         Log.e("AZURA_SYNC", "Sync Error at $stage: ${error.message}")
         return when (error) {
             is AppError.Network -> Result.retry()
+            is AppError.NetworkError -> Result.retry()
             is AppError.LocalDB -> Result.failure()
+            is AppError.LocalError -> Result.failure()
             is AppError.BusinessRule -> Result.failure()
             is AppError.Conflict -> {
                 // Conflict during sync – log and treat as non‑fatal (skip this batch)
                 Log.w("AZURA_SYNC", "Konflik data terdeteksi, skip.")
                 Result.success()
             }
+            is AppError.ValidationError -> Result.failure()
+            is AppError.Unauthorized -> Result.failure()
             is AppError.Unknown -> Result.retry()
         }
     }

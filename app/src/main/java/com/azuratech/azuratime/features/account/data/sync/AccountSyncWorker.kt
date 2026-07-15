@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.AppError
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
@@ -39,18 +39,18 @@ class AccountSyncWorker @AssistedInject constructor(
         return try {
             // 1. Sync Account Profile (Cloud -> Local)
             val accountResult = accountRepository.syncAccount(accountId)
-            if (accountResult is com.azuratech.azuraengine.result.Result.Failure) {
+            if (accountResult is com.azuratech.azuratime.core.result.Result.Failure) {
                 return handleSyncError(accountResult.error)
             }
 
             // 2. Push Pending Local Changes (Local -> Cloud)
             val pushResult = accountRepository.pushAccount(accountId)
-            if (pushResult is com.azuratech.azuraengine.result.Result.Failure) {
+            if (pushResult is com.azuratech.azuratime.core.result.Result.Failure) {
                 return handleSyncError(pushResult.error)
             }
 
             // 3. Sync Workspaces (Schools) for this account
-            val account = (accountResult as com.azuratech.azuraengine.result.Result.Success).data
+            val account = (accountResult as com.azuratech.azuratime.core.result.Result.Success).data
             val schoolIds = account.memberships.keys.toList()
             schoolRepository.syncSchools(schoolIds)
 

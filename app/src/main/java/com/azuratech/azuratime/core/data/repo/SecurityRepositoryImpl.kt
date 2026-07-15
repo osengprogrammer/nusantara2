@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.core.data.repo
 
 import android.util.Log
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.domain.repository.SecurityRepository
 import com.azuratech.azuratime.core.security.SecurityVault
 import com.azuratech.azuratime.core.session.SessionManager

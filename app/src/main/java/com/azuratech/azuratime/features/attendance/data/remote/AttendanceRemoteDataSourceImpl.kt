@@ -2,8 +2,8 @@ package com.azuratech.azuratime.features.attendance.data.remote
 
 import com.azuratech.azuratime.core.data.local.AttendanceRecordEntity
 import com.azuratech.azuratime.core.data.local.toAttendanceRecordEntity
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await

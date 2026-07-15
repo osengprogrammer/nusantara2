@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.core.ui.designsystem.AzuraTextField
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -192,11 +192,11 @@ fun AddClassDialog(
             Button(
                 onClick = {
                     if (editingClass != null) {
-                        onConfirmClick(name, editingClass.level, editingClass.category, editingClass.major, editingClass.section)
+                        onConfirmClick(name, editingClass.level ?: 0, editingClass.category ?: "", editingClass.major ?: "", editingClass.section ?: "")
                     } else if (isStructuredMode) {
                         onConfirmClick(generatedName, selectedLevel, selectedCategory, selectedMajor, selectedSection)
                     } else {
-                        onConfirmClick(name, parsedClass.level, parsedClass.category, parsedClass.major, parsedClass.section)
+                        onConfirmClick(name, parsedClass.level, parsedClass.category, parsedClass.major ?: "", parsedClass.section ?: "")
                     }
                 },
                 enabled = isNameValid,

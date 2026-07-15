@@ -70,8 +70,8 @@ fun StudentAssignmentScreen(
 @Composable
 fun StudentRosterList(
     roster: List<com.azuratech.azuratime.core.data.local.StudentBiometricDetails>,
-    assignedClasses: Map<String, List<com.azuratech.azuraengine.model.ClassModel>>,
-    availableClasses: List<com.azuratech.azuraengine.model.ClassModel>,
+    assignedClasses: Map<String, List<com.azuratech.azuratime.core.domain.model.ClassModel>>,
+    availableClasses: List<com.azuratech.azuratime.core.domain.model.ClassModel>,
     onAssign: (String, String) -> Unit,
     onRemove: (String, String) -> Unit,
 ) {
@@ -152,9 +152,9 @@ fun FlowRow(
 
 @Composable
 fun ClassPicker(
-    availableClasses: List<com.azuratech.azuraengine.model.ClassModel>,
+    availableClasses: List<com.azuratech.azuratime.core.domain.model.ClassModel>,
     onDismiss: () -> Unit,
-    onSelected: (com.azuratech.azuraengine.model.ClassModel) -> Unit,
+    onSelected: (com.azuratech.azuratime.core.domain.model.ClassModel) -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,

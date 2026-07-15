@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.core.domain.media
 
-import com.azuratech.azuraengine.core.ImageProcessor
-import com.azuratech.azuraengine.core.StorageProvider
-import com.azuratech.azuraengine.media.PhotoProcessResult
+import com.azuratech.azuratime.core.domain.media.ImageProcessor
+import com.azuratech.azuratime.core.domain.media.StorageProvider
+import com.azuratech.azuratime.core.domain.media.PhotoProcessResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

@@ -2,8 +2,10 @@ package com.azuratech.azuratime.features.session.domain.usecase
 
 import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
+import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.map
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 import java.util.UUID
 import javax.inject.Inject
@@ -15,6 +17,7 @@ import javax.inject.Inject
  */
 class CreateSessionUseCase @Inject constructor(
     private val repository: SessionRepository,
+    private val accountRepository: AccountRepository,
 ) {
     suspend operator fun invoke(
         classId: String?,
@@ -26,6 +29,10 @@ class CreateSessionUseCase @Inject constructor(
         endTime: String,
         schoolId: String,
     ): Result<String> { // 🔥 Return String (sessionId)
+        // 🔒 Strict role-based authorization: only ADMIN or SUPERVISOR may create sessions
+        val authResult = accountRepository.checkAuthorizedForSchool(supervisorEmail, schoolId)
+        if (authResult is Result.Failure) return authResult
+
         // 🔥 AI Native: Prefix-based lookupKey to prevent cross-tier collisions
         val timeKey = startTime.replace(":", "")
         val lookupKey = when (sessionType) {

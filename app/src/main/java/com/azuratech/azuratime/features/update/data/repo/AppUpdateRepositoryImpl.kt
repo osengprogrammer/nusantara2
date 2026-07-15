@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.update.data.repo
 
 import android.util.Log
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.update.domain.model.AppVersionInfo
 import com.azuratech.azuratime.features.update.domain.repository.AppUpdateRepository
 import kotlinx.coroutines.Dispatchers

@@ -3,8 +3,8 @@ package com.azuratech.azuratime.features.attendance.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

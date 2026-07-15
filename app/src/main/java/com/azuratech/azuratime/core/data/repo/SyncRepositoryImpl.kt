@@ -2,7 +2,8 @@ package com.azuratech.azuratime.core.data.repo
 
 import android.content.Context
 import androidx.work.*
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.domain.repository.SyncRepository
 import com.azuratech.azuratime.core.sync.SyncWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -51,7 +52,7 @@ class SyncRepositoryImpl @Inject constructor(
             )
             Result.Success(Unit)
         } catch (e: Exception) {
-            Result.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule(e.message))
+            Result.Failure(AppError.BusinessRule(e.message))
         }
     }
 }

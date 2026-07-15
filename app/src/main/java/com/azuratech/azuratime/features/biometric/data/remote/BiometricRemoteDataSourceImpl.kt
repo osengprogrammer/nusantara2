@@ -2,8 +2,8 @@ package com.azuratech.azuratime.features.biometric.data.remote
 
 import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity
 import com.azuratech.azuratime.core.data.local.StudentBiometricEntity
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.AppError
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.SetOptions

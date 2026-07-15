@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.BuildConfig
 import com.azuratech.azuratime.features.update.domain.repository.AppUpdateRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

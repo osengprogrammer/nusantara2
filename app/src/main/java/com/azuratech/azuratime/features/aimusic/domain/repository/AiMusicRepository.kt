@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.aimusic.domain.repository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.aimusic.domain.model.TraditionalMusicTrack
 
 /**

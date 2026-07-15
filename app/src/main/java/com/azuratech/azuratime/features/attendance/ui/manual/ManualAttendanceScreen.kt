@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.attendance.ui.manual
 
 import androidx.compose.runtime.*
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.features.attendance.ui.AttendanceViewModel
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 import com.azuratech.azuratime.core.data.local.StudentBiometricDetails

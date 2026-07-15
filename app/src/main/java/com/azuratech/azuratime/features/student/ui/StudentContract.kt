@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.student.ui
 
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.core.ui.components.StudentDisplayItem
 

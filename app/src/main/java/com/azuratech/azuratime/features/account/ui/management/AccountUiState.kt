@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.account.ui.management
 import com.azuratech.azuratime.core.data.local.AccessRequestEntity
 import com.azuratech.azuratime.core.data.local.AccountEntity
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 
 

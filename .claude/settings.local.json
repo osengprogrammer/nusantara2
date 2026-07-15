@@ -5,7 +5,9 @@
       "Bash(./gradlew assembleDebug)",
       "Bash(./gradlew clean *)",
       "Bash(./gradlew :app:compileDebugKotlin)",
-      "Bash(./gradlew :app:kspDebugKotlin)"
+      "Bash(./gradlew :app:kspDebugKotlin)",
+      "Bash(./gradlew :app:assembleDebug)",
+      "Bash(sed -i '/is Result.Loading -> {}$/{ *)"
     ]
   }
 }

@@ -9,23 +9,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuraengine.result.onSuccess
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.PermissionsHandler
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuratime.core.util.LocationProvider
 import com.azuratech.azuratime.core.ui.components.rememberVoiceAssistant
 import com.azuratech.azuratime.features.attendance.ui.components.AttendanceScannerView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -39,19 +35,6 @@ fun AttendanceCaptureScreen(
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val voiceAssistant = rememberVoiceAssistant()
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
-    val context = LocalContext.current
-    val locationProvider = remember { LocationProvider(context) }
-
-    // 🛡️ AI Native: Periodic Geofence Validation
-    LaunchedEffect(uiState.activeSchoolId) {
-        if (uiState.activeSchoolId == null) return@LaunchedEffect
-        while (true) {
-            locationProvider.getCurrentLocation().onSuccess { location ->
-                viewModel.onEvent(AttendanceCheckInUiEvent.GeofenceValidated(location.latitude, location.longitude))
-            }
-            delay(10000) // 10s Re-check
-        }
-    }
 
     // UI Effects: Voice Assistant
     LaunchedEffect(Unit) {

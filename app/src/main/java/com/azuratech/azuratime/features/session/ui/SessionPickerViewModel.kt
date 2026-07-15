@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.session.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -71,6 +71,7 @@ class SessionPickerViewModel @Inject constructor(
                         )
                     }
                 }
+                Result.Network -> {}
             }
         }.launchIn(viewModelScope)
     }

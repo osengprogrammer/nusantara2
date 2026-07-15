@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.reporting.ui.integrity
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.data.local.AttendanceConflictEntity
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import com.azuratech.azuratime.features.reporting.domain.repository.DataIntegrityRepository
@@ -98,6 +98,7 @@ class DataIntegrityViewModel @Inject constructor(
                     _uiEffectFlow.emit(DataIntegrityUiEffect.ShowSnackbar("Failed: ${result.error.message}"))
                 }
                 is Result.Loading -> {}
+                Result.Network -> {}
             }
         }
     }

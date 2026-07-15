@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.core.data.repo
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.domain.repository.BootRepository
 import com.azuratech.azuratime.core.session.SessionManager
 import com.google.firebase.auth.FirebaseAuth

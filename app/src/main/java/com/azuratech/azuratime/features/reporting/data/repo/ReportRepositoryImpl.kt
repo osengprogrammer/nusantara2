@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.reporting.data.repo
 
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.reporting.domain.model.SystemAuditTrail
 import com.azuratech.azuratime.features.reporting.domain.repository.ReportRepository

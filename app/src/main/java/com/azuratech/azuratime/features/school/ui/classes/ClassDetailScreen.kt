@@ -27,7 +27,7 @@ fun ClassDetailScreen(
     classViewModel: ClassViewModel,
     sessions: List<SessionWithDetails>,
     subjects: List<SubjectEntity>,
-    classes: List<com.azuratech.azuraengine.model.ClassModel>,
+    classes: List<com.azuratech.azuratime.core.domain.model.ClassModel>,
     assignments: List<TeacherAssignment>,
     selectedTier: SessionType,
     onDeleteSession: (SessionWithDetails) -> Unit,

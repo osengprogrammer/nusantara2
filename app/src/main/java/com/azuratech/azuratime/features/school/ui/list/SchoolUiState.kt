@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.school.ui.list
 import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
-import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.core.domain.model.ClassModel
+import com.azuratech.azuratime.features.school.domain.model.School
 import com.azuratech.azuratime.core.domain.model.AccountRole
 
 

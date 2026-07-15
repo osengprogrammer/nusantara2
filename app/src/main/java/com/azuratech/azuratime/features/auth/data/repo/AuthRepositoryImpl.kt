@@ -11,7 +11,8 @@ import com.azuratech.azuratime.features.account.domain.repository.AccountReposit
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.domain.model.SyncStatus
-import com.azuratech.azuraengine.result.Result as DomainResult
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result as DomainResult
 import com.azuratech.azuratime.core.domain.repository.SecurityRepository
 import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -46,8 +47,8 @@ class AuthRepositoryImpl @Inject constructor(
         try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
-            val firebaseUser = authResult.user ?: return@withContext DomainResult.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule("Google profile not found."))
-            val email = firebaseUser.email?.lowercase()?.trim() ?: return@withContext DomainResult.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule("Email not available."))
+            val firebaseUser = authResult.user ?: return@withContext DomainResult.Failure(AppError.BusinessRule("Google profile not found."))
+            val email = firebaseUser.email?.lowercase()?.trim() ?: return@withContext DomainResult.Failure(AppError.BusinessRule("Email not available."))
             val uid = firebaseUser.uid
 
             // SSOT Migration v7.1: Check Room first
@@ -98,7 +99,7 @@ class AuthRepositoryImpl @Inject constructor(
             return@withContext DomainResult.Success(Pair(accountEntity.toDomain(), false))
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error: ${e.message}")
-            DomainResult.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))
+            DomainResult.Failure(AppError.Network(e.message))
         }
     }
 
@@ -119,10 +120,10 @@ class AuthRepositoryImpl @Inject constructor(
             } else {
                 // If account doesn't exist, we can't update. This shouldn't happen in the normal flow.
                 Log.e("AuthRepository", "Cannot register membership: Account $uid not found in Room.")
-                DomainResult.Failure(com.azuratech.azuraengine.result.AppError.LocalDB("Account $uid not found in Room."))
+                DomainResult.Failure(AppError.LocalDB("Account $uid not found in Room."))
             }
         } catch (e: Exception) {
-            DomainResult.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))
+            DomainResult.Failure(AppError.Network(e.message))
         }
     }
 
@@ -156,7 +157,7 @@ class AuthRepositoryImpl @Inject constructor(
             DomainResult.Success(Unit)
         } catch (e: Exception) {
             sessionManager.setLoggingOut(false)
-            DomainResult.Failure(com.azuratech.azuraengine.result.AppError.BusinessRule(e.message))
+            DomainResult.Failure(AppError.BusinessRule(e.message))
         }
     }
 }

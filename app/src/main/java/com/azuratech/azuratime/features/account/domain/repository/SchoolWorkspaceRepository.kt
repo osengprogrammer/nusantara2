@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.account.domain.repository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 
 interface SchoolWorkspaceRepository {
     suspend fun searchSchools(query: String): Result<List<Map<String, Any>>>

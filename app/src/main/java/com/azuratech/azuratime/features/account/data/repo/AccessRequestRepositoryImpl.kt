@@ -1,9 +1,9 @@
 package com.azuratech.azuratime.features.account.data.repo
 import com.azuratech.azuratime.core.data.local.AccessRequestEntity
 import androidx.room.withTransaction
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.asLocalResult
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.asLocalResult
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.data.local.*

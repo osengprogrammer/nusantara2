@@ -5,7 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import androidx.core.content.FileProvider
-import com.azuratech.azuraengine.core.StorageProvider
+import com.azuratech.azuratime.core.domain.media.StorageProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.OkHttpClient
 import okhttp3.Request

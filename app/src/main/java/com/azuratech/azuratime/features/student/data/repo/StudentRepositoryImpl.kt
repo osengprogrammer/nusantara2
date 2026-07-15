@@ -1,9 +1,9 @@
 package com.azuratech.azuratime.features.student.data.repo
 
 import androidx.room.withTransaction
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.asLocalResult
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.asLocalResult
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.*
 import com.azuratech.azuratime.core.data.local.ClassEntity

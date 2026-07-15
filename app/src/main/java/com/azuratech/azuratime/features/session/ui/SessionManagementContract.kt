@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.session.ui
 import com.azuratech.azuratime.core.domain.model.toSubjectTemplate
 
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 import com.azuratech.azuratime.core.data.local.SessionWithDetails
 import com.azuratech.azuratime.core.data.local.SubjectEntity
@@ -44,9 +44,9 @@ sealed class SessionManagementUiEvent {
     ) : SessionManagementUiEvent()
     data class DeleteSession(val session: SessionWithDetails) : SessionManagementUiEvent()
     object GenerateFromMatrix : SessionManagementUiEvent() // 🔥 Point C: Auto-generate sessions
-    object ClearError : SessionManagementUiEvent()
 }
 
 sealed class SessionManagementUiEffect {
     data class ShowToast(val message: String) : SessionManagementUiEffect()
+    data class ShowError(val message: String) : SessionManagementUiEffect()
 }

@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.student.domain.usecase
 
 import androidx.room.withTransaction
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.features.student.data.local.StudentEntity
 import com.azuratech.azuratime.core.data.local.StudentClassAssignmentEntity

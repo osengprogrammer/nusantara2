@@ -1,9 +1,9 @@
 package com.azuratech.azuratime.features.biometric.data.repo
 
 import android.app.Application
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.asLocalResult
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.asLocalResult
 import com.azuratech.azuratime.core.data.local.BiometricCache
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.toProfile

@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.school.ui.classes
 
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 
 /**
  * 🏫 CLASS UI EVENT (v3.2.0-ai-native)

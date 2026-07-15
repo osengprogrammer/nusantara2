@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.account.domain.repository
 import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.features.account.domain.model.Account
 import com.azuratech.azuratime.features.account.domain.model.AccountProfile
@@ -53,6 +53,11 @@ interface AccountRepository {
     suspend fun bulkUpdateAssignments(schoolId: String, assignmentMap: Map<String, List<com.azuratech.azuratime.core.domain.model.TeacherAssignment>>): Result<Unit>
 
     suspend fun updateMemberRole(targetAccountId: String, schoolId: String, newRole: AccountRole): Result<Unit>
+
+    /**
+     * 🔒 Authorization: Check if the user (by email) has an ADMIN or SUPERVISOR role for the given school.
+     */
+    suspend fun checkAuthorizedForSchool(email: String, schoolId: String): Result<Boolean>
 
     // 🔒 v3.2.2 Hardened Transactional RBAC methods
     suspend fun selectActiveClass(accountId: String, classId: String?): Result<Unit>

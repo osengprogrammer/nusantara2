@@ -4,8 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
+import com.azuratech.azuratime.core.util.LocationProvider
 import com.azuratech.azuratime.features.attendance.domain.repository.BiometricScannerRepository
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceResult
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
@@ -34,6 +36,7 @@ class AttendanceCaptureViewModel @Inject constructor(
     private val attendanceRepository: AttendanceRepository,
     private val schoolRepository: SchoolRepository, // 🔥 AI Native: For Geofence settings
     private val sessionManager: SessionManager,
+    private val locationProvider: LocationProvider, // 🔥 AI Native: Periodic Geofence Validation
 ) : AndroidViewModel(application) {
 
     private val sessionId: String? = savedStateHandle["sessionId"]
@@ -61,6 +64,19 @@ class AttendanceCaptureViewModel @Inject constructor(
                         }
                     }
                 }
+            }
+        }
+
+        // 🔥 Periodic geofence validation (moved from Screen to ViewModel)
+        viewModelScope.launch {
+            while (true) {
+                val schoolId = _uiStateFlow.value.activeSchoolId
+                if (schoolId != null) {
+                    locationProvider.getCurrentLocation().onSuccess { location ->
+                        validateGeofence(location.latitude, location.longitude)
+                    }
+                }
+                delay(10000) // 10s Re-check
             }
         }
     }
@@ -266,6 +282,7 @@ class AttendanceCaptureViewModel @Inject constructor(
                 handleError(result.error.message ?: "Check-in Failed")
             }
             is Result.Loading -> { /* Not used here */ }
+            Result.Network -> {}
         }
     }
 

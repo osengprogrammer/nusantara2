@@ -3,10 +3,10 @@ package com.azuratech.azuratime.features.student.ui.form
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.domain.media.PhotoStorageUtils
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
@@ -62,7 +62,7 @@ class StudentFormViewModel @Inject constructor(
             }
             .onEach { result ->
                 when (result) {
-                    is com.azuratech.azuraengine.result.Result.Success -> {
+                    is com.azuratech.azuratime.core.result.Result.Success -> {
                         _uiStateFlow.update { it.copy(availableClasses = result.data) }
                     }
                     else -> {
@@ -167,6 +167,7 @@ class StudentFormViewModel @Inject constructor(
                     _uiEffectFlow.emit(StudentFormUiEffect.ShowToast("Failed: ${result.error.message}"))
                 }
                 is Result.Loading -> {}
+                Result.Network -> {}
             }
         }
     }

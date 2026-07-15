@@ -9,8 +9,8 @@ import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.core.data.local.SchoolMembership as LocalSchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.AccessRequestRepository
 import com.azuratech.azuratime.features.account.domain.repository.SchoolWorkspaceRepository
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.AppError
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.core.domain.model.SyncStatus

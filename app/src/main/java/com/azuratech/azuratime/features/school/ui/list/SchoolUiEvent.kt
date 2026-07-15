@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.school.ui.list
 
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.features.school.domain.model.School
 
 sealed class SchoolUiEvent {
     data class LoadSchools(val accountId: String) : SchoolUiEvent()

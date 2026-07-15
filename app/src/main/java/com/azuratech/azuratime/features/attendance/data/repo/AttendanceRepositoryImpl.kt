@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.attendance.data.repo
 
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.asLocalResult
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.asLocalResult
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.domain.sync.ExportUtils
 import com.azuratech.azuratime.core.session.SessionManager
@@ -215,6 +215,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             is Result.Success -> Result.Success(result.data.map { it.toDomain() })
             is Result.Failure -> Result.Failure(result.error)
             is Result.Loading -> Result.Loading
+            Result.Network -> Result.Network
         }
     }
 

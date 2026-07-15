@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.template.domain.usecase
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.sync.SyncManager
 import com.azuratech.azuratime.features.template.domain.model.SchoolTemplate
 import com.azuratech.azuratime.features.template.domain.repository.TemplateRepository
@@ -22,9 +22,14 @@ class ApplySchoolTemplateUseCase @Inject constructor(
         ownerId: String,
         template: SchoolTemplate,
     ): Result<Unit> = withContext(Dispatchers.IO) {
-        repository.applyTemplate(schoolId, ownerId, template).flatMap {
-            syncManager.enqueueSync()
-            Result.Success(Unit)
+        val result = repository.applyTemplate(schoolId, ownerId, template)
+        return@withContext when (result) {
+            is Result.Success -> {
+                syncManager.enqueueSync()
+                Result.Success(Unit)
+            }
+            is Result.Failure -> result
+            else -> result
         }
     }
 }

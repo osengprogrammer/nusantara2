@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.ai.data.repo
 
 import android.content.Context
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.AppError
 import com.azuratech.azuratime.BuildConfig
 import com.azuratech.azuratime.R
 import com.azuratech.azuratime.core.data.local.AppDatabase

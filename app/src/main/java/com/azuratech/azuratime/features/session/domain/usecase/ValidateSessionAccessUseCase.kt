@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.session.domain.usecase
 
 import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import javax.inject.Inject
 
 /**

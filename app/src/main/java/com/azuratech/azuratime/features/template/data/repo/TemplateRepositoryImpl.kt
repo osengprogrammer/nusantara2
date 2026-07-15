@@ -2,8 +2,8 @@ package com.azuratech.azuratime.features.template.data.repo
 import com.azuratech.azuratime.core.domain.model.toSubjectTemplate
 
 import androidx.room.withTransaction
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.data.local.ClassEntity
 import com.azuratech.azuratime.core.data.local.toClassEntity
@@ -221,7 +221,7 @@ class TemplateRepositoryImpl @Inject constructor(
             // 4. Atomic persist to Room database
             persistTemplateData(classEntities, subjectEntities)
         } catch (e: Exception) {
-            Result.Failure(com.azuratech.azuraengine.result.AppError.Network(e.message))
+            Result.Failure(AppError.NetworkError(e.message ?: "Unknown error"))
         }
     }
 }

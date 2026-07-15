@@ -3,18 +3,19 @@ import com.azuratech.azuratime.core.domain.model.toSubjectTemplate
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.onSuccess
-import com.azuratech.azuraengine.result.onFailure
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.account.domain.model.Account
-import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
-import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.core.data.local.SubjectEntity
 import com.azuratech.azuratime.features.session.domain.usecase.CreateSessionUseCase
 import com.azuratech.azuratime.features.session.domain.usecase.UpdateSessionUseCase
-import com.azuratech.azuratime.features.session.domain.repository.SessionRepository
-import com.azuratech.azuratime.core.data.local.SubjectEntity
+import com.azuratech.azuratime.features.session.domain.usecase.SaveSubjectUseCase
+import com.azuratech.azuratime.features.session.domain.usecase.DeleteSubjectUseCase
+import com.azuratech.azuratime.features.session.domain.usecase.DeleteSessionUseCase
+import com.azuratech.azuratime.features.session.domain.usecase.FetchGlobalSubjectsUseCase
+import com.azuratech.azuratime.features.session.domain.usecase.ObserveSessionManagementDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -23,18 +24,19 @@ import javax.inject.Inject
 
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.AppError
 import com.azuratech.azuratime.core.domain.model.SubjectTemplate
 
 @HiltViewModel
 class SessionManagementViewModel @Inject constructor(
-    private val sessionRepository: SessionRepository,
-    private val schoolRepository: SchoolRepository,
-    private val accountRepository: AccountRepository,
     private val sessionManager: SessionManager,
     private val createSessionUseCase: CreateSessionUseCase,
     private val updateSessionUseCase: UpdateSessionUseCase,
-    private val templateRepository: com.azuratech.azuratime.features.template.domain.repository.TemplateRepository,
+    private val saveSubjectUseCase: SaveSubjectUseCase,
+    private val deleteSubjectUseCase: DeleteSubjectUseCase,
+    private val deleteSessionUseCase: DeleteSessionUseCase,
+    private val fetchGlobalSubjectsUseCase: FetchGlobalSubjectsUseCase,
+    private val observeSessionManagementDataUseCase: ObserveSessionManagementDataUseCase,
 ) : ViewModel() {
 
     private val _uiStateFlow = MutableStateFlow(SessionManagementUiState())
@@ -50,7 +52,7 @@ class SessionManagementViewModel @Inject constructor(
 
     private fun loadAvailableSubjectsFromTemplate() {
         viewModelScope.launch {
-            templateRepository.fetchAllGlobalSubjects()
+            fetchGlobalSubjectsUseCase()
                 .onSuccess { globalSubjects ->
                     val distinctSubjects = globalSubjects.distinctBy { it.name }.sortedBy { it.name }
                     _uiStateFlow.update { it.copy(availableSubjects = distinctSubjects) }
@@ -77,28 +79,16 @@ class SessionManagementViewModel @Inject constructor(
         }
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private fun observeData() {
-        val schoolIdFlow = sessionManager.activeSchoolIdFlow.filterNotNull()
-        val accountIdFlow = sessionManager.currentAccountIdFlow.filterNotNull()
-
         viewModelScope.launch {
-            combine(schoolIdFlow, accountIdFlow) { schoolId, accountId ->
-                schoolId to accountId
-            }.flatMapLatest { (schoolId, accountId) ->
-                combine(
-                    sessionRepository.observeAllSubjectsFlow(schoolId),
-                    sessionRepository.observeAllSessionsFlow(schoolId),
-                    schoolRepository.observeClassesFlow(schoolId),
-                    accountRepository.getAccountFlow(accountId),
-                ) { subjectsResult, sessionsResult, classesResult, accountResult ->
-                    DataContainer(subjectsResult, sessionsResult, classesResult, accountResult, schoolId)
-                }
-            }.collect { container ->
-                val subjects = container.subjectsResult.getOrNull() ?: emptyList()
-                val sessions = container.sessionsResult.getOrNull() ?: emptyList()
-                val classes = container.classesResult.getOrNull() ?: emptyList()
-                val account = container.accountResult.getOrNull()
+            observeSessionManagementDataUseCase(
+                schoolIdFlow = sessionManager.activeSchoolIdFlow,
+                accountIdFlow = sessionManager.currentAccountIdFlow,
+            ).collect { data ->
+                val subjects = data.subjectsResult.getOrNull() ?: emptyList()
+                val sessions = data.sessionsResult.getOrNull() ?: emptyList()
+                val classes = data.classesResult.getOrNull() ?: emptyList()
+                val account = data.accountResult.getOrNull()
 
                 // Populate class names
                 sessions.forEach { sessionDetails ->
@@ -106,7 +96,7 @@ class SessionManagementViewModel @Inject constructor(
                 }
 
                 if (account != null) {
-                    val membership = account.memberships[container.schoolId]
+                    val membership = account.memberships[data.schoolId]
                     val role = membership?.role?.let { AccountRole.fromString(it) } ?: account.role
                     val assignments = membership?.assignments ?: emptyList()
 
@@ -157,14 +147,6 @@ class SessionManagementViewModel @Inject constructor(
         }
     }
 
-    private data class DataContainer(
-        val subjectsResult: Result<List<SubjectEntity>>,
-        val sessionsResult: Result<List<com.azuratech.azuratime.core.data.local.SessionWithDetails>>,
-        val classesResult: Result<List<com.azuratech.azuraengine.model.ClassModel>>,
-        val accountResult: Result<Account>,
-        val schoolId: String,
-    )
-
     fun onEvent(event: SessionManagementUiEvent) {
         when (event) {
             is SessionManagementUiEvent.AddSubject -> addSubject(event.name, event.description)
@@ -175,7 +157,6 @@ class SessionManagementViewModel @Inject constructor(
             is SessionManagementUiEvent.UpdateSession -> updateSession(event)
             is SessionManagementUiEvent.DeleteSession -> deleteSession(event.session)
             SessionManagementUiEvent.GenerateFromMatrix -> generateFromMatrix()
-            SessionManagementUiEvent.ClearError -> _uiStateFlow.update { it.copy(error = null) }
         }
     }
 
@@ -189,7 +170,7 @@ class SessionManagementViewModel @Inject constructor(
 
         viewModelScope.launch {
             val updated = subject.copy(name = newName, description = newDescription)
-            val result = sessionRepository.saveSubject(updated)
+            val result = saveSubjectUseCase(updated)
             if (result is Result.Success) {
                 _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Subject updated"))
             } else if (result is Result.Failure) {
@@ -235,7 +216,8 @@ class SessionManagementViewModel @Inject constructor(
         _uiStateFlow.update { it.copy(isLoading = true) }
         val schoolId = sessionManager.getActiveSchoolId()
         if (schoolId == null) {
-            _uiStateFlow.update { it.copy(error = "Pilih sekolah terlebih dahulu sebelum menambahkan mata pelajaran", isLoading = false) }
+            _uiStateFlow.update { it.copy(isLoading = false) }
+            viewModelScope.launch { _uiEffectFlow.emit(SessionManagementUiEffect.ShowError("Pilih sekolah terlebih dahulu sebelum menambahkan mata pelajaran")) }
             return
         }
         // Generate a new UUID for the school‑specific subject ID
@@ -251,8 +233,7 @@ class SessionManagementViewModel @Inject constructor(
         )
         viewModelScope.launch {
             // clear previous error before trying
-            _uiStateFlow.update { it.copy(error = null) }
-            val result = sessionRepository.saveSubject(subject)
+            val result = saveSubjectUseCase(subject)
             if (result is Result.Success) {
                 _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Subject added"))
             } else if (result is Result.Failure) {
@@ -261,7 +242,7 @@ class SessionManagementViewModel @Inject constructor(
                 } else {
                     result.error.message ?: "Failed to save subject"
                 }
-                _uiStateFlow.update { it.copy(error = errorMsg) }
+                viewModelScope.launch { _uiEffectFlow.emit(SessionManagementUiEffect.ShowError(errorMsg)) }
             }
             // loading finished
             _uiStateFlow.update { it.copy(isLoading = false) }
@@ -269,7 +250,7 @@ class SessionManagementViewModel @Inject constructor(
     }
     private fun deleteSubject(subject: SubjectEntity) {
         viewModelScope.launch {
-            val result = sessionRepository.deleteSubject(subject)
+            val result = deleteSubjectUseCase(subject)
             when (result) {
                 is Result.Success -> _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Subject deleted"))
                 is Result.Failure -> _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast(result.error.message ?: "Error deleting subject"))
@@ -351,7 +332,7 @@ class SessionManagementViewModel @Inject constructor(
                 isActive = session.isActive,
                 isSynced = session.isSynced,
             )
-            val result = sessionRepository.deleteSession(entity)
+            val result = deleteSessionUseCase(entity)
             if (result is Result.Success) {
                 _uiEffectFlow.emit(SessionManagementUiEffect.ShowToast("Session removed"))
             }

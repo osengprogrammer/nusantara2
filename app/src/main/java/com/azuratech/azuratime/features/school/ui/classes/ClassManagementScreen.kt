@@ -20,7 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import androidx.compose.material.icons.filled.Person
 

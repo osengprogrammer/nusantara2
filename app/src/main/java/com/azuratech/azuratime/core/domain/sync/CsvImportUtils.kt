@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.core.domain.sync
 
-import com.azuratech.azuraengine.core.StorageProvider
-import com.azuratech.azuraengine.sync.CsvStudentData
-import com.azuratech.azuraengine.sync.CsvParseResult
+import com.azuratech.azuratime.core.domain.media.StorageProvider
+import com.azuratech.azuratime.core.domain.sync.CsvStudentData
+import com.azuratech.azuratime.core.domain.sync.CsvParseResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader

@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.reporting.ui.matrix
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
@@ -146,7 +146,7 @@ class AttendanceMatrixViewModel @Inject constructor(
         val query: String,
         val classId: String,
         val students: List<StudentProfile>,
-        val classes: List<com.azuratech.azuraengine.model.ClassModel>,
+        val classes: List<com.azuratech.azuratime.core.domain.model.ClassModel>,
     )
 
     private fun generateDateRange(startDate: LocalDate, endDate: LocalDate): List<LocalDate> {

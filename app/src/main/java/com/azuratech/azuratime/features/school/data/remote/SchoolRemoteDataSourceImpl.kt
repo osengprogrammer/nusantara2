@@ -1,9 +1,9 @@
 package com.azuratech.azuratime.features.school.data.remote
 import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
-import com.azuratech.azuraengine.model.School
-import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.school.domain.model.School
+import com.azuratech.azuratime.core.domain.model.ClassModel
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.channels.awaitClose
@@ -241,7 +241,7 @@ class SchoolRemoteDataSourceImpl @Inject constructor(
                         schoolId = doc.getString("schoolId") ?: schoolId,
                         name = doc.getString("name") ?: "",
                         grade = doc.getString("grade") ?: "",
-                        accountId = doc.getString("accountId"),
+                        accountId = doc.getString("accountId") ?: "",
                         studentCount = doc.getLong("studentCount")?.toInt() ?: studentIds.size,
                         studentIds = studentIds,
                         createdAt = createdAt,

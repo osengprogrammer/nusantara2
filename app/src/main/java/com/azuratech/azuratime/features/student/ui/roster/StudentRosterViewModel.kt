@@ -2,8 +2,8 @@ package com.azuratech.azuratime.features.student.ui.roster
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository

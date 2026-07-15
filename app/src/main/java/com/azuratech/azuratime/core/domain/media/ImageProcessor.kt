@@ -1,5 +1,7 @@
 package com.azuratech.azuratime.core.domain.media
 
 interface ImageProcessor {
-    suspend fun process(imageBytes: ByteArray): ByteArray
+    fun resize(imageBytes: ByteArray, maxWidth: Int, maxHeight: Int): ByteArray
+    fun rotate(imageBytes: ByteArray, degrees: Int): ByteArray
+    suspend fun extractFaceEmbedding(imageBytes: ByteArray): Pair<ByteArray, FloatArray>?
 }

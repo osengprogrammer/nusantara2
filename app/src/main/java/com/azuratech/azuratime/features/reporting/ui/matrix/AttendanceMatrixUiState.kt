@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.reporting.ui.matrix
 
 import androidx.compose.ui.graphics.Color
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import java.time.LocalDate
 
 /**

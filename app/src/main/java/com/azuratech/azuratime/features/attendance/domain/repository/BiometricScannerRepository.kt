@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.attendance.domain.repository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 
 interface BiometricScannerRepository {
     suspend fun getSessionData(email: String, schoolId: String?): Result<Triple<String?, String, String?>>

@@ -3,9 +3,9 @@ package com.azuratech.azuratime.features.account.ui.management
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result as AzuraResult
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.Result as AzuraResult
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.domain.model.TeacherAssignment
@@ -177,7 +177,7 @@ class AssignClassViewModel @Inject constructor(
     }
 
     private data class DataSnapshot(
-        val classesRes: AzuraResult<List<com.azuratech.azuraengine.model.ClassModel>>,
+        val classesRes: AzuraResult<List<com.azuratech.azuratime.core.domain.model.ClassModel>>,
         val subjectsRes: AzuraResult<List<com.azuratech.azuratime.core.data.local.SubjectEntity>>,
         val assignments: List<com.azuratech.azuratime.features.account.data.local.TeacherAssignmentTuple>,
         val query: String,

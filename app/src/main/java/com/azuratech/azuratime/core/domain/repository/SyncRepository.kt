@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.core.domain.repository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import kotlinx.coroutines.flow.StateFlow
 
 interface SyncRepository {

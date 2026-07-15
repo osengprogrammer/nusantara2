@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.account.domain.repository
 
 import com.azuratech.azuratime.features.account.domain.model.AccessRequestProfile
 import com.azuratech.azuratime.core.data.local.AccessRequestEntity
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.domain.model.AccountRole
 import kotlinx.coroutines.flow.Flow
 

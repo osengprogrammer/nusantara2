@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.features.school.domain.model.School
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -108,7 +108,7 @@ fun MySchoolsCard(
 }
 
 @Composable
-fun SchoolItem(school: com.azuratech.azuraengine.model.School, onClick: () -> Unit) {
+fun SchoolItem(school: com.azuratech.azuratime.features.school.domain.model.School, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
             .width(140.dp)

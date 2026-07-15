@@ -52,16 +52,8 @@ fun SessionManagementScreen(
         viewModel.uiEffectFlow.collect { effect ->
             when (effect) {
                 is SessionManagementUiEffect.ShowToast -> context.showToast(effect.message)
+                is SessionManagementUiEffect.ShowError -> context.showToast(effect.message)
             }
-        }
-    }
-
-    // State‑driven error handling: show toast/snackbar when uiState.error is set
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { msg ->
-            context.showToast(msg)
-            // Clear the error after showing it so it does not re‑appear on recomposition/rotation
-            viewModel.onEvent(SessionManagementUiEvent.ClearError)
         }
     }
 

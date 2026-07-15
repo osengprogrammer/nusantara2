@@ -9,8 +9,8 @@ import com.azuratech.azuratime.core.domain.model.SyncStatus
 import com.azuratech.azuratime.features.account.domain.model.SchoolMembership as DomainSchoolMembership
 import com.azuratech.azuratime.features.account.domain.repository.MembershipRepository
 import com.azuratech.azuratime.features.account.domain.repository.MembershipDocUpdate
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.AppError
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers

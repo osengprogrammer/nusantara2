@@ -2,8 +2,8 @@ package com.azuratech.azuratime.features.reporting.ui.daily
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.attendance.domain.repository.AttendanceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

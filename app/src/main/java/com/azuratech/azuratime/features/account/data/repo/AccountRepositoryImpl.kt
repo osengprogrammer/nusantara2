@@ -3,11 +3,12 @@ import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 
 import androidx.room.withTransaction
 import android.util.Log
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.data.local.AppDatabase
-import com.azuratech.azuraengine.result.AppError
-import com.azuratech.azuraengine.result.asLocalResult
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.AppError
+import com.azuratech.azuratime.core.result.asLocalResult
+import com.azuratech.azuratime.core.result.map
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.features.account.data.local.AccountDao
 import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.core.data.local.toProfile
@@ -708,6 +709,21 @@ class AccountRepositoryImpl @Inject constructor(
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun checkAuthorizedForSchool(email: String, schoolId: String): Result<Boolean> {
+        return try {
+            val account = accountDao.getAccountByEmail(email.lowercase().trim())
+                ?: return Result.Failure(AppError.Unauthorized)
+            val role = account.memberships[schoolId]?.role
+            if (role == "ADMIN" || role == "SUPERVISOR") {
+                Result.Success(true)
+            } else {
+                Result.Failure(AppError.Unauthorized)
+            }
+        } catch (e: Exception) {
+            Result.Failure(AppError.Unauthorized)
         }
     }
 }

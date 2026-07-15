@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.features.student.ui.form
 
 import android.graphics.Bitmap
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 
 /**

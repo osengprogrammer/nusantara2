@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.ui.designsystem.AzuraButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen

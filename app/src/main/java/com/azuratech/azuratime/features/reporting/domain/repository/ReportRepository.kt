@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.reporting.domain.repository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.reporting.domain.model.SystemAuditTrail
 import java.time.LocalDate
 

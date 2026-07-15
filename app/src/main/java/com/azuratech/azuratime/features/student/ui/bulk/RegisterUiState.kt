@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.student.ui.bulk
 
-import com.azuratech.azuraengine.model.ProcessResult
+import com.azuratech.azuratime.core.result.ProcessResult
 
 /**
  * 📝 REGISTER UI STATE (v3.2.0-ai-native)

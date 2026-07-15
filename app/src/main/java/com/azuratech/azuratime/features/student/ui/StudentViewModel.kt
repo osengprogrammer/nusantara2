@@ -2,12 +2,14 @@ package com.azuratech.azuratime.features.student.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
-import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.core.ui.components.StudentDisplayItem
+import com.azuratech.azuratime.features.student.domain.usecase.DeleteStudentProfileUseCase
+import com.azuratech.azuratime.features.student.domain.usecase.GetAllStudentsUseCase
+import com.azuratech.azuratime.features.student.domain.usecase.ObserveClassesForSchoolUseCase
+import com.azuratech.azuratime.features.student.domain.usecase.ObserveStudentProfilesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,8 +32,10 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class StudentViewModel @Inject constructor(
-    private val studentRepository: StudentRepository,
-    private val schoolRepository: SchoolRepository,
+    private val observeClassesForSchoolUseCase: ObserveClassesForSchoolUseCase,
+    private val getAllStudentsUseCase: GetAllStudentsUseCase,
+    private val observeStudentProfilesUseCase: ObserveStudentProfilesUseCase,
+    private val deleteStudentProfileUseCase: DeleteStudentProfileUseCase,
     private val sessionManager: SessionManager,
     private val syncUseCase: com.azuratech.azuratime.features.student.domain.usecase.SyncPendingStudentDataUseCase,
 ) : ViewModel() {
@@ -49,7 +53,7 @@ class StudentViewModel @Inject constructor(
     private val _allClassesFlow = sessionManager.activeSchoolIdFlow
         .filterNotNull()
         .flatMapLatest { schoolId ->
-            schoolRepository.observeClassesFlow(schoolId).map { result ->
+            observeClassesForSchoolUseCase(schoolId).map { result ->
                 result.getOrNull() ?: emptyList()
             }
         }
@@ -87,7 +91,7 @@ class StudentViewModel @Inject constructor(
     private fun loadStudents() {
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            studentRepository.getAll()
+            getAllStudentsUseCase()
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
                 }
@@ -100,7 +104,7 @@ class StudentViewModel @Inject constructor(
 
     private fun observeStudentsReactive() {
         combine(
-            studentRepository.getStudentProfilesFlow(),
+            observeStudentProfilesUseCase(),
             _allClassesFlow,
             _searchQueryFlow,
             _selectedClassIdFlow,
@@ -152,7 +156,7 @@ class StudentViewModel @Inject constructor(
     private fun deleteStudent(studentId: String) {
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            studentRepository.deleteProfile(studentId)
+            deleteStudentProfileUseCase(studentId)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
                     _uiEffectFlow.emit(StudentUiEffect.ShowToast("Student deleted"))

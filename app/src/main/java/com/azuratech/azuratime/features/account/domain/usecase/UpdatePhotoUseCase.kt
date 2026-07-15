@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.account.domain.usecase
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.account.domain.repository.AccountRepository
 import javax.inject.Inject
 

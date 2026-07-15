@@ -6,7 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.core.data.local.StudentBiometricDetails
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDatePickerButton
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen

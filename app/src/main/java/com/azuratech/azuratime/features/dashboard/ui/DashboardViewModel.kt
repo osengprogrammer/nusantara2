@@ -3,10 +3,10 @@ import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuraengine.model.School
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.domain.model.ClassModel
+import com.azuratech.azuratime.features.school.domain.model.School
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.core.data.local.AccountEntity

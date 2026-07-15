@@ -3,12 +3,14 @@ package com.azuratech.azuratime.features.template.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.template.domain.model.SchoolTemplate
-import com.azuratech.azuratime.features.template.domain.repository.TemplateRepository
 import com.azuratech.azuratime.features.template.domain.usecase.ApplySchoolTemplateUseCase
+import com.azuratech.azuratime.features.template.domain.usecase.FetchSchoolTemplatesUseCase
+import com.azuratech.azuratime.features.template.domain.usecase.FetchGlobalClassesByIdsUseCase
+import com.azuratech.azuratime.features.template.domain.usecase.FetchGlobalSubjectsByIdsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +29,9 @@ import javax.inject.Inject
 @HiltViewModel
 class TemplateDashboardViewModel @Inject constructor(
     private val applySchoolTemplateUseCase: ApplySchoolTemplateUseCase,
-    private val repository: TemplateRepository,
+    private val fetchSchoolTemplatesUseCase: FetchSchoolTemplatesUseCase,
+    private val fetchGlobalClassesByIdsUseCase: FetchGlobalClassesByIdsUseCase,
+    private val fetchGlobalSubjectsByIdsUseCase: FetchGlobalSubjectsByIdsUseCase,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
@@ -51,7 +55,7 @@ class TemplateDashboardViewModel @Inject constructor(
     private fun loadTemplates() {
         _uiStateFlow.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            repository.fetchSchoolTemplates()
+            fetchSchoolTemplatesUseCase()
                 .onSuccess { templates ->
                     Log.d("TemplateDebug", "Data diterima: ${templates.size} item")
 
@@ -59,9 +63,9 @@ class TemplateDashboardViewModel @Inject constructor(
                     val allSubjectIds = templates.flatMap { it.defaultSubjectIds }.distinct()
 
                     // Fetch details in batch
-                    val classTemplates = repository.fetchGlobalClassesByIds(allClassIds)
+                    val classTemplates = fetchGlobalClassesByIdsUseCase(allClassIds)
                         .getOrNull() ?: emptyList()
-                    val subjectTemplates = repository.fetchGlobalSubjectsByIds(allSubjectIds)
+                    val subjectTemplates = fetchGlobalSubjectsByIdsUseCase(allSubjectIds)
                         .getOrNull() ?: emptyList()
 
                     val classMap = classTemplates.associateBy { it.id }

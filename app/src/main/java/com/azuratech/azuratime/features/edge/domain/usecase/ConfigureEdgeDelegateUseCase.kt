@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.edge.domain.usecase
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.edge.domain.model.EdgeDelegateConfig
 import com.azuratech.azuratime.features.edge.domain.model.MLDelegateType
 import javax.inject.Inject

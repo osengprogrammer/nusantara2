@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.session.data.remote
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.session.data.local.ClassSessionEntity
 import com.azuratech.azuratime.core.data.local.SubjectEntity
 

@@ -3,7 +3,7 @@ package com.azuratech.azuratime.core.data.local
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import java.util.UUID
 
 @Entity(
@@ -35,10 +35,10 @@ data class ClassEntity(
 ) {
     fun toDomain(): ClassModel = ClassModel(
         id = id,
-        schoolId = schoolId,
+        schoolId = schoolId ?: "",
         name = name,
         grade = grade,
-        accountId = accountId,
+        accountId = accountId ?: "",
         studentCount = studentCount,
         studentIds = emptyList(),
         subjectIds = subjectIds,

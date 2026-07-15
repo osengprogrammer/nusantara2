@@ -1,7 +1,7 @@
 package com.azuratech.azuratime.core.domain.sync
 
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuraengine.core.StorageProvider
+import com.azuratech.azuratime.core.domain.media.StorageProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate

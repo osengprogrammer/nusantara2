@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.student.domain.usecase
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.student.domain.repository.StudentRepository
 import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
 import javax.inject.Inject

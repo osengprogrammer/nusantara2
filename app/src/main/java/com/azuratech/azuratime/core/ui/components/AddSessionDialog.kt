@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import com.azuratech.azuratime.core.data.local.SubjectEntity
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.core.domain.model.TeacherAssignment
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
@@ -22,7 +23,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AddSessionDialog(
     subjects: List<SubjectEntity>,
-    classes: List<com.azuratech.azuraengine.model.ClassModel>,
+    classes: List<ClassModel>,
     assignments: List<TeacherAssignment>,
     selectedTier: SessionType,
     onTierSelected: (SessionType) -> Unit,
@@ -38,9 +39,7 @@ fun AddSessionDialog(
     val isEditing = editingSubjectId != null || editingClassId != null
 
     LaunchedEffect(editingTier) {
-        editingTier?.let {
-            onTierSelected(it)
-        }
+        editingTier?.let { onTierSelected(it) }
     }
 
     var selectedSubjectId by remember(editingSubjectId) { mutableStateOf(editingSubjectId) }
@@ -105,36 +104,77 @@ fun AddSessionDialog(
                         }
                     }
                 } else {
-                    // Fallback to manual selection if no assignments or different tier
-                    // Conditional Subject Picker
+                    // 🎯 NEW: Conditional Subject Picker as ExposedDropdownMenu
                     if (selectedTier == SessionType.ACADEMIC) {
                         item {
                             HorizontalDivider(Modifier.padding(vertical = AzuraSpacing.sm))
-                            Text("Select Subject", style = MaterialTheme.typography.titleSmall)
-                            subjects.forEach { subj ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth().clickable { selectedSubjectId = subj.subjectId },
+                            var expandedSubject by remember { mutableStateOf(false) }
+                            val selectedSubjectName = subjects.find { it.subjectId == selectedSubjectId }?.name ?: "Select a Subject"
+                            
+                            ExposedDropdownMenuBox(
+                                expanded = expandedSubject,
+                                onExpandedChange = { expandedSubject = !expandedSubject }
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedSubjectName,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Subject") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSubject) },
+                                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                    shape = AzuraShapes.medium
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = expandedSubject,
+                                    onDismissRequest = { expandedSubject = false }
                                 ) {
-                                    RadioButton(selected = selectedSubjectId == subj.subjectId, onClick = { selectedSubjectId = subj.subjectId })
-                                    Text(subj.name)
+                                    subjects.forEach { subj ->
+                                        DropdownMenuItem(
+                                            text = { Text(subj.name) },
+                                            onClick = {
+                                                selectedSubjectId = subj.subjectId
+                                                expandedSubject = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
 
-                    // Conditional Class Picker
+                    // Conditional Class Picker as ExposedDropdownMenu
                     if (selectedTier != SessionType.GLOBAL) {
                         item {
                             HorizontalDivider(Modifier.padding(vertical = AzuraSpacing.sm))
-                            Text("Select Class", style = MaterialTheme.typography.titleSmall)
-                            classes.forEach { cls ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth().clickable { selectedClassId = cls.id },
+                            var expandedClass by remember { mutableStateOf(false) }
+                            val selectedClassName = classes.find { it.id == selectedClassId }?.name ?: "Select a Class"
+                            
+                            ExposedDropdownMenuBox(
+                                expanded = expandedClass,
+                                onExpandedChange = { expandedClass = !expandedClass }
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedClassName,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Class") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClass) },
+                                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                    shape = AzuraShapes.medium
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = expandedClass,
+                                    onDismissRequest = { expandedClass = false }
                                 ) {
-                                    RadioButton(selected = selectedClassId == cls.id, onClick = { selectedClassId = cls.id })
-                                    Text(cls.name)
+                                    classes.forEach { cls ->
+                                        DropdownMenuItem(
+                                            text = { Text(cls.name) },
+                                            onClick = {
+                                                selectedClassId = cls.id
+                                                expandedClass = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }

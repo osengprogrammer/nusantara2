@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.attendance.ui
 
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceStatus
 

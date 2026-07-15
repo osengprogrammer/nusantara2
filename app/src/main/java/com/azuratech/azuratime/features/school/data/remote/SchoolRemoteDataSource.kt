@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.school.data.remote
 import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
-import com.azuratech.azuraengine.model.School
-import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.features.school.domain.model.School
+import com.azuratech.azuratime.core.domain.model.ClassModel
+import com.azuratech.azuratime.core.result.Result
 import kotlinx.coroutines.flow.Flow
 
 

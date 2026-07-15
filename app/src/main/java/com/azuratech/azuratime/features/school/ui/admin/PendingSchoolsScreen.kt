@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.features.school.domain.model.School
 import com.azuratech.azuratime.core.ui.designsystem.AzuraCard
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes

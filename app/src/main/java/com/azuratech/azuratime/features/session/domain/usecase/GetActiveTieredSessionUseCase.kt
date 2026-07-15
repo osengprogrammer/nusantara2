@@ -4,7 +4,7 @@ import com.azuratech.azuratime.features.session.domain.repository.SessionReposit
 
 import com.azuratech.azuratime.features.session.domain.usecase.GetSessionsByDayUseCase
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.data.local.SessionWithDetails
 import com.azuratech.azuratime.features.session.domain.model.SessionType
 import kotlinx.coroutines.flow.*
@@ -64,6 +64,7 @@ class GetActiveTieredSessionUseCase @Inject constructor(
                 }
                 is Result.Failure -> Result.Failure(result.error)
                 is Result.Loading -> Result.Loading
+                Result.Network -> Result.Network
             }
         }
     }

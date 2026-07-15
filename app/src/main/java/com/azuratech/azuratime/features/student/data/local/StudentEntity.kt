@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.student.data.local
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.azuratech.azuraengine.model.StudentModel
+import com.azuratech.azuratime.features.student.domain.model.StudentModel
 
 @Entity(
     tableName = "students",
@@ -27,8 +27,8 @@ data class StudentEntity(
         studentId = studentId,
         schoolId = schoolId,
         name = name,
-        studentCode = studentCode,
-        classId = classId,
+        studentCode = studentCode ?: "",
+        classId = classId ?: "",
         createdAt = createdAt,
         isSynced = isSynced,
     )

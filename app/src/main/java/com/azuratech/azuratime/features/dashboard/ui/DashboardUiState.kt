@@ -1,8 +1,8 @@
 package com.azuratech.azuratime.features.dashboard.ui
 import com.azuratech.azuratime.core.data.local.GpsGeofenceEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceRecord
-import com.azuratech.azuraengine.model.ClassModel
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.core.domain.model.ClassModel
+import com.azuratech.azuratime.features.school.domain.model.School
 import com.azuratech.azuratime.core.data.local.AccountEntity
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 import com.azuratech.azuratime.core.data.local.StudentBiometricEntity

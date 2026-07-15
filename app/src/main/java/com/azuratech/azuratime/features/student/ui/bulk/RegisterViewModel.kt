@@ -3,7 +3,7 @@ package com.azuratech.azuratime.features.student.ui.bulk
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.student.domain.repository.StudentRegistrationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -72,6 +72,7 @@ class RegisterViewModel @Inject constructor(
                         Result.Loading -> {
                             _uiStateFlow.update { it.copy(status = "Preparing data...") }
                         }
+                        Result.Network -> {}
                     }
                 }
                 .onCompletion {

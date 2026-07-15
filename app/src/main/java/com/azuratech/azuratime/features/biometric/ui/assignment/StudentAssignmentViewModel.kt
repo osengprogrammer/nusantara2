@@ -2,11 +2,16 @@ package com.azuratech.azuratime.features.biometric.ui.assignment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.onFailure
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.map
+import com.azuratech.azuratime.core.result.onFailure
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.biometric.domain.repository.BiometricRepository
-import com.azuratech.azuratime.features.school.domain.repository.SchoolRepository
+import com.azuratech.azuratime.features.biometric.domain.usecase.ObserveStudentsWithDetailsUseCase
+import com.azuratech.azuratime.features.biometric.domain.usecase.ObserveClassesForSchoolUseCase
+import com.azuratech.azuratime.features.biometric.domain.usecase.ObserveAssignmentsUseCase
+import com.azuratech.azuratime.features.biometric.domain.usecase.AssignStudentToClassUseCase
+import com.azuratech.azuratime.features.biometric.domain.usecase.RemoveStudentFromClassUseCase
+import com.azuratech.azuratime.features.biometric.domain.usecase.RemoveAllAssignmentsForStudentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -19,8 +24,12 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class StudentAssignmentViewModel @Inject constructor(
-    private val biometricRepository: BiometricRepository,
-    private val schoolRepository: SchoolRepository,
+    private val observeStudentsWithDetailsUseCase: ObserveStudentsWithDetailsUseCase,
+    private val observeClassesForSchoolUseCase: ObserveClassesForSchoolUseCase,
+    private val observeAssignmentsUseCase: ObserveAssignmentsUseCase,
+    private val assignStudentToClassUseCase: AssignStudentToClassUseCase,
+    private val removeStudentFromClassUseCase: RemoveStudentFromClassUseCase,
+    private val removeAllAssignmentsForStudentUseCase: RemoveAllAssignmentsForStudentUseCase,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
@@ -39,7 +48,7 @@ class StudentAssignmentViewModel @Inject constructor(
 
         // 1. Observe Roster
         schoolIdFlow
-            .flatMapLatest { schoolId -> biometricRepository.getStudentsWithDetailsFlow(schoolId) }
+            .flatMapLatest { schoolId -> observeStudentsWithDetailsUseCase(schoolId) }
             .onEach { result ->
                 result.onSuccess { roster ->
                     _uiStateFlow.update { it.copy(roster = roster) }
@@ -49,7 +58,7 @@ class StudentAssignmentViewModel @Inject constructor(
 
         // 2. Observe Available Classes
         schoolIdFlow
-            .flatMapLatest { schoolId -> schoolRepository.observeClassesFlow(schoolId) }
+            .flatMapLatest { schoolId -> observeClassesForSchoolUseCase(schoolId) }
             .onEach { result ->
                 result.onSuccess { classes ->
                     _uiStateFlow.update { it.copy(availableClasses = classes) }
@@ -66,7 +75,7 @@ class StudentAssignmentViewModel @Inject constructor(
             schoolId to availableClasses
         }.flatMapLatest { (schoolId, availableClasses) ->
             val classMap = availableClasses.associateBy { it.id }
-            biometricRepository.getAllAssignmentsFlow(schoolId).map { result ->
+            observeAssignmentsUseCase(schoolId).map { result ->
                 result.map { assignments ->
                     assignments.groupBy { it.studentId }
                         .mapValues { entry -> entry.value.mapNotNull { classMap[it.classId] } }
@@ -94,7 +103,7 @@ class StudentAssignmentViewModel @Inject constructor(
     private fun assignToClass(studentId: String, classId: String) {
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            biometricRepository.assignStudentToClass(studentId, classId)
+            assignStudentToClassUseCase(studentId, classId)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
                     _refreshTriggerFlow.value++
@@ -108,7 +117,7 @@ class StudentAssignmentViewModel @Inject constructor(
     private fun removeSpecificAssignment(studentId: String, classId: String) {
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            biometricRepository.removeStudentFromClass(studentId, classId)
+            removeStudentFromClassUseCase(studentId, classId)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
                     _refreshTriggerFlow.value++
@@ -122,7 +131,7 @@ class StudentAssignmentViewModel @Inject constructor(
     private fun removeAllAssignmentsForStudent(studentId: String) {
         viewModelScope.launch {
             _uiStateFlow.update { it.copy(isLoading = true) }
-            biometricRepository.removeAllAssignmentsForStudent(studentId)
+            removeAllAssignmentsForStudentUseCase(studentId)
                 .onSuccess {
                     _uiStateFlow.update { it.copy(isLoading = false) }
                     _refreshTriggerFlow.value++

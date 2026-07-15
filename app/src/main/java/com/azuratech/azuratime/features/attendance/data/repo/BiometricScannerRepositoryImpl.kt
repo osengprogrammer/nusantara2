@@ -6,8 +6,8 @@ import com.azuratech.azuratime.core.data.local.AppDatabase
 import com.azuratech.azuratime.core.data.local.BiometricCache
 import com.azuratech.azuratime.core.session.SessionManager
 import com.azuratech.azuratime.features.attendance.domain.repository.BiometricScannerRepository
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.AppError
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.AppError
 import com.azuratech.azuratime.ml.matcher.FaceEngine
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers

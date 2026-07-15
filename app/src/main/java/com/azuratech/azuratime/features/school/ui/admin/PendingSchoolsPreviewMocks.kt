@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.school.ui.admin
 
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.features.school.domain.model.School
 
 /**
  * 🧬 PENDING SCHOOLS PREVIEW MOCKS (v3.2.0-ai-native)

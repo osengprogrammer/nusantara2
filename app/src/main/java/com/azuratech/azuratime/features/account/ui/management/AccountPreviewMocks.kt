@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.account.ui.management
 
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.features.account.domain.model.AccountProfile
 
 /**
@@ -17,8 +17,8 @@ object AccountPreviewMocks {
             role = "ADMIN",
         ),
         classes: List<ClassModel> = listOf(
-            ClassModel("cls_1", "sch_1", "Kelas 10-A", "10", null, 0, emptyList(), emptyList(), 0L),
-            ClassModel("cls_2", "sch_1", "Kelas 11-B", "11", null, 0, emptyList(), emptyList(), 0L),
+            ClassModel("cls_1", "sch_1", "Kelas 10-A", "10", "", 0),
+            ClassModel("cls_2", "sch_1", "Kelas 11-B", "11", "", 0),
         ),
     ): AccountUiState = AccountUiState(
         accountProfile = profile,

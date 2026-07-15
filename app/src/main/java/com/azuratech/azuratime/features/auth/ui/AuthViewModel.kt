@@ -4,7 +4,7 @@ import android.app.Application
 import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.auth.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -89,6 +89,7 @@ class AuthViewModel @Inject constructor(
                                 }
                             }
                             is Result.Loading -> {}
+                            Result.Network -> {}
                         }
                     } else {
                         val schoolId = account.activeSchoolId ?: ""
@@ -108,6 +109,7 @@ class AuthViewModel @Inject constructor(
                     _uiStateFlow.update { it.copy(isLoading = false, isGoogleSigning = false, error = result.error.message) }
                 }
                 is Result.Loading -> {}
+                Result.Network -> {}
             }
         }
     }
@@ -136,6 +138,7 @@ class AuthViewModel @Inject constructor(
                     _uiStateFlow.update { it.copy(isLoading = false, error = regResult.error.message) }
                 }
                 is Result.Loading -> {}
+                Result.Network -> {}
             }
         }
     }

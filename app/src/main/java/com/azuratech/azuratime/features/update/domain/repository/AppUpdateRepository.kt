@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.update.domain.repository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.azuratech.azuratime.features.update.domain.model.AppVersionInfo
 import java.io.File
 import kotlinx.coroutines.flow.Flow

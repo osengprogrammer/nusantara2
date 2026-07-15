@@ -12,8 +12,8 @@ import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDat
 import com.azuratech.azuratime.features.biometric.data.remote.BiometricRemoteDataSourceImpl
 import com.azuratech.azuratime.features.session.data.remote.SessionRemoteDataSource
 import com.azuratech.azuratime.features.session.data.remote.SessionRemoteDataSourceImpl
-import com.azuratech.azuraengine.core.ImageProcessor
-import com.azuratech.azuraengine.core.StorageProvider
+import com.azuratech.azuratime.core.domain.media.ImageProcessor
+import com.azuratech.azuratime.core.domain.media.StorageProvider
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSource
 import com.azuratech.azuratime.features.school.data.remote.SchoolRemoteDataSourceImpl
 import dagger.Binds

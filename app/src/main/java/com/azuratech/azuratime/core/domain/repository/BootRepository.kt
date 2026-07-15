@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.core.domain.repository
 
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import com.google.firebase.auth.FirebaseUser
 
 interface BootRepository {

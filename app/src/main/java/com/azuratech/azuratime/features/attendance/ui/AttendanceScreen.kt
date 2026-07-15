@@ -18,7 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.azuratech.azuraengine.model.ClassModel
+import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.core.ui.designsystem.AttendanceActionSheet
 import com.azuratech.azuratime.core.ui.designsystem.AzuraDropdownField
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen

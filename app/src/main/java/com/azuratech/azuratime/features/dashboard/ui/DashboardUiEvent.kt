@@ -1,6 +1,6 @@
 package com.azuratech.azuratime.features.dashboard.ui
 
-import com.azuratech.azuraengine.model.School
+import com.azuratech.azuratime.features.school.domain.model.School
 import com.azuratech.azuratime.features.attendance.domain.model.AttendanceConflict
 
 sealed class DashboardUiEvent {

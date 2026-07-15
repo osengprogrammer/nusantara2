@@ -2,7 +2,7 @@ package com.azuratech.azuratime.features.student.domain.repository
 
 import com.azuratech.azuratime.features.student.domain.model.StudentProfile
 import com.azuratech.azuratime.core.domain.model.SyncStatus
-import com.azuratech.azuraengine.result.Result
+import com.azuratech.azuratime.core.result.Result
 import kotlinx.coroutines.flow.Flow
 
 /**

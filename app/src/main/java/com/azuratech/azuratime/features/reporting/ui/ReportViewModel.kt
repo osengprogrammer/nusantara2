@@ -2,11 +2,13 @@ package com.azuratech.azuratime.features.reporting.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.azuratech.azuraengine.result.Result
-import com.azuratech.azuraengine.result.onSuccess
+import com.azuratech.azuratime.core.result.Result
+import com.azuratech.azuratime.core.result.onSuccess
 import com.azuratech.azuratime.core.session.SessionManager
-import com.azuratech.azuratime.features.reporting.domain.repository.ExportRepository
-import com.azuratech.azuratime.features.reporting.domain.repository.ReportRepository
+import com.azuratech.azuratime.features.reporting.domain.usecase.ClearCompletedExportJobsUseCase
+import com.azuratech.azuratime.features.reporting.domain.usecase.GetAuditLogsUseCase
+import com.azuratech.azuratime.features.reporting.domain.usecase.ObserveExportJobsUseCase
+import com.azuratech.azuratime.features.reporting.domain.usecase.StartExportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,8 +27,10 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class ReportViewModel @Inject constructor(
-    private val reportRepository: ReportRepository,
-    private val exportRepository: ExportRepository,
+    private val observeExportJobsUseCase: ObserveExportJobsUseCase,
+    private val getAuditLogsUseCase: GetAuditLogsUseCase,
+    private val startExportUseCase: StartExportUseCase,
+    private val clearCompletedExportJobsUseCase: ClearCompletedExportJobsUseCase,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
 
@@ -51,7 +55,7 @@ class ReportViewModel @Inject constructor(
             sessionManager.currentAccountIdFlow
                 .filterNotNull()
                 .flatMapLatest { accountId ->
-                    exportRepository.observeExportJobs(accountId)
+                    observeExportJobsUseCase(accountId)
                 }
                 .collect { result ->
                     result.onSuccess { jobs ->
@@ -82,7 +86,7 @@ class ReportViewModel @Inject constructor(
 
         viewModelScope.launch {
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
-            when (val result = reportRepository.getAuditLogs(currentState.startDate, currentState.endDate, schoolId)) {
+            when (val result = getAuditLogsUseCase(currentState.startDate, currentState.endDate, schoolId)) {
                 is Result.Success -> {
                     _uiStateFlow.update { it.copy(isLoading = false, auditLogs = result.data) }
                 }
@@ -90,6 +94,7 @@ class ReportViewModel @Inject constructor(
                     _uiStateFlow.update { it.copy(isLoading = false, error = result.error.message) }
                 }
                 is Result.Loading -> {}
+                Result.Network -> {}
             }
         }
     }
@@ -100,7 +105,7 @@ class ReportViewModel @Inject constructor(
             val accountId = sessionManager.getCurrentAccountId() ?: ""
             val schoolId = sessionManager.getActiveSchoolId() ?: ""
 
-            when (val result = exportRepository.startExport(format, accountId, schoolId)) {
+            when (val result = startExportUseCase(format, accountId, schoolId)) {
                 is Result.Success -> {
                     _uiStateFlow.update { it.copy(isLoading = false) }
                     // UI will update via observeExportJobs flow
@@ -109,6 +114,7 @@ class ReportViewModel @Inject constructor(
                     _uiStateFlow.update { it.copy(isLoading = false, error = result.error.message) }
                 }
                 is Result.Loading -> {}
+                Result.Network -> {}
             }
         }
     }
@@ -116,7 +122,7 @@ class ReportViewModel @Inject constructor(
     private fun clearExportJobs() {
         viewModelScope.launch {
             val accountId = sessionManager.getCurrentAccountId() ?: ""
-            exportRepository.clearCompletedJobs(accountId)
+            clearCompletedExportJobsUseCase(accountId)
         }
     }
 }
