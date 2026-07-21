@@ -31,18 +31,6 @@ interface MembershipDoc {
     role?: string;
 }
 
-interface AccountDoc {
-    email: string;
-    name: string;
-    status: string;
-    role: string;
-    activeSchoolId?: string;
-    activeClassId?: string;
-    fcmToken?: string;
-    memberships: Record<string, any>;
-    lastUpdated: admin.firestore.FieldValue;
-}
-
 interface SchoolDoc {
     schoolId: string;
     schoolName: string;
@@ -53,6 +41,9 @@ interface SchoolDoc {
     updatedAt: admin.firestore.FieldValue;
 }
 
+// ==========================================
+// 1. REGISTRATION APPROVAL
+// ==========================================
 export const onregistrationapproved = onDocumentUpdated(
     { document: `${COLLECTIONS.MEMBERSHIPS}/{uid}`, region: "asia-southeast2" },
     async (event) => {
@@ -125,6 +116,9 @@ export const onregistrationapproved = onDocumentUpdated(
     }
 );
 
+// ==========================================
+// 2. CONNECTION REQUEST NOTIFICATION
+// ==========================================
 export const onconnectionrequestcreated = onDocumentCreated(
     { document: `${COLLECTIONS.CONNECTION_REQUESTS}/{requestId}`, region: "asia-southeast2" },
     async (event) => {
@@ -152,6 +146,9 @@ export const onconnectionrequestcreated = onDocumentCreated(
     }
 );
 
+// ==========================================
+// 3. ACCOUNT FOLLOWED NOTIFICATION
+// ==========================================
 export const onaccountfollowed = onDocumentUpdated(
     { document: `${COLLECTIONS.WHITELISTED_ACCOUNTS}/{uid}`, region: "asia-southeast2" },
     async (event) => {
@@ -186,42 +183,219 @@ export const onaccountfollowed = onDocumentUpdated(
     }
 );
 
+// ==========================================
+// 4. ATTENDANCE NOTIFICATION
+// Trigger: schools/{schoolId}/checkin_records/{recordId}
+// (synced from azura-time via FirestoreManager)
+// ==========================================
 export const sendparentnotification = onDocumentCreated(
-    { document: `${COLLECTIONS.SCHOOLS}/{schoolId}/${COLLECTIONS.CHECKIN_RECORDS}/{recordId}`, region: "asia-southeast2" },
+    { document: "schools/{schoolId}/checkin_records/{recordId}", region: "asia-southeast2" },
     async (event) => {
         const snap = event.data;
         if (!snap) return;
         const data = snap.data();
-        const schoolId = event.params.schoolId;
-        const studentId = data.studentId || data.faceId;
-        const studentName = data.name;
-        const status = data.status;
 
-        if (!schoolId || !studentId) return;
+        const schoolId = event.params.schoolId || data.schoolId;
+        const studentId = data.studentId || data.faceId;
+        const studentName = data.name || "Siswa";
+        const status = data.status || "H";
+
+        if (!schoolId || !studentId) {
+            console.log("⚠️ Missing schoolId or studentId in checkin record");
+            return;
+        }
+
+        const subscriptionKey = `${schoolId}_${studentId}`;
 
         try {
-            const linksSnapshot = await admin.firestore().collection(COLLECTIONS.SCHOOLS).doc(schoolId)
-                .collection(COLLECTIONS.PARENT_LINKS)
-                .where("studentId", "==", studentId)
-                .where("status", "==", "APPROVED")
+            const db = admin.firestore();
+
+            // ✅ Loop breaker: skip if this record was created by the Cloud Function itself
+            if (data.source === "cloud_function") {
+                console.log(`ℹ️ Skipping self-triggered record for ${studentName}`);
+                return;
+            }
+
+            // Query parent subscriptions
+            const parentUsersSnapshot = await db.collection(COLLECTIONS.PARENT_USERS)
+                .where(`subscriptions.${subscriptionKey}.status`, "in", ["ACTIVE", "APPROVED"])
                 .get();
 
-            if (linksSnapshot.empty) {
-                const legacySnapshot = await admin.firestore().collection(COLLECTIONS.SCHOOLS).doc(schoolId)
-                    .collection(COLLECTIONS.PARENT_LINKS)
-                    .where("faceId", "==", studentId)
-                    .where("status", "==", "APPROVED")
-                    .get();
-                if (!legacySnapshot.empty) await sendToFCM(legacySnapshot, studentName, status);
-            } else {
-                await sendToFCM(linksSnapshot, studentName, status);
+            if (parentUsersSnapshot.empty) {
+                console.log(`ℹ️ No matching parent subscriptions found for key: ${subscriptionKey}`);
+                return;
             }
+
+            const promises = parentUsersSnapshot.docs.map(async (parentDoc) => {
+                const parentEmail = parentDoc.id;
+                const parentData = parentDoc.data();
+                const fcmToken = parentData?.fcmToken;
+
+                // ✅ FIX 2: Save notification to Firestore so app notification screen can read it
+                let statusText = "Present";
+                const s = (status || "").toUpperCase();
+                if (s === "A" || s === "ABSENT") statusText = "Absent";
+                else if (s === "S" || s === "SICK") statusText = "Sick";
+                else if (s === "I" || s === "IZIN") statusText = "Permission";
+                else if (s === "T" || s === "LATE") statusText = "Late";
+
+                await db.collection(COLLECTIONS.PARENT_USERS).doc(parentEmail)
+                    .collection("notifications")
+                    .add({
+                        title: "Kehadiran Tercatat",
+                        message: `${studentName} telah tercatat (${statusText}).`,
+                        studentId,
+                        schoolId,
+                        type: "ATTENDANCE_CHECKIN",
+                        isRead: false,
+                        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                console.log(`✅ Notification saved to Firestore for ${parentEmail}`);
+
+                // Send FCM push notification
+                if (fcmToken) {
+                    try {
+                        await admin.messaging().send({
+                            notification: {
+                                title: "Kehadiran Tercatat",
+                                body: `${studentName} telah tercatat (${statusText}).`
+                            },
+                            data: {
+                                studentId,
+                                schoolId,
+                                status: status || "",
+                                type: "ATTENDANCE_CHECKIN"
+                            },
+                            token: fcmToken
+                        });
+                        console.log(`✅ SUCCESS: Notification sent to ${parentEmail}`);
+                    } catch (err: any) {
+                        if (err.code === 'messaging/registration-token-not-registered') {
+                            console.log(`🧹 Cleaning up dead FCM token for ${parentEmail}`);
+                            try {
+                                await db.collection(COLLECTIONS.PARENT_USERS).doc(parentEmail).update({
+                                    fcmToken: admin.firestore.FieldValue.delete()
+                                });
+                            } catch (cleanupErr) {
+                                console.error(`❌ Failed to clean up token for ${parentEmail}:`, cleanupErr);
+                            }
+                        } else {
+                            console.error(`❌ FCM ERROR for ${parentEmail}:`, err);
+                        }
+                    }
+                }
+            });
+
+            await Promise.all(promises);
         } catch (error) {
             console.error("❌ AI-NATIVE: Notification error:", error);
         }
     }
 );
 
+// ==========================================
+// 5. PAYMENT NOTIFICATION (FIXED: saves notif to Firestore)
+// ==========================================
+export const sendpaymentnotification = onDocumentCreated(
+    { document: "schools/{schoolId}/transactions/{recordId}", region: "asia-southeast2" },
+    async (event) => {
+        const snap = event.data;
+        if (!snap) return;
+        const data = snap.data();
+
+        const schoolId = event.params.schoolId || data.schoolId;
+        const studentId = data.studentId || data.faceId;
+        const amount = data.amount || 0;
+        const type = data.type || "UNKNOWN";
+        const performedBy = data.performedByAccountName || "Admin";
+
+        if (!schoolId || !studentId) {
+            console.log("⚠️ Missing schoolId or studentId in transaction");
+            return;
+        }
+
+        const subscriptionKey = `${schoolId}_${studentId}`;
+
+        try {
+            const db = admin.firestore();
+
+            const parentUsersSnapshot = await db.collection(COLLECTIONS.PARENT_USERS)
+                .where(`subscriptions.${subscriptionKey}.status`, "in", ["ACTIVE", "APPROVED"])
+                .get();
+
+            if (parentUsersSnapshot.empty) {
+                console.log(`ℹ️ No matching parent subscriptions found for key: ${subscriptionKey}`);
+                return;
+            }
+
+            const promises = parentUsersSnapshot.docs.map(async (parentDoc) => {
+                const parentEmail = parentDoc.id;
+                const parentData = parentDoc.data();
+                const fcmToken = parentData?.fcmToken;
+
+                const formattedAmount = `Rp ${amount.toLocaleString('id-ID')}`;
+
+                let title = "Transaksi Saldo";
+                let message = "";
+
+                if (type === "TOP_UP") {
+                    title = "💰 Top Up Berhasil";
+                    message = `Saldo anak Anda bertambah ${formattedAmount} oleh ${performedBy}.`;
+                } else if (type === "DEDUCTION") {
+                    title = "💸 Saldo Digunakan";
+                    message = `Saldo anak Anda berkurang ${formattedAmount} oleh ${performedBy}.`;
+                } else {
+                    message = `Transaksi ${formattedAmount} tercatat untuk anak Anda.`;
+                }
+
+                // ✅ FIX: Save notification to Firestore
+                await db.collection(COLLECTIONS.PARENT_USERS).doc(parentEmail)
+                    .collection("notifications")
+                    .add({
+                        title,
+                        message,
+                        studentId,
+                        schoolId,
+                        amount,
+                        type,
+                        transactionType: "PAYMENT",
+                        isRead: false,
+                        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                console.log(`✅ Payment notification saved to Firestore for ${parentEmail}`);
+
+                // Send FCM push notification
+                if (fcmToken) {
+                    try {
+                        await admin.messaging().send({
+                            notification: { title: title, body: message },
+                            data: {
+                                studentId,
+                                schoolId,
+                                amount: amount.toString(),
+                                type,
+                                performedBy,
+                                transactionType: "PAYMENT"
+                            },
+                            token: fcmToken
+                        });
+                        console.log(`✅ SUCCESS: Payment notification sent to ${parentEmail}`);
+                    } catch (err) {
+                        console.error(`❌ FCM ERROR for ${parentEmail}:`, err);
+                    }
+                }
+            });
+
+            await Promise.all(promises);
+        } catch (error) {
+            console.error("❌ AI-NATIVE: Payment notification error:", error);
+        }
+    }
+);
+
+// ==========================================
+// 6. GET SECURITY ISO KEY
+// ==========================================
 export const getsecurityisokey = onCall(
     { region: "asia-southeast2" },
     async (request) => {
@@ -258,29 +432,177 @@ export const getsecurityisokey = onCall(
     }
 );
 
-async function sendToFCM(snapshot: admin.firestore.QuerySnapshot, studentName: string, status: string) {
-    const promises: Promise<any>[] = [];
-    snapshot.forEach(doc => {
-        const parentEmail = doc.data().parentEmail;
-        const p = admin.firestore().collection(COLLECTIONS.PARENT_USERS).doc(parentEmail).get().then(parentDoc => {
-            if (parentDoc.exists) {
-                const fcmToken = parentDoc.data()?.fcmToken;
-                if (fcmToken) {
-                    let statusText = "Present";
-                    const s = (status || "").toUpperCase();
-                    if (s === "A" || s === "ABSENT") statusText = "Absent (No Notice)";
-                    else if (s === "S" || s === "SICK") statusText = "Sick";
-                    else if (s === "P" || s === "PERMISSION") statusText = "Permission";
+// ==========================================
+// 7. PROCESS BANK NOTIFICATION (Zero-Cost Auto Top-Up)
+// Trigger: bank_notifications/{notifId}
+// Parses raw bank notification text and auto-credits student wallet
+// ==========================================
+export const processbanknotification = onDocumentCreated(
+    { document: "bank_notifications/{notifId}", region: "asia-southeast2" },
+    async (event) => {
+        const snap = event.data;
+        if (!snap) return;
+        const data = snap.data();
+        const notifId = event.params.notifId;
+        const db = admin.firestore();
 
-                    return admin.messaging().send({
-                        notification: { title: "Azura Time: Attendance Info", body: `${studentName} has recorded attendance (${statusText}).` },
-                        token: fcmToken
-                    });
-                }
-            }
+        // --- Guard Clause: prevent double processing ---
+        if (data.processed === true) {
+            console.log(`ℹ️ Notification ${notifId} already processed, skipping.`);
             return null;
-        });
-        promises.push(p);
-    });
-    await Promise.all(promises);
-}
+        }
+
+        console.log(`🏦 Processing bank notification: ${notifId}`);
+
+        const title = (data.title || "").toString();
+        const body = (data.body || "").toString();
+        const schoolId = data.schoolId || "";
+        console.log(`📝 Raw notification body: ${body}`);
+
+        // --- Parse Amount from notification text ---
+        // BCA/BNI use "IDR 5,321.00" format (comma = thousands, .00 = cents)
+        // Indonesian banks/e-wallets use "Rp 50.000" format (dot = thousands)
+        const amountMatch = body.match(/IDR\s?([\d,]+\.\d{2})/i)
+            || body.match(/Rp\s?([\d,.]+)/i)
+            || title.match(/IDR\s?([\d,]+\.\d{2})/i)
+            || title.match(/Rp\s?([\d,.]+)/i);
+
+        if (!amountMatch || !schoolId) {
+            console.log(`❌ Failed to parse bank notification ${notifId}: missing amount or schoolId.`);
+            console.log(`   Title: ${title}`);
+            console.log(`   Body: ${body}`);
+            await db.collection("bank_notifications").doc(notifId).update({
+                processed: true,
+                status: "FAILED_PARSE",
+                parsedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            return null;
+        }
+
+        // Format-aware amount cleaning:
+        //   IDR 5,321.00 → strip decimal → "5,321" → remove commas → "5321"
+        //   Rp 50.000    → remove dots → "50000"
+        //   Rp 5.321     → remove dots → "5321"
+        let cleanAmount: string;
+        const rawValue = amountMatch[1];
+        const isIDR = amountMatch[0].toUpperCase().startsWith("IDR");
+
+        if (isIDR) {
+            // IDR format: strip .XX cents, then remove commas
+            cleanAmount = rawValue.replace(/\.\d{2}$/, "").replace(/,/g, "");
+        } else {
+            // Rp format: remove dots (thousands separator)
+            cleanAmount = rawValue.replace(/\./g, "");
+        }
+
+        const amount = parseInt(cleanAmount, 10);
+
+        if (isNaN(amount) || amount <= 0) {
+            console.log(`❌ Invalid parsed amount for ${notifId}: "${rawValue}" → "${cleanAmount}" → ${amount}`);
+            await db.collection("bank_notifications").doc(notifId).update({
+                processed: true,
+                status: "FAILED_PARSE",
+                parsedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            return null;
+        }
+
+        console.log(`💰 Parsed amount: ${rawValue} → ${cleanAmount} → ${amount}`);
+
+        // --- Determine student ID ---
+        // Priority:
+        // 1. If the Android app sent a studentId field directly in the document, use it
+        // 2. Otherwise, extract from LAST 3 DIGITS of the transferred amount
+        //    (parents transfer an amount ending with last 3 digits of child's student ID)
+        const suffix3 = (amount % 1000).toString().padStart(3, '0');
+        let studentId: string | null = data.studentId ? (data.studentId as string).trim() : null;
+
+        if (studentId && studentId.length > 0) {
+            console.log(`📋 Using studentId from document data: ${studentId} (suffix: ${suffix3})`);
+        } else {
+            console.log(`🔍 No studentId in document. Looking up wallet by suffix: ${suffix3} (from amount ${amount})`);
+
+            // Query all student wallets for this school to find a matching suffix
+            // Firestore lacks ENDS_WITH, so we fetch all wallets and filter in code.
+            // For large schools, consider storing a `studentIdSuffix` field on wallet docs.
+            const walletsSnapshot = await db.collection("schools").doc(schoolId)
+                .collection("student_wallets")
+                .get();
+
+            const matchingWallet = walletsSnapshot.docs
+                .map(doc => ({ id: doc.id, data: doc.data() }))
+                .find(w => (w.data.studentId || "").endsWith(suffix3));
+
+            if (!matchingWallet) {
+                console.log(`❌ No student wallet found with ID suffix: ${suffix3} for school ${schoolId}`);
+                await db.collection("bank_notifications").doc(notifId).update({
+                    processed: true,
+                    status: "FAILED_PARSE",
+                    parsedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    parsedAmount: amount,
+                    parsedSuffix: suffix3,
+                });
+                return null;
+            }
+
+            studentId = matchingWallet.data.studentId;
+            console.log(`✅ Matched student: ${studentId} (wallet doc: ${matchingWallet.id}) via suffix: ${suffix3}`);
+        }
+
+        // Safety guard — should never reach here without a studentId
+        if (!studentId) {
+            console.log(`❌ Student ID unexpectedly null for ${notifId}`);
+            return null;
+        }
+
+        // --- Atomic Transaction: create transaction record + update wallet ---
+        try {
+            await db.runTransaction(async (transaction) => {
+                const walletRef = db.collection("schools").doc(schoolId)
+                    .collection("student_wallets").doc(studentId);
+                const txRef = db.collection("schools").doc(schoolId)
+                    .collection("transactions").doc();
+
+                // Create transaction record
+                transaction.set(txRef, {
+                    studentId,
+                    schoolId,
+                    amount,
+                    type: "TOP_UP",
+                    performedBy: "BANK_FORWARDER",
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
+                // Increment wallet balance (creates doc with initial balance if missing)
+                transaction.set(walletRef, {
+                    studentId,
+                    schoolId,
+                    balance: admin.firestore.FieldValue.increment(amount),
+                    lastTopUp: admin.firestore.FieldValue.serverTimestamp(),
+                }, { merge: true });
+            });
+
+            // --- Mark as processed ---
+            await db.collection("bank_notifications").doc(notifId).update({
+                processed: true,
+                status: "SUCCESS",
+                parsedAt: admin.firestore.FieldValue.serverTimestamp(),
+                parsedAmount: amount,
+                parsedSuffix: suffix3,
+                parsedStudentId: studentId,
+            });
+
+            console.log(`✅ Auto Top-Up successful for student ${studentId}: +Rp ${amount.toLocaleString("id-ID")}`);
+        } catch (error) {
+            console.error(`❌ Auto Top-Up failed for notification ${notifId}:`, error);
+            await db.collection("bank_notifications").doc(notifId).update({
+                processed: true,
+                status: "ERROR",
+                errorMessage: String(error),
+                parsedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
+
+        return null;
+    }
+);

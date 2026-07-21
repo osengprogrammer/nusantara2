@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +39,7 @@ fun AccountManagementScreen(
     title: String = "Account Settings",
     onNavigateToBulkAssign: () -> Unit = {},
     onNavigateToAssignClass: (String, String) -> Unit = { _, _ -> },
+    onNavigateToBankForwarder: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -99,6 +101,7 @@ fun AccountManagementScreen(
         title = if (title == "Staff & Supervisors") "Staff Profiles" else title,
         onNavigateToBulkAssign = onNavigateToBulkAssign,
         onNavigateToAssignClass = onNavigateToAssignClass,
+        onNavigateToBankForwarder = onNavigateToBankForwarder,
         onRemoveMemberRequest = { id ->
             targetAccountIdToDelete = id
             showDeleteDialog = true
@@ -116,6 +119,7 @@ fun AccountManagementContent(
     title: String = "Account Settings",
     onNavigateToBulkAssign: () -> Unit = {},
     onNavigateToAssignClass: (String, String) -> Unit = { _, _ -> },
+    onNavigateToBankForwarder: () -> Unit = {},
 ) {
     AzuraScreen(
         title = title,
@@ -199,6 +203,24 @@ fun AccountManagementContent(
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    // 🔥 Bank Notification Forwarder
+                    if (title != "Staff & Supervisors") {
+                        AzuraCard(modifier = Modifier.fillMaxWidth()) {
+                            ListItem(
+                                headlineContent = { Text("Bank Notif Forwarder") },
+                                supportingContent = { Text("Auto top-up saldo dari notifikasi bank") },
+                                leadingContent = {
+                                    Icon(
+                                        Icons.Default.AccountBalanceWallet,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                },
+                                modifier = Modifier.clickable { onNavigateToBankForwarder() },
+                            )
                         }
                     }
 

@@ -1,6 +1,8 @@
 package com.azuratech.azuratime.features.dashboard.ui
+import androidx.compose.ui.platform.LocalContext
 
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,12 +24,14 @@ import androidx.navigation.NavController
 import com.azuratech.azuratime.core.domain.model.ClassModel
 import com.azuratech.azuratime.features.school.domain.model.School
 import com.azuratech.azuratime.core.navigation.Screen
+import com.azuratech.azuratime.core.navigation.NavigationRoutes
 import com.azuratech.azuratime.core.ui.designsystem.AzuraScreen
 import com.azuratech.azuratime.core.ui.theme.AzuraShapes
 import com.azuratech.azuratime.core.ui.theme.AzuraSpacing
 import com.azuratech.azuratime.core.ui.theme.AzuraTheme
 import com.azuratech.azuratime.core.util.isAdmin
 import com.azuratech.azuratime.core.data.local.toDomain
+import com.azuratech.azuratime.features.bankforwarder.core.NotificationAccessHelper
 import com.azuratech.azuratime.features.dashboard.ui.components.*
 import com.azuratech.azuratime.core.ui.components.AddSchoolDialog
 
@@ -49,6 +53,14 @@ fun DashboardScreen(
     var showAddSchoolDialog by remember { mutableStateOf(false) }
     var showHealthSheet by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+
+    // 🔥 Bank Forwarder: check if notification listener permission is granted
+    //    (NotificationListenerService is system-managed, no foreground service needed)
+    val context = LocalContext.current
+    var isFullyActive by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isFullyActive = NotificationAccessHelper.isNotificationServiceEnabled(context)
+    }
 
     LaunchedEffect(uiEffect) {
         when (val effect = uiEffect) {
@@ -100,6 +112,7 @@ fun DashboardScreen(
                     isLoadingSchools = isLoadingSchools,
                     activeSchoolId = activeSchoolId,
                     availableClasses = availableClasses,
+                    isFullyActive = isFullyActive,
                     onRefreshSchools = onRefreshSchools,
                     onSelectSchool = onSelectSchool,
                     onAddSchoolClick = { showAddSchoolDialog = true },
@@ -147,6 +160,7 @@ fun DashboardContent(
     isLoadingSchools: Boolean,
     activeSchoolId: String?,
     availableClasses: List<ClassModel>,
+    isFullyActive: Boolean = false,
     onRefreshSchools: () -> Unit,
     onSelectSchool: (School) -> Unit,
     onAddSchoolClick: () -> Unit,
@@ -315,6 +329,14 @@ fun DashboardContent(
                     )
                 }
 
+                // 🔥 BANK NOTIFICATION FORWARDER CARD
+                item {
+                    BankForwarderDashboardCard(
+                        isFullyActive = isFullyActive,
+                        onClick = { navController.navigate(NavigationRoutes.BANK_FORWARDER_SETUP) },
+                    )
+                }
+
                 // AI Native Feature Section
                 item {
                     HorizontalDivider(modifier = Modifier.padding(horizontal = AzuraSpacing.md))
@@ -409,6 +431,89 @@ fun PaymentDashboardCard(onClick: () -> Unit) {
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        }
+    }
+}
+
+// --- COMPONENT: BANK FORWARDER CARD ---
+
+@Composable
+fun BankForwarderDashboardCard(
+    isFullyActive: Boolean,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = AzuraSpacing.md)
+            .clickable { onClick() },
+        shape = AzuraShapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFullyActive)
+                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(AzuraSpacing.md)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Smartphone,
+                    contentDescription = null,
+                    tint = if (isFullyActive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(32.dp),
+                )
+                Spacer(Modifier.width(AzuraSpacing.md))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Bank Notif Forwarder",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "Auto top-up dari notifikasi bank (Zero Cost)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    )
+                }
+            }
+
+            // 🔥 Status Indicator
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = 8.dp),
+            ) {
+                Text(
+                    text = if (isFullyActive) "Active" else "Inactive",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isFullyActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(
+                            color = if (isFullyActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            shape = CircleShape,
+                        ),
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
             )
         }
     }

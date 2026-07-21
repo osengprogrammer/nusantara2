@@ -15,6 +15,7 @@ import com.azuratech.azuratime.features.account.ui.management.AssignClassScreen
 import com.azuratech.azuratime.features.account.ui.management.BulkAssignMatrixScreen
 import com.azuratech.azuratime.features.account.ui.components.MyAssignedClassScreen
 import com.azuratech.azuratime.features.account.ui.components.FollowingScreen
+import com.azuratech.azuratime.features.bankforwarder.presentation.BankForwarderSetupScreen
 
 fun NavGraphBuilder.accountGraph(
     navController: androidx.navigation.NavController,
@@ -33,6 +34,9 @@ fun NavGraphBuilder.accountGraph(
                     // 🔥 AI Native: BootViewModel will handle root UI transition.
                     // No need to navigate local navController to auth routes.
                     android.util.Log.d("LogoutNav", "Logout triggered, awaiting root state transition...")
+                },
+                onNavigateToBankForwarder = {
+                    navController.navigate(NavigationRoutes.BANK_FORWARDER_SETUP)
                 },
             )
         }
@@ -124,6 +128,11 @@ fun NavGraphBuilder.accountGraph(
         }
         composable(NavigationRoutes.DEBUG) {
             com.azuratech.azuratime.features.account.ui.debug.DebugScreen(onNavigateBack = { navController.popBackStack() })
+        }
+        composable(NavigationRoutes.BANK_FORWARDER_SETUP) {
+            BankForwarderSetupScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
     }
 }

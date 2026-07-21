@@ -58,6 +58,7 @@ object NavigationRoutes {
     const val GPS_MANAGEMENT = "gpsManagement"
     const val MAP_PICKER = "mapPicker"
     const val SCHOOL_TEMPLATES = "schoolTemplates"
+    const val BANK_FORWARDER_SETUP = "bank_forwarder_setup"
 
     // --- 🗺️ NAVIGATION GRAPHS ---
     const val DASHBOARD_GRAPH = "dashboardGraph"

@@ -2,6 +2,9 @@ package com.azuratech.azuratime.core.data.local
 
 import android.content.Context
 import androidx.room.*
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.room.migration.Migration
+import androidx.room.TypeConverters
 import com.azuratech.azuratime.features.school.data.local.*
 import com.azuratech.azuratime.features.student.data.local.*
 import com.azuratech.azuratime.features.attendance.data.local.*
@@ -10,10 +13,11 @@ import com.azuratech.azuratime.features.account.data.local.*
 import com.azuratech.azuratime.features.reporting.data.local.*
 import com.azuratech.azuratime.features.aimusic.data.local.*
 import com.azuratech.azuratime.features.session.data.local.*
-import androidx.sqlite.db.SupportSQLiteDatabase
-import androidx.room.migration.Migration
-
-import androidx.room.TypeConverters
+import com.azuratech.azuratime.features.payment.data.local.PaymentEntity
+import com.azuratech.azuratime.features.payment.data.local.PaymentDao
+// 🔥 PERBAIKAN: Nama kelas disesuaikan dengan file yang sebenarnya dibuat
+import com.azuratech.azuratime.features.bankforwarder.data.local.BankNotificationDao
+import com.azuratech.azuratime.features.bankforwarder.data.local.BankNotificationEntity
 
 @Database(
     entities = [
@@ -35,8 +39,9 @@ import androidx.room.TypeConverters
         GpsGeofenceEntity::class,
         SubjectEntity::class,
         ClassSessionEntity::class,
-        com.azuratech.azuratime.features.payment.data.local.PaymentEntity::class,
-        com.azuratech.azuratime.core.data.local.StudentWalletEntity::class,
+        PaymentEntity::class,
+        StudentWalletEntity::class,
+        BankNotificationEntity::class, // 🔥 PERBAIKAN: Nama Entity yang benar
     ],
     version = 27,
     exportSchema = false,
@@ -44,8 +49,11 @@ import androidx.room.TypeConverters
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun paymentDao(): com.azuratech.azuratime.features.payment.data.local.PaymentDao
-    abstract fun studentWalletDao(): com.azuratech.azuratime.core.data.local.StudentWalletDao
+    abstract fun paymentDao(): PaymentDao
+    abstract fun studentWalletDao(): StudentWalletDao
+    
+    // 🔥 PERBAIKAN: Nama fungsi dan return type yang benar
+    abstract fun bankNotificationDao(): BankNotificationDao
 
     abstract fun studentDao(): StudentDao
     abstract fun attendanceRecordDao(): AttendanceRecordDao
@@ -70,198 +78,32 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_26_27 = object : Migration(26, 27) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // --- Blueprint fields for ClassEntity ---
                 db.execSQL("ALTER TABLE `classes` ADD COLUMN `level` INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE `classes` ADD COLUMN `category` TEXT NOT NULL DEFAULT ''")
                 db.execSQL("ALTER TABLE `classes` ADD COLUMN `major` TEXT NOT NULL DEFAULT ''")
                 db.execSQL("ALTER TABLE `classes` ADD COLUMN `section` TEXT NOT NULL DEFAULT ''")
                 db.execSQL("ALTER TABLE `classes` ADD COLUMN `active` INTEGER NOT NULL DEFAULT 1")
-
-                // --- Blueprint fields for SubjectEntity ---
                 db.execSQL("ALTER TABLE `subjects` ADD COLUMN `category` TEXT NOT NULL DEFAULT ''")
             }
         }
 
         private val MIGRATION_25_26 = object : Migration(25, 26) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // --- 1. DEDUPLICATE SUBJECTS ---
-                // Step A: Find duplicate groups and assign a masterId (MIN) for each group of (schoolId, name)
-                db.execSQL(
-                    """
-                    CREATE TEMP TABLE temp_subject_duplicates AS
-                    SELECT schoolId, name, MIN(subjectId) AS masterId
-                    FROM subjects
-                    GROUP BY schoolId, name
-                    """.trimIndent(),
-                )
-
-                // Step B: Remap class_sessions to use the master subjectId
-                db.execSQL(
-                    """
-                    UPDATE class_sessions
-                    SET subjectId = (
-                        SELECT d.masterId
-                        FROM temp_subject_duplicates d
-                        JOIN subjects s ON s.name = d.name AND s.schoolId = d.schoolId
-                        WHERE s.subjectId = class_sessions.subjectId
-                    )
-                    WHERE subjectId IS NOT NULL AND subjectId IN (
-                        SELECT s.subjectId
-                        FROM subjects s
-                        JOIN temp_subject_duplicates d ON s.name = d.name AND s.schoolId = d.schoolId
-                        WHERE s.subjectId != d.masterId
-                    )
-                    """.trimIndent(),
-                )
-
-                // Step C: Remap account_class_access to use the master subjectId
-                db.execSQL(
-                    """
-                    UPDATE account_class_access
-                    SET subjectId = (
-                        SELECT d.masterId
-                        FROM temp_subject_duplicates d
-                        JOIN subjects s ON s.name = d.name AND s.schoolId = d.schoolId
-                        WHERE s.subjectId = account_class_access.subjectId
-                    )
-                    WHERE subjectId != '' AND subjectId IN (
-                        SELECT s.subjectId
-                        FROM subjects s
-                        JOIN temp_subject_duplicates d ON s.name = d.name AND s.schoolId = d.schoolId
-                        WHERE s.subjectId != d.masterId
-                    )
-                    """.trimIndent(),
-                )
-
-                // Step D: Delete duplicate subjects (retaining only the masterId)
-                db.execSQL(
-                    """
-                    DELETE FROM subjects
-                    WHERE subjectId NOT IN (SELECT masterId FROM temp_subject_duplicates)
-                    """.trimIndent(),
-                )
-
-                // Step E: Drop temp table
+                db.execSQL("CREATE TEMP TABLE temp_subject_duplicates AS SELECT schoolId, name, MIN(subjectId) AS masterId FROM subjects GROUP BY schoolId, name")
+                db.execSQL("UPDATE class_sessions SET subjectId = (SELECT d.masterId FROM temp_subject_duplicates d JOIN subjects s ON s.name = d.name AND s.schoolId = d.schoolId WHERE s.subjectId = class_sessions.subjectId) WHERE subjectId IS NOT NULL AND subjectId IN (SELECT s.subjectId FROM subjects s JOIN temp_subject_duplicates d ON s.name = d.name AND s.schoolId = d.schoolId WHERE s.subjectId != d.masterId)")
+                db.execSQL("UPDATE account_class_access SET subjectId = (SELECT d.masterId FROM temp_subject_duplicates d JOIN subjects s ON s.name = d.name AND s.schoolId = d.schoolId WHERE s.subjectId = account_class_access.subjectId) WHERE subjectId != '' AND subjectId IN (SELECT s.subjectId FROM subjects s JOIN temp_subject_duplicates d ON s.name = d.name AND s.schoolId = d.schoolId WHERE s.subjectId != d.masterId)")
+                db.execSQL("DELETE FROM subjects WHERE subjectId NOT IN (SELECT masterId FROM temp_subject_duplicates)")
                 db.execSQL("DROP TABLE temp_subject_duplicates")
-
-                // --- 2. DEDUPLICATE CLASSES ---
-                // Step A: Find duplicate classes and assign a masterId (MIN) for each group of (schoolId, name)
-                db.execSQL(
-                    """
-                    CREATE TEMP TABLE temp_class_duplicates AS
-                    SELECT schoolId, name, MIN(id) AS masterId
-                    FROM classes
-                    GROUP BY schoolId, name
-                    """.trimIndent(),
-                )
-
-                // Step B: Remap school_class_assignments
-                db.execSQL(
-                    """
-                    UPDATE school_class_assignments
-                    SET classId = (
-                        SELECT d.masterId
-                        FROM temp_class_duplicates d
-                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id = school_class_assignments.classId
-                    )
-                    WHERE classId IN (
-                        SELECT c.id
-                        FROM classes c
-                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id != d.masterId
-                    )
-                    """.trimIndent(),
-                )
-
-                // Step C: Remap student_class_assignments
-                db.execSQL(
-                    """
-                    UPDATE student_class_assignments
-                    SET classId = (
-                        SELECT d.masterId
-                        FROM temp_class_duplicates d
-                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id = student_class_assignments.classId
-                    )
-                    WHERE classId IN (
-                        SELECT c.id
-                        FROM classes c
-                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id != d.masterId
-                    )
-                    """.trimIndent(),
-                )
-
-                // Step D: Remap class_sessions
-                db.execSQL(
-                    """
-                    UPDATE class_sessions
-                    SET classId = (
-                        SELECT d.masterId
-                        FROM temp_class_duplicates d
-                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id = class_sessions.classId
-                    )
-                    WHERE classId IS NOT NULL AND classId IN (
-                        SELECT c.id
-                        FROM classes c
-                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id != d.masterId
-                    )
-                    """.trimIndent(),
-                )
-
-                // Step E: Remap account_class_access
-                db.execSQL(
-                    """
-                    UPDATE account_class_access
-                    SET classId = (
-                        SELECT d.masterId
-                        FROM temp_class_duplicates d
-                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id = account_class_access.classId
-                    )
-                    WHERE classId IN (
-                        SELECT c.id
-                        FROM classes c
-                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id != d.masterId
-                    )
-                    """.trimIndent(),
-                )
-
-                // Step F: Remap accounts (activeClassId)
-                db.execSQL(
-                    """
-                    UPDATE accounts
-                    SET activeClassId = (
-                        SELECT d.masterId
-                        FROM temp_class_duplicates d
-                        JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id = accounts.activeClassId
-                    )
-                    WHERE activeClassId IS NOT NULL AND activeClassId IN (
-                        SELECT c.id
-                        FROM classes c
-                        JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL))
-                        WHERE c.id != d.masterId
-                    )
-                    """.trimIndent(),
-                )
-
-                // Step G: Delete duplicate classes
-                db.execSQL(
-                    """
-                    DELETE FROM classes
-                    WHERE id NOT IN (SELECT masterId FROM temp_class_duplicates)
-                    """.trimIndent(),
-                )
-
-                // Step H: Drop temp table
+                
+                db.execSQL("CREATE TEMP TABLE temp_class_duplicates AS SELECT schoolId, name, MIN(id) AS masterId FROM classes GROUP BY schoolId, name")
+                db.execSQL("UPDATE school_class_assignments SET classId = (SELECT d.masterId FROM temp_class_duplicates d JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id = school_class_assignments.classId) WHERE classId IN (SELECT c.id FROM classes c JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id != d.masterId)")
+                db.execSQL("UPDATE student_class_assignments SET classId = (SELECT d.masterId FROM temp_class_duplicates d JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id = student_class_assignments.classId) WHERE classId IN (SELECT c.id FROM classes c JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id != d.masterId)")
+                db.execSQL("UPDATE class_sessions SET classId = (SELECT d.masterId FROM temp_class_duplicates d JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id = class_sessions.classId) WHERE classId IS NOT NULL AND classId IN (SELECT c.id FROM classes c JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id != d.masterId)")
+                db.execSQL("UPDATE account_class_access SET classId = (SELECT d.masterId FROM temp_class_duplicates d JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id = account_class_access.classId) WHERE classId IN (SELECT c.id FROM classes c JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id != d.masterId)")
+                db.execSQL("UPDATE accounts SET activeClassId = (SELECT d.masterId FROM temp_class_duplicates d JOIN classes c ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id = accounts.activeClassId) WHERE activeClassId IS NOT NULL AND activeClassId IN (SELECT c.id FROM classes c JOIN temp_class_duplicates d ON c.name = d.name AND (c.schoolId = d.schoolId OR (c.schoolId IS NULL AND d.schoolId IS NULL)) WHERE c.id != d.masterId)")
+                db.execSQL("DELETE FROM classes WHERE id NOT IN (SELECT masterId FROM temp_class_duplicates)")
                 db.execSQL("DROP TABLE temp_class_duplicates")
-
-                // --- 3. CREATE UNIQUE INDEXES ---
+                
                 db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_subjects_schoolId_name` ON `subjects` (`schoolId`, `name`)")
                 db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_classes_schoolId_name` ON `classes` (`schoolId`, `name`)")
             }
@@ -282,46 +124,10 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_22_23 = object : Migration(22, 23) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // 1. Create new table with nullable classId/subjectId and sessionType
-                db.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `class_sessions_new` (
-                        `sessionId` TEXT NOT NULL, 
-                        `classId` TEXT, 
-                        `subjectId` TEXT, 
-                        `sessionType` TEXT NOT NULL DEFAULT 'ACADEMIC', 
-                        `supervisorEmail` TEXT NOT NULL, 
-                        `dayOfWeek` INTEGER NOT NULL, 
-                        `startTime` TEXT NOT NULL, 
-                        `endTime` TEXT NOT NULL, 
-                        `schoolId` TEXT NOT NULL, 
-                        `lookupKey` TEXT NOT NULL, 
-                        `isActive` INTEGER NOT NULL DEFAULT 1, 
-                        `isSynced` INTEGER NOT NULL DEFAULT 0, 
-                        PRIMARY KEY(`sessionId`)
-                    )
-                    """.trimIndent(),
-                )
-
-                // 2. Copy data and Prefix lookupKey for legacy ACADEMIC sessions
-                db.execSQL(
-                    """
-                    INSERT INTO `class_sessions_new` (
-                        sessionId, classId, subjectId, sessionType, supervisorEmail, 
-                        dayOfWeek, startTime, endTime, schoolId, lookupKey, isActive, isSynced
-                    )
-                    SELECT 
-                        sessionId, classId, subjectId, 'ACADEMIC', supervisorEmail, 
-                        dayOfWeek, startTime, endTime, schoolId, 'ACADEMIC_' || lookupKey, isActive, isSynced
-                    FROM `class_sessions`
-                    """.trimIndent(),
-                )
-
-                // 3. Swap tables
+                db.execSQL("CREATE TABLE IF NOT EXISTS `class_sessions_new` (`sessionId` TEXT NOT NULL, `classId` TEXT, `subjectId` TEXT, `sessionType` TEXT NOT NULL DEFAULT 'ACADEMIC', `supervisorEmail` TEXT NOT NULL, `dayOfWeek` INTEGER NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `schoolId` TEXT NOT NULL, `lookupKey` TEXT NOT NULL, `isActive` INTEGER NOT NULL DEFAULT 1, `isSynced` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`sessionId`))")
+                db.execSQL("INSERT INTO `class_sessions_new` (sessionId, classId, subjectId, sessionType, supervisorEmail, dayOfWeek, startTime, endTime, schoolId, lookupKey, isActive, isSynced) SELECT sessionId, classId, subjectId, 'ACADEMIC', supervisorEmail, dayOfWeek, startTime, endTime, schoolId, 'ACADEMIC_' || lookupKey, isActive, isSynced FROM `class_sessions`")
                 db.execSQL("DROP TABLE `class_sessions`")
                 db.execSQL("ALTER TABLE `class_sessions_new` RENAME TO `class_sessions`")
-
-                // 4. Recreate Indices
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_schoolId` ON `class_sessions` (`schoolId`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_classId` ON `class_sessions` (`classId`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_subjectId` ON `class_sessions` (`subjectId`)")
@@ -349,7 +155,6 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_18_19 = object : Migration(18, 19) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // LEGACY: Support for polymorphic sessions and directional tracking
                 db.execSQL("ALTER TABLE `class_sessions` ADD COLUMN `sessionType` TEXT NOT NULL DEFAULT 'SCHOOL'")
                 db.execSQL("ALTER TABLE `check_in_records` ADD COLUMN `direction` TEXT")
             }
@@ -365,34 +170,8 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_16_17 = object : Migration(16, 17) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `subjects` (
-                        `subjectId` TEXT NOT NULL, 
-                        `name` TEXT NOT NULL, 
-                        `description` TEXT, 
-                        `schoolId` TEXT NOT NULL, 
-                        `isSynced` INTEGER NOT NULL, 
-                        PRIMARY KEY(`subjectId`)
-                    )
-                    """.trimIndent(),
-                )
-                db.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `class_sessions` (
-                        `sessionId` TEXT NOT NULL, 
-                        `classId` TEXT NOT NULL, 
-                        `subjectId` TEXT NOT NULL, 
-                        `supervisorEmail` TEXT NOT NULL, 
-                        `dayOfWeek` INTEGER NOT NULL, 
-                        `startTime` TEXT NOT NULL, 
-                        `endTime` TEXT NOT NULL, 
-                        `schoolId` TEXT NOT NULL, 
-                        `isSynced` INTEGER NOT NULL, 
-                        PRIMARY KEY(`sessionId`)
-                    )
-                    """.trimIndent(),
-                )
+                db.execSQL("CREATE TABLE IF NOT EXISTS `subjects` (`subjectId` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT, `schoolId` TEXT NOT NULL, `isSynced` INTEGER NOT NULL, PRIMARY KEY(`subjectId`))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `class_sessions` (`sessionId` TEXT NOT NULL, `classId` TEXT NOT NULL, `subjectId` TEXT NOT NULL, `supervisorEmail` TEXT NOT NULL, `dayOfWeek` INTEGER NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `schoolId` TEXT NOT NULL, `isSynced` INTEGER NOT NULL, PRIMARY KEY(`sessionId`))")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_schoolId` ON `class_sessions` (`schoolId`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_classId` ON `class_sessions` (`classId`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_class_sessions_subjectId` ON `class_sessions` (`subjectId`)")

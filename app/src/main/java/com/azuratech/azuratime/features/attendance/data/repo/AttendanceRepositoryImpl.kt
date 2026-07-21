@@ -226,17 +226,30 @@ class AttendanceRepositoryImpl @Inject constructor(
             return@withContext Result.Success(Unit)
         }
 
-        // 1. PUSH PHASE
+        // 1. PUSH PHASE — individual record failures must not stop the batch
         try {
             val unsyncedResult = getUnsyncedRecords(schoolId)
             if (unsyncedResult is Result.Success) {
                 val records = unsyncedResult.data
+                var pushFailedCount = 0
                 for (record in records) {
-                    syncRecord(record)
+                    try {
+                        val syncResult = syncRecord(record)
+                        if (syncResult is Result.Failure) {
+                            pushFailedCount++
+                            android.util.Log.e("AttendanceRepo", "❌ Failed to push record ${record.recordId}: ${syncResult.error.message}")
+                        }
+                    } catch (e: Exception) {
+                        pushFailedCount++
+                        android.util.Log.e("AttendanceRepo", "❌ Exception pushing record ${record.recordId}: ${e.message}")
+                    }
+                }
+                if (pushFailedCount > 0) {
+                    android.util.Log.w("AttendanceRepo", "⚠️ $pushFailedCount/${records.size} records failed to push.")
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AttendanceRepo", "❌ Push error: ${e.message}")
+            android.util.Log.e("AttendanceRepo", "❌ Push phase error: ${e.message}")
         }
 
         // 2. PULL PHASE
@@ -278,6 +291,15 @@ class AttendanceRepositoryImpl @Inject constructor(
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(AppError.LocalDB(e.message))
+        }
+    }
+
+    override suspend fun getLastCheckInTime(studentId: String, schoolId: String): Long? {
+        return try {
+            val record = attendanceRecordDao.getLatestRecordByStudent(studentId, schoolId)
+            record?.timestamp
+        } catch (e: Exception) {
+            null
         }
     }
 

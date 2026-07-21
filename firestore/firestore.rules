@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is owner of the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 🏫 Schools collection
+    match /schools/{schoolId} {
+      // Allow authenticated users to read/write school data
+      allow read, write: if isAuthenticated();
+
+      // All subcollections under schools
+      match /{subcollection=**} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // 👤 Accounts collection - Users can only read/write their own account
+    match /accounts/{accountId} {
+      allow read, write: if isOwner(accountId);
+    }
+
+    // 🔐 Whitelisted accounts - Users can read their own, Cloud Functions write
+    match /whitelisted_accounts/{accountId} {
+      allow read: if isOwner(accountId);
+      allow write: if false;
+    }
+
+    // 👨‍👩‍👧 Parent users collection
+    match /parent_users/{parentEmail} {
+      allow read: if isAuthenticated();
+      // Cloud Functions handle writes
+
+      // Notifications subcollection
+      match /notifications/{notificationId} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+      }
+    }
+
+    // 🔗 Connection requests
+    match /connection_requests/{requestId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 📋 Memberships - Used during registration
+    match /memberships/{uid} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 📋 Audit logs
+    match /audit_logs/{logId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 🌐 Global classes (shared across schools)
+    match /global_classes/{classId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 🌐 Global subjects (shared across schools)
+    match /global_subjects/{subjectId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 🏫 School templates
+    match /school_templates/{templateId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}
